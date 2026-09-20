@@ -34,3 +34,21 @@ class Client(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     account: Mapped[Account] = relationship(back_populates="client")
+
+
+class ClientIdentityReconciliation(Base):
+    """Durable state for a client identity operation awaiting completion."""
+
+    __tablename__ = "client_identity_reconciliation"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    operation: Mapped[str] = mapped_column(String(32), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), unique=True)
+    name: Mapped[str | None] = mapped_column(String(200))
+    account_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("account.id"), unique=True
+    )
+    keycloak_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

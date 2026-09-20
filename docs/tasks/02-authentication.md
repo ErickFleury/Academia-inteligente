@@ -54,6 +54,13 @@ Add unit/integration tests for valid, invalid, expired/absent session, inactive-
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
+## Subsequent approved dependency
+
+This task remains complete under its original scope. The later-approved Task 06
+must provision actual client identities and integration-verify RF-04 first
+access and inactive-account behavior; those behaviors are not retroactively
+claimed here.
+
 ## Ready-to-use Codex prompt
 
 Read `AGENTS.md`, then `docs/tasks/02-authentication.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

@@ -16,7 +16,7 @@ def test_api_accepts_frontend_cors_preflight() -> None:
         "query_string": b"",
         "headers": [
             (b"origin", b"http://localhost:5173"),
-            (b"access-control-request-method", b"POST"),
+            (b"access-control-request-method", b"PATCH"),
             (b"access-control-request-headers", b"authorization,content-type"),
         ],
         "client": ("testclient", 50000),
@@ -36,3 +36,4 @@ def test_api_accepts_frontend_cors_preflight() -> None:
     assert response["status"] == 200
     assert headers[b"access-control-allow-origin"] == b"http://localhost:5173"
     assert b"authorization" in headers[b"access-control-allow-headers"].lower()
+    assert b"PATCH" in headers[b"access-control-allow-methods"]

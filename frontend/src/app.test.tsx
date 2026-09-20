@@ -1,14 +1,18 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import { App } from './app'
+import { OidcSessionClient } from './auth'
 
 beforeEach(() => {
   window.history.replaceState({}, '', '/')
   sessionStorage.clear()
 })
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 test('renders a sign-in action without a session', () => {
   render(<App />)
@@ -90,4 +94,22 @@ test('returns to the sign-in state when the client API rejects a stale session',
 
   expect(await screen.findByText('Sessão necessária para acessar esta página.')).toBeInTheDocument()
   expect(sessionStorage.getItem('academia.session')).toBeNull()
+})
+
+test('ends the provider session and clears the local session when signing out', () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({
+      accessToken: 'access-token',
+      idToken: 'id-token',
+      expiresAt: Date.now() + 300_000,
+      roles: ['admin'],
+    }),
+  )
+  const logoutUrl = new OidcSessionClient().endSession()
+
+  expect(sessionStorage.getItem('academia.session')).toBeNull()
+  expect(logoutUrl.href).toBe(
+    'http://localhost:8080/realms/academia/protocol/openid-connect/logout?client_id=academia-web&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&id_token_hint=id-token',
+  )
 })

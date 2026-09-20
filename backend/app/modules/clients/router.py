@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_database_session
 from app.modules.clients.service import (
+    ClientIdentityConflictError,
+    ClientIdentityProvisioningError,
     ClientService,
     ClientSummary,
     ClientValidationError,
@@ -30,6 +32,7 @@ class ClientResponse(BaseModel):
     name: str
     email: str
     account_active: bool
+    identity_provisioned: bool
     created_at: str
 
 
@@ -39,6 +42,7 @@ def response_from_summary(summary: ClientSummary) -> ClientResponse:
         name=summary.name,
         email=summary.email,
         account_active=summary.account_active,
+        identity_provisioned=summary.identity_provisioned,
         created_at=summary.created_at.isoformat(),
     )
 
@@ -73,6 +77,15 @@ def create_client(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account already uses this e-mail address",
         ) from None
+    except ClientIdentityConflictError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="A conflicting Keycloak identity exists"
+        ) from None
+    except ClientIdentityProvisioningError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Client identity provisioning is pending",
+        ) from None
 
 
 @router.get("", response_model=list[ClientResponse])
@@ -93,6 +106,28 @@ def get_client(
     """Return a client only to an authorized administrator."""
     del administrator
     client = client_service.get(session, client_id)
+    if client is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
+    return response_from_summary(client)
+
+
+@router.post("/{client_id}/provision-identity", response_model=ClientResponse)
+def provision_client_identity(
+    client_id: UUID, session: DatabaseSession, administrator: Administrator
+) -> ClientResponse:
+    """Reconcile a local client created before Keycloak provisioning existed."""
+    del administrator
+    try:
+        client = client_service.provision_existing(session, client_id)
+    except ClientIdentityConflictError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="A conflicting Keycloak identity exists"
+        ) from None
+    except ClientIdentityProvisioningError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Client identity provisioning is pending",
+        ) from None
     if client is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
     return response_from_summary(client)
@@ -123,6 +158,15 @@ def update_client(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account already uses this e-mail address",
+        ) from None
+    except ClientIdentityConflictError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="A conflicting Keycloak identity exists"
+        ) from None
+    except ClientIdentityProvisioningError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Client identity provisioning is pending",
         ) from None
     if client is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")

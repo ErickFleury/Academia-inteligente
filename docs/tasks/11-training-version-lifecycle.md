@@ -1,4 +1,4 @@
-# Task 10 — Training Version Lifecycle
+# Task 11 — Training Version Lifecycle
 
 ## Objective
 
@@ -6,7 +6,7 @@ Establish the approved training-sheet lifecycle, immutable version history, curr
 
 ## Requirements covered
 
-- RF-17: CA-17.1–CA-17.3. This task owns versioning behavior; Tasks 11 and 14 integrate with it without reimplementing it.
+- RF-17: CA-17.1–CA-17.3. This task owns versioning behavior; Tasks 12 and 15 integrate with it without reimplementing it.
 
 ## Related rules and constraints
 
@@ -20,7 +20,7 @@ Establish the approved training-sheet lifecycle, immutable version history, curr
 
 ## Prerequisites
 
-- Tasks 03 and 09 complete.
+- Tasks 03 and 10 complete.
 - Relevant resolutions for DEC-04, DEC-07, DEC-15, and DEC-17 recorded.
 
 ## Required reading
@@ -33,7 +33,7 @@ Implement training-sheet/version persistence and application services for initia
 
 ## Out of scope
 
-- Calling AI (Tasks 11, 13, 14), current client display (Task 12), exercise catalog CRUD, or completed-workout tracking.
+- Calling AI (Tasks 12, 14, 15), current client display (Task 13), exercise catalog CRUD, or completed-workout tracking.
 - Inventing approval states, manual authoring UI, or professional permissions.
 - Mutating an existing historical version in place.
 
@@ -57,4 +57,4 @@ Add domain tests for transitions/invariants, persistence tests for ordering/curr
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/10-training-version-lifecycle.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/11-training-version-lifecycle.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

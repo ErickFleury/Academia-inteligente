@@ -1,4 +1,4 @@
-# Task 08 — Physical and Health Onboarding
+# Task 09 — Physical and Health Onboarding
 
 ## Objective
 
@@ -19,7 +19,8 @@ Capture and persist the approved physical and health onboarding fields with stri
 
 ## Prerequisites
 
-- Tasks 03 and 07 complete.
+- Tasks 03 and 08 complete; Task 06 identity provisioning is inherited through
+  the onboarding chain.
 - Relevant resolutions for DEC-04, DEC-06, DEC-17, and DEC-18 recorded.
 
 ## Required reading
@@ -33,7 +34,7 @@ Implement the approved onboarding schema, backend validation/persistence, draft 
 ## Out of scope
 
 - Choosing missing fields, units, validation ranges, or retention rules.
-- Completing the onboarding (Task 09), post-completion self-review (RF-14), AI severity assessment, or training generation.
+- Completing the onboarding (Task 10), post-completion self-review (RF-14), AI severity assessment, or training generation.
 - Broad medical records or diagnosis functionality.
 
 ## Acceptance criteria
@@ -58,4 +59,4 @@ Add schema/validation unit tests, persistence and authorization integration test
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/08-physical-and-health-onboarding.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/09-physical-and-health-onboarding.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

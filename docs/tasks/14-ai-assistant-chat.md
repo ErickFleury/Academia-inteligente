@@ -1,4 +1,4 @@
-# Task 13 — AI Assistant Chat
+# Task 14 — AI Assistant Chat
 
 ## Objective
 
@@ -16,11 +16,12 @@ Provide an isolated client chat that uses the current training sheet and, when a
 - RN-30: responses are not medical diagnoses.
 - RNF01, RNF05, RNF06: show processing, map failures cleanly, and use the AI adapter boundary.
 - DEC-08 is **blocking** for chat request/response contracts, context rules, provider behavior, and error handling.
-- DEC-07 is **non-blocking for read-only chat**; any detected change request remains inert until Task 14 and the approval flow exist.
+- DEC-07 is **non-blocking for read-only chat**; any detected change request remains inert until Task 15 and the approval flow exist.
 
 ## Prerequisites
 
-- Tasks 11 and 12 complete.
+- Tasks 06, 12, and 13 complete. The caller must resolve through the Task 06
+  Keycloak subject linkage; do not treat a database-only client as authenticated.
 - Chat-relevant DEC-08 decisions recorded.
 
 ## Required reading
@@ -33,7 +34,7 @@ Implement authenticated message submission, the approved conversation persistenc
 
 ## Out of scope
 
-- Applying training changes (Task 14), medical diagnosis, provider selection, or broad chat features absent from RF-18.
+- Applying training changes (Task 15), medical diagnosis, provider selection, or broad chat features absent from RF-18.
 - Cross-client/admin conversation browsing.
 - Sending any unrelated client's onboarding, sheet, or messages to the adapter.
 
@@ -57,4 +58,4 @@ Use a fake AI adapter. Add successful chat, context-selection, cross-client isol
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/13-ai-assistant-chat.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/14-ai-assistant-chat.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

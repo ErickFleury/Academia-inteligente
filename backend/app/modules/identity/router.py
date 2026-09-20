@@ -41,6 +41,8 @@ def get_authenticated_identity(
         ) from None
 
     account = session.scalar(select(Account).where(Account.keycloak_subject == identity.subject))
+    if "client" in identity.roles and account is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
     if account is not None and not account.account_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
     return identity

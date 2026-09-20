@@ -15,7 +15,7 @@ Enforce the approved MVP permissions in both interface navigation and backend AP
 - RN-23/RN-29: avoid sensitive logging and cross-client AI context.
 - RNF04: centralize permission logic rather than duplicating it across controllers/components.
 - DEC-04 is **blocking**: the role/permission matrix, employee subprofiles, professional equivalence, and provisioning must be approved.
-- DEC-18 is **non-blocking for the authorization mechanism**, but its health-data permissions must be resolved before Task 08.
+- DEC-18 is **non-blocking for the authorization mechanism**, but its health-data permissions must be resolved before Task 09.
 
 ## Prerequisites
 
@@ -52,6 +52,13 @@ Add policy/guard unit tests and API integration tests covering allow/deny cases 
 - Inspect the Git diff for unrelated changes.
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
+
+## Subsequent approved dependency
+
+This task remains complete under its original scope. Task 06 must assign a
+newly provisioned identity only the `client` role and re-run CA-05.1/CA-05.3
+against administrative APIs; that integration evidence is not retroactively
+claimed here.
 
 ## Ready-to-use Codex prompt
 

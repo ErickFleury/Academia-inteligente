@@ -54,6 +54,13 @@ Add transition/domain tests, API persistence/authorization tests, authentication
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
+## Subsequent approved dependency
+
+This task remains complete for the approved reduced RF-03 scope, with CA-03.4
+still pending. Task 06 must verify `account_active` against a provisioned client
+identity while preserving DEC-05's separation from physical-entry eligibility;
+it does not add biometric behavior here.
+
 ## Ready-to-use Codex prompt
 
 Read `AGENTS.md`, then `docs/tasks/05-client-profile-and-status.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision, especially DEC-05/CA-03.4. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

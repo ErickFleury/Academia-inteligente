@@ -1,4 +1,4 @@
-# Task 07 — Secure Onboarding Access
+# Task 08 — Secure Onboarding Access
 
 ## Objective
 
@@ -18,7 +18,7 @@ Validate invitation tokens and open only the onboarding associated with the inte
 
 ## Prerequisites
 
-- Task 06 complete.
+- Task 07 complete; Task 06 identity provisioning is inherited through it.
 - Invitation-token decisions in DEC-06 recorded.
 
 ## Required reading
@@ -31,7 +31,7 @@ Implement token validation and client/onboarding scoping at the backend plus the
 
 ## Out of scope
 
-- Physical or health form fields (Task 08) and completion (Task 09).
+- Physical or health form fields (Task 09) and completion (Task 10).
 - General authentication/password recovery.
 - Inventing token lifetimes or post-completion edit behavior.
 
@@ -54,4 +54,4 @@ Add token validation unit tests and API/UI integration cases for valid, malforme
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/07-secure-onboarding-access.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/08-secure-onboarding-access.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

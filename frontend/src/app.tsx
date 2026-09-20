@@ -32,6 +32,12 @@ export function App() {
     setSession(null)
   }
 
+  function endSession() {
+    const logoutUrl = oidcSessionClient.endSession()
+    setSession(null)
+    window.location.assign(logoutUrl)
+  }
+
   return (
     <Container component="main" maxWidth="md" sx={{ py: 4 }}>
       <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
@@ -57,7 +63,7 @@ export function App() {
                 Administração
               </Button>
             )}
-            <Button onClick={clearSession} variant="text">
+            <Button onClick={endSession} variant="text">
               Sair
             </Button>
             {isAdministrativeRoute && (

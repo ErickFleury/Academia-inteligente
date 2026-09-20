@@ -57,6 +57,14 @@ Add domain/validation tests, persistence/API integration tests for atomicity and
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
+## Subsequent approved dependency
+
+This task remains complete for local account/client creation and search. It
+intentionally left `account.keycloak_subject` nullable and did not provision
+Keycloak; Task 06 now owns that subsequently approved integration, first-access
+flow, and cross-system compensation while reusing this task's validation and
+uniqueness rules.
+
 ## Ready-to-use Codex prompt
 
 Read `AGENTS.md`, then `docs/tasks/04-client-registration-and-search.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

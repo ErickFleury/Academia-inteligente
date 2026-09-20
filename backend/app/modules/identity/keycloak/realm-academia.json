@@ -1,6 +1,15 @@
 {
   "realm": "academia",
   "enabled": true,
+  "registrationAllowed": false,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "noreply@academia.test",
+    "auth": "false",
+    "starttls": "false",
+    "ssl": "false"
+  },
   "roles": {
     "realm": [
       { "name": "client" },
@@ -12,6 +21,20 @@
   },
   "clients": [
     {
+      "clientId": "academia-provisioner",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_PROVISIONING_CLIENT_SECRET}",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect",
+      "serviceAccountClientRoles": {
+        "realm-management": ["manage-users", "query-users", "view-realm"]
+      }
+    },
+    {
       "clientId": "academia-web",
       "name": "Academia Inteligente web",
       "enabled": true,
@@ -21,6 +44,9 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:5173/"],
       "webOrigins": ["http://localhost:5173"],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:5173/"
+      },
       "protocolMappers": [
         {
           "name": "account_active",

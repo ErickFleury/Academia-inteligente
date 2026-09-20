@@ -16,6 +16,7 @@ import {
   createClient,
   getClient,
   listClients,
+  provisionClientIdentity,
   updateClient,
 } from './clients'
 
@@ -120,6 +121,20 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
     }
   }
 
+  async function handleProvisionIdentity() {
+    if (!selectedClient) return
+    setError(null)
+    setSuccess(null)
+    try {
+      const updated = await provisionClientIdentity(accessToken, selectedClient.id)
+      setClients((currentClients) => currentClients.map((client) => (client.id === updated.id ? updated : client)))
+      selectClient(updated)
+      setSuccess('Acesso do cliente provisionado. O cliente recebeu instruções para criar a senha.')
+    } catch (reason) {
+      setError(errorMessage(reason, 'Não foi possível provisionar o acesso do cliente.'))
+    }
+  }
+
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
       <Typography component="h2" variant="h5">
@@ -209,6 +224,11 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
           <Button sx={{ alignSelf: 'flex-start' }} type="submit" variant="contained">
             Salvar alterações
           </Button>
+          {selectedClient.identity_provisioned === false && (
+            <Button onClick={() => void handleProvisionIdentity()} variant="outlined">
+              Provisionar acesso
+            </Button>
+          )}
         </Stack>
       )}
     </Stack>

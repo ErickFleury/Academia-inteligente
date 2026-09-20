@@ -1,4 +1,4 @@
-# Task 12 — Current Training View
+# Task 13 — Current Training View
 
 ## Objective
 
@@ -7,19 +7,21 @@ Provide a mobile-first client view of the authenticated client's current trainin
 ## Requirements covered
 
 - RF-16: CA-16.1–CA-16.3.
-- RF-17 CA-17.3 is integration-verified here; Task 10 owns persistence behavior.
+- RF-17 CA-17.3 is integration-verified here; Task 11 owns persistence behavior.
 
 ## Related rules and constraints
 
 - RN-05: clients can view only their own training context.
 - RN-18: historical data must not be rewritten while displaying the current version.
 - RNF01–RNF03: prompt loading/error feedback and usable smartphone, tablet, and desktop layouts.
-- Resolved lifecycle decisions inherited from Tasks 10–11 determine which version is “current”; this task must not reinterpret them.
+- Resolved lifecycle decisions inherited from Tasks 11–12 determine which version is “current”; this task must not reinterpret them.
 - DEC-16 is **non-blocking** for implementation but required later for formal performance/device measurement.
 
 ## Prerequisites
 
-- Tasks 10 and 11 complete.
+- Tasks 06, 11, and 12 complete. The current-sheet flow requires an
+  authenticated client whose `account.keycloak_subject` was populated by Task
+  06; a database-only client is not a usable login identity.
 - A stable current-version query contract exists.
 
 ## Required reading
@@ -56,4 +58,4 @@ Add API authorization/isolation tests, current/empty/error query tests, frontend
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/12-current-training-view.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/13-current-training-view.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

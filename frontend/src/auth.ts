@@ -2,6 +2,7 @@ export type Session = {
   accessToken: string
   expiresAt: number
   roles: string[]
+  idToken?: string
 }
 
 const sessionKey = 'academia.session'
@@ -117,7 +118,11 @@ export class OidcSessionClient {
     })
     if (!tokenResponse.ok) throw new Error('Unable to start the authenticated session')
 
-    const payload = (await tokenResponse.json()) as { access_token?: string; expires_in?: number }
+    const payload = (await tokenResponse.json()) as {
+      access_token?: string
+      expires_in?: number
+      id_token?: string
+    }
     if (!payload.access_token || !payload.expires_in) throw new Error('Invalid authentication response')
 
     sessionStorage.setItem(
@@ -126,6 +131,7 @@ export class OidcSessionClient {
         accessToken: payload.access_token,
         expiresAt: Date.now() + payload.expires_in * 1000,
         roles: rolesFromAccessToken(payload.access_token),
+        idToken: payload.id_token,
       }),
     )
     sessionStorage.removeItem(verifierKey)
@@ -137,5 +143,21 @@ export class OidcSessionClient {
     sessionStorage.removeItem(sessionKey)
     sessionStorage.removeItem(verifierKey)
     sessionStorage.removeItem(stateKey)
+  }
+
+  endSession(): URL {
+    const { issuer, clientId, redirectUri } = oidcConfig()
+    const session = this.getSession()
+    this.clearSession()
+
+    const logoutParameters = new URLSearchParams({
+      client_id: clientId,
+      post_logout_redirect_uri: redirectUri,
+    })
+    if (session?.idToken) logoutParameters.set('id_token_hint', session.idToken)
+
+    const logoutUrl = new URL(`${issuer}/protocol/openid-connect/logout`)
+    logoutUrl.search = logoutParameters.toString()
+    return logoutUrl
   }
 }

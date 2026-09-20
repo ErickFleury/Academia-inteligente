@@ -83,6 +83,45 @@ Keycloak realm roles are `client`, `employee`, `attendant`, `instructor`, and
   for training-plan work. Administrator status does not by itself grant
   unrestricted medical-information access.
 
+### Client identity-provisioning amendment
+
+**Status:** approved — 2026-09-20
+
+Administrative client creation must provision a corresponding Keycloak user.
+The Keycloak e-mail must equal the normalized local `account.email`, and the
+resulting OIDC `sub` must be stored in `account.keycloak_subject`; application
+and client UUIDs remain independent from that external identifier under
+DEC-17. Later authorized e-mail changes must preserve the same subject linkage
+and keep the Keycloak e-mail synchronized with the local authoritative value.
+
+- A newly provisioned client receives only the `client` realm role. Client
+  creation must never grant `admin` or another employee role, and backend
+  authorization must continue to reject client access to administrative APIs.
+- The administrator does not choose a permanent client password. Keycloak owns
+  all credentials and must send the client through its secure first-access
+  required-action flow to define a password. PostgreSQL stores no password,
+  temporary credential, reset token, or equivalent authentication secret.
+- Public self-registration remains disabled. Provisioning is initiated only by
+  an authorized administrative operation.
+- `account.account_active` remains the application-login authority described by
+  DEC-05. Physical gym-entry eligibility remains a separate concern.
+- The operation is not successful until the Keycloak user, exact role
+  assignment, local account/client, and persisted subject linkage are
+  consistent. External/local partial failures require explicit compensation or
+  durable reconciliation, controlled errors, and idempotent retry behavior;
+  an orphan identity or unlinked usable account must not be silently accepted.
+- Existing local accounts with a null `keycloak_subject` are not assumed to
+  have usable identities. They require explicit provisioning/reconciliation.
+
+### Task 06 implementation record
+
+Cross-system creation and e-mail synchronization use durable local
+reconciliation state before reporting success. Keycloak creation, role mapping,
+and required-action delivery are retried idempotently using a reconciliation
+identifier stored as a Keycloak user attribute; a client-role token without a
+linked local account is rejected by the application. The reproducible local
+first-access procedure is documented in `README.md`.
+
 ## DEC-05 — Account activity and physical-access eligibility
 
 **Status:** approved — 2026-09-20

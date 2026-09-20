@@ -3,6 +3,7 @@ export type Client = {
   name: string
   email: string
   account_active: boolean
+  identity_provisioned?: boolean
   created_at: string
 }
 
@@ -47,6 +48,10 @@ export function listClients(accessToken: string, query = ''): Promise<Client[]> 
 
 export function getClient(accessToken: string, clientId: string): Promise<Client> {
   return request(accessToken, `/clients/${clientId}`)
+}
+
+export function provisionClientIdentity(accessToken: string, clientId: string): Promise<Client> {
+  return request(accessToken, `/clients/${clientId}/provision-identity`, { method: 'POST' })
 }
 
 export function updateClient(

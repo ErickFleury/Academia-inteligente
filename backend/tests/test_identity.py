@@ -62,7 +62,7 @@ def test_protected_endpoint_returns_authenticated_active_identity(monkeypatch) -
         "identity_provider",
         FakeIdentityProvider(
             AuthenticatedIdentity(
-                subject="user-123", username="active@example.test", roles=("client",)
+                subject="user-123", username="active@example.test", roles=("admin",)
             )
         ),
     )
@@ -73,7 +73,7 @@ def test_protected_endpoint_returns_authenticated_active_identity(monkeypatch) -
     assert body == {
         "subject": "user-123",
         "username": "active@example.test",
-        "roles": ["client"],
+        "roles": ["admin"],
     }
 
 
@@ -116,8 +116,8 @@ def test_client_is_denied_direct_administrative_api_access(monkeypatch) -> None:
 
     status, body = request(create_app(), "Bearer client-token", "/identity/admin")
 
-    assert status == 403
-    assert body == {"detail": "Forbidden"}
+    assert status == 401
+    assert body == {"detail": "Unauthenticated"}
 
 
 def test_administrator_can_access_administrative_api(monkeypatch) -> None:

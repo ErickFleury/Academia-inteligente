@@ -1,11 +1,13 @@
 # Academia Inteligente
 
 The current local slice includes OIDC authentication, administrator-only client
-registration, and client search.
+registration/search, and Keycloak-provisioned client first access.
 
 ## Local runtime
 
 1. Copy `.env.example` to `.env` and replace the local placeholder passwords.
+   Set a distinct `KEYCLOAK_PROVISIONING_CLIENT_SECRET`; it belongs only to the
+   backend-to-Keycloak service account.
 2. Run `docker-compose up --build`.
 3. Apply the application schema:
 
@@ -21,6 +23,19 @@ Use the `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` values from `.env` to
 sign in to the application. `KEYCLOAK_ADMIN` credentials are only for the
 Keycloak administration console. The frontend origin must be listed in
 `CORS_ALLOWED_ORIGINS` (the local default is `http://localhost:5173`).
+
+When an administrator creates a client, the backend creates a Keycloak user
+with only the `client` role and sends a Mailpit first-access message. Open the
+message at `http://localhost:8025`, follow its Keycloak link, define the
+client's password, and then sign in as that client. The password and action
+token never enter PostgreSQL. A local client created before provisioning can be
+selected under **Clientes** and retried with **Provisionar acesso**.
+
+For a fresh local realm, `docker-compose up --build` imports the provisioning
+service account and Mailpit SMTP configuration. Existing Keycloak realms are
+not overwritten by Keycloak import; configure the same `academia-provisioner`
+service account and SMTP settings through the Keycloak admin console before
+using this flow.
 
 Only the UI, API, Keycloak, and Mailpit are bound to loopback addresses.
 PostgreSQL is available exclusively on the internal Compose network. Configure

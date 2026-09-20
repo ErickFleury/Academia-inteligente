@@ -1,4 +1,4 @@
-# Task 09 — Onboarding Completion
+# Task 10 — Onboarding Completion
 
 ## Objective
 
@@ -17,7 +17,7 @@ Validate and atomically transition a sufficiently complete onboarding from edita
 
 ## Prerequisites
 
-- Task 08 complete.
+- Task 09 complete.
 - Completion/editability decisions in DEC-06 recorded.
 
 ## Required reading
@@ -30,9 +30,9 @@ Implement server-side completeness validation, an atomic completed-state transit
 
 ## Out of scope
 
-- AI calls or training generation (Task 11).
+- AI calls or training generation (Task 12).
 - Post-completion consultation (RF-14) or edit behavior beyond what DEC-06 explicitly approves.
-- Adding onboarding fields not approved in Task 08.
+- Adding onboarding fields not approved in Task 09.
 
 ## Acceptance criteria
 
@@ -53,4 +53,4 @@ Add completeness-domain tests, persistence/API integration tests for atomic tran
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/09-onboarding-completion.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/10-onboarding-completion.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

@@ -137,3 +137,24 @@ test('updates a selected client profile and deactivates its application account'
   })
   expect(screen.getByText('Ada Byron — ada@example.test (Inativo)')).toBeInTheDocument()
 })
+
+test('offers identity reconciliation for a legacy client', async () => {
+  const client = {
+    id: 'legacy', name: 'Legacy Client', email: 'legacy@example.test', account_active: true,
+    identity_provisioned: false, created_at: '2026-09-20T00:00:00+00:00',
+  }
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => [client] })
+    .mockResolvedValueOnce({ ok: true, json: async () => client })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ ...client, identity_provisioned: true }) })
+  vi.stubGlobal('fetch', fetchMock)
+
+  render(<ClientManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
+  fireEvent.click(await screen.findByRole('button', { name: /legacy client/i }))
+  await screen.findByRole('heading', { name: 'Editar cliente' })
+  fireEvent.click(screen.getByRole('button', { name: 'Provisionar acesso' }))
+
+  expect(await screen.findByText(/acesso do cliente provisionado/i)).toBeInTheDocument()
+  expect(fetchMock.mock.calls[2][0]).toBe('http://localhost:8000/clients/legacy/provision-identity')
+})

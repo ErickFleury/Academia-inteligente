@@ -1,4 +1,4 @@
-# Task 14 — Dynamic Training Adaptation
+# Task 15 — Dynamic Training Adaptation
 
 ## Objective
 
@@ -7,7 +7,7 @@ Turn relevant chat reports into an AI-generated adaptation proposal and, only th
 ## Requirements covered
 
 - RF-19: CA-19.1–CA-19.4.
-- RF-17 CA-17.2/CA-17.3 are integration-verified; Task 10 owns versioning behavior.
+- RF-17 CA-17.2/CA-17.3 are integration-verified; Task 11 owns versioning behavior.
 
 ## Related rules and constraints
 
@@ -21,7 +21,8 @@ Turn relevant chat reports into an AI-generated adaptation proposal and, only th
 
 ## Prerequisites
 
-- Tasks 10 and 13 complete.
+- Tasks 11 and 14 complete; Task 06 authenticated-client identity is inherited
+  through Task 14.
 - Blocking decisions DEC-04, DEC-07, DEC-08, and DEC-15 recorded.
 
 ## Required reading
@@ -30,7 +31,7 @@ Read `AGENTS.md`; RF-19 and CA-19.1–CA-19.4; RF-17/CA-17.2–CA-17.3; RN-12–
 
 ## Scope
 
-Implement change-request detection/triggering as defined by the approved contract, context-safe adaptation generation, structured proposal validation, review/approval transitions, and activation through Task 10's version service. Preserve unrelated sheet content and expose only the UI needed for the approved actors/states.
+Implement change-request detection/triggering as defined by the approved contract, context-safe adaptation generation, structured proposal validation, review/approval transitions, and activation through Task 11's version service. Preserve unrelated sheet content and expose only the UI needed for the approved actors/states.
 
 ## Out of scope
 
@@ -44,7 +45,7 @@ Implement change-request detection/triggering as defined by the approved contrac
 - CA-19.2: only a change approved through the defined flow becomes a later current version.
 - CA-19.3: unrelated portions of the sheet remain intact.
 - CA-19.4: the changed current sheet persists after reauthentication.
-- Integration re-verifies CA-17.2/CA-17.3 through Task 10 services.
+- Integration re-verifies CA-17.2/CA-17.3 through Task 11 services.
 
 ## Tests
 
@@ -59,4 +60,4 @@ Use fake AI responses. Add contextual adaptation, unrelated-content preservation
 
 ## Ready-to-use Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/14-dynamic-training-adaptation.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Read `AGENTS.md`, then `docs/tasks/15-dynamic-training-adaptation.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

@@ -12,7 +12,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_database_session
 from app.main import create_app
-from app.modules.clients.models import Account, Client
+from app.modules.clients import router as clients_router
+from app.modules.clients.models import Account, Client, ClientIdentityReconciliation
 from app.modules.clients.service import ClientService, ClientValidationError
 from app.modules.identity import router as identity_router
 from app.modules.identity.service import AuthenticatedIdentity
@@ -24,6 +25,20 @@ class FakeIdentityProvider:
 
     def get_identity(self, access_token: str) -> AuthenticatedIdentity:
         return self.identity
+
+
+class FakeProvisioner:
+    def __init__(self) -> None:
+        self.subjects: dict[str, str] = {}
+        self.updated: list[tuple[str, str]] = []
+
+    def ensure_client_identity(self, email, reconciliation_id, subject):
+        resolved = subject or self.subjects.setdefault(email, f"subject-{len(self.subjects) + 1}")
+        self.subjects[email] = resolved
+        return resolved
+
+    def update_email(self, subject, email):
+        self.updated.append((subject, email))
 
 
 @pytest.fixture
@@ -102,8 +117,11 @@ class AsgiClient:
 
 
 @pytest.fixture
-def api_client(database_session: Session) -> Generator[AsgiClient, None, None]:
+def api_client(
+    database_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> Generator[AsgiClient, None, None]:
     app = create_app()
+    monkeypatch.setattr(clients_router, "client_service", ClientService(FakeProvisioner()))
 
     def override_database_session() -> Generator[Session, None, None]:
         yield database_session
@@ -163,8 +181,9 @@ def test_administrator_creates_client_and_normalizes_account_email(
     client = database_session.scalar(select(Client))
     assert account is not None and client is not None
     assert client.account_id == account.id
-    assert account.keycloak_subject is None
+    assert account.keycloak_subject == "subject-1"
     assert account.account_active is True
+    assert body["identity_provisioned"] is True
 
 
 def test_duplicate_email_is_rejected_for_inactive_account(
@@ -204,8 +223,12 @@ def test_administrator_lists_searches_and_reads_client_detail(
 
 
 def test_client_role_cannot_access_client_records(
-    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
 ) -> None:
+    database_session.add(
+        Account(email="client@example.test", keycloak_subject="test-subject", account_active=True)
+    )
+    database_session.commit()
     authenticate_as(monkeypatch, "client")
 
     create_response = api_client.post(
@@ -266,6 +289,23 @@ def test_deactivated_linked_account_is_rejected_as_unauthenticated(
 
     assert response.status_code == 401
     assert database_session.scalar(select(Client)) is not None
+
+
+def test_legacy_local_client_can_be_provisioned_by_an_administrator(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    account = Account(email="legacy@example.test", account_active=True)
+    client = Client(name="Legacy", account=account)
+    database_session.add(client)
+    database_session.commit()
+    authenticate_as(monkeypatch, "admin")
+
+    response = api_client.post(f"/clients/{client.id}/provision-identity", json={})
+
+    assert response.status_code == 200
+    assert response.json()["identity_provisioned"] is True
+    assert account.keycloak_subject == "subject-1"
+    assert database_session.scalars(select(ClientIdentityReconciliation)).all() == []
 
 
 def test_update_rejects_invalid_fields_without_partial_changes(
