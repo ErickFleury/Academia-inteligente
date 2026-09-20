@@ -1,0 +1,1 @@
+"""Academia Inteligente backend application."""
