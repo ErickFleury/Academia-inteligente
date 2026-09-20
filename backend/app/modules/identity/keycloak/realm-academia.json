@@ -1,0 +1,58 @@
+{
+  "realm": "academia",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "client" },
+      { "name": "employee" },
+      { "name": "attendant", "composite": true, "composites": { "realm": ["employee"] } },
+      { "name": "instructor", "composite": true, "composites": { "realm": ["employee"] } },
+      { "name": "admin" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "academia-web",
+      "name": "Academia Inteligente web",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:5173"],
+      "protocolMappers": [
+        {
+          "name": "account_active",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "account_active",
+            "claim.name": "account_active",
+            "jsonType.label": "boolean",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "${APP_ADMIN_USERNAME}",
+      "enabled": true,
+      "email": "${APP_ADMIN_USERNAME}",
+      "emailVerified": true,
+      "attributes": { "account_active": ["true"] },
+      "realmRoles": ["admin"],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${APP_ADMIN_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

@@ -62,3 +62,37 @@ official images are used where available; container images are pinned to exact
 tags, while the JavaScript lockfile pins exact package versions. Prisma, Jest,
 and Supertest are intentionally absent because the approved MVP backend is
 Python/FastAPI. Major-version changes require explicit approval in a later task.
+
+## DEC-04 — Roles and account provisioning
+
+**Status:** approved — 2026-09-20
+
+Keycloak realm roles are `client`, `employee`, `attendant`, `instructor`, and
+`admin`. Attendant and instructor are specialised employee roles.
+
+- There is no public employee or administrator registration.
+- The initial application administrator is provisioned by the Keycloak realm
+  bootstrap using environment-provided credentials; credentials are never
+  hardcoded or committed.
+- Client accounts will be provisioned by the client-registration flow. Employee
+  accounts will be provisioned by the later administrative employee-management
+  flow.
+- Attendants may manage biometric enrolment when that module exists, but may not
+  access client medical or health information.
+- Instructors may access health information only when it is functionally needed
+  for training-plan work. Administrator status does not by itself grant
+  unrestricted medical-information access.
+
+## DEC-05 — Account activity and physical-access eligibility
+
+**Status:** approved — 2026-09-20
+
+`account_active` alone determines whether an identity may authenticate to the
+application. An inactive account must not authenticate normally.
+
+`gym_access_enabled` is a separate physical-entry state. An active client can
+log in even without biometrics, a valid/current enrolment, payment/access
+eligibility, or physical-entry permission, so they can complete onboarding,
+manage account-related flows, or make payments. Physical-entry authorization
+will be evaluated separately when the applicable biometric, enrolment, payment,
+modality, and access-count modules are implemented.

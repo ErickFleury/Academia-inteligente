@@ -6,6 +6,7 @@ services:
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
       VITE_OIDC_ISSUER: ${VITE_OIDC_ISSUER}
+      VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID}
     ports:
       - "127.0.0.1:5173:5173"
     volumes:
@@ -58,13 +59,17 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.6.3
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
     ports:
       - "127.0.0.1:8080:8080"
+    volumes:
+      - ./backend/app/modules/identity/keycloak/realm-academia.json:/opt/keycloak/data/import/realm-academia.json:ro
 
   mailpit:
     image: axllent/mailpit:v1.30.7
