@@ -1,21 +1,49 @@
-import { Alert, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material'
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { FormEvent, useEffect, useState } from 'react'
 
-import { type Client, createClient, getClient, listClients } from './clients'
+import {
+  ApiRequestError,
+  type Client,
+  createClient,
+  getClient,
+  listClients,
+  updateClient,
+} from './clients'
 
 type ClientManagementProps = {
   accessToken: string
+  onUnauthenticated: () => void
 }
 
-export function ClientManagement({ accessToken }: ClientManagementProps) {
+export function ClientManagement({ accessToken, onUnauthenticated }: ClientManagementProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [query, setQuery] = useState('')
   const [clients, setClients] = useState<Client[]>([])
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editAccountActive, setEditAccountActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  function errorMessage(reason: unknown, fallback: string): string {
+    if (reason instanceof ApiRequestError && reason.status === 401) {
+      onUnauthenticated()
+      return 'Sua sessão expirou. Entre novamente.'
+    }
+    return reason instanceof Error ? reason.message : fallback
+  }
 
   async function loadClients(search = '') {
     setLoading(true)
@@ -23,7 +51,7 @@ export function ClientManagement({ accessToken }: ClientManagementProps) {
     try {
       setClients(await listClients(accessToken, search))
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Não foi possível carregar clientes.')
+      setError(errorMessage(reason, 'Não foi possível carregar clientes.'))
     } finally {
       setLoading(false)
     }
@@ -43,9 +71,9 @@ export function ClientManagement({ accessToken }: ClientManagementProps) {
       setEmail('')
       setSuccess('Cliente cadastrado com sucesso.')
       await loadClients(query)
-      setSelectedClient(client)
+      selectClient(client)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Não foi possível cadastrar o cliente.')
+      setError(errorMessage(reason, 'Não foi possível cadastrar o cliente.'))
     }
   }
 
@@ -58,9 +86,37 @@ export function ClientManagement({ accessToken }: ClientManagementProps) {
   async function handleSelect(clientId: string) {
     setError(null)
     try {
-      setSelectedClient(await getClient(accessToken, clientId))
+      selectClient(await getClient(accessToken, clientId))
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Não foi possível carregar o cliente.')
+      setError(errorMessage(reason, 'Não foi possível carregar o cliente.'))
+    }
+  }
+
+  function selectClient(client: Client) {
+    setSelectedClient(client)
+    setEditName(client.name)
+    setEditEmail(client.email)
+    setEditAccountActive(client.account_active)
+  }
+
+  async function handleUpdate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedClient) return
+    setError(null)
+    setSuccess(null)
+    try {
+      const updated = await updateClient(accessToken, selectedClient.id, {
+        name: editName,
+        email: editEmail,
+        account_active: editAccountActive,
+      })
+      setClients((currentClients) =>
+        currentClients.map((client) => (client.id === updated.id ? updated : client)),
+      )
+      selectClient(updated)
+      setSuccess('Cliente atualizado com sucesso.')
+    } catch (reason) {
+      setError(errorMessage(reason, 'Não foi possível atualizar o cliente.'))
     }
   }
 
@@ -114,7 +170,7 @@ export function ClientManagement({ accessToken }: ClientManagementProps) {
           {clients.map((client) => (
             <li key={client.id}>
               <Button onClick={() => void handleSelect(client.id)} variant="text">
-                {client.name} — {client.email}
+                {client.name} — {client.email} ({client.account_active ? 'Ativo' : 'Inativo'})
               </Button>
             </li>
           ))}
@@ -122,9 +178,38 @@ export function ClientManagement({ accessToken }: ClientManagementProps) {
         </Stack>
       )}
       {selectedClient && (
-        <Alert severity="info">
-          Cliente selecionado: {selectedClient.name} ({selectedClient.email})
-        </Alert>
+        <Stack component="form" spacing={2} onSubmit={handleUpdate}>
+          <Typography component="h3" variant="h6">
+            Editar cliente
+          </Typography>
+          <TextField
+            fullWidth
+            label="Nome do cliente"
+            onChange={(event) => setEditName(event.target.value)}
+            required
+            value={editName}
+          />
+          <TextField
+            fullWidth
+            label="E-mail do cliente"
+            onChange={(event) => setEditEmail(event.target.value)}
+            required
+            type="email"
+            value={editEmail}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={editAccountActive}
+                onChange={(event) => setEditAccountActive(event.target.checked)}
+              />
+            }
+            label="Conta ativa"
+          />
+          <Button sx={{ alignSelf: 'flex-start' }} type="submit" variant="contained">
+            Salvar alterações
+          </Button>
+        </Stack>
       )}
     </Stack>
   )

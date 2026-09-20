@@ -1,5 +1,5 @@
 import { Alert, Button, CircularProgress, Container, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { OidcSessionClient, type Session } from './auth'
 import { ClientManagement } from './client-management'
@@ -10,9 +10,11 @@ export function App() {
   const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
+  const loginCompletionStarted = useRef(false)
 
   useEffect(() => {
-    if (!new URL(window.location.href).searchParams.has('code')) return
+    if (!new URL(window.location.href).searchParams.has('code') || loginCompletionStarted.current) return
+    loginCompletionStarted.current = true
     setCompletingLogin(true)
     void oidcSessionClient
       .completeLogin()
@@ -24,6 +26,11 @@ export function App() {
   const isProtectedRoute = window.location.pathname === '/dashboard'
   const isAdministrativeRoute = window.location.pathname === '/admin'
   const isAdministrator = session?.roles.includes('admin') ?? false
+
+  function clearSession() {
+    oidcSessionClient.clearSession()
+    setSession(null)
+  }
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: 4 }}>
@@ -50,7 +57,12 @@ export function App() {
                 Administração
               </Button>
             )}
-            {isAdministrativeRoute && <ClientManagement accessToken={session.accessToken} />}
+            <Button onClick={clearSession} variant="text">
+              Sair
+            </Button>
+            {isAdministrativeRoute && (
+              <ClientManagement accessToken={session.accessToken} onUnauthenticated={clearSession} />
+            )}
           </>
         ) : (
           <Button variant="contained" onClick={() => void oidcSessionClient.startLogin()}>

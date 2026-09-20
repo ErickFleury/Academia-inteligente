@@ -54,14 +54,19 @@ class AsgiClient:
     def __init__(self, app: FastAPI) -> None:
         self.app = app
 
-    def post(self, path: str, json: dict[str, str]) -> ApiResponse:
+    def post(self, path: str, json: dict[str, object]) -> ApiResponse:
         return self.request("POST", path, json)
+
+    def patch(self, path: str, json: dict[str, object]) -> ApiResponse:
+        return self.request("PATCH", path, json)
 
     def get(self, path: str, params: dict[str, str] | None = None) -> ApiResponse:
         query_string = f"?{urlencode(params)}" if params else ""
         return self.request("GET", f"{path}{query_string}")
 
-    def request(self, method: str, url: str, payload: dict[str, str] | None = None) -> ApiResponse:
+    def request(
+        self, method: str, url: str, payload: dict[str, object] | None = None
+    ) -> ApiResponse:
         path, _, query_string = url.partition("?")
         request_body = json.dumps(payload).encode() if payload else b""
         sent: list[dict[str, object]] = []
@@ -212,3 +217,71 @@ def test_client_role_cannot_access_client_records(
     assert create_response.status_code == 403
     assert list_response.status_code == 403
     assert detail_response.status_code == 403
+
+
+def test_administrator_updates_profile_and_state_with_persistence(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    authenticate_as(monkeypatch, "admin")
+    created = api_client.post(
+        "/clients", json={"name": "Ada Lovelace", "email": "ada@example.test"}
+    )
+    assert created.status_code == 201
+    created_body = created.json()
+    assert isinstance(created_body, dict)
+    client_id = created_body["id"]
+    created_at = created_body["created_at"]
+
+    updated = api_client.patch(
+        f"/clients/{client_id}",
+        json={"name": "  Ada   Byron ", "email": "ada.byron@example.test", "account_active": False},
+    )
+    reloaded = api_client.get(f"/clients/{client_id}")
+
+    assert updated.status_code == 200
+    assert updated.json()["name"] == "Ada Byron"
+    assert updated.json()["email"] == "ada.byron@example.test"
+    assert updated.json()["account_active"] is False
+    assert reloaded.json()["created_at"] == created_at
+    account = database_session.scalar(select(Account))
+    client = database_session.scalar(select(Client))
+    assert account is not None and client is not None
+    assert account.account_active is False
+    assert client.name == "Ada Byron"
+
+
+def test_deactivated_linked_account_is_rejected_as_unauthenticated(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    account = Account(
+        email="deactivated@example.test",
+        keycloak_subject="test-subject",
+        account_active=False,
+    )
+    database_session.add(Client(name="Deactivated Client", account=account))
+    database_session.commit()
+    authenticate_as(monkeypatch, "client")
+
+    response = api_client.get("/clients")
+
+    assert response.status_code == 401
+    assert database_session.scalar(select(Client)) is not None
+
+
+def test_update_rejects_invalid_fields_without_partial_changes(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient
+) -> None:
+    authenticate_as(monkeypatch, "admin")
+    created = api_client.post(
+        "/clients", json={"name": "Ada Lovelace", "email": "ada@example.test"}
+    )
+    client_id = created.json()["id"]
+
+    response = api_client.patch(
+        f"/clients/{client_id}", json={"name": "Changed", "email": "invalid"}
+    )
+    reloaded = api_client.get(f"/clients/{client_id}")
+
+    assert response.status_code == 422
+    assert reloaded.json()["name"] == "Ada Lovelace"
+    assert reloaded.json()["email"] == "ada@example.test"

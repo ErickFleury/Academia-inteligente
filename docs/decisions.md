@@ -97,6 +97,19 @@ manage account-related flows, or make payments. Physical-entry authorization
 will be evaluated separately when the applicable biometric, enrolment, payment,
 modality, and access-count modules are implemented.
 
+### RF-03 MVP clarification
+
+**Status:** approved — 2026-09-20
+
+For Task 05, authorized administrators may update basic client profile data and
+the application `account_active` state. An inactive account must be rejected by
+application authentication, while its client and historical relationships are
+preserved. `account_active` remains independent from physical-entry eligibility.
+
+CA-03.4 is explicitly pending: it requires the RF-22 biometric photo flow and
+must not be treated as satisfied or approximated until that dependency is
+explicitly implemented and approved.
+
 ## DEC-17 — Application identity and client-account relationship
 
 **Status:** approved — 2026-09-20

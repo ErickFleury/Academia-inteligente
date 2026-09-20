@@ -27,6 +27,7 @@ class ClientSummary:
     id: UUID
     name: str
     email: str
+    account_active: bool
     created_at: datetime
 
 
@@ -53,6 +54,7 @@ def summary_from_client(client: Client) -> ClientSummary:
         id=client.id,
         name=client.name,
         email=client.account.email,
+        account_active=client.account.account_active,
         created_at=client.created_at,
     )
 
@@ -85,3 +87,39 @@ class ClientService:
         statement = select(Client).options(joinedload(Client.account)).where(Client.id == client_id)
         client = session.scalar(statement)
         return summary_from_client(client) if client else None
+
+    def update(
+        self,
+        session: Session,
+        client_id: UUID,
+        *,
+        name: str | None,
+        email: str | None,
+        account_active: bool | None,
+    ) -> ClientSummary | None:
+        client = session.scalar(
+            select(Client).options(joinedload(Client.account)).where(Client.id == client_id)
+        )
+        if client is None:
+            return None
+        if name is None and email is None and account_active is None:
+            raise ClientValidationError("At least one client field must be provided")
+
+        normalized_name = client.name
+        normalized_email = client.account.email
+        if name is not None:
+            normalized_name, _ = validate_client_data(name, normalized_email)
+        if email is not None:
+            _, normalized_email = validate_client_data(normalized_name, email)
+
+        client.name = normalized_name
+        client.account.email = normalized_email
+        if account_active is not None:
+            client.account.account_active = account_active
+        try:
+            session.commit()
+        except IntegrityError as error:
+            session.rollback()
+            raise DuplicateEmailError from error
+        session.refresh(client, attribute_names=["account"])
+        return summary_from_client(client)

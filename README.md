@@ -1,15 +1,26 @@
 # Academia Inteligente
 
-Task 01 establishes the runnable foundation only; it contains no domain schema,
-migrations, or business endpoints.
+The current local slice includes OIDC authentication, administrator-only client
+registration, and client search.
 
 ## Local runtime
 
 1. Copy `.env.example` to `.env` and replace the local placeholder passwords.
 2. Run `docker-compose up --build`.
-3. Open the frontend at `http://localhost:5173`, API health at
+3. Apply the application schema:
+
+   ```bash
+   docker-compose run --rm backend alembic upgrade head
+   ```
+
+4. Open the frontend at `http://localhost:5173`, API health at
    `http://localhost:8000/health`, API OpenAPI at `http://localhost:8000/docs`,
    Keycloak at `http://localhost:8080`, and Mailpit at `http://localhost:8025`.
+
+Use the `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` values from `.env` to
+sign in to the application. `KEYCLOAK_ADMIN` credentials are only for the
+Keycloak administration console. The frontend origin must be listed in
+`CORS_ALLOWED_ORIGINS` (the local default is `http://localhost:5173`).
 
 Only the UI, API, Keycloak, and Mailpit are bound to loopback addresses.
 PostgreSQL is available exclusively on the internal Compose network. Configure

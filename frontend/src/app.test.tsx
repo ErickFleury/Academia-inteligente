@@ -74,3 +74,20 @@ test('shows administrative navigation and page to an administrator', () => {
   expect(screen.getByRole('link', { name: 'Administração' })).toHaveAttribute('href', '/admin')
   expect(screen.getByRole('heading', { name: 'Clientes' })).toBeInTheDocument()
 })
+
+test('returns to the sign-in state when the client API rejects a stale session', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'stale-token', expiresAt: Date.now() + 300_000, roles: ['admin'] }),
+  )
+  window.history.replaceState({}, '', '/admin')
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ detail: 'Unauthenticated' }) }),
+  )
+
+  render(<App />)
+
+  expect(await screen.findByText('Sessão necessária para acessar esta página.')).toBeInTheDocument()
+  expect(sessionStorage.getItem('academia.session')).toBeNull()
+})
