@@ -1,6 +1,7 @@
 export type Session = {
   accessToken: string
   expiresAt: number
+  roles: string[]
 }
 
 const sessionKey = 'academia.session'
@@ -11,6 +12,22 @@ function oidcConfig() {
   return {
     issuer: import.meta.env.VITE_OIDC_ISSUER,
     clientId: import.meta.env.VITE_OIDC_CLIENT_ID ?? 'academia-web',
+    redirectUri: import.meta.env.VITE_OIDC_REDIRECT_URI || 'http://localhost:5173/',
+  }
+}
+
+function rolesFromAccessToken(accessToken: string): string[] {
+  try {
+    const payload = accessToken.split('.')[1]
+    if (!payload) return []
+
+    const decoded = JSON.parse(
+      atob(payload.replaceAll('-', '+').replaceAll('_', '/')),
+    ) as { realm_access?: { roles?: unknown } }
+    const roles = decoded.realm_access?.roles
+    return Array.isArray(roles) ? roles.filter((role): role is string => typeof role === 'string') : []
+  } catch {
+    return []
   }
 }
 
@@ -43,7 +60,12 @@ export class OidcSessionClient {
         this.clearSession()
         return null
       }
-      return session
+      return {
+        ...session,
+        roles: Array.isArray(session.roles)
+          ? session.roles.filter((role): role is string => typeof role === 'string')
+          : [],
+      }
     } catch {
       this.clearSession()
       return null
@@ -51,7 +73,7 @@ export class OidcSessionClient {
   }
 
   async startLogin(): Promise<void> {
-    const { issuer, clientId } = oidcConfig()
+    const { issuer, clientId, redirectUri } = oidcConfig()
     const verifier = randomValue()
     const state = randomValue()
     sessionStorage.setItem(verifierKey, verifier)
@@ -60,7 +82,7 @@ export class OidcSessionClient {
     const authorizationUrl = new URL(`${issuer}/protocol/openid-connect/auth`)
     authorizationUrl.search = new URLSearchParams({
       client_id: clientId,
-      redirect_uri: window.location.origin + window.location.pathname,
+      redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid profile',
       state,
@@ -81,7 +103,7 @@ export class OidcSessionClient {
       throw new Error('Unable to verify the sign-in response')
     }
 
-    const { issuer, clientId } = oidcConfig()
+    const { issuer, clientId, redirectUri } = oidcConfig()
     const tokenResponse = await fetch(`${issuer}/protocol/openid-connect/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -89,7 +111,7 @@ export class OidcSessionClient {
         grant_type: 'authorization_code',
         client_id: clientId,
         code,
-        redirect_uri: window.location.origin + window.location.pathname,
+        redirect_uri: redirectUri,
         code_verifier: verifier,
       }),
     })
@@ -100,7 +122,11 @@ export class OidcSessionClient {
 
     sessionStorage.setItem(
       sessionKey,
-      JSON.stringify({ accessToken: payload.access_token, expiresAt: Date.now() + payload.expires_in * 1000 }),
+      JSON.stringify({
+        accessToken: payload.access_token,
+        expiresAt: Date.now() + payload.expires_in * 1000,
+        roles: rolesFromAccessToken(payload.access_token),
+      }),
     )
     sessionStorage.removeItem(verifierKey)
     sessionStorage.removeItem(stateKey)

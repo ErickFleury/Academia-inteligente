@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.modules.identity.authorization import require_roles
 from app.modules.identity.service import (
     AuthenticatedIdentity,
     IdentityProvider,
@@ -41,3 +42,15 @@ def get_current_identity(
 ) -> dict[str, object]:
     """A protected endpoint used to establish and verify the browser session."""
     return {"subject": identity.subject, "username": identity.username, "roles": identity.roles}
+
+
+@router.get("/admin")
+def get_admin_capability(
+    identity: Annotated[
+        AuthenticatedIdentity,
+        Depends(require_roles(get_authenticated_identity, "admin")),
+    ],
+) -> dict[str, bool]:
+    """Expose the administrative capability only after the centralized role check."""
+    del identity
+    return {"authorized": True}

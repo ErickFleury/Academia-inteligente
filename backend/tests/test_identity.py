@@ -3,6 +3,7 @@ import json
 
 from app.main import create_app
 from app.modules.identity import router as identity_router
+from app.modules.identity.authorization import has_any_role
 from app.modules.identity.service import AuthenticatedIdentity, InvalidSessionError
 
 
@@ -16,7 +17,9 @@ class FakeIdentityProvider:
         return self.identity
 
 
-def request(app, authorization: str | None = None) -> tuple[int, dict[str, object]]:
+def request(
+    app, authorization: str | None = None, path: str = "/identity/me"
+) -> tuple[int, dict[str, object]]:
     """Exercise the ASGI app without a live identity provider or HTTP client."""
     sent: list[dict[str, object]] = []
     headers = [] if authorization is None else [(b"authorization", authorization.encode())]
@@ -26,8 +29,8 @@ def request(app, authorization: str | None = None) -> tuple[int, dict[str, objec
         "http_version": "1.1",
         "method": "GET",
         "scheme": "http",
-        "path": "/identity/me",
-        "raw_path": b"/identity/me",
+        "path": path,
+        "raw_path": path.encode(),
         "query_string": b"",
         "headers": headers,
         "client": ("testclient", 50000),
@@ -90,3 +93,45 @@ def test_inactive_account_is_rejected(monkeypatch) -> None:
     status, _ = request(create_app(), "Bearer inactive")
 
     assert status == 401
+
+
+def test_role_policy_matches_only_allowed_roles() -> None:
+    client = AuthenticatedIdentity(subject="client-123", username=None, roles=("client",))
+    administrator = AuthenticatedIdentity(subject="admin-123", username=None, roles=("admin",))
+
+    assert not has_any_role(client, frozenset({"admin"}))
+    assert has_any_role(administrator, frozenset({"admin"}))
+
+
+def test_client_is_denied_direct_administrative_api_access(monkeypatch) -> None:
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(
+            AuthenticatedIdentity(
+                subject="client-123", username="client@example.test", roles=("client",)
+            )
+        ),
+    )
+
+    status, body = request(create_app(), "Bearer client-token", "/identity/admin")
+
+    assert status == 403
+    assert body == {"detail": "Forbidden"}
+
+
+def test_administrator_can_access_administrative_api(monkeypatch) -> None:
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(
+            AuthenticatedIdentity(
+                subject="admin-123", username="admin@example.test", roles=("admin",)
+            )
+        ),
+    )
+
+    status, body = request(create_app(), "Bearer admin-token", "/identity/admin")
+
+    assert status == 200
+    assert body == {"authorized": True}

@@ -40,4 +40,37 @@ test('stores a usable session after a valid OIDC callback', async () => {
   render(<App />)
 
   expect(await screen.findByText('Sessão autenticada.')).toBeInTheDocument()
+  expect(new URLSearchParams(vi.mocked(fetch).mock.calls[0][1]?.body as string).get('redirect_uri')).toBe(
+    'http://localhost:5173/',
+  )
+})
+
+test('hides administrative navigation and denies the administrative page to a client', () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', expiresAt: Date.now() + 300_000, roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/admin')
+
+  render(<App />)
+
+  expect(screen.getByText('Você não tem permissão para acessar esta página.')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Administração' })).not.toBeInTheDocument()
+})
+
+test('shows administrative navigation and page to an administrator', () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', expiresAt: Date.now() + 300_000, roles: ['admin'] }),
+  )
+  window.history.replaceState({}, '', '/admin')
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
+  )
+
+  render(<App />)
+
+  expect(screen.getByRole('link', { name: 'Administração' })).toHaveAttribute('href', '/admin')
+  expect(screen.getByRole('heading', { name: 'Clientes' })).toBeInTheDocument()
 })

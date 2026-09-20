@@ -2,6 +2,7 @@ import { Alert, Button, CircularProgress, Container, Stack, Typography } from '@
 import { useEffect, useState } from 'react'
 
 import { OidcSessionClient, type Session } from './auth'
+import { ClientManagement } from './client-management'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -21,6 +22,8 @@ export function App() {
   }, [])
 
   const isProtectedRoute = window.location.pathname === '/dashboard'
+  const isAdministrativeRoute = window.location.pathname === '/admin'
+  const isAdministrator = session?.roles.includes('admin') ?? false
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: 4 }}>
@@ -30,15 +33,25 @@ export function App() {
         </Typography>
         {completingLogin && <CircularProgress aria-label="Iniciando sessão" />}
         {authenticationError && <Alert severity="error">{authenticationError}</Alert>}
-        {isProtectedRoute && !session ? (
+        {(isProtectedRoute || isAdministrativeRoute) && !session ? (
           <>
             <Alert severity="info">Sessão necessária para acessar esta página.</Alert>
             <Button variant="contained" onClick={() => void oidcSessionClient.startLogin()}>
               Entrar
             </Button>
           </>
+        ) : isAdministrativeRoute && !isAdministrator ? (
+          <Alert severity="error">Você não tem permissão para acessar esta página.</Alert>
         ) : session ? (
-          <Alert severity="success">Sessão autenticada.</Alert>
+          <>
+            <Alert severity="success">Sessão autenticada.</Alert>
+            {isAdministrator && (
+              <Button href="/admin" variant="outlined">
+                Administração
+              </Button>
+            )}
+            {isAdministrativeRoute && <ClientManagement accessToken={session.accessToken} />}
+          </>
         ) : (
           <Button variant="contained" onClick={() => void oidcSessionClient.startLogin()}>
             Entrar

@@ -96,3 +96,24 @@ eligibility, or physical-entry permission, so they can complete onboarding,
 manage account-related flows, or make payments. Physical-entry authorization
 will be evaluated separately when the applicable biometric, enrolment, payment,
 modality, and access-count modules are implemented.
+
+## DEC-17 — Application identity and client-account relationship
+
+**Status:** approved — 2026-09-20
+
+Application identifiers are independent from Keycloak identifiers. `account.id`
+and `client.id` are application-generated UUID primary keys; a Keycloak OIDC
+subject is never used as a domain identifier.
+
+- `account.keycloak_subject` is the unique external OIDC `sub` reference and
+  remains nullable until the corresponding Keycloak identity is provisioned.
+- `account.email` is normalized and globally unique, including for inactive
+  accounts. It is the authoritative e-mail field and is not duplicated in
+  `client`.
+- `account.account_active` controls whether an account may authenticate. This
+  decision does not define later activation or physical-access transitions.
+- `client.account_id` is a unique foreign key to `account.id`, forming a
+  one-to-one relationship. Client-specific data belongs to `client`.
+- Passwords and other credentials remain exclusively in Keycloak. The local
+  account model is reusable for later client, employee, and administrator
+  identities.
