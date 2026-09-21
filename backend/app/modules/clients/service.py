@@ -84,21 +84,35 @@ class ClientService:
         pending = session.scalar(
             select(ClientIdentityReconciliation).where(ClientIdentityReconciliation.email == email)
         )
-        if pending is None:
-            if session.scalar(select(Account).where(Account.email == email)):
-                raise DuplicateEmailError
-            pending = ClientIdentityReconciliation(operation=CREATE, email=email, name=name)
-            self._commit_pending(session, pending)
-        elif pending.operation != CREATE:
-            raise ClientIdentityProvisioningError
-        subject = self._ensure_identity(session, pending)
         if session.scalar(select(Account).where(Account.email == email)):
             raise DuplicateEmailError
-        client = Client(
-            name=name, account=Account(email=email, keycloak_subject=subject, account_active=True)
-        )
+        if pending is not None:
+            if pending.operation != CREATE:
+                raise ClientIdentityProvisioningError
+            # Registrations attempted before the non-blocking flow have a
+            # CREATE record but no local account/client. Preserve their
+            # reconciliation identifier and convert them to the LINK path.
+            client = Client(name=name, account=Account(email=email, account_active=True))
+            session.add(client)
+            session.flush()
+            pending.operation = LINK
+            pending.name = None
+            pending.account_id = client.account.id
+            try:
+                session.commit()
+            except IntegrityError as error:
+                session.rollback()
+                raise ClientIdentityProvisioningError from error
+            session.refresh(client, attribute_names=["account"])
+            return summary_from_client(client)
+
+        client = Client(name=name, account=Account(email=email, account_active=True))
         session.add(client)
-        session.delete(pending)
+        session.flush()
+        pending = ClientIdentityReconciliation(
+            operation=LINK, email=email, account_id=client.account.id
+        )
+        session.add(pending)
         try:
             session.commit()
         except IntegrityError as error:
@@ -185,10 +199,16 @@ class ClientService:
             except KeycloakProvisioningError as error:
                 raise ClientIdentityProvisioningError from error
             session.delete(pending)
-        elif email != client.account.email and session.scalar(
-            select(Account).where(Account.email == email)
-        ):
-            raise DuplicateEmailError
+        elif email != client.account.email:
+            if session.scalar(select(Account).where(Account.email == email)):
+                raise DuplicateEmailError
+            pending = session.scalar(
+                select(ClientIdentityReconciliation).where(
+                    ClientIdentityReconciliation.account_id == client.account.id
+                )
+            )
+            if pending is not None:
+                pending.email = email
         client.name, client.account.email = name, email
         if account_active is not None:
             client.account.account_active = account_active

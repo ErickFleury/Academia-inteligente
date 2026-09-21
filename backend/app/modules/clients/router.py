@@ -1,11 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.database import get_database_session
+from app.database import SessionLocal, get_database_session
 from app.modules.clients.service import (
     ClientIdentityConflictError,
     ClientIdentityProvisioningError,
@@ -54,6 +54,21 @@ Administrator = Annotated[
 DatabaseSession = Annotated[Session, Depends(get_database_session)]
 
 
+def reconcile_pending_client_identity(client_id: UUID) -> None:
+    """Attempt durable identity reconciliation outside the creation response."""
+    if SessionLocal is None:
+        return
+    session = SessionLocal()
+    try:
+        client_service.provision_existing(session, client_id)
+    except (ClientIdentityConflictError, ClientIdentityProvisioningError):
+        # The durable reconciliation record is intentionally retained for an
+        # authorized administrator to retry through the explicit API.
+        pass
+    finally:
+        session.close()
+
+
 class ClientUpdateRequest(BaseModel):
     name: str | None = Field(default=None, max_length=200)
     email: str | None = Field(default=None, max_length=320)
@@ -62,12 +77,18 @@ class ClientUpdateRequest(BaseModel):
 
 @router.post("", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
 def create_client(
-    payload: ClientCreateRequest, session: DatabaseSession, administrator: Administrator
+    payload: ClientCreateRequest,
+    background_tasks: BackgroundTasks,
+    session: DatabaseSession,
+    administrator: Administrator,
 ) -> ClientResponse:
-    """Create an account/client pair in one transaction."""
+    """Persist a client, then reconcile its external identity asynchronously."""
     del administrator
     try:
-        return response_from_summary(client_service.create(session, payload.name, payload.email))
+        client = client_service.create(session, payload.name, payload.email)
+        if not client.identity_provisioned:
+            background_tasks.add_task(reconcile_pending_client_identity, client.id)
+        return response_from_summary(client)
     except ClientValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)

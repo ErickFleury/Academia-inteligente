@@ -97,7 +97,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 03 | Authorization | RF-05 | 02 | Completed | Backend role/policy boundaries |
 | 04 | Client registration and search | RF-01, RF-02 | 01–03 | Completed | Local Account/Client creation and admin search |
 | 05 | Client profile and status | RF-03 except deferred CA-03.4 | 04 | Completed reduced scope | Updates, active state, history preservation |
-| 06 | Client identity provisioning | RF-01/RF-04/RF-05 integration | 02–05 | Completed | Client-only Keycloak identity, subject linkage, first access, reconciliation |
+| 06 | Client identity provisioning | RF-01/RF-04/RF-05 integration | 02–05 | Completed | Client-only Keycloak identity, subject linkage, first access, independent durable reconciliation |
 | 07 | Onboarding invitations | RF-09 | 03, 04, 06; approved DEC-06 token policy | Completed | Client-bound e-mail invitation outcome |
 | 08 | Secure onboarding access | RF-10 | 07; DEC-06 | MVP future | Valid scoped link/form entry |
 | 09 | Physical and health onboarding | RF-11, RF-12 | 03, 08; DEC-06/18 | MVP future | Authoritative structured onboarding draft |

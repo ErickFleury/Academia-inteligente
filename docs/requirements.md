@@ -136,9 +136,13 @@ and future employees are provisioned by an authorized employee-management flow.
   relationship. Client-domain data belongs to Client, not Account.
 - Credentials remain exclusively in Keycloak. PostgreSQL stores no password,
   temporary password, required-action token, or authentication secret.
-- Administrative client creation provisions one Keycloak identity with matching
-  e-mail and only the `client` role, persists its `sub`, and starts Keycloak's
-  secure first-access required action so the client defines their password.
+- Administrative client creation first persists the local Account/Client pair
+  and a durable, per-client provisioning record. It reports a distinct pending
+  state while an independent background reconciliation provisions one Keycloak
+  identity with matching e-mail and only the `client` role, persists its `sub`,
+  and starts Keycloak's secure first-access required action so the client
+  defines their password. A pending client cannot authenticate, and one pending
+  identity never blocks another administrative registration.
 - Public self-registration is disabled. Creating a client never grants an
   administrative or employee role.
 - Cross-system partial failures require explicit compensation or durable,
@@ -1070,7 +1074,7 @@ unchecked boxes or planned files.
 | RF-05 | Original MVP | Implemented | DEC-04 | Task 03; client-role denial reverified in Task 06. |
 | RF-01/RF-02 | Original MVP | Implemented | DEC-04/DEC-17 | Task 04 plus Task 06 provisioning integration. |
 | RF-03 | Original MVP | **Partially implemented** | DEC-05 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred and not satisfied. |
-| Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action and reconciliation. |
+| Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
 | RF-10–RF-13 | Original MVP | Planned | DEC-06/DEC-18 | Tasks 08–09 and 11; not yet implemented. |
 | EXT-RF-AI-01 | Approved MVP extension | Planned | DEC-06/08/18 | Task 10; not yet implemented. |

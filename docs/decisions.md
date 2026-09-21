@@ -105,22 +105,30 @@ and keep the Keycloak e-mail synchronized with the local authoritative value.
   an authorized administrative operation.
 - `account.account_active` remains the application-login authority described by
   DEC-05. Physical gym-entry eligibility remains a separate concern.
-- The operation is not successful until the Keycloak user, exact role
-  assignment, local account/client, and persisted subject linkage are
-  consistent. External/local partial failures require explicit compensation or
-  durable reconciliation, controlled errors, and idempotent retry behavior;
-  an orphan identity or unlinked usable account must not be silently accepted.
+- Local client registration succeeds once the Account/Client pair and its
+  durable reconciliation record are persisted. It must explicitly report
+  identity provisioning as pending, not claim that the client can log in. The
+  Keycloak reconciliation is scheduled independently for each client, so a
+  pending identity never blocks another administrative registration. Identity
+  provisioning succeeds only once the Keycloak user, exact role assignment,
+  local account/client, and persisted subject linkage are consistent.
+  External/local partial failures require explicit compensation or durable
+  reconciliation, controlled errors, and idempotent retry behavior; an orphan
+  identity or unlinked usable account must not be silently accepted.
 - Existing local accounts with a null `keycloak_subject` are not assumed to
   have usable identities. They require explicit provisioning/reconciliation.
 
 ### Task 06 implementation record
 
 Cross-system creation and e-mail synchronization use durable local
-reconciliation state before reporting success. Keycloak creation, role mapping,
-and required-action delivery are retried idempotently using a reconciliation
-identifier stored as a Keycloak user attribute; a client-role token without a
-linked local account is rejected by the application. The reproducible local
-first-access procedure is documented in `README.md`.
+reconciliation state. Creation first persists the local Account/Client pair and
+returns a visible pending-provisioning state; a background reconciliation
+attempt is scheduled per client, with an authorized retry path if it fails.
+Keycloak creation, role mapping, and required-action delivery are retried
+idempotently using a reconciliation identifier stored as a Keycloak user
+attribute; a client-role token without a linked local account is rejected by
+the application. The reproducible local first-access procedure is documented
+in `README.md`.
 
 ## DEC-05 — Account activity and physical-access eligibility
 

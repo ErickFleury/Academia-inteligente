@@ -19,6 +19,7 @@ test('creates a client and refreshes the administrative list', async () => {
         name: 'Ada Lovelace',
         email: 'ada@example.test',
         account_active: true,
+        identity_provisioned: false,
         created_at: '2026-09-20T00:00:00+00:00',
       }),
     })
@@ -30,6 +31,7 @@ test('creates a client and refreshes the administrative list', async () => {
           name: 'Ada Lovelace',
           email: 'ada@example.test',
           account_active: true,
+          identity_provisioned: false,
           created_at: '2026-09-20T00:00:00+00:00',
         },
       ],
@@ -46,7 +48,7 @@ test('creates a client and refreshes the administrative list', async () => {
   })
   fireEvent.click(screen.getByRole('button', { name: 'Cadastrar cliente' }))
 
-  expect(await screen.findByText('Cliente cadastrado com sucesso.')).toBeInTheDocument()
+  expect(await screen.findByText('Cliente cadastrado. Provisionamento de acesso pendente.')).toBeInTheDocument()
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
   expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8000/clients')
   expect(fetchMock.mock.calls[1][1]).toMatchObject({

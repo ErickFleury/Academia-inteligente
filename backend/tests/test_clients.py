@@ -162,10 +162,16 @@ def test_client_service_validates_e_mail_address(database_session: Session) -> N
     assert database_session.scalars(select(Client)).all() == []
 
 
-def test_administrator_creates_client_and_normalizes_account_email(
+def test_administrator_creates_client_with_durable_pending_identity_provisioning(
     monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
 ) -> None:
     authenticate_as(monkeypatch, "admin")
+    scheduled: list[object] = []
+    monkeypatch.setattr(
+        clients_router,
+        "reconcile_pending_client_identity",
+        lambda client_id: scheduled.append(client_id),
+    )
 
     response = api_client.post(
         "/clients", json={"name": "  Ada   Lovelace ", "email": " ADA@EXAMPLE.TEST "}
@@ -181,9 +187,71 @@ def test_administrator_creates_client_and_normalizes_account_email(
     client = database_session.scalar(select(Client))
     assert account is not None and client is not None
     assert client.account_id == account.id
-    assert account.keycloak_subject == "subject-1"
+    assert account.keycloak_subject is None
     assert account.account_active is True
-    assert body["identity_provisioned"] is True
+    assert body["identity_provisioned"] is False
+    pending = database_session.scalar(select(ClientIdentityReconciliation))
+    assert pending is not None
+    assert pending.operation == "link_existing"
+    assert pending.account_id == account.id
+    assert pending.email == "ada@example.test"
+    assert len(scheduled) == 1
+
+
+def test_administrator_can_register_multiple_clients_while_identities_are_pending(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    authenticate_as(monkeypatch, "admin")
+    scheduled: list[object] = []
+    monkeypatch.setattr(
+        clients_router,
+        "reconcile_pending_client_identity",
+        lambda client_id: scheduled.append(client_id),
+    )
+
+    first = api_client.post("/clients", json={"name": "Ada Lovelace", "email": "ada@example.test"})
+    second = api_client.post(
+        "/clients", json={"name": "Grace Hopper", "email": "grace@example.test"}
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert first.json()["identity_provisioned"] is False
+    assert second.json()["identity_provisioned"] is False
+    assert len(database_session.scalars(select(Client)).all()) == 2
+    pending = database_session.scalars(select(ClientIdentityReconciliation)).all()
+    assert {entry.email for entry in pending} == {"ada@example.test", "grace@example.test"}
+    assert len(scheduled) == 2
+
+
+def test_retrying_a_pre_nonblocking_registration_does_not_wait_for_keycloak(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    database_session.add(
+        ClientIdentityReconciliation(
+            operation="create", email="ada@example.test", name="Ada Lovelace"
+        )
+    )
+    database_session.commit()
+    authenticate_as(monkeypatch, "admin")
+    scheduled: list[object] = []
+    monkeypatch.setattr(
+        clients_router,
+        "reconcile_pending_client_identity",
+        lambda client_id: scheduled.append(client_id),
+    )
+
+    response = api_client.post(
+        "/clients", json={"name": "Ada Lovelace", "email": "ada@example.test"}
+    )
+
+    assert response.status_code == 201
+    assert response.json()["identity_provisioned"] is False
+    pending = database_session.scalar(select(ClientIdentityReconciliation))
+    assert pending is not None
+    assert pending.operation == "link_existing"
+    assert pending.account_id is not None
+    assert len(scheduled) == 1
 
 
 def test_duplicate_email_is_rejected_for_inactive_account(
@@ -306,6 +374,43 @@ def test_legacy_local_client_can_be_provisioned_by_an_administrator(
     assert response.json()["identity_provisioned"] is True
     assert account.keycloak_subject == "subject-1"
     assert database_session.scalars(select(ClientIdentityReconciliation)).all() == []
+
+
+def test_pending_registration_can_be_provisioned_independently(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    authenticate_as(monkeypatch, "admin")
+    created = api_client.post(
+        "/clients", json={"name": "Ada Lovelace", "email": "ada@example.test"}
+    )
+
+    provisioned = api_client.post(f"/clients/{created.json()['id']}/provision-identity", json={})
+
+    assert provisioned.status_code == 200
+    assert provisioned.json()["identity_provisioned"] is True
+    account = database_session.scalar(select(Account))
+    assert account is not None
+    assert account.keycloak_subject == "subject-1"
+    assert database_session.scalars(select(ClientIdentityReconciliation)).all() == []
+
+
+def test_updating_an_unprovisioned_client_email_updates_its_pending_identity(
+    monkeypatch: pytest.MonkeyPatch, api_client: AsgiClient, database_session: Session
+) -> None:
+    authenticate_as(monkeypatch, "admin")
+    created = api_client.post(
+        "/clients", json={"name": "Ada Lovelace", "email": "ada@example.test"}
+    )
+
+    updated = api_client.patch(
+        f"/clients/{created.json()['id']}",
+        json={"email": "ada.byron@example.test"},
+    )
+
+    assert updated.status_code == 200
+    pending = database_session.scalar(select(ClientIdentityReconciliation))
+    assert pending is not None
+    assert pending.email == "ada.byron@example.test"
 
 
 def test_update_rejects_invalid_fields_without_partial_changes(

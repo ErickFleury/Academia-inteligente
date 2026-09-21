@@ -71,7 +71,11 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
       const client = await createClient(accessToken, name, email)
       setName('')
       setEmail('')
-      setSuccess('Cliente cadastrado com sucesso.')
+      setSuccess(
+        client.identity_provisioned
+          ? 'Cliente cadastrado com sucesso.'
+          : 'Cliente cadastrado. Provisionamento de acesso pendente.',
+      )
       await loadClients(query)
       selectClient(client)
     } catch (reason) {
