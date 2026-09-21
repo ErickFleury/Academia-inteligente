@@ -28,6 +28,14 @@ services:
       SMTP_PORT: "1025"
       SMTP_FROM: ${SMTP_FROM:-no-reply@academia.local}
       ONBOARDING_INVITATION_URL: ${ONBOARDING_INVITATION_URL:-http://localhost:5173/onboarding}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6-luna}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-10}
+      AI_RECENT_MESSAGE_LIMIT: ${AI_RECENT_MESSAGE_LIMIT:-6}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
+      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-30}
       KEYCLOAK_ADMIN_URL: http://keycloak:8080
       KEYCLOAK_REALM: academia
       KEYCLOAK_PROVISIONING_CLIENT_ID: academia-provisioner
@@ -38,6 +46,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./backend:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -89,6 +99,43 @@ services:
     ports:
       - "127.0.0.1:8025:8025"
 
+  ollama:
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG:-0.34.1}
+    profiles: ["ollama"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "OLLAMA_HOST=http://127.0.0.1:11434 ollama list >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ollama-model:
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG:-0.34.1}
+    profiles: ["ollama"]
+    entrypoint: ["/bin/ollama"]
+    command: ["pull", "${OLLAMA_MODEL:-qwen3:8b}"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
 volumes:
   frontend_node_modules:
   postgres_data:
+  ollama_data:

@@ -4,7 +4,19 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, Uuid, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -14,6 +26,7 @@ class OnboardingInvitation(Base):
     """A one-time, client-bound onboarding invitation without a raw token."""
 
     __tablename__ = "onboarding_invitation"
+    __table_args__ = (Index("ix_onboarding_invitation_client_purpose", "client_id", "purpose"),)
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     client_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("client.id"), nullable=False)
@@ -74,5 +87,57 @@ class OnboardingAuditEvent(Base):
     changed_fields: Mapped[str | None] = mapped_column(String(1000))
     succeeded: Mapped[bool] = mapped_column(Boolean, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class OnboardingAiConversation(Base):
+    """One resumable, client-owned conversation with expiring raw context."""
+
+    __tablename__ = "onboarding_ai_conversation"
+    __table_args__ = (Index("ix_onboarding_ai_conversation_raw_expires_at", "raw_expires_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    client_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("client.id"), unique=True, nullable=False
+    )
+    summary: Mapped[str | None] = mapped_column(Text)
+    raw_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class OnboardingAiMessage(Base):
+    """Sensitive raw message, retained only during the approved short window."""
+
+    __tablename__ = "onboarding_ai_message"
+    __table_args__ = (
+        UniqueConstraint("conversation_id", "sequence", name="uq_onboarding_ai_message_sequence"),
+        UniqueConstraint(
+            "conversation_id", "client_request_id", name="uq_onboarding_ai_message_request"
+        ),
+        UniqueConstraint(
+            "conversation_id",
+            "reply_to_client_request_id",
+            name="uq_onboarding_ai_message_reply",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("onboarding_ai_conversation.id"), nullable=False
+    )
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    client_request_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    reply_to_client_request_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    missing_required_fields: Mapped[str | None] = mapped_column(Text)
+    completion_ready: Mapped[bool | None] = mapped_column(Boolean)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

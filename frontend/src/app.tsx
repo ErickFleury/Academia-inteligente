@@ -6,6 +6,7 @@ import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OidcSessionClient, type Session } from './auth'
 import { ClientManagement } from './client-management'
 import { OnboardingAccessPage } from './onboarding-access-page'
+import { OnboardingConversationPage } from './onboarding-conversation-page'
 import { OnboardingForm } from './onboarding-form'
 
 const oidcSessionClient = new OidcSessionClient()
@@ -46,6 +47,8 @@ export function App() {
   const isProtectedRoute = window.location.pathname === '/dashboard'
   const isAdministrativeRoute = window.location.pathname === '/admin'
   const isOnboardingRoute = window.location.pathname === '/onboarding'
+  const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
+  const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
 
   function clearSession() {
@@ -83,17 +86,21 @@ export function App() {
     return <SignInEntry message="Sessão necessária para acessar esta página." onSignIn={() => void oidcSessionClient.startLogin()} />
   }
 
-  if (isOnboardingRoute && !session) {
+  if (isClientOnboardingRoute && !session) {
     return <SignInEntry message="Entre para acessar seu onboarding." onSignIn={() => void oidcSessionClient.startLogin()} />
   }
 
-  if (isOnboardingRoute && !session?.roles.includes('client')) {
+  if (isClientOnboardingRoute && !session?.roles.includes('client')) {
     return (
       <ClientShell onSignOut={endSession}>
         <PageHeader eyebrow="Acesso protegido" title="Onboarding indisponível" />
         <Alert severity="error" variant="outlined">Você não tem permissão para acessar este onboarding.</Alert>
       </ClientShell>
     )
+  }
+
+  if (isOnboardingConversationRoute && session) {
+    return <OnboardingConversationPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
   if (isOnboardingRoute && session) {

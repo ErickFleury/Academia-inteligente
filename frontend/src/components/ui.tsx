@@ -42,3 +42,25 @@ export function EmptyState({ title, description }: { title: string; description:
 export function StatusNotice({ severity, children }: { severity: 'error' | 'success' | 'info'; children: ReactNode }) {
   return <Alert severity={severity} variant="outlined">{children}</Alert>
 }
+
+export function ChatMessage({ role, children }: { role: 'user' | 'assistant'; children: ReactNode }) {
+  const isUser = role === 'user'
+  return (
+    <Box
+      component="article"
+      sx={{
+        alignSelf: isUser ? 'flex-end' : 'flex-start',
+        bgcolor: isUser ? 'primary.main' : 'background.paper',
+        border: isUser ? 0 : '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2.5,
+        color: isUser ? 'primary.contrastText' : 'text.primary',
+        maxWidth: { xs: '92%', sm: '76%' },
+        px: 2,
+        py: 1.5,
+      }}
+    >
+      <Typography component="p" sx={{ whiteSpace: 'pre-wrap' }}>{children}</Typography>
+    </Box>
+  )
+}

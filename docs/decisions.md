@@ -214,7 +214,9 @@ update the current draft without creating a history version for each save.
 
 Completion requires all four training/physical values, explicit values for all
 three booleans, and every conditional detail required by a true boolean. Task
-10 must support these completion rules but does not implement completion.
+10 provides the validation boundary; Task 12 performs the explicit atomic
+`draft` to `completed` transition and records `completed_at` only after that
+same validation succeeds.
 After completion, client edits are disabled and completed information is not
 silently overwritten; a future approved revision/replacement flow is required.
 
@@ -250,6 +252,75 @@ biometric task.
   data must not be overwritten silently; post-completion changes require a
   future revision/replacement flow. Preserve non-sensitive audit metadata for
   allowed operations without duplicating health payloads.
+
+### AI-conversation amendment
+
+**Status:** approved for Task 11 — 2026-09-21
+
+Raw conversational-onboarding messages and their bounded summary are sensitive,
+client-owned PostgreSQL data. They are visible only to the owning client; they
+are not available to instructors, attendants, ordinary administrators, or
+other clients. Raw messages and the summary expire after five days. Structured
+onboarding values validated from the conversation remain under their own
+onboarding lifecycle and are not deleted with raw chat content. A project-
+compatible purge entry point must delete expired raw conversation state without
+requiring new scheduling infrastructure.
+
+AI context is minimized to the current user message, a bounded summary, at
+most six recent messages by default (configuration-controlled), and only the
+structured onboarding values actually necessary for the current exchange. No
+cross-client context is permitted. Prompts, raw messages/responses, health
+values, and provider credentials are never logged; operational metadata may
+record internal IDs, provider/model, duration, outcome, error category, retry
+count, and time.
+
+Provider failures must leave the authoritative onboarding draft unchanged. A
+valid provider result, schema validation, persistence of accepted updates, and
+conversation response are one safe operation; invalid/malformed/refused output
+or a timeout is retried once and then returns a controlled failure without
+persisting proposed updates. The provider timeout is ten seconds per attempt.
+The frontend creates a UUID for each logical user message and reuses it for a
+retry; the backend uses client/conversation plus that identifier as an
+idempotency key, so a successful duplicate never calls the provider, writes
+messages, or applies updates twice.
+
+Biometric DEC-18 questions remain unresolved.
+
+## DEC-08 — AI provider, contract, and bounded context
+
+**Status:** resolved for Task 11 — 2026-09-21
+
+The initial provider is the OpenAI API and initial configurable model is
+`gpt-5.6-luna`. Provider and model are environment-configured; API keys remain
+server-side secrets. Onboarding domain code depends on a provider-neutral
+application interface, with the OpenAI Responses API and Structured Outputs
+contained in its adapter. No provider SDK response type, model ID, API key, or
+provider-specific behavior crosses that boundary.
+
+Normal provider-neutral interview turns contain client-facing Portuguese
+`assistant_message` and advisory `interview_status`; they do not mutate the
+structured draft. When the interviewer reports readiness, a separate
+schema-constrained final-extraction operation returns only approved onboarding
+fields. The backend validates that extraction against DEC-06 atomically,
+calculates readiness, and treats structured onboarding as the
+only authoritative state. AI output cannot diagnose, give medication guidance,
+invent fields/facts, bypass validation, or override backend readiness.
+
+The OpenAI adapter uses the supported Responses API with schema-constrained
+Structured Outputs rather than free-form JSON instructions. Refusal, incomplete
+or unparseable output, retryable provider failure, and timeout are controlled
+provider failures subject to the single retry policy recorded under DEC-18.
+
+**Development adapter amendment — 2026-09-21:** Ollama is an approved second
+implementation of the same provider-neutral onboarding interface for local,
+zero-API-cost development and testing. It uses configurable
+`OLLAMA_BASE_URL`, `OLLAMA_MODEL` (default `qwen3:8b`), and
+`OLLAMA_TIMEOUT_SECONDS` (default 30), with JSON-Schema-constrained local HTTP
+output mapped and validated through the same application response contract.
+This does not replace OpenAI or change its ten-second production timeout.
+For reproducible local use, Ollama may run as an optional internal Docker
+Compose profile with a persistent model volume; it is not exposed on a host
+port and is not a production infrastructure requirement.
 
 ## DEC-17 — Application identity and client-account relationship
 

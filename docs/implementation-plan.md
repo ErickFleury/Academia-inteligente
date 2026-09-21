@@ -58,7 +58,7 @@ browser-provided client ID as proof of ownership.
 3. **Visual foundation (Task 08, completed):** shared MUI theme, primitives,
    ClientShell/AdminShell, and retroactive restyling of frontend work from
    completed Tasks 01–07; no change to their historical business scope.
-4. **Onboarding (Tasks 07, 09, and 10 completed; Tasks 11–12 future):**
+4. **Onboarding (Tasks 07 and 09–12 completed):**
    invitation, secure form access, authoritative structured health data,
    conversational AI orchestration, and shared completion using Task 08 UI
    foundations.
@@ -88,7 +88,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
 | DEC-06 | Invitation-token policy is resolved for Tasks 07 and 09; schema, validation, and editable-draft behavior are resolved for Task 10. Recovery-token policy remains unresolved for later affected work. |
 | DEC-07 | Blocking Tasks 13, 14, and 17: severity and review/approval lifecycle. |
-| DEC-08 | Blocking Tasks 11, 14, 16, and 17: AI provider/contract/context/failures. |
+| DEC-08 | Resolved for Task 11: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output; Ollama is also available as a local development/test adapter. Later AI tasks retain their own applicable gates. |
 | DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
 | DEC-10 | Blocking Task 22 and Task 23: occupancy sources/meaning/freshness. Do not infer a source of truth. |
 | DEC-11 | Blocking Task 22 where external/access events are its inputs. |
@@ -96,7 +96,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-15 | Blocking Tasks 13, 14, and 17 wherever manual/professional/audit flows are required. |
 | DEC-16 | Blocking formal RNF sign-off in Task 19. |
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
-| DEC-18 | Health/onboarding storage, access, retention, and non-sensitive audit behavior are resolved for Task 10. Remaining AI-sensitive-data and biometric behavior still gates affected future work. |
+| DEC-18 | Health/onboarding policy is resolved for Task 10 and client-only AI conversation handling/five-day raw retention is resolved for Task 11. Biometric behavior still gates affected work. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
 | EXT-DEC-SOC-01 | Blocking Task 20 audience/moderation/deletion/retention model. |
 | EXT-DEC-EQP-01 | Blocking Task 21 persistence/grouping model. |
@@ -116,8 +116,8 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 08 | Frontend design system and existing UI restyle | Visual enabler; no new RF ownership | 01–07 | Completed | Shared MUI tokens/primitives/shells; retroactive UI restyle |
 | 09 | Secure onboarding access | RF-10 | 07, 08; DEC-06 | Completed | Valid scoped onboarding entry and intentional token redemption |
 | 10 | Physical and health onboarding | RF-11, RF-12 | 03, 08, 09; DEC-06/18 | Completed | Client-scoped structured draft, separated health data, validation, and audit metadata |
-| 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | MVP extension | Resumable AI orchestration over structured data |
-| 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | MVP future | Shared validated completion/readiness |
+| 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | Completed | Client-only resumable AI interview, final validated extraction, and bounded retention |
+| 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | Completed | Shared validation with intentional atomic completion and timestamp |
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | MVP future | Immutable versions/current/professional attribution |
 | 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | MVP future | Safe structured proposal through lifecycle |
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | MVP future | Mobile own-current-plan/exercise view |
@@ -180,8 +180,6 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 10, physical and health onboarding, is next in dependency order. It cannot
-start until the relevant remaining DEC-06 onboarding-schema and DEC-18
-sensitive-data decisions are approved. Use the Terra/Medium prompt at the end
-of `docs/tasks/10-physical-and-health-onboarding.md` once those decisions are
-available.
+Task 13, training version lifecycle, is next in dependency order. It consumes
+the completed-onboarding contract from Task 12 and must not treat conversational
+readiness as RF-13 completion.

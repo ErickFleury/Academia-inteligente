@@ -1,0 +1,79 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
+
+import { OnboardingConversationPage } from './onboarding-conversation-page'
+
+const emptyConversation = {
+  messages: [],
+  missing_required_fields: ['training_goal', 'height_cm'],
+  completion_ready: false,
+}
+
+const emptyDraft = {
+  status: 'draft', completed_at: null, training_goal: null, training_experience: null,
+  height_cm: null, weight_kg: null, has_limitations_or_complaints: null,
+  limitations_or_complaints: null, uses_medications: null, medications: null,
+  has_health_conditions: null, health_conditions: null,
+}
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
+
+test('starts a mobile-friendly conversation and shows structured progress', async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyConversation })
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyDraft })
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        messages: [
+          { role: 'user', content: 'Quero começar meu onboarding.', created_at: '2026-09-21T00:00:00Z' },
+          { role: 'assistant', content: 'Qual é o seu objetivo?', created_at: '2026-09-21T00:00:01Z' },
+        ],
+        missing_required_fields: ['training_goal'],
+        completion_ready: false,
+      }),
+    })
+  vi.stubGlobal('fetch', fetchMock)
+  vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000001' })
+
+  render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
+
+  expect(await screen.findByText('Comece quando estiver pronto')).toBeInTheDocument()
+  expect(screen.getByText('objetivo de treino')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Começar conversa' }))
+
+  expect(await screen.findByText('Qual é o seu objetivo?')).toBeInTheDocument()
+  expect(fetchMock.mock.calls[2][0]).toBe('http://localhost:8000/onboarding/conversation/messages')
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({
+    message: 'Quero começar meu onboarding.',
+    client_request_id: '00000000-0000-4000-8000-000000000001',
+  })
+})
+
+test('reuses the same client request id when a conversation submission is retried', async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyConversation })
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyDraft })
+    .mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) })
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyConversation })
+  vi.stubGlobal('fetch', fetchMock)
+  vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000002' })
+
+  render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
+
+  await screen.findByText('Comece quando estiver pronto')
+  fireEvent.change(screen.getByLabelText('Escreva sua resposta'), { target: { value: 'Meu objetivo é força' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+  expect(await screen.findByText('A conversa está indisponível no momento. Tente novamente.')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
+
+  await screen.findByText('Comece quando estiver pronto')
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body).client_request_id).toBe(
+    JSON.parse(fetchMock.mock.calls[3][1].body).client_request_id,
+  )
+})

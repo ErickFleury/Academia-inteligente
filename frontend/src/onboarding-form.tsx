@@ -17,7 +17,9 @@ import type { ReactNode } from 'react'
 
 import { ClientShell } from './components/application-shell'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
+import { OnboardingCompletion } from './onboarding-completion'
 import {
+  completeOwnOnboarding,
   getOwnOnboardingDraft,
   saveOwnOnboardingDraft,
   type OnboardingDraft,
@@ -27,7 +29,7 @@ import {
 
 type OnboardingFormProps = { accessToken: string; onSignOut: () => void }
 
-type FormValues = Omit<OnboardingDraft, 'status'>
+type FormValues = Omit<OnboardingDraft, 'status' | 'completed_at'>
 
 const emptyValues: FormValues = {
   training_goal: null,
@@ -43,8 +45,20 @@ const emptyValues: FormValues = {
 }
 
 function valuesFromDraft(draft: OnboardingDraft): FormValues {
-  const { status: _status, ...values } = draft
+  const { status: _status, completed_at: _completedAt, ...values } = draft
   return values
+}
+
+function missingFields(values: FormValues): string[] {
+  const required = ['training_goal', 'training_experience', 'height_cm', 'weight_kg'] as const
+  const missing = required.filter((field) => values[field] === null || values[field] === '') as string[]
+  if (values.has_limitations_or_complaints === null) missing.push('has_limitations_or_complaints')
+  else if (values.has_limitations_or_complaints && !optionalText(values.limitations_or_complaints)) missing.push('limitations_or_complaints')
+  if (values.uses_medications === null) missing.push('uses_medications')
+  else if (values.uses_medications && !optionalText(values.medications)) missing.push('medications')
+  if (values.has_health_conditions === null) missing.push('has_health_conditions')
+  else if (values.has_health_conditions && !optionalText(values.health_conditions)) missing.push('health_conditions')
+  return missing
 }
 
 function optionalText(value: string | null): string | null {
@@ -117,13 +131,20 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
   const [values, setValues] = useState<FormValues>(emptyValues)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [completing, setCompleting] = useState(false)
+  const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
     void getOwnOnboardingDraft(accessToken)
-      .then((draft) => active && setValues(valuesFromDraft(draft)))
+      .then((loadedDraft) => {
+        if (active) {
+          setDraft(loadedDraft)
+          setValues(valuesFromDraft(loadedDraft))
+        }
+      })
       .catch((reason: unknown) => active && setError(reason instanceof Error ? reason.message : 'Não foi possível carregar o onboarding.'))
       .finally(() => active && setLoading(false))
     return () => { active = false }
@@ -153,6 +174,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
     if (payload.has_health_conditions === false) payload.health_conditions = null
     try {
       const saved = await saveOwnOnboardingDraft(accessToken, payload)
+      setDraft(saved)
       setValues(valuesFromDraft(saved))
       setSuccess('Rascunho salvo com segurança.')
     } catch (reason) {
@@ -162,12 +184,29 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
     }
   }
 
+  async function complete() {
+    setCompleting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const completed = await completeOwnOnboarding(accessToken)
+      setDraft(completed)
+      setValues(valuesFromDraft(completed))
+      setSuccess('Seu onboarding foi concluído com sucesso.')
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível concluir seu onboarding.')
+    } finally {
+      setCompleting(false)
+    }
+  }
+
   if (loading) return <ClientShell onSignOut={onSignOut}><LoadingState label="Carregando seu onboarding" /></ClientShell>
 
   return (
     <ClientShell onSignOut={onSignOut}>
       <Stack spacing={3} sx={{ maxWidth: 840 }}>
         <PageHeader
+          action={<Button component="a" href="/onboarding/conversa" variant="outlined">Responder por conversa</Button>}
           description="Salve seu progresso quando quiser. Os campos marcados como necessários serão validados na conclusão do onboarding."
           eyebrow="Seu perfil de treino"
           title="Conte um pouco sobre você"
@@ -176,6 +215,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
         {success && <StatusNotice severity="success">{success}</StatusNotice>}
         <Section title="Objetivo e experiência">
           <TextField
+            disabled={draft?.status === 'completed'}
             fullWidth
             helperText="Necessário para concluir · até 500 caracteres"
             label="Qual é o seu objetivo de treino?"
@@ -186,6 +226,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
           <FormControl fullWidth>
             <InputLabel id="experience-label">Experiência de treino</InputLabel>
             <Select
+              disabled={draft?.status === 'completed'}
               label="Experiência de treino"
               labelId="experience-label"
               onChange={(event) => update(
@@ -205,6 +246,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
         <Section title="Dados físicos">
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
+              disabled={draft?.status === 'completed'}
               fullWidth
               helperText="Em centímetros · use apenas números · necessário para concluir"
               inputMode="numeric"
@@ -218,6 +260,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
               value={values.height_cm ?? ''}
             />
             <TextField
+              disabled={draft?.status === 'completed'}
               fullWidth
               helperText="Em quilogramas · use apenas números · até 2 casas decimais"
               inputMode="decimal"
@@ -244,7 +287,8 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
           <BooleanSelect id="health-conditions-answer" label="Você tem alguma condição de saúde ou histórico relevante?" onChange={(value) => update('has_health_conditions', value)} value={values.has_health_conditions} />
           {values.has_health_conditions && <TextField fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte as condições ou o histórico relevante" multiline minRows={4} onChange={(event) => update('health_conditions', event.target.value)} value={values.health_conditions ?? ''} />}
         </Section>
-        <Box><Button disabled={saving} onClick={() => void saveDraft()} size="large" variant="contained">{saving ? 'Salvando rascunho…' : 'Salvar rascunho'}</Button></Box>
+        {draft?.status !== 'completed' && <Box><Button disabled={saving} onClick={() => void saveDraft()} size="large" variant="contained">{saving ? 'Salvando rascunho…' : 'Salvar rascunho'}</Button></Box>}
+        <OnboardingCompletion completedAt={draft?.completed_at ?? null} missingFields={missingFields(values)} onComplete={() => void complete()} submitting={completing} />
       </Stack>
     </ClientShell>
   )

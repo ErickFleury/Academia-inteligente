@@ -13,7 +13,7 @@ merely because it is approved.
 
 ## EXT-RF-AI-01 — Conversational AI onboarding
 
-**Status:** approved product extension; planned for the MVP onboarding journey.
+**Status:** approved product extension; implemented in Task 11 for the MVP onboarding journey.
 
 **Description:** After authenticating, a client may complete or resume
 onboarding through a progressive AI conversation. The conversation is an
@@ -62,9 +62,11 @@ the minimum permitted client context may be sent to the AI adapter; health data
 and conversation text are sensitive and must not leak through logs or other
 clients' contexts.
 
-**Unresolved decisions:** the implementation remains blocked by the relevant
-parts of DEC-06, DEC-08, and DEC-18. This approval does not select a provider,
-invent onboarding fields, or define retention.
+**Decision status:** Task 11 uses the approved DEC-06 schema, a provider-neutral
+adapter boundary from DEC-08 (OpenAI initially; Ollama also approved for local
+development/test), and client-only five-day raw-message retention from DEC-18.
+This does not resolve contracts for later AI features, biometric policy, or
+RF-13 completion.
 
 ## EXT-RF-SOC-01 — Controlled progress sharing
 

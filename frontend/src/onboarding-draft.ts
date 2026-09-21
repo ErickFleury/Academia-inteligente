@@ -2,6 +2,7 @@ export type TrainingExperience = 'none' | 'beginner' | 'intermediate' | 'advance
 
 export type OnboardingDraft = {
   status: 'draft' | 'completed'
+  completed_at: string | null
   training_goal: string | null
   training_experience: TrainingExperience | null
   height_cm: number | null
@@ -14,7 +15,7 @@ export type OnboardingDraft = {
   health_conditions: string | null
 }
 
-export type OnboardingDraftUpdate = Omit<OnboardingDraft, 'status'>
+export type OnboardingDraftUpdate = Omit<OnboardingDraft, 'status' | 'completed_at'>
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -33,6 +34,20 @@ async function requestDraft(accessToken: string, method: 'GET' | 'PATCH', payloa
     if (response.status === 409) throw new Error('Este onboarding já foi concluído e não pode ser alterado.')
     if (response.status === 422) throw new Error('Revise os campos informados antes de salvar.')
     throw new Error('Não foi possível salvar seu onboarding. Tente novamente.')
+  }
+  return response.json() as Promise<OnboardingDraft>
+}
+
+export async function completeOwnOnboarding(accessToken: string): Promise<OnboardingDraft> {
+  const response = await fetch(`${apiBaseUrl}/onboarding/me/completion`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
+    if (response.status === 409) throw new Error('Este onboarding já foi concluído.')
+    if (response.status === 422) throw new Error('Complete as informações obrigatórias antes de concluir.')
+    throw new Error('Não foi possível concluir seu onboarding. Tente novamente.')
   }
   return response.json() as Promise<OnboardingDraft>
 }

@@ -1,6 +1,7 @@
 """Client-scoped draft onboarding persistence without sensitive-value logging."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -23,6 +24,10 @@ class OnboardingNotEditableError(Exception):
 
 class OnboardingDraftValidationError(Exception):
     """A partial draft violates an approved field or conditional rule."""
+
+
+class OnboardingAlreadyCompletedError(Exception):
+    """Completion is a one-way transition until an approved revision flow exists."""
 
 
 @dataclass(frozen=True)
@@ -63,7 +68,12 @@ class OnboardingDraftService:
         return onboarding
 
     def save_draft(
-        self, session: Session, scope: ClientOnboardingScope, update: OnboardingDraftUpdate
+        self,
+        session: Session,
+        scope: ClientOnboardingScope,
+        update: OnboardingDraftUpdate,
+        *,
+        commit: bool = True,
     ) -> Onboarding:
         onboarding = self.get_or_create_draft(session, scope)
         if onboarding.status != "draft":
@@ -78,9 +88,59 @@ class OnboardingDraftService:
                 setattr(onboarding, field, value)
 
         self._audit(session, onboarding, scope, "onboarding_draft_saved", tuple(sorted(changes)))
+        if commit:
+            session.commit()
+            session.refresh(onboarding)
+        else:
+            session.flush()
+        return onboarding
+
+    def complete_draft(self, session: Session, scope: ClientOnboardingScope) -> Onboarding:
+        """Atomically validate and complete the client's own structured onboarding."""
+        onboarding = self.get_or_create_draft(session, scope)
+        if onboarding.status == "completed":
+            raise OnboardingAlreadyCompletedError
+
+        # Validate before any state mutation.  `completion_data` is also the
+        # downstream contract used by training generation.
+        self.completion_data(onboarding)
+        onboarding.status = "completed"
+        onboarding.completed_at = datetime.now(UTC)
+        self._audit(session, onboarding, scope, "onboarding_completed", ())
         session.commit()
         session.refresh(onboarding)
         return onboarding
+
+    def has_valid_completed_onboarding(self, session: Session, client_id: UUID) -> bool:
+        """Stable server-side prerequisite for downstream training workflows."""
+        onboarding = session.scalar(select(Onboarding).where(Onboarding.client_id == client_id))
+        if (
+            onboarding is None
+            or onboarding.status != "completed"
+            or onboarding.completed_at is None
+        ):
+            return False
+        try:
+            self.completion_data(onboarding)
+        except OnboardingDraftValidationError:
+            return False
+        return True
+
+    @classmethod
+    def missing_required_fields(cls, onboarding: Onboarding) -> list[str]:
+        """Report canonical completion gaps without exposing a sensitive value."""
+        missing = [
+            field
+            for field in ("training_goal", "training_experience", "height_cm", "weight_kg")
+            if getattr(onboarding, field) is None
+        ]
+        for boolean_field, detail_field in cls._conditional_fields:
+            boolean_value = getattr(onboarding, boolean_field)
+            if boolean_value is None:
+                missing.append(boolean_field)
+            elif boolean_value and not getattr(onboarding, detail_field):
+                missing.append(detail_field)
+        return missing
 
     @staticmethod
     def completion_data(onboarding: Onboarding) -> OnboardingCompletionData:

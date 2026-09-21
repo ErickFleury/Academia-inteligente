@@ -37,6 +37,43 @@ link expires after 24 hours. A newer invitation invalidates unused prior links.
 The link is validated/redeemed by the later secure-onboarding flow; opening it
 must not consume it by itself.
 
+### Local conversational AI with Ollama
+
+OpenAI remains the initial configured provider. For local development without
+an API cost, use the optional internal Ollama Compose profile. Set the following
+values in `.env` (a smaller compatible model such as `qwen3:4b` can be used
+instead):
+
+```bash
+AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://ollama:11434
+OLLAMA_MODEL=qwen3:8b
+OLLAMA_TIMEOUT_SECONDS=30
+```
+
+Start it when needed:
+
+```bash
+docker compose --profile ollama up -d
+```
+
+The first execution downloads the configured model. It is then retained in the
+`ollama_data` Docker volume. Recreate the backend with
+`docker compose up --build -d backend`, then sign in as a client and test
+`/onboarding/conversa`. To stop local inference without deleting the model,
+run `docker compose --profile ollama stop ollama`; start it again with
+`docker compose --profile ollama start ollama`.
+
+The Ollama API is accessible only to Compose services; this project does not
+publish port 11434. To use an Ollama process installed directly on the Linux
+host instead, set `OLLAMA_BASE_URL=http://host.docker.internal:11434`; the
+Compose backend includes the required Linux host-gateway mapping.
+
+The optional Compose service requests every available NVIDIA GPU. The host must
+have a compatible NVIDIA driver and NVIDIA Container Toolkit configured for
+Docker; otherwise Ollama uses CPU or cannot start with GPU access. This project
+does not configure a host GPU driver or expose GPU services publicly.
+
 For a fresh local realm, `docker-compose up --build` imports the provisioning
 service account and Mailpit SMTP configuration. Existing Keycloak realms are
 not overwritten by Keycloak import; configure the same `academia-provisioner`

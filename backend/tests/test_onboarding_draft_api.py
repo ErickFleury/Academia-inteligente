@@ -9,10 +9,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_database_session
+from app.integrations.ai import AiInterviewTurnResponse, AiOnboardingExtractionResponse
 from app.main import create_app
 from app.modules.clients.models import Account, Client
 from app.modules.identity import router as identity_router
 from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.onboarding import router as onboarding_router
+from app.modules.onboarding.conversation_service import OnboardingConversationService
+from app.modules.onboarding.draft_service import OnboardingDraftService
 
 
 class FakeIdentityProvider:
@@ -22,6 +26,19 @@ class FakeIdentityProvider:
     def get_identity(self, access_token: str) -> AuthenticatedIdentity:
         del access_token
         return self.identity
+
+
+class FakeConversationProvider:
+    def interview_turn(self, context: dict[str, object]) -> AiInterviewTurnResponse:
+        del context
+        return AiInterviewTurnResponse(
+            assistant_message="Qual é o seu objetivo de treino?",
+            interview_status="in_progress",
+        )
+
+    def extract_onboarding(self, context: dict[str, object]) -> AiOnboardingExtractionResponse:
+        del context
+        raise AssertionError("final extraction should not be called")
 
 
 @pytest.fixture
@@ -158,4 +175,92 @@ def test_unauthenticated_draft_access_is_rejected(database_session: Session) -> 
 
     assert status_code == 401
     assert body == {"detail": "Unauthenticated"}
+    app.dependency_overrides.clear()
+
+
+def test_completion_requires_complete_own_draft_and_records_timestamp_atomically(
+    database_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    create_client(database_session, "ada-subject", "ada@example.test")
+    app = app_for(database_session)
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(AuthenticatedIdentity("ada-subject", "ada@example.test", ("client",))),
+    )
+    incomplete_status, incomplete = request(app, "POST", "/onboarding/me/completion")
+    assert incomplete_status == 422
+    assert incomplete["detail"] == "Onboarding is not ready for completion"
+
+    payload = {
+        "training_goal": "Ganhar força",
+        "training_experience": "beginner",
+        "height_cm": 170,
+        "weight_kg": "70.50",
+        "has_limitations_or_complaints": False,
+        "uses_medications": False,
+        "has_health_conditions": False,
+    }
+    assert request(app, "PATCH", "/onboarding/me", payload)[0] == 200
+    completed_status, completed = request(app, "POST", "/onboarding/me/completion")
+    assert completed_status == 200
+    assert completed["status"] == "completed"
+    assert completed["completed_at"] is not None
+    assert request(app, "POST", "/onboarding/me/completion")[0] == 409
+    assert request(app, "PATCH", "/onboarding/me", {"training_goal": "Outro"})[0] == 409
+    app.dependency_overrides.clear()
+
+
+def test_client_conversation_is_own_scoped_and_admin_cannot_read_raw_history(
+    database_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    create_client(database_session, "ada-subject", "ada@example.test")
+    create_client(database_session, "grace-subject", "grace@example.test")
+    monkeypatch.setattr(
+        onboarding_router,
+        "conversation_service",
+        OnboardingConversationService(
+            provider=FakeConversationProvider(), draft_service=OnboardingDraftService()
+        ),
+    )
+    app = app_for(database_session)
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(AuthenticatedIdentity("ada-subject", "ada@example.test", ("client",))),
+    )
+
+    sent_status, sent = request(
+        app,
+        "POST",
+        "/onboarding/conversation/messages",
+        {
+            "message": "Quero começar.",
+            "client_request_id": "00000000-0000-4000-8000-000000000001",
+        },
+    )
+    assert sent_status == 200
+    assert sent["messages"][-1]["content"] == "Qual é o seu objetivo de treino?"
+
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(
+            AuthenticatedIdentity("grace-subject", "grace@example.test", ("client",))
+        ),
+    )
+    other_status, other = request(app, "GET", "/onboarding/conversation")
+    assert other_status == 200
+    assert other["messages"] == []
+
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(
+            AuthenticatedIdentity("admin-subject", "admin@example.test", ("admin",))
+        ),
+    )
+    denied_status, denied = request(app, "GET", "/onboarding/conversation")
+    assert denied_status == 403
+    assert denied == {"detail": "Forbidden"}
     app.dependency_overrides.clear()

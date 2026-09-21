@@ -3,7 +3,7 @@
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 TrainingExperience = Literal["none", "beginner", "intermediate", "advanced"]
 
@@ -26,6 +26,7 @@ class OnboardingDraftUpdate(BaseModel):
     """Partial draft update; final completion validation belongs to Task 12."""
 
     training_goal: str | None = Field(default=None, max_length=500)
+    model_config = ConfigDict(extra="forbid")
     training_experience: TrainingExperience | None = None
     height_cm: int | None = Field(default=None, gt=0, le=300)
     weight_kg: Decimal | None = Field(default=None, gt=0, le=500)
@@ -41,9 +42,7 @@ class OnboardingDraftUpdate(BaseModel):
     def validate_training_goal(cls, value: str | None) -> str | None:
         return normalize_required_text(value) if value is not None else None
 
-    @field_validator(
-        "limitations_or_complaints", "medications", "health_conditions", mode="after"
-    )
+    @field_validator("limitations_or_complaints", "medications", "health_conditions", mode="after")
     @classmethod
     def normalize_details(cls, value: str | None) -> str | None:
         return normalize_optional_detail(value)
@@ -75,9 +74,7 @@ class OnboardingCompletionData(BaseModel):
     def validate_goal(cls, value: str) -> str:
         return normalize_required_text(value)
 
-    @field_validator(
-        "limitations_or_complaints", "medications", "health_conditions", mode="after"
-    )
+    @field_validator("limitations_or_complaints", "medications", "health_conditions", mode="after")
     @classmethod
     def normalize_completion_details(cls, value: str | None) -> str | None:
         return normalize_optional_detail(value)
