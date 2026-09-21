@@ -1,4 +1,4 @@
-# Task 10 — Conversational AI Onboarding
+# Task 11 — Conversational AI Onboarding
 
 ## Objective
 
@@ -10,9 +10,9 @@ without replacing the secure-link/form experience.
 
 - EXT-RF-AI-01: EXT-CA-AI-01.1–EXT-CA-AI-01.8.
 - RF-11/RF-12 criteria are integration-verified only for AI-to-structured-field
-  mapping; Task 09 retains ownership of schema, validation, persistence, and
+  mapping; Task 10 retains ownership of schema, validation, persistence, and
   health-data authorization.
-- RF-13 remains owned by Task 11.
+- RF-13 remains owned by Task 12.
 
 ## Related rules and constraints
 
@@ -25,18 +25,19 @@ without replacing the secure-link/form experience.
   conversation/AI contracts, and sensitive-data handling/retention.
 - DEC-19 approves this extension but does not resolve those implementation
   decisions.
+- Task 08 and `docs/frontend-design.md` govern the client chat and progress UI.
 
 ## Prerequisites
 
-- Tasks 06 and 09 complete; Tasks 07–09 provide the coexisting secure-link/form
-  path and the authoritative structured onboarding schema.
+- Tasks 06, 08, and 10 complete; Tasks 07, 09, and 10 provide the coexisting
+  secure-link/form path and the authoritative structured onboarding schema.
 - Relevant DEC-06, DEC-08, and DEC-18 resolutions recorded. Stop if any missing
   decision would require inventing fields, medical rules, retention, or provider
   behavior.
 
 ## Required reading
 
-Read `AGENTS.md`; `docs/requirements.md` sections 1–4, 7.1.1, 8, 9.2, and 11;
+Read `AGENTS.md`; `docs/frontend-design.md`; `docs/requirements.md` sections 1–4, 7.1.1, 8, 9.2, and 11;
 `docs/product-extensions.md` EXT-RF-AI-01; RF-11–RF-13 and their CA; RN-05,
 RN-11, RN-23, RN-29, RN-30; RNF01, RNF03, RNF05, RNF06; DEC-06, DEC-08,
 DEC-18, and DEC-19.
@@ -45,15 +46,19 @@ DEC-18, and DEC-19.
 
 - Implement an authenticated own-client conversation/session and message flow
   behind the provider-independent AI adapter.
-- Ask progressive questions only from the approved Task 09 schema and map
+- Ask progressive questions only from the approved Task 10 schema and map
   validated answers into that client's structured onboarding draft.
 - Preserve structured fields as authoritative. Ambiguous, missing, or invalid
   answers remain incomplete and are explained; chat text alone is insufficient.
 - Support safe resume after navigation/re-authentication according to the
   approved retention policy and show processing/controlled failure states.
-- Reuse Task 09 validation and authorization rather than duplicating medical or
-  field rules. Keep Task 07/08 link and Task 09 form usable.
-- Expose a stable readiness result for Task 11, but do not mark onboarding
+- Build the conversation from shared client/chat patterns: readable message
+  width, clear sender distinction, persistent input, generating/error/retry
+  states, and visible structured onboarding progress. Keep the form and chat
+  visually coherent and fully usable on phone, tablet, and desktop.
+- Reuse Task 10 validation and authorization rather than duplicating medical or
+  field rules. Keep the Task 07 invitation/Task 09 link and Task 10 form usable.
+- Expose a stable readiness result for Task 12, but do not mark onboarding
   complete in this task.
 
 ## Out of scope
@@ -96,10 +101,13 @@ with the form and readiness handoff without a live AI provider.
 ## Ready-to-use Terra/Medium Codex prompt
 
 Use Terra with Medium reasoning. Read `AGENTS.md`, then
-`docs/tasks/10-conversational-ai-onboarding.md`, then only the requirements and
+`docs/tasks/11-conversational-ai-onboarding.md`, then only the requirements and
 extension sections/IDs listed under Required reading. Inspect the existing
 repository before modifying files. Implement only this task, preserving the
-secure-link/form onboarding path and structured data as authoritative. Stop and
-ask if DEC-06, DEC-08, DEC-18, or another unresolved item requires a material
-human decision. Run relevant backend, frontend, and integration tests, review
-the Git diff, and provide the required completion report. Do not commit or push.
+secure-link/form onboarding path and structured data as authoritative. Follow
+`docs/frontend-design.md` and reuse Task 08 shared shell/chat components; do
+not create an independent chatbot style. Check phone, tablet, and desktop.
+Stop and ask if DEC-06, DEC-08, DEC-18, or another unresolved item requires a
+material human decision. Run relevant backend, frontend, and integration tests,
+review the Git diff, and provide the required completion report. Do not commit
+or push.

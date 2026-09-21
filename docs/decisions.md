@@ -162,7 +162,7 @@ explicitly implemented and approved.
 **Status:** partially approved — 2026-09-20
 
 This approval resolves only the onboarding invitation-token portion needed by
-RF-09 and Tasks 07–08. The onboarding schema, required fields, editability, and
+RF-09 and Tasks 07 and 09. The onboarding schema, required fields, editability, and
 other DEC-06 matters remain unresolved.
 
 - An `onboarding_invitation` token is cryptographically random, bound to exactly

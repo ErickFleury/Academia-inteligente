@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -31,6 +31,12 @@ class InvitationResponse(BaseModel):
     delivery_status: str
     expires_at: str
     sent_at: str | None
+
+
+class InvitationAccessResponse(BaseModel):
+    """Public token state without account, client, or onboarding data."""
+
+    status: Literal["valid", "expired", "invalid", "redeemed"]
 
 
 def response_from_summary(summary: InvitationSummary) -> InvitationResponse:
@@ -68,3 +74,18 @@ def issue_onboarding_invitation(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Onboarding invitation delivery failed",
         ) from None
+
+
+@router.get("/access", response_model=InvitationAccessResponse)
+def validate_onboarding_access(token: str, session: DatabaseSession) -> InvitationAccessResponse:
+    """Validate a mailed token passively; a GET request never consumes it."""
+    access = invitation_service.validate_access(session, token)
+    return InvitationAccessResponse(status=access.status)
+
+
+@router.post("/access/redemptions", response_model=InvitationAccessResponse)
+def redeem_onboarding_access(token: str, session: DatabaseSession) -> InvitationAccessResponse:
+    """Consume a valid token only after the recipient intentionally starts onboarding."""
+    if invitation_service.consume_access_after_redemption(session, token):
+        return InvitationAccessResponse(status="redeemed")
+    return InvitationAccessResponse(status="invalid")

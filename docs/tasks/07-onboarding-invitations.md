@@ -37,7 +37,7 @@ proof that the other flow completed.
 
 ## Out of scope
 
-- Rendering/accepting onboarding content (Tasks 08–10).
+- Rendering/accepting onboarding content (Tasks 09–12).
 - Password recovery (RF-06), provider selection, or production e-mail account setup.
 - Claiming delivery when only enqueueing/sending has failed.
 

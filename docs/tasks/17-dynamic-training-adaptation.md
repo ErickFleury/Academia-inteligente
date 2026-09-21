@@ -1,4 +1,4 @@
-# Task 16 — Dynamic Training Adaptation
+# Task 17 — Dynamic Training Adaptation
 
 ## Objective
 
@@ -7,7 +7,7 @@ Turn relevant chat reports into an AI-generated adaptation proposal and, only th
 ## Requirements covered
 
 - RF-19: CA-19.1–CA-19.4.
-- RF-17 CA-17.2/CA-17.3 are integration-verified; Task 12 owns versioning behavior.
+- RF-17 CA-17.2/CA-17.3 are integration-verified; Task 13 owns versioning behavior.
 
 ## Related rules and constraints
 
@@ -21,17 +21,19 @@ Turn relevant chat reports into an AI-generated adaptation proposal and, only th
 
 ## Prerequisites
 
-- Tasks 12 and 15 complete; Task 06 authenticated-client identity is inherited
-  through Task 15.
+- Tasks 08, 13, and 16 complete; Task 06 authenticated-client identity is inherited
+  through Task 16.
 - Blocking decisions DEC-04, DEC-07, DEC-08, and DEC-15 recorded.
 
 ## Required reading
 
-Read `AGENTS.md`; RF-19 and CA-19.1–CA-19.4; RF-17/CA-17.2–CA-17.3; RN-12–RN-18, RN-29–RN-31; RNF04–RNF06; DEC-04, DEC-07, DEC-08, DEC-15, DEC-18; `docs/requirements.md` sections 2.2, 7.1.1, 8.2, 9.2, and 11.
+Read `AGENTS.md`; `docs/frontend-design.md`; RF-19 and CA-19.1–CA-19.4; RF-17/CA-17.2–CA-17.3; RN-12–RN-18, RN-29–RN-31; RNF04–RNF06; DEC-04, DEC-07, DEC-08, DEC-15, DEC-18; `docs/requirements.md` sections 2.2, 7.1.1, 8.2, 9.2, and 11.
 
 ## Scope
 
-Implement change-request detection/triggering as defined by the approved contract, context-safe adaptation generation, structured proposal validation, review/approval transitions, and activation through Task 12's version service. Preserve unrelated sheet content and expose only the UI needed for the approved actors/states.
+Implement change-request detection/triggering as defined by the approved contract, context-safe adaptation generation, structured proposal validation, review/approval transitions, and activation through Task 13's version service. Preserve unrelated sheet content and expose only the UI needed for the approved actors/states.
+
+Reuse Task 08 design foundations plus Task 16 chat and Task 13/14 review-state patterns. Visually distinguish suggestion, approval, and current plan without adding a separate style or implying automatic activation.
 
 ## Out of scope
 
@@ -45,7 +47,7 @@ Implement change-request detection/triggering as defined by the approved contrac
 - CA-19.2: only a change approved through the defined flow becomes a later current version.
 - CA-19.3: unrelated portions of the sheet remain intact.
 - CA-19.4: the changed current sheet persists after reauthentication.
-- Integration re-verifies CA-17.2/CA-17.3 through Task 12 services.
+- Integration re-verifies CA-17.2/CA-17.3 through Task 13 services.
 
 ## Tests
 
@@ -60,4 +62,4 @@ Use fake AI responses. Add contextual adaptation, unrelated-content preservation
 
 ## Ready-to-use Terra/Medium Codex prompt
 
-Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/16-dynamic-training-adaptation.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task and preserve the authenticated client's approved current/history/version boundaries. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/17-dynamic-training-adaptation.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task and preserve the authenticated client's approved current/history/version boundaries. Follow `docs/frontend-design.md` and reuse Task 08 shared components and Task 16 chat/review patterns; check phone, tablet, and desktop. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

@@ -29,6 +29,9 @@ requirements.
 5. `docs/implementation-plan.md` and `docs/tasks/` define execution order and
    verified status, but do not create product requirements by themselves.
 
+`docs/frontend-design.md` governs UI presentation and reuse; it does not add or
+change RF/CA/RNF/RN requirements or their acceptance status.
+
 Unchecked acceptance boxes preserve source traceability; they are not evidence
 that a criterion is unimplemented or failed. Current verified status appears in
 section 11 and is based only on completed tasks and test evidence.
@@ -1020,7 +1023,7 @@ historical presentation of every DEC as unresolved.
 | DEC-03 | **Resolved** | Python/FastAPI modular monolith, PostgreSQL/SQLAlchemy/Alembic, React/TS/Vite/MUI, Keycloak/OIDC, SMTP/Mailpit, Docker Compose/Linux/UFW, provider-independent AI adapters, and approved pinned baseline. NestJS has no MVP role. | All architecture and external adapters. |
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
-| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. Schema, required fields/types/units/ranges, editability, and recovery-token policy remain unresolved. | Task 07 may proceed; Tasks 08–11 and EXT-RF-AI-01 remain blocked by their relevant unresolved portions. |
+| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. Schema, required fields/types/units/ranges, editability, and recovery-token policy remain unresolved. | Task 07 may proceed; Tasks 09–12 and EXT-RF-AI-01 remain blocked by their relevant unresolved portions. |
 | DEC-07 | Unresolved; blocking | Health severity criteria, proposal/review/approval states, approvers, and activation rules. | Training generation/adaptation. |
 | DEC-08 | Unresolved; blocking | AI provider/model, contracts, structured outputs, context limits, retention/error behavior. | Conversational onboarding, RF-15, RF-18, RF-19. |
 | DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
@@ -1076,14 +1079,16 @@ unchecked boxes or planned files.
 | RF-03 | Original MVP | **Partially implemented** | DEC-05 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred and not satisfied. |
 | Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
-| RF-10–RF-13 | Original MVP | Planned | DEC-06/DEC-18 | Tasks 08–09 and 11; not yet implemented. |
-| EXT-RF-AI-01 | Approved MVP extension | Planned | DEC-06/08/18 | Task 10; not yet implemented. |
-| RF-15–RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 12–16 after renumbering. |
-| MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 17. |
-| EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 18. |
-| RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Planned | EXT-DEC-EQP-01 | Task 19. |
-| RF-23–RF-25X | Original post-MVP | Planned/blocked | DEC-10/DEC-11 | Task 20 implements count/view only after decisions. |
-| EXT-RF-PRES-01 | Approved post-MVP extension | Blocked | DEC-10/EXT-DEC-PRES-01 | Task 21. |
+| Frontend design system and existing UI restyle | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 08; preserves Tasks 01–07 behavior. |
+| RF-10–RF-13 | Original MVP | Planned | DEC-06/DEC-18 | Tasks 09–10 and 12; not yet implemented. |
+| EXT-RF-AI-01 | Approved MVP extension | Planned | DEC-06/08/18 | Task 11; not yet implemented. |
+| RF-15–RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 13–17. |
+| MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
+| MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
+| EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |
+| RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Planned | EXT-DEC-EQP-01 | Task 21. |
+| RF-23–RF-25X | Original post-MVP | Planned/blocked | DEC-10/DEC-11 | Task 22 implements count/view only after decisions. |
+| EXT-RF-PRES-01 | Approved post-MVP extension | Blocked | DEC-10/EXT-DEC-PRES-01 | Task 23. |
 | Remaining RF-06–RF-08, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Fluxo de trabalho do Codex
@@ -1155,14 +1160,14 @@ by inference.
 - **DEC-02:** RF-24X/RF-25X suffix meaning; affects occupancy work.
 - **DEC-06:** onboarding schema/editability and recovery-token policies; its
   invitation-token policy is approved for Task 07, while remaining portions
-  block Tasks 08–11.
+  block Tasks 09–12.
 - **DEC-07:** AI health severity and review/approval lifecycle; blocks training
   generation/adaptation tasks.
 - **DEC-08:** AI provider and contracts; blocks conversational onboarding and AI
   training/chat/adaptation tasks.
 - **DEC-09:** biometric metrics and thresholds; blocks relevant RF-21/RF-22 work.
-- **DEC-10:** occupancy source/meaning/freshness; blocks Task 20 and contributes
-  to the Task 21 block.
+- **DEC-10:** occupancy source/meaning/freshness; blocks Task 22 and contributes
+  to the Task 23 block.
 - **DEC-11:** physical-access integration and exceptions; blocks RF-20–RF-23.
 - **DEC-12:** plans, enrollment, payment, and entry eligibility details; blocks
   RF-31 and related physical-access work.
@@ -1170,11 +1175,11 @@ by inference.
 - **DEC-14:** class scheduling/capacity/reservation model; blocks RF-30 details.
 - **DEC-15:** manual/review/exercise/audit flows; blocks the affected training
   tasks when those flows are required.
-- **DEC-16:** RNF measurement protocol; blocks formal Task 17 sign-off.
+- **DEC-16:** RNF measurement protocol; blocks formal Task 19 sign-off.
 - **DEC-18:** sensitive-data storage/access/retention/logging; blocks health/AI
   and biometric work.
-- **EXT-DEC-SOC-01:** sharing audience and lifecycle; blocks Task 18.
-- **EXT-DEC-EQP-01:** equipment grouping/inventory model; blocks Task 19's
+- **EXT-DEC-SOC-01:** sharing audience and lifecycle; blocks Task 20.
+- **EXT-DEC-EQP-01:** equipment grouping/inventory model; blocks Task 21's
   persistence design.
 - **EXT-DEC-PRES-01:** named-presence consent/data/source/retention model; blocks
-  Task 21 together with DEC-10.
+  Task 23 together with DEC-10.

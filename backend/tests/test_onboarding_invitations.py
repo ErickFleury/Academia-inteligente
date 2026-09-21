@@ -50,16 +50,23 @@ class AsgiClient:
         self.app = app
 
     def post(self, path: str) -> tuple[int, dict[str, object]]:
+        return self.request("POST", path)
+
+    def get(self, path: str) -> tuple[int, dict[str, object]]:
+        return self.request("GET", path)
+
+    def request(self, method: str, path: str) -> tuple[int, dict[str, object]]:
         sent: list[dict[str, object]] = []
+        parsed = urlsplit(path)
         scope = {
             "type": "http",
             "asgi": {"version": "3.0"},
             "http_version": "1.1",
-            "method": "POST",
+            "method": method,
             "scheme": "http",
-            "path": path,
-            "raw_path": path.encode(),
-            "query_string": b"",
+            "path": parsed.path,
+            "raw_path": parsed.path.encode(),
+            "query_string": parsed.query.encode(),
             "headers": [(b"authorization", b"Bearer admin-token")],
             "client": ("testclient", 50000),
             "server": ("testserver", 80),
@@ -166,6 +173,64 @@ def test_expired_and_already_used_tokens_are_rejected(database_session: Session)
     assert (
         service.validate_for_client(database_session, raw_token(expired_sender), client.id) is None
     )
+
+
+def test_access_status_is_passive_and_distinguishes_expired_from_invalid(
+    database_session: Session,
+) -> None:
+    client = create_client(database_session, "ada@example.test")
+    sender = FakeEmailSender()
+    clock = [datetime(2026, 9, 20, tzinfo=UTC)]
+    service = OnboardingInvitationService(
+        sender=sender, clock=lambda: clock[0], token_factory=lambda _: "access-token"
+    )
+    service.issue(database_session, client.id)
+    token = raw_token(sender)
+
+    assert service.validate_access(database_session, token).status == "valid"
+    assert service.validate_access(database_session, "malformed-token").status == "invalid"
+    assert service.validate_for_client(database_session, token, client.id) is not None
+
+    clock[0] += timedelta(hours=24)
+    assert service.validate_access(database_session, token).status == "expired"
+
+
+def test_access_api_passively_validates_and_only_explicit_redemption_consumes(
+    database_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = create_client(database_session, "ada@example.test")
+    app = create_app()
+
+    def override_database_session() -> Generator[Session, None, None]:
+        yield database_session
+
+    app.dependency_overrides[get_database_session] = override_database_session
+    sender = FakeEmailSender()
+    service = OnboardingInvitationService(sender=sender, token_factory=lambda _: "web-access-token")
+    monkeypatch.setattr(onboarding_router, "invitation_service", service)
+    service.issue(database_session, client.id)
+    token = raw_token(sender)
+    api_client = AsgiClient(app)
+
+    status_code, body = api_client.get(f"/onboarding/access?token={token}")
+    assert status_code == 200
+    assert body == {"status": "valid"}
+    assert database_session.scalar(select(OnboardingInvitation)).redeemed_at is None
+
+    redeemed_status, redeemed_body = api_client.post(
+        f"/onboarding/access/redemptions?token={token}"
+    )
+    assert redeemed_status == 200
+    assert redeemed_body == {"status": "redeemed"}
+    assert database_session.scalar(select(OnboardingInvitation)).redeemed_at is not None
+
+    reused_status, reused_body = api_client.get(f"/onboarding/access?token={token}")
+    assert reused_status == 200
+    assert reused_body == {"status": "invalid"}
+    invalid_status, invalid_body = api_client.get("/onboarding/access?token=wrong-token")
+    assert invalid_status == 200
+    assert invalid_body == {"status": "invalid"}
+    app.dependency_overrides.clear()
 
 
 def test_resend_invalidates_previous_unused_token_and_keeps_newest_valid(

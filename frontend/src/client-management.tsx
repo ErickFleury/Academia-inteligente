@@ -1,7 +1,10 @@
 import {
-  Alert,
+  Box,
   Button,
-  CircularProgress,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
   FormControlLabel,
   Stack,
   Switch,
@@ -10,6 +13,7 @@ import {
 } from '@mui/material'
 import { FormEvent, useEffect, useState } from 'react'
 
+import { EmptyState, LoadingState, StatusNotice } from './components/ui'
 import {
   ApiRequestError,
   type Client,
@@ -24,6 +28,10 @@ import {
 type ClientManagementProps = {
   accessToken: string
   onUnauthenticated: () => void
+}
+
+function accountStatus(client: Client) {
+  return client.account_active ? 'Ativo' : 'Inativo'
 }
 
 export function ClientManagement({ accessToken, onUnauthenticated }: ClientManagementProps) {
@@ -71,11 +79,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
       const client = await createClient(accessToken, name, email)
       setName('')
       setEmail('')
-      setSuccess(
-        client.identity_provisioned
-          ? 'Cliente cadastrado com sucesso.'
-          : 'Cliente cadastrado. Provisionamento de acesso pendente.',
-      )
+      setSuccess(client.identity_provisioned ? 'Cliente cadastrado com sucesso.' : 'Cliente cadastrado. Provisionamento de acesso pendente.')
       await loadClients(query)
       selectClient(client)
     } catch (reason) {
@@ -116,9 +120,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
         email: editEmail,
         account_active: editAccountActive,
       })
-      setClients((currentClients) =>
-        currentClients.map((client) => (client.id === updated.id ? updated : client)),
-      )
+      setClients((currentClients) => currentClients.map((client) => (client.id === updated.id ? updated : client)))
       selectClient(updated)
       setSuccess('Cliente atualizado com sucesso.')
     } catch (reason) {
@@ -153,105 +155,92 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
   }
 
   return (
-    <Stack spacing={2} sx={{ width: '100%' }}>
-      <Typography component="h2" variant="h5">
-        Clientes
-      </Typography>
-      {error && <Alert severity="error">{error}</Alert>}
-      {success && <Alert severity="success">{success}</Alert>}
-      <Stack component="form" spacing={2} onSubmit={handleCreate} sx={{ width: '100%' }}>
-        <Typography component="h3" variant="h6">
-          Cadastrar cliente
-        </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <TextField
-            fullWidth
-            label="Nome"
-            onChange={(event) => setName(event.target.value)}
-            required
-            value={name}
-          />
-          <TextField
-            fullWidth
-            label="E-mail"
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            type="email"
-            value={email}
-          />
-        </Stack>
-        <Button sx={{ alignSelf: 'flex-start' }} type="submit" variant="contained">
-          Cadastrar cliente
-        </Button>
+    <Stack spacing={3} sx={{ width: '100%' }}>
+      <Stack aria-live="polite" spacing={1}>
+        {error && <StatusNotice severity="error">{error}</StatusNotice>}
+        {success && <StatusNotice severity="success">{success}</StatusNotice>}
       </Stack>
-      <Stack component="form" direction={{ xs: 'column', sm: 'row' }} spacing={2} onSubmit={handleSearch}>
-        <TextField
-          fullWidth
-          label="Pesquisar por nome ou e-mail"
-          onChange={(event) => setQuery(event.target.value)}
-          value={query}
-        />
-        <Button type="submit" variant="outlined">
-          Pesquisar
-        </Button>
-      </Stack>
-      {loading ? (
-        <CircularProgress aria-label="Carregando clientes" />
-      ) : (
-        <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
-          {clients.map((client) => (
-            <li key={client.id}>
-              <Button onClick={() => void handleSelect(client.id)} variant="text">
-                {client.name} — {client.email} ({client.account_active ? 'Ativo' : 'Inativo'})
-              </Button>
-            </li>
-          ))}
-          {!clients.length && <Typography>Nenhum cliente encontrado.</Typography>}
+
+      <Card component="section">
+        <CardContent>
+          <Stack component="form" spacing={2.5} onSubmit={handleCreate}>
+            <Box>
+              <Typography color="primary.main" variant="overline">Novo cadastro</Typography>
+              <Typography component="h2" variant="h3">Cadastrar cliente</Typography>
+              <Typography color="text.secondary" sx={{ mt: 0.5 }}>Os dados de acesso serão provisionados separadamente.</Typography>
+            </Box>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField autoComplete="name" fullWidth label="Nome" onChange={(event) => setName(event.target.value)} required value={name} />
+              <TextField autoComplete="email" fullWidth label="E-mail" onChange={(event) => setEmail(event.target.value)} required type="email" value={email} />
+            </Stack>
+            <Box><Button type="submit" variant="contained">Cadastrar cliente</Button></Box>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Card component="section">
+        <CardContent>
+          <Stack component="form" direction={{ xs: 'column', sm: 'row' }} spacing={2} onSubmit={handleSearch}>
+            <TextField fullWidth label="Pesquisar por nome ou e-mail" onChange={(event) => setQuery(event.target.value)} value={query} />
+            <Button type="submit" variant="outlined">Pesquisar</Button>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Stack component="section" spacing={1.5} aria-label="Resultados de clientes">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between' }}>
+          <Typography component="h2" variant="h3">Clientes cadastrados</Typography>
+          {!loading && <Typography color="text.secondary" variant="body2">{clients.length} {clients.length === 1 ? 'resultado' : 'resultados'}</Typography>}
         </Stack>
-      )}
+        {loading ? <LoadingState label="Carregando clientes" /> : (
+          <Stack component="ul" spacing={1.25} sx={{ listStyle: 'none', m: 0, p: 0 }}>
+            {clients.map((client) => (
+              <Box component="li" key={client.id}>
+                <Card variant="outlined">
+                  <Button
+                    aria-label={`${client.name} — ${client.email} (${accountStatus(client)})`}
+                    color="inherit"
+                    onClick={() => void handleSelect(client.id)}
+                    sx={{ alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5, textAlign: 'left', width: '100%' }}
+                    variant="text"
+                  >
+                    <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                      <Typography noWrap sx={{ color: 'text.primary', fontWeight: 750 }}>{client.name} — {client.email} ({accountStatus(client)})</Typography>
+                      <Typography color="text.secondary" variant="body2">Selecionar para consultar ou editar</Typography>
+                    </Stack>
+                    <Chip color={client.account_active ? 'success' : 'default'} label={accountStatus(client)} size="small" sx={{ ml: 2 }} />
+                  </Button>
+                </Card>
+              </Box>
+            ))}
+            {!clients.length && <EmptyState description="Ajuste a busca ou cadastre o primeiro cliente." title="Nenhum cliente encontrado." />}
+          </Stack>
+        )}
+      </Stack>
+
       {selectedClient && (
-        <Stack component="form" spacing={2} onSubmit={handleUpdate}>
-          <Typography component="h3" variant="h6">
-            Editar cliente
-          </Typography>
-          <TextField
-            fullWidth
-            label="Nome do cliente"
-            onChange={(event) => setEditName(event.target.value)}
-            required
-            value={editName}
-          />
-          <TextField
-            fullWidth
-            label="E-mail do cliente"
-            onChange={(event) => setEditEmail(event.target.value)}
-            required
-            type="email"
-            value={editEmail}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={editAccountActive}
-                onChange={(event) => setEditAccountActive(event.target.checked)}
+        <Card component="section" sx={{ borderColor: 'primary.main' }}>
+          <CardContent>
+            <Stack component="form" spacing={2.5} onSubmit={handleUpdate}>
+              <Box>
+                <Typography color="primary.main" variant="overline">Perfil e acesso</Typography>
+                <Typography component="h2" variant="h3">Editar cliente</Typography>
+              </Box>
+              <Divider />
+              <TextField autoComplete="name" fullWidth label="Nome do cliente" onChange={(event) => setEditName(event.target.value)} required value={editName} />
+              <TextField autoComplete="email" fullWidth label="E-mail do cliente" onChange={(event) => setEditEmail(event.target.value)} required type="email" value={editEmail} />
+              <FormControlLabel
+                control={<Switch checked={editAccountActive} onChange={(event) => setEditAccountActive(event.target.checked)} />}
+                label="Conta ativa"
               />
-            }
-            label="Conta ativa"
-          />
-          <Button sx={{ alignSelf: 'flex-start' }} type="submit" variant="contained">
-            Salvar alterações
-          </Button>
-          {selectedClient.identity_provisioned === false && (
-            <Button onClick={() => void handleProvisionIdentity()} variant="outlined">
-              Provisionar acesso
-            </Button>
-          )}
-          {selectedClient.identity_provisioned === true && selectedClient.account_active && (
-            <Button onClick={() => void handleSendOnboardingInvitation()} variant="outlined">
-              Enviar convite de onboarding
-            </Button>
-          )}
-        </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
+                <Button type="submit" variant="contained">Salvar alterações</Button>
+                {selectedClient.identity_provisioned === false && <Button onClick={() => void handleProvisionIdentity()} variant="outlined">Provisionar acesso</Button>}
+                {selectedClient.identity_provisioned === true && selectedClient.account_active && <Button onClick={() => void handleSendOnboardingInvitation()} variant="outlined">Enviar convite de onboarding</Button>}
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
       )}
     </Stack>
   )

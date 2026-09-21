@@ -44,6 +44,13 @@ alternatives as active architecture.
 
 Do not introduce major technologies or architectural changes without approval.
 
+## Frontend visual system
+
+`docs/frontend-design.md` is the visual/UI source of truth. Frontend tasks
+must reuse the established MUI theme, shared components, and client/admin
+shells, maintaining consistent responsive and accessible behavior. Add a new
+shared pattern only when existing components cannot express the needed UI.
+
 ## Project Structure
 
 Expected top-level structure:

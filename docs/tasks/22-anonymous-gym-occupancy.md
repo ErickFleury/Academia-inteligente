@@ -1,4 +1,4 @@
-# Task 20 — Anonymous Gym Occupancy
+# Task 22 — Anonymous Gym Occupancy
 
 ## Objective
 
@@ -24,14 +24,14 @@ counts is decided.
 
 ## Prerequisites
 
-- Tasks 03 and 06 complete; physical access/event prerequisites selected by the
+- Tasks 03, 06, and 08 complete; physical access/event prerequisites selected by the
   approved DEC-10/DEC-11 design are implemented.
 - DEC-10 and applicable DEC-11 parts recorded. Stop if either source-of-truth or
   event contract remains materially unresolved.
 
 ## Required reading
 
-Read `AGENTS.md`; RF-20–RF-25X and their CA for boundaries; RN-04–RN-10,
+Read `AGENTS.md`; `docs/frontend-design.md`; RF-20–RF-25X and their CA for boundaries; RN-04–RN-10,
 RN-23, RN-32, RN-33, RN-35–RN-37; RNF01, RNF03–RNF06;
 `docs/requirements.md` sections 3, 4.1, 7.1.1, 8.4, 9.2, and 11; DEC-02,
 DEC-09–DEC-12, DEC-19.
@@ -42,9 +42,11 @@ Implement only the approved idempotent attendance/occupancy inputs, non-negative
 current anonymous count, failure/freshness behavior, authorized API, and mobile
 client display. Keep aggregate occupancy independent from named presence.
 
+Reuse Task 08 ClientShell and data-display/feedback patterns. Make the current count immediately readable with concise status/context, not a marketing card. Preserve a clear count-only boundary and check phone, tablet, and desktop.
+
 ## Out of scope
 
-Named clients currently present (Task 21), opt-in preferences, inferred camera
+Named clients currently present (Task 23), opt-in preferences, inferred camera
 identity, biometric algorithms, live equipment usage, or any unapproved
 resolution of DEC-10.
 
@@ -70,9 +72,10 @@ Do not commit or push.
 ## Ready-to-use Terra/Medium Codex prompt
 
 Use Terra with Medium reasoning. Read `AGENTS.md`, then
-`docs/tasks/20-anonymous-gym-occupancy.md`, then only the requirements/decisions
+`docs/tasks/22-anonymous-gym-occupancy.md`, then only the requirements/decisions
 listed under Required reading. Inspect the repository before editing. Implement
-only anonymous occupancy. Stop and ask if DEC-10, applicable DEC-11 behavior, or
+only anonymous occupancy. Follow `docs/frontend-design.md` and reuse Task 08
+shared layout/components; check phone, tablet, and desktop. Stop and ask if DEC-10, applicable DEC-11 behavior, or
 another unresolved item requires a material human decision. Run relevant tests,
 review the Git diff, and provide the required completion report. Do not commit
 or push.

@@ -32,6 +32,14 @@ class InvitationDeliveryError(Exception):
 
 
 @dataclass(frozen=True)
+class InvitationAccess:
+    """A token-derived onboarding scope that never exposes client identity."""
+
+    invitation: OnboardingInvitation | None
+    status: str
+
+
+@dataclass(frozen=True)
 class InvitationSummary:
     id: UUID
     expires_at: datetime
@@ -46,6 +54,15 @@ def current_time() -> datetime:
 def hash_token(raw_token: str) -> str:
     """Return the fixed-size database representation of a high-entropy token."""
     return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+
+def is_expired(expires_at: datetime, now: datetime) -> bool:
+    """Compare timestamps safely with SQLite's timezone-naive test values."""
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=UTC)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=UTC)
+    return expires_at <= now
 
 
 class OnboardingInvitationService:
@@ -91,6 +108,7 @@ class OnboardingInvitationService:
                 OnboardingInvitation.redeemed_at.is_(None),
             )
             .values(invalidated_at=now)
+            .execution_options(synchronize_session="fetch")
         )
         session.add(invitation)
         session.commit()
@@ -129,6 +147,40 @@ class OnboardingInvitationService:
             )
         )
 
+    def validate_access(self, session: Session, raw_token: str) -> InvitationAccess:
+        """Passively classify one token without exposing its bound client.
+
+        This lookup deliberately does not consume the token, so URL prefetching
+        and mail scanners cannot invalidate an invitation.
+        """
+        invitation = session.scalar(
+            select(OnboardingInvitation).where(
+                OnboardingInvitation.token_hash == hash_token(raw_token),
+                OnboardingInvitation.purpose == INVITATION_PURPOSE,
+            )
+        )
+        if invitation is None:
+            return InvitationAccess(invitation=None, status="invalid")
+
+        if is_expired(invitation.expires_at, self._clock()):
+            return InvitationAccess(invitation=invitation, status="expired")
+        if (
+            invitation.delivery_status != "sent"
+            or invitation.redeemed_at is not None
+            or invitation.invalidated_at is not None
+        ):
+            return InvitationAccess(invitation=invitation, status="invalid")
+        return InvitationAccess(invitation=invitation, status="valid")
+
+    def consume_access_after_redemption(self, session: Session, raw_token: str) -> bool:
+        """Consume an invitation without accepting a caller-selected client id."""
+        access = self.validate_access(session, raw_token)
+        if access.status != "valid":
+            return False
+        if access.invitation is None:
+            return False
+        return self.consume_after_valid_redemption(session, raw_token, access.invitation.client_id)
+
     def consume_after_valid_redemption(
         self, session: Session, raw_token: str, client_id: UUID
     ) -> bool:
@@ -146,6 +198,7 @@ class OnboardingInvitationService:
                 OnboardingInvitation.invalidated_at.is_(None),
             )
             .values(redeemed_at=now)
+            .execution_options(synchronize_session="fetch")
         )
         session.commit()
         return result.rowcount == 1

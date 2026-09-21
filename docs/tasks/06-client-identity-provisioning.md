@@ -87,7 +87,7 @@ RNF04–RNF06; DEC-03–DEC-05 and DEC-17; sections 4.1, 6.2, 7.1, 8.2, and 10.
   (RF-06), or allowing an administrator to choose a client password.
 - Storing credentials, required-action tokens, or Keycloak secrets in
   PostgreSQL.
-- Onboarding invitations/content (Tasks 07–10), biometrics, membership,
+- Onboarding invitations/content (Task 07 and Tasks 09–12), biometrics, membership,
   payment, or physical-entry authorization.
 - Granting `admin`, `employee`, `attendant`, or `instructor` during client
   provisioning.
