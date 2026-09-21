@@ -1043,7 +1043,7 @@ This order is implementation guidance added in this consolidation; it does not c
 | Major feature | Classification | Governing requirements/decisions |
 | --- | --- | --- |
 | Client/account CRUD, auth, authorization | Original MVP; Tasks 02–06 implemented/integration-verified | RF-01–RF-05; DEC-03–DEC-05, DEC-17 |
-| Secure-link structured onboarding | Original MVP; planned | RF-09–RF-13; DEC-06, DEC-18 |
+| Secure-link structured onboarding | Original MVP; partially implemented | RF-09–RF-13; DEC-06, DEC-18 |
 | Conversational onboarding | Approved MVP extension; planned | EXT-RF-AI-01; DEC-06, DEC-08, DEC-18 |
 | Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
 | Training generation/version/current view/chat/adaptation | Original MVP; planned | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
@@ -1068,7 +1068,7 @@ retains the chronological decision history.
 | DEC-03 | **Resolved** | Python/FastAPI modular monolith, PostgreSQL/SQLAlchemy/Alembic, React/TS/Vite/MUI, Keycloak/OIDC, SMTP/Mailpit, Docker Compose/Linux/UFW, provider-independent AI adapters, and approved pinned baseline. NestJS has no MVP role. | All architecture and external adapters. |
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
-| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. Schema, required fields/types/units/ranges, editability, and recovery-token policy remain unresolved. | Tasks 07 and 09 are complete; Tasks 10–12 and EXT-RF-AI-01 remain blocked by their relevant unresolved portions. |
+| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, and 12 may proceed. EXT-RF-AI-01 remains gated by DEC-08 and its applicable privacy rules. |
 | DEC-07 | Unresolved; blocking | Health severity criteria, proposal/review/approval states, approvers, and activation rules. | Training generation/adaptation. |
 | DEC-08 | Unresolved; blocking | AI provider/model, contracts, structured outputs, context limits, retention/error behavior. | Conversational onboarding, RF-15, RF-18, RF-19. |
 | DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
@@ -1080,7 +1080,7 @@ retains the chronological decision history.
 | DEC-15 | Unresolved; blocking where invoked | Manual/review training, exercise maintenance, evaluations, completed workouts, critical notices, audit/export flows. | RF-15–RF-19 and related RN. |
 | DEC-16 | Unresolved; blocking formal RNF sign-off | Reference load, timeouts, viewports, usability protocol and continuous-availability measurement. | Formal end-to-end RNF verification. |
 | DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
-| DEC-18 | Unresolved; blocking sensitive-data work | Health/biometric storage, access, logging, retention, replacement and audit-evidence policy. | Health onboarding, AI health context, biometrics. |
+| DEC-18 | Partially resolved | Health/onboarding storage, access, logging, retention, draft replacement, and non-sensitive audit evidence are approved for Task 10. Biometric storage/replacement/retention remains unresolved. | Task 10 may proceed; AI health context and biometrics retain their relevant decision gates. |
 
 DEC-19 is a later approved decision, not an original question: it records the
 client-facing direction and four of the extension requirements in section 3.1.
@@ -1127,7 +1127,8 @@ unchecked boxes or planned files.
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
 | Frontend design system and existing UI restyle | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 08: shared MUI theme, shells, and restyle; preserves Tasks 01–07 behavior. |
 | RF-10 | Original MVP | Implemented | DEC-06 | Task 09: secure client-scoped invitation validation and intentional redemption. |
-| RF-11–RF-13 | Original MVP | Planned | DEC-06/DEC-18 | Tasks 10 and 12; not yet implemented. |
+| RF-11/RF-12 | Original MVP | Implemented | DEC-06/DEC-18 | Task 10: client-scoped structured draft, physical/health validation, separate persistence, and non-sensitive audit evidence. |
+| RF-13 | Original MVP | Planned | DEC-06 | Task 12; not yet implemented. |
 | EXT-RF-AI-01 | Approved MVP extension | Planned | DEC-06/08/18 | Task 11; not yet implemented. |
 | EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
 | RF-15–RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 13–17. |
@@ -1206,9 +1207,10 @@ by inference.
 - **DEC-01:** professor-validated final scope; non-blocking while preserving the
   original catalog/MVP.
 - **DEC-02:** RF-24X/RF-25X suffix meaning; affects occupancy work.
-- **DEC-06:** onboarding schema/editability and recovery-token policies; its
-  invitation-token policy is complete in Tasks 07 and 09, while remaining
-  portions block Tasks 10–12.
+- **DEC-06:** recovery-token policy remains unresolved. The invitation-token
+  policy, structured schema, editable-draft behavior, and completion
+  prerequisites are approved; conversational onboarding remains gated by its
+  applicable AI/privacy decisions.
 - **DEC-07:** AI health severity and review/approval lifecycle; blocks training
   generation/adaptation tasks.
 - **DEC-08:** AI provider and contracts; blocks conversational onboarding and AI
@@ -1224,8 +1226,9 @@ by inference.
 - **DEC-15:** manual/review/exercise/audit flows; blocks the affected training
   tasks when those flows are required.
 - **DEC-16:** RNF measurement protocol; blocks formal Task 19 sign-off.
-- **DEC-18:** sensitive-data storage/access/retention/logging; blocks health/AI
-  and biometric work.
+- **DEC-18:** health/onboarding storage, access, logging, retention, draft
+  replacement, and non-sensitive audit evidence are approved for Task 10.
+  Biometric behavior and the remaining AI-sensitive-data decisions are pending.
 - **EXT-DEC-SOC-01:** sharing audience and lifecycle; blocks Task 20.
 - **EXT-DEC-EQP-01:** equipment grouping/inventory model; blocks Task 21's
   persistence design.

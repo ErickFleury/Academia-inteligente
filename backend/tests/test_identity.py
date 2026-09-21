@@ -1,10 +1,16 @@
 import asyncio
 import json
+from io import BytesIO
 
 from app.main import create_app
 from app.modules.identity import router as identity_router
+from app.modules.identity import service as identity_service
 from app.modules.identity.authorization import has_any_role
-from app.modules.identity.service import AuthenticatedIdentity, InvalidSessionError
+from app.modules.identity.service import (
+    AuthenticatedIdentity,
+    InvalidSessionError,
+    OidcUserInfoProvider,
+)
 
 
 class FakeIdentityProvider:
@@ -84,6 +90,23 @@ def test_expired_or_invalid_session_is_rejected(monkeypatch) -> None:
     status, _ = request(create_app(), "Bearer expired")
 
     assert status == 401
+
+
+def test_oidc_userinfo_does_not_require_a_keycloak_account_active_claim(monkeypatch) -> None:
+    payload = json.dumps(
+        {
+            "sub": "client-123",
+            "preferred_username": "client@example.test",
+            "realm_access": {"roles": ["client"]},
+        }
+    ).encode()
+    monkeypatch.setattr(identity_service, "urlopen", lambda *args, **kwargs: BytesIO(payload))
+
+    identity = OidcUserInfoProvider("http://keycloak.test/realms/academia").get_identity("token")
+
+    assert identity == AuthenticatedIdentity(
+        subject="client-123", username="client@example.test", roles=("client",)
+    )
 
 
 def test_inactive_account_is_rejected(monkeypatch) -> None:

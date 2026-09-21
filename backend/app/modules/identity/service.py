@@ -54,7 +54,7 @@ class OidcUserInfoProvider:
             raise IdentityProviderUnavailableError from None
 
         subject = payload.get("sub")
-        if not isinstance(subject, str) or not subject or payload.get("account_active") is not True:
+        if not isinstance(subject, str) or not subject:
             raise InvalidSessionError
 
         roles = payload.get("realm_access", {}).get("roles", [])

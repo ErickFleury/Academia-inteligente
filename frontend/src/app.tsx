@@ -6,6 +6,7 @@ import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OidcSessionClient, type Session } from './auth'
 import { ClientManagement } from './client-management'
 import { OnboardingAccessPage } from './onboarding-access-page'
+import { OnboardingForm } from './onboarding-form'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -58,8 +59,10 @@ export function App() {
     window.location.assign(logoutUrl)
   }
 
-  if (isOnboardingRoute) {
-    return <OnboardingAccessPage token={new URL(window.location.href).searchParams.get('token')} />
+  const onboardingToken = new URL(window.location.href).searchParams.get('token')
+
+  if (isOnboardingRoute && onboardingToken) {
+    return <OnboardingAccessPage token={onboardingToken} />
   }
 
   if (completingLogin) return <PublicShell><LoadingState label="Iniciando sessão" /></PublicShell>
@@ -78,6 +81,23 @@ export function App() {
 
   if ((isProtectedRoute || isAdministrativeRoute) && !session) {
     return <SignInEntry message="Sessão necessária para acessar esta página." onSignIn={() => void oidcSessionClient.startLogin()} />
+  }
+
+  if (isOnboardingRoute && !session) {
+    return <SignInEntry message="Entre para acessar seu onboarding." onSignIn={() => void oidcSessionClient.startLogin()} />
+  }
+
+  if (isOnboardingRoute && !session?.roles.includes('client')) {
+    return (
+      <ClientShell onSignOut={endSession}>
+        <PageHeader eyebrow="Acesso protegido" title="Onboarding indisponível" />
+        <Alert severity="error" variant="outlined">Você não tem permissão para acessar este onboarding.</Alert>
+      </ClientShell>
+    )
+  }
+
+  if (isOnboardingRoute && session) {
+    return <OnboardingForm accessToken={session.accessToken} onSignOut={endSession} />
   }
 
   if (isAdministrativeRoute && !isAdministrator) {
@@ -116,6 +136,7 @@ export function App() {
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">Seu espaço está pronto</Typography>
                 <Typography color="text.secondary">Novos recursos pessoais aparecerão aqui conforme forem disponibilizados.</Typography>
+                {!isAdministrator && <Box><Button component="a" href="/onboarding" variant="contained">Preencher onboarding</Button></Box>}
                 {isAdministrator && <Box><Button component="a" href="/admin" variant="contained">Administração</Button></Box>}
               </Stack>
             </CardContent>

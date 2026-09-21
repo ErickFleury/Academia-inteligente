@@ -181,6 +181,76 @@ other DEC-06 matters remain unresolved.
   redemption, later own-onboarding access uses the normal authenticated-client
   context when available; the link is not reused for later edits.
 
+### Onboarding schema amendment
+
+**Status:** approved — 2026-09-21
+
+Structured onboarding fields are authoritative. Conversational onboarding may
+later populate the same fields but may not replace validation or persistence.
+The approved minimum schema is:
+
+| Field | Type and validation | Draft/completion rule |
+| --- | --- | --- |
+| `training_goal` | Trimmed text, required for completion, 1–500 characters. | May be absent in a partial draft. |
+| `training_experience` | Required enum: `none`, `beginner`, `intermediate`, or `advanced`. | May be absent in a partial draft. |
+| `height_cm` | Integer in centimeters, greater than 0 and at most 300. | May be absent in a partial draft. |
+| `weight_kg` | Decimal kilograms, greater than 0 and at most 500, with at most 2 decimal places. | May be absent in a partial draft. |
+| `has_limitations_or_complaints` | Required boolean for completion. | Its detail is required only when true. |
+| `limitations_or_complaints` | Trimmed text, at most 2,000 characters. | Required and non-empty when the corresponding boolean is true; otherwise null. |
+| `uses_medications` | Required boolean for completion. | Its detail is required only when true. |
+| `medications` | Trimmed text, at most 2,000 characters. | Required and non-empty when the corresponding boolean is true; otherwise null. |
+| `has_health_conditions` | Required boolean for completion. | Its detail is required only when true. |
+| `health_conditions` | Trimmed text, at most 2,000 characters. | Required and non-empty when the corresponding boolean is true; otherwise null. |
+
+The physical ranges are technical sanity checks, not medical judgments. The
+free-text health fields are client-reported information: the application does
+not diagnose, infer dosage advice, or create a medical-diagnosis vocabulary.
+BMI is not persisted; any future BMI use derives it from approved source data.
+
+An onboarding starts in `draft`. The authenticated owning client may save
+partial draft progress when supplied values individually satisfy their
+type/range rules; reopening the draft returns persisted values. Draft saves
+update the current draft without creating a history version for each save.
+
+Completion requires all four training/physical values, explicit values for all
+three booleans, and every conditional detail required by a true boolean. Task
+10 must support these completion rules but does not implement completion.
+After completion, client edits are disabled and completed information is not
+silently overwritten; a future approved revision/replacement flow is required.
+
+## DEC-18 — Health-data storage, access, and audit evidence
+
+**Status:** partially approved — 2026-09-21
+
+This approval applies only to health/onboarding data. Biometric storage,
+replacement, retention, and access remain unresolved until RF-22 or a separate
+biometric task.
+
+- Store onboarding health data in PostgreSQL in a dedicated onboarding-health
+  structure or an equivalently clearly separated persistence model, linked by
+  internal application identifiers. Do not store it in Keycloak, authentication
+  tokens, URLs, or ordinary Account/Client profile fields.
+- A client may read and edit only their own editable draft. An attendant has no
+  health-data access. Admin role alone does not grant health-data access, and
+  ordinary administrative client APIs/UI must not expose health fields.
+  Instructors may access relevant data only when a later, explicitly approved
+  training-plan/review function requires it; Task 10 creates no instructor
+  health screen or API.
+- Future AI integrations receive only minimum approved context for the resolved
+  client; data from one client never enters another client's context.
+- Never log medications, health-condition text, limitations/complaints, full
+  onboarding payloads containing health data, or raw invitation tokens.
+  Operational/audit evidence may record actor ID, client/onboarding ID, action,
+  timestamp, success/failure, and changed field names—never sensitive values.
+- Account/client deactivation does not delete onboarding or health history.
+  Completed data remains while client history remains; the MVP has no automatic
+  time-based deletion. Account deletion/anonymization needs a separate approved
+  workflow and no legal retention duration is inferred.
+- Draft values may be replaced by the owning client while editable. Completed
+  data must not be overwritten silently; post-completion changes require a
+  future revision/replacement flow. Preserve non-sensitive audit metadata for
+  allowed operations without duplicating health payloads.
+
 ## DEC-17 — Application identity and client-account relationship
 
 **Status:** approved — 2026-09-20

@@ -62,6 +62,37 @@ test('hides administrative navigation and denies the administrative page to a cl
   expect(screen.queryByRole('link', { name: 'Administração' })).not.toBeInTheDocument()
 })
 
+test('opens the own onboarding form only for an authenticated client', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', expiresAt: Date.now() + 300_000, roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/onboarding')
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'draft',
+        training_goal: null,
+        training_experience: null,
+        height_cm: null,
+        weight_kg: null,
+        has_limitations_or_complaints: null,
+        limitations_or_complaints: null,
+        uses_medications: null,
+        medications: null,
+        has_health_conditions: null,
+        health_conditions: null,
+      }),
+    }),
+  )
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Conte um pouco sobre você' })).toBeInTheDocument()
+})
+
 test('shows administrative navigation and page to an administrator', () => {
   sessionStorage.setItem(
     'academia.session',

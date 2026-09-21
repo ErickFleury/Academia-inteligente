@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -9,6 +10,14 @@ from app.database import get_database_session
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.onboarding.draft_service import (
+    OnboardingDraftService,
+    OnboardingDraftValidationError,
+    OnboardingNotEditableError,
+    OnboardingNotFoundError,
+)
+from app.modules.onboarding.models import Onboarding
+from app.modules.onboarding.schema import OnboardingDraftUpdate, TrainingExperience
 from app.modules.onboarding.service import (
     ClientInvitationUnavailableError,
     InvitationDeliveryError,
@@ -18,10 +27,15 @@ from app.modules.onboarding.service import (
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 invitation_service = OnboardingInvitationService()
+draft_service = OnboardingDraftService()
 
 Administrator = Annotated[
     AuthenticatedIdentity,
     Depends(require_roles(get_authenticated_identity, "admin")),
+]
+ClientUser = Annotated[
+    AuthenticatedIdentity,
+    Depends(require_roles(get_authenticated_identity, "client")),
 ]
 DatabaseSession = Annotated[Session, Depends(get_database_session)]
 
@@ -37,6 +51,38 @@ class InvitationAccessResponse(BaseModel):
     """Public token state without account, client, or onboarding data."""
 
     status: Literal["valid", "expired", "invalid", "redeemed"]
+
+
+class OnboardingDraftResponse(BaseModel):
+    """Own-client structured data; no client/account fields are exposed."""
+
+    status: Literal["draft", "completed"]
+    training_goal: str | None
+    training_experience: TrainingExperience | None
+    height_cm: int | None
+    weight_kg: Decimal | None
+    has_limitations_or_complaints: bool | None
+    limitations_or_complaints: str | None
+    uses_medications: bool | None
+    medications: str | None
+    has_health_conditions: bool | None
+    health_conditions: str | None
+
+
+def response_from_onboarding(onboarding: Onboarding) -> OnboardingDraftResponse:
+    return OnboardingDraftResponse(
+        status=onboarding.status,
+        training_goal=onboarding.training_goal,
+        training_experience=onboarding.training_experience,
+        height_cm=onboarding.height_cm,
+        weight_kg=onboarding.weight_kg,
+        has_limitations_or_complaints=onboarding.has_limitations_or_complaints,
+        limitations_or_complaints=onboarding.limitations_or_complaints,
+        uses_medications=onboarding.uses_medications,
+        medications=onboarding.medications,
+        has_health_conditions=onboarding.has_health_conditions,
+        health_conditions=onboarding.health_conditions,
+    )
 
 
 def response_from_summary(summary: InvitationSummary) -> InvitationResponse:
@@ -89,3 +135,42 @@ def redeem_onboarding_access(token: str, session: DatabaseSession) -> Invitation
     if invitation_service.consume_access_after_redemption(session, token):
         return InvitationAccessResponse(status="redeemed")
     return InvitationAccessResponse(status="invalid")
+
+
+@router.get("/me", response_model=OnboardingDraftResponse)
+def get_own_onboarding_draft(
+    session: DatabaseSession, client_user: ClientUser
+) -> OnboardingDraftResponse:
+    """Return only the authenticated client's draft, creating its empty draft when needed."""
+    try:
+        scope = draft_service.resolve_client_scope(session, client_user.subject)
+        return response_from_onboarding(draft_service.get_or_create_draft(session, scope))
+    except OnboardingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated"
+        ) from None
+
+
+@router.patch("/me", response_model=OnboardingDraftResponse)
+def save_own_onboarding_draft(
+    payload: OnboardingDraftUpdate,
+    session: DatabaseSession,
+    client_user: ClientUser,
+) -> OnboardingDraftResponse:
+    """Save a partial, validated draft without exposing a client-selected ID path."""
+    try:
+        scope = draft_service.resolve_client_scope(session, client_user.subject)
+        return response_from_onboarding(draft_service.save_draft(session, scope, payload))
+    except OnboardingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated"
+        ) from None
+    except OnboardingNotEditableError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Completed onboarding cannot be changed",
+        ) from None
+    except OnboardingDraftValidationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)
+        ) from None

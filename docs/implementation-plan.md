@@ -58,9 +58,10 @@ browser-provided client ID as proof of ownership.
 3. **Visual foundation (Task 08, completed):** shared MUI theme, primitives,
    ClientShell/AdminShell, and retroactive restyling of frontend work from
    completed Tasks 01–07; no change to their historical business scope.
-4. **Onboarding (Tasks 07 and 09 completed; Tasks 10–12 future):** invitation,
-   secure form access, authoritative structured health data, conversational AI
-   orchestration, and shared completion using Task 08 UI foundations.
+4. **Onboarding (Tasks 07, 09, and 10 completed; Tasks 11–12 future):**
+   invitation, secure form access, authoritative structured health data,
+   conversational AI orchestration, and shared completion using Task 08 UI
+   foundations.
 5. **Training and client AI (Tasks 13–17, future):** version lifecycle, initial
    generation, mobile personal plan, client-facing chat, approved adaptation.
 6. **MVP visual polish (Task 18, future):** consistency, responsiveness,
@@ -85,7 +86,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-03 | Resolved; inherited architecture baseline for every task. |
 | DEC-04 | Resolved for current roles/provisioning; inherited by authorization, health, training, and future employee work. |
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
-| DEC-06 | Invitation-token policy resolved for Tasks 07 and 09; schema, validation, and editability remain blocking for Tasks 10–12. |
+| DEC-06 | Invitation-token policy is resolved for Tasks 07 and 09; schema, validation, and editable-draft behavior are resolved for Task 10. Recovery-token policy remains unresolved for later affected work. |
 | DEC-07 | Blocking Tasks 13, 14, and 17: severity and review/approval lifecycle. |
 | DEC-08 | Blocking Tasks 11, 14, 16, and 17: AI provider/contract/context/failures. |
 | DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
@@ -95,7 +96,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-15 | Blocking Tasks 13, 14, and 17 wherever manual/professional/audit flows are required. |
 | DEC-16 | Blocking formal RNF sign-off in Task 19. |
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
-| DEC-18 | Blocking Tasks 10, 11, 14, 16 and future biometric work: sensitive-data access/retention/logging. |
+| DEC-18 | Health/onboarding storage, access, retention, and non-sensitive audit behavior are resolved for Task 10. Remaining AI-sensitive-data and biometric behavior still gates affected future work. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
 | EXT-DEC-SOC-01 | Blocking Task 20 audience/moderation/deletion/retention model. |
 | EXT-DEC-EQP-01 | Blocking Task 21 persistence/grouping model. |
@@ -114,7 +115,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 07 | Onboarding invitations | RF-09 | 03, 04, 06; approved DEC-06 token policy | Completed | Client-bound e-mail invitation outcome |
 | 08 | Frontend design system and existing UI restyle | Visual enabler; no new RF ownership | 01–07 | Completed | Shared MUI tokens/primitives/shells; retroactive UI restyle |
 | 09 | Secure onboarding access | RF-10 | 07, 08; DEC-06 | Completed | Valid scoped onboarding entry and intentional token redemption |
-| 10 | Physical and health onboarding | RF-11, RF-12 | 03, 08, 09; DEC-06/18 | MVP future | Authoritative structured onboarding draft |
+| 10 | Physical and health onboarding | RF-11, RF-12 | 03, 08, 09; DEC-06/18 | Completed | Client-scoped structured draft, separated health data, validation, and audit metadata |
 | 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | MVP extension | Resumable AI orchestration over structured data |
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | MVP future | Shared validated completion/readiness |
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | MVP future | Immutable versions/current/professional attribution |
