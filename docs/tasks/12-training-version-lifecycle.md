@@ -1,4 +1,4 @@
-# Task 11 — Training Version Lifecycle
+# Task 12 — Training Version Lifecycle
 
 ## Objective
 
@@ -6,7 +6,7 @@ Establish the approved training-sheet lifecycle, immutable version history, curr
 
 ## Requirements covered
 
-- RF-17: CA-17.1–CA-17.3. This task owns versioning behavior; Tasks 12 and 15 integrate with it without reimplementing it.
+- RF-17: CA-17.1–CA-17.3. This task owns versioning behavior; Tasks 13 and 16 integrate with it without reimplementing it.
 
 ## Related rules and constraints
 
@@ -20,12 +20,12 @@ Establish the approved training-sheet lifecycle, immutable version history, curr
 
 ## Prerequisites
 
-- Tasks 03 and 10 complete.
+- Tasks 03 and 11 complete.
 - Relevant resolutions for DEC-04, DEC-07, DEC-15, and DEC-17 recorded.
 
 ## Required reading
 
-Read `AGENTS.md`; RF-17 and CA-17.1–CA-17.3; RN-12, RN-14, RN-16–RN-19, RN-31–RN-33; RNF04; DEC-04, DEC-07, DEC-15, DEC-17; sections 7.1, 8.2, and 10.
+Read `AGENTS.md`; RF-17 and CA-17.1–CA-17.3; RN-12, RN-14, RN-16–RN-19, RN-31–RN-33; RNF04; DEC-04, DEC-07, DEC-15, DEC-17; `docs/requirements.md` sections 2.1, 2.2, 7.1.1, 8.2, 9.2, and 11.
 
 ## Scope
 
@@ -33,7 +33,7 @@ Implement training-sheet/version persistence and application services for initia
 
 ## Out of scope
 
-- Calling AI (Tasks 12, 14, 15), current client display (Task 13), exercise catalog CRUD, or completed-workout tracking.
+- Calling AI (Tasks 13, 15, 16), current client display (Task 14), exercise catalog CRUD, or completed-workout tracking.
 - Inventing approval states, manual authoring UI, or professional permissions.
 - Mutating an existing historical version in place.
 
@@ -55,6 +55,6 @@ Add domain tests for transitions/invariants, persistence tests for ordering/curr
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
-## Ready-to-use Codex prompt
+## Ready-to-use Terra/Medium Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/11-training-version-lifecycle.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/12-training-version-lifecycle.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Resolve client ownership from authenticated identity in client-facing paths and preserve proposal/approved/history distinctions. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

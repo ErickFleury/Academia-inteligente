@@ -17,6 +17,7 @@ import {
   getClient,
   listClients,
   provisionClientIdentity,
+  sendOnboardingInvitation,
   updateClient,
 } from './clients'
 
@@ -135,6 +136,18 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
     }
   }
 
+  async function handleSendOnboardingInvitation() {
+    if (!selectedClient) return
+    setError(null)
+    setSuccess(null)
+    try {
+      await sendOnboardingInvitation(accessToken, selectedClient.id)
+      setSuccess('Convite de onboarding enviado. Expira em 24 horas.')
+    } catch (reason) {
+      setError(errorMessage(reason, 'Não foi possível enviar o convite de onboarding.'))
+    }
+  }
+
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
       <Typography component="h2" variant="h5">
@@ -227,6 +240,11 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
           {selectedClient.identity_provisioned === false && (
             <Button onClick={() => void handleProvisionIdentity()} variant="outlined">
               Provisionar acesso
+            </Button>
+          )}
+          {selectedClient.identity_provisioned === true && selectedClient.account_active && (
+            <Button onClick={() => void handleSendOnboardingInvitation()} variant="outlined">
+              Enviar convite de onboarding
             </Button>
           )}
         </Stack>

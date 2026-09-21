@@ -149,6 +149,30 @@ CA-03.4 is explicitly pending: it requires the RF-22 biometric photo flow and
 must not be treated as satisfied or approximated until that dependency is
 explicitly implemented and approved.
 
+## DEC-06 — Onboarding invitation token policy
+
+**Status:** partially approved — 2026-09-20
+
+This approval resolves only the onboarding invitation-token portion needed by
+RF-09 and Tasks 07–08. The onboarding schema, required fields, editability, and
+other DEC-06 matters remain unresolved.
+
+- An `onboarding_invitation` token is cryptographically random, bound to exactly
+  one client, and expires 24 hours after issuance.
+- It is single-use. It is consumed only after a valid intentional redemption,
+  never by passive URL validation/GET, so mail scanners and prefetchers do not
+  invalidate it.
+- Issuing a new invitation invalidates every prior unused invitation token for
+  that client. Only the newest valid token is redeemable.
+- Expired, used, invalid, or wrong-client tokens receive a controlled response
+  without revealing unnecessary account/client information. They are not renewed
+  automatically; an authorized flow may issue a replacement invitation.
+- The application persists only a secure token hash/verification representation,
+  never the raw token. Raw tokens must not appear in application logs.
+- The invitation is not a permanent authentication mechanism. After a successful
+  redemption, later own-onboarding access uses the normal authenticated-client
+  context when available; the link is not reused for later edits.
+
 ## DEC-17 — Application identity and client-account relationship
 
 **Status:** approved — 2026-09-20
@@ -169,3 +193,33 @@ subject is never used as a domain identifier.
 - Passwords and other credentials remain exclusively in Keycloak. The local
   account model is reusable for later client, employee, and administrator
   identities.
+
+## DEC-19 — Client-facing product direction and approved extensions
+
+**Status:** approved — 2026-09-20
+
+The product evolves as a client-facing gym platform while retaining its
+administrative capabilities and original requirements. The following additions
+are approved and specified under stable extension IDs in
+`docs/product-extensions.md`:
+
+- `EXT-RF-AI-01`: conversational AI onboarding over authoritative structured
+  onboarding data, coexisting with the secure-link/form flow;
+- `EXT-RF-SOC-01`: limited, controlled progress sharing;
+- `EXT-RF-EQP-01`: active equipment quantity by approved logical type/model;
+- `EXT-RF-PRES-01`: optional named presence with explicit client opt-in.
+
+This decision does not renumber or reinterpret an original RF. Client-owned
+APIs must resolve the local client from the authenticated Keycloak subject and
+must not trust an arbitrary browser-supplied client ID as proof of ownership.
+Client-facing training-plan and AI-chat behavior remains governed by RF-16,
+RF-18, RF-19, RN-05, RN-16–RN-18, and RN-29–RN-31.
+The current-plan area is mobile-usable and shows the authenticated client's
+exercises and approved instructions. AI chat may use only functionally necessary
+permitted context from that client's onboarding, current plan, plan
+history/context, and already-implemented client-visible exercise/equipment data.
+
+The new extensions do not approve a general social network, real-time equipment
+availability, or disclosure of private data. `DEC-10` remains unresolved, and
+named presence cannot be implemented until its separate privacy/persistence
+decision (`EXT-DEC-PRES-01`) is approved.

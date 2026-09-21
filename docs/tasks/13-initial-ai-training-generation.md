@@ -1,4 +1,4 @@
-# Task 12 — Initial AI Training Generation
+# Task 13 — Initial AI Training Generation
 
 ## Objective
 
@@ -7,7 +7,7 @@ Generate a safe, structured, client-scoped initial training proposal from a vali
 ## Requirements covered
 
 - RF-15: CA-15.1–CA-15.5.
-- RF-17 CA-17.1 is integration-verified here; Task 11 owns its implementation.
+- RF-17 CA-17.1 is integration-verified here; Task 12 owns its implementation.
 
 ## Related rules and constraints
 
@@ -20,21 +20,26 @@ Generate a safe, structured, client-scoped initial training proposal from a vali
 
 ## Prerequisites
 
-- Tasks 10 and 11 complete; client identity provisioning from Task 06 is an
+- Tasks 11 and 12 complete; client identity provisioning from Task 06 is an
   inherited prerequisite.
 - Blocking decisions DEC-04, DEC-07, DEC-08, DEC-15, and DEC-18 recorded.
 
 ## Required reading
 
-Read `AGENTS.md`; RF-15 and CA-15.1–CA-15.5; RF-17/CA-17.1; RN-12–RN-19, RN-23, RN-29–RN-31; RNF01, RNF05, RNF06; DEC-04, DEC-07, DEC-08, DEC-15, DEC-18; sections 6.2, 8.2, and 10.
+Read `AGENTS.md`; RF-15 and CA-15.1–CA-15.5; RF-17/CA-17.1; EXT-RF-AI-01 only for authoritative onboarding provenance; RN-12–RN-19, RN-23, RN-29–RN-31; RNF01, RNF05, RNF06; DEC-04, DEC-07, DEC-08, DEC-15, DEC-18, DEC-19; `docs/requirements.md` sections 3.1, 6, 7.1.1, 8.2, 9.2, and 11.
 
 ## Scope
 
-Implement the provider-independent AI generation contract, client-scoped context assembly from the completed onboarding, response validation into the approved training structure, severity-block handling, provider error mapping, and handoff to the Task 11 lifecycle. Include approved review/activation steps only as defined by DEC-07/DEC-15.
+Implement the provider-independent AI generation contract, client-scoped context assembly from the completed onboarding, response validation into the approved training structure, severity-block handling, provider error mapping, and handoff to the Task 12 lifecycle. Include approved review/activation steps only as defined by DEC-07/DEC-15.
+
+The completed onboarding remains structured and authoritative whether its data
+was entered through the Task 09 form or Task 10 conversation. Resolve any
+client-initiated request from the authenticated identity rather than a browser
+client ID.
 
 ## Out of scope
 
-- Chat (Task 14), dynamic adaptation (Task 15), provider selection, medical diagnosis, or invented severity rules.
+- Chat (Task 15), dynamic adaptation (Task 16), provider selection, medical diagnosis, or invented severity rules.
 - Broad exercise management, completed-workout tracking, or unapproved automatic activation.
 - Live-provider dependence in automated tests.
 
@@ -58,6 +63,6 @@ Use fake adapters for success, malformed response, timeout, and unavailable-prov
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
-## Ready-to-use Codex prompt
+## Ready-to-use Terra/Medium Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/12-initial-ai-training-generation.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/13-initial-ai-training-generation.md`, then only the requirements and extension sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task using completed authoritative structured onboarding, regardless of form or conversational entry. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

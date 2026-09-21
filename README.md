@@ -31,6 +31,12 @@ client's password, and then sign in as that client. The password and action
 token never enter PostgreSQL. A local client created before provisioning can be
 selected under **Clientes** and retried with **Provisionar acesso**.
 
+For onboarding, select a provisioned active client under **Clientes** and use
+**Enviar convite de onboarding**. The SMTP message appears in Mailpit and the
+link expires after 24 hours. A newer invitation invalidates unused prior links.
+The link is validated/redeemed by the later secure-onboarding flow; opening it
+must not consume it by itself.
+
 For a fresh local realm, `docker-compose up --build` imports the provisioning
 service account and Mailpit SMTP configuration. Existing Keycloak realms are
 not overwritten by Keycloak import; configure the same `academia-provisioner`

@@ -1,4 +1,4 @@
-# Task 16 — MVP End-to-End Verification
+# Task 17 — MVP End-to-End Verification
 
 ## Objective
 
@@ -6,8 +6,9 @@ Verify the complete MVP critical path, cross-module security boundaries, externa
 
 ## Requirements covered
 
-- Verification only for RF-01–RF-05, RF-09–RF-13, and RF-15–RF-19.
-- Re-run every CA assigned in Tasks 02–15; implementation ownership remains with those tasks. Include Task 06's RF-01/RF-04/RF-05 integration checks without changing original ownership.
+- Verification only for RF-01–RF-05, RF-09–RF-13, RF-15–RF-19, and the
+  approved MVP extension EXT-RF-AI-01.
+- Re-run every CA assigned in Tasks 02–16; implementation ownership remains with those tasks. Include Task 06's RF-01/RF-04/RF-05 integration checks without changing original ownership.
 
 ## Related rules and constraints
 
@@ -18,16 +19,18 @@ Verify the complete MVP critical path, cross-module security boundaries, externa
 
 ## Prerequisites
 
-- Tasks 02–15 complete; Task 01 baseline remains healthy.
+- Tasks 02–16 complete; Task 01 baseline remains healthy.
 - DEC-16 recorded for formal RNF sign-off. If absent, run objective checks that are possible and report the unverified RNF criteria rather than claiming them.
 
 ## Required reading
 
-Read `AGENTS.md`; requirements sections 4, 4.1, 8, 9 (especially DEC-16), and 10; review every MVP RF/CA and the completed task reports for Tasks 02–15.
+Read `AGENTS.md`; `docs/requirements.md` sections 2.2, 3, 3.1, 4, 4.1, 8,
+9 (especially DEC-16), and 11; `docs/product-extensions.md` EXT-RF-AI-01;
+review every MVP RF/CA, extension CA, and completed task report for Tasks 02–16.
 
 ## Scope
 
-Add and run end-to-end/contract checks for the critical journey: admin authentication/authorization, local client creation with Keycloak provisioning, client-only role assignment and first-access password setup, invitation, secure onboarding, data capture/completion, safe initial generation, current-sheet display, isolated chat, approved adaptation, and persistence after reauthentication. Validate provisioning compensation, inactive-account rejection, client denial of administrative APIs, unauthorized/cross-client paths, and e-mail/AI failure containment. Document traceability from each MVP CA to its passing test or remaining issue.
+Add and run end-to-end/contract checks for the critical journey: admin authentication/authorization, local client creation with Keycloak provisioning, client-only role assignment and first-access password setup, invitation, secure-link/form and conversational onboarding, shared structured data capture/completion, safe initial generation, current-sheet display, isolated chat, approved adaptation, and persistence after reauthentication. Validate provisioning compensation, inactive-account rejection, client denial of administrative APIs, identity-derived client ownership, unauthorized/cross-client paths, and e-mail/AI failure containment. Document traceability from each MVP and extension CA to its passing test or remaining issue.
 
 ## Out of scope
 
@@ -37,7 +40,7 @@ Add and run end-to-end/contract checks for the critical journey: admin authentic
 
 ## Acceptance criteria
 
-- Every MVP CA has a recorded pass or explicit unresolved failure; none is omitted.
+- Every MVP CA and EXT-CA-AI-01.1–EXT-CA-AI-01.8 has a recorded pass or explicit unresolved failure; none is omitted.
 - Critical-path tests pass under the approved local runtime.
 - Direct API authorization and cross-client isolation are exercised, not inferred from UI tests.
 - E-mail/AI outages are controlled and do not corrupt unrelated or approved state.
@@ -54,6 +57,6 @@ Run the full relevant unit, integration, API-contract, frontend, and end-to-end 
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
-## Ready-to-use Codex prompt
+## Ready-to-use Terra/Medium Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/16-mvp-end-to-end-verification.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository and completed task reports before modifying files. Implement only this verification task. Stop and ask if an unresolved DEC item requires a material human decision. Run the relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/17-mvp-end-to-end-verification.md`, then only the requirements and extension sections/IDs listed under Required reading. Inspect the existing repository and completed task reports before modifying files. Implement only this verification task, including conversational onboarding and identity-derived client ownership. Stop and ask if an unresolved DEC item requires a material human decision. Run the relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

@@ -158,3 +158,33 @@ test('offers identity reconciliation for a legacy client', async () => {
   expect(await screen.findByText(/acesso do cliente provisionado/i)).toBeInTheDocument()
   expect(fetchMock.mock.calls[2][0]).toBe('http://localhost:8000/clients/legacy/provision-identity')
 })
+
+test('sends an onboarding invitation only for a provisioned active client', async () => {
+  const client = {
+    id: 'client-1', name: 'Ada Lovelace', email: 'ada@example.test', account_active: true,
+    identity_provisioned: true, created_at: '2026-09-20T00:00:00+00:00',
+  }
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => [client] })
+    .mockResolvedValueOnce({ ok: true, json: async () => client })
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 'invitation-1', delivery_status: 'sent', expires_at: '2026-09-21T00:00:00+00:00',
+        sent_at: '2026-09-20T00:00:00+00:00',
+      }),
+    })
+  vi.stubGlobal('fetch', fetchMock)
+
+  render(<ClientManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
+  fireEvent.click(await screen.findByRole('button', { name: /ada lovelace/i }))
+  await screen.findByRole('heading', { name: 'Editar cliente' })
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar convite de onboarding' }))
+
+  expect(await screen.findByText('Convite de onboarding enviado. Expira em 24 horas.')).toBeInTheDocument()
+  expect(fetchMock.mock.calls[2][0]).toBe('http://localhost:8000/onboarding/clients/client-1/invitations')
+  expect(fetchMock.mock.calls[2][1]).toMatchObject({
+    method: 'POST', headers: { Authorization: 'Bearer admin-token' },
+  })
+})

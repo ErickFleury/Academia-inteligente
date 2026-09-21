@@ -7,6 +7,13 @@ export type Client = {
   created_at: string
 }
 
+export type OnboardingInvitation = {
+  id: string
+  delivery_status: 'sent'
+  expires_at: string
+  sent_at: string
+}
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 export class ApiRequestError extends Error {
@@ -52,6 +59,13 @@ export function getClient(accessToken: string, clientId: string): Promise<Client
 
 export function provisionClientIdentity(accessToken: string, clientId: string): Promise<Client> {
   return request(accessToken, `/clients/${clientId}/provision-identity`, { method: 'POST' })
+}
+
+export function sendOnboardingInvitation(
+  accessToken: string,
+  clientId: string,
+): Promise<OnboardingInvitation> {
+  return request(accessToken, `/onboarding/clients/${clientId}/invitations`, { method: 'POST' })
 }
 
 export function updateClient(

@@ -1,84 +1,152 @@
-# MVP Implementation Plan
+# Academia Inteligente Implementation Plan
 
-## Scope and architecture envelope
+## Specification and architecture envelope
 
-The MVP is the 15-item set explicitly listed in requirements section 8.1: RF-01–RF-05, RF-09–RF-13, and RF-15–RF-19. The approved system boundary is a React/TypeScript/Vite client, FastAPI modular-monolith backend, PostgreSQL persistence, Keycloak/OIDC identity, Docker Compose runtime, and provider-independent adapters for e-mail and AI, as recorded in DEC-03. The new Task 06 must use that established topology and must not introduce a second authentication store or backend technology.
+`docs/requirements.md` is the primary consolidated implementation
+specification. `requirements.md` preserves the original 33 RFs, their CA, 6
+RNFs, 37 RN, 10 TEC entries, original MVP, and DEC questions.
+`docs/decisions.md` is the chronological decision authority, while
+`docs/product-extensions.md` owns approved behavior added beyond the original
+source. An unresolved conflict stops only the affected task.
 
-The implementation should be modular around identity/access, clients, onboarding/health, training sheets, conversations, and external integrations. Backend authorization and tenant/client isolation are mandatory. External failures must remain contained by adapters (RNF05/RNF06), and sensitive health and AI context must never cross client boundaries (RN-11, RN-23, RN-29).
+The original MVP remains RF-01–RF-05, RF-09–RF-13, and RF-15–RF-19. DEC-19
+adds EXT-RF-AI-01 conversational onboarding to the planned MVP experience; it
+does not rewrite the historical MVP. EXT-RF-SOC-01, EXT-RF-EQP-01, and
+EXT-RF-PRES-01 are approved post-MVP extensions.
+
+The approved architecture remains a React/TypeScript/Vite/MUI frontend,
+Python/FastAPI modular monolith, PostgreSQL with SQLAlchemy/Alembic, Keycloak
+OIDC, REST/JSON/OpenAPI, SMTP/Mailpit adapter, provider-independent AI adapters,
+and Docker Compose. No extension authorizes another backend, database, broker,
+vector database, WebSocket layer, or social framework.
+
+## Dependency chain
+
+```text
+foundation
+  → authentication → authorization
+  → local account/client → profile/status
+  → Keycloak client provisioning + first access
+  → invitation → secure link → structured onboarding
+  → conversational onboarding → completion
+  → training version lifecycle → initial generation
+  → own current-plan view → own-context AI chat → approved adaptation
+  → MVP end-to-end verification
+  → post-MVP progress sharing / equipment catalog
+  → anonymous occupancy → opt-in named presence
+```
+
+The secure-link/form path and conversational path share one authoritative
+structured onboarding and coexist unless a later approved decision replaces
+one. Client-owned APIs resolve `Keycloak sub → Account → Client` and never use a
+browser-provided client ID as proof of ownership.
 
 ## Dependency-ordered batches
 
-1. **Foundation (Task 01):** creates the agreed workspace and quality/runtime baseline after architectural decisions.
-2. **Identity and clients (Tasks 02–06):** authentication precedes authorization; both precede protected client operations. Tasks 04–05 retain ownership of the already-completed local client/account behavior; Task 06 adds the subsequently approved Keycloak provisioning and first-access integration.
-3. **Invitation and onboarding (Tasks 07–10):** identity provisioning precedes the client journey; invitation delivery creates the secure onboarding entry path, token validation precedes health-data capture, and persisted required fields precede completion.
-4. **Training and AI (Tasks 11–15):** version lifecycle is established before generation, display, chat, and approved adaptation. This keeps provider calls separate from domain state transitions.
-5. **MVP verification (Task 16):** validates the integrated journey and applicable RNFs without taking ownership of new feature behavior.
+1. **Foundation (Task 01, completed):** approved workspace/runtime/test baseline.
+2. **Identity and clients (Tasks 02–06, completed):** authentication,
+   authorization, local client/account behavior, lifecycle, Keycloak
+   provisioning, client-only role, first access, and reconciliation.
+3. **Onboarding (Task 07 completed; Tasks 08–11 future):** invitation and
+   secure form access, authoritative structured health data, conversational AI
+   orchestration, and shared completion.
+4. **Training and client AI (Tasks 12–16, future):** version lifecycle, initial
+   generation, mobile personal plan, client-facing chat, approved adaptation.
+5. **MVP verification (Task 17, future):** original MVP plus EXT-RF-AI-01,
+   including client identity and cross-client isolation.
+6. **Post-MVP client modules (Tasks 18–19, future):** controlled progress
+   sharing and equipment management/catalog/quantity.
+7. **Occupancy and privacy-gated presence (Tasks 20–21, future):** anonymous
+   count first; named presence separately and only with opt-in decisions.
+
+Post-MVP order is an implementation dependency/order, not a change to original
+MVP membership. Independent future RF-06–RF-08, RF-14, RF-20–RF-22, and
+RF-26–RF-31 require their own tasks when prioritized.
 
 ## Decision gates
 
-| Decision | Classification and affected work |
+| Decision | Status and affected tasks |
 | --- | --- |
-| DEC-01 | Non-blocking: use the explicit section 8.1 MVP until scope is revalidated. |
-| DEC-03 | Blocking for Tasks 01, 02, and 06; inherited by later tasks: architecture, auth, e-mail, runtime, and NestJS/Python boundaries. |
-| DEC-04 | Blocking for Tasks 02–04, 06, 09, 11, 12, and 15: provisioning, role matrix, health access, and professional identity. |
-| DEC-05 | Blocking for Tasks 02, 05, and 06: active versus enabled status, RF-03/biometric interaction, and provisioned-client login eligibility. |
-| DEC-06 | Blocking for Tasks 07–10: invitation-token policy and approved onboarding schema/editability. |
-| DEC-07 | Blocking for Tasks 11, 12, and 15: health severity, review/approval states, and activation. |
-| DEC-08 | Blocking for Tasks 12, 14, and 15: AI provider/contract, structured responses, and failure behavior. |
-| DEC-15 | Blocking for Tasks 11, 12, and 15 where professional review/manual-edit flows are required by RN-12–RN-19. |
-| DEC-16 | Non-blocking for feature work; blocking for formal RNF sign-off in Task 16. |
-| DEC-17 | Blocking before migrations in Tasks 04, 06, 09, and 11; resolve only the relevant domain slice. |
-| DEC-18 | Blocking for Tasks 09 and 12: health-data access, retention, and safe logging/context handling. |
-
-DEC-02 and DEC-09–DEC-14 concern functionality outside this MVP. They remain unresolved and must not influence MVP implementation unless scope changes.
+| DEC-01 | Unresolved/non-blocking while the original catalog and MVP are preserved. |
+| DEC-02 | Unresolved; relevant to Task 20 naming/traceability. |
+| DEC-03 | Resolved; inherited architecture baseline for every task. |
+| DEC-04 | Resolved for current roles/provisioning; inherited by authorization, health, training, and future employee work. |
+| DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
+| DEC-06 | Invitation-token policy resolved for Task 07; schema, validation, and editability remain blocking for Tasks 08–11. |
+| DEC-07 | Blocking Tasks 12, 13, and 16: severity and review/approval lifecycle. |
+| DEC-08 | Blocking Tasks 10, 13, 15, and 16: AI provider/contract/context/failures. |
+| DEC-09 | Blocking future biometric work and relevant Task 20 physical-access inputs. |
+| DEC-10 | Blocking Task 20 and Task 21: occupancy sources/meaning/freshness. Do not infer a source of truth. |
+| DEC-11 | Blocking Task 20 where external/access events are its inputs. |
+| DEC-12–DEC-14 | Blocking future plan/payment/financial/class tasks respectively. |
+| DEC-15 | Blocking Tasks 12, 13, and 16 wherever manual/professional/audit flows are required. |
+| DEC-16 | Blocking formal RNF sign-off in Task 17. |
+| DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
+| DEC-18 | Blocking Tasks 09, 10, 13, 15 and future biometric work: sensitive-data access/retention/logging. |
+| DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
+| EXT-DEC-SOC-01 | Blocking Task 18 audience/moderation/deletion/retention model. |
+| EXT-DEC-EQP-01 | Blocking Task 19 persistence/grouping model. |
+| EXT-DEC-PRES-01 | Blocking Task 21 consent/source/fields/revocation/retention model. |
 
 ## Task index
 
-| # | Task | RFs covered | Major RN/RNF | DEC dependencies | Prerequisites | Result |
-| --- | --- | --- | --- | --- | --- | --- |
-| 01 | Project foundation | Enabler only | RNF04–RNF06 | DEC-03 B; DEC-16/17 NB | None | Agreed runnable/testable project skeleton |
-| 02 | Authentication | RF-04 | RN-02, RN-04, RN-23; RNF01, RNF05 | DEC-03/04/05 B | 01 | Active users can authenticate; protected routes reject anonymous access |
-| 03 | Authorization | RF-05 | RN-04, RN-05, RN-11; RNF04 | DEC-04 B; DEC-18 NB | 02 | Backend-enforced role/permission boundaries |
-| 04 | Client registration and search | RF-01, RF-02 | RN-01, RN-04, RN-05, RN-32; RNF01–RNF04 | DEC-04/17 B; DEC-05 NB | 01–03 | Authorized admins create, list, and search clients |
-| 05 | Client profile and status | RF-03 | RN-02, RN-33; RNF04 | DEC-05/17 B | 04 | Client edits and reversible lifecycle state with history preserved |
-| 06 | Client identity provisioning | RF-01, RF-04, RF-05 (integration) | RN-01, RN-02, RN-04, RN-05, RN-23, RN-32; RNF01, RNF04–RNF06 | DEC-03/04/05/17 B | 02–05 | Admin-created clients receive a client-only Keycloak identity, persisted subject linkage, and secure first access |
-| 07 | Onboarding invitations | RF-09 | RN-23, RN-32; RNF01, RNF05, RNF06 | DEC-03/06 B | 03, 04, 06 | Recorded e-mail invitation attempts with client-bound links |
-| 08 | Secure onboarding access | RF-10 | RN-05, RN-23, RN-32 | DEC-06 B | 07 | Valid, scoped tokens open the correct onboarding |
-| 09 | Physical and health onboarding | RF-11, RF-12 | RN-05, RN-11, RN-23; RNF02–RNF04 | DEC-04/06/17/18 B | 03, 08 | Validated, isolated physical and health data capture |
-| 10 | Onboarding completion | RF-13 | RN-32; RNF01, RNF04 | DEC-06 B | 09 | Only complete forms transition to completed with timestamp |
-| 11 | Training version lifecycle | RF-17 | RN-12, RN-14, RN-16–RN-19, RN-31–RN-33; RNF04 | DEC-04/07/15/17 B | 03, 10 | Persistent immutable versions and one current version |
-| 12 | Initial AI training generation | RF-15 | RN-12–RN-19, RN-23, RN-29–RN-31; RNF01, RNF05, RNF06 | DEC-04/07/08/15/18 B | 10, 11 | Safe client-scoped AI proposal creates an initial version through the approved flow |
-| 13 | Current training view | RF-16 | RN-05, RN-18; RNF01–RNF03 | Decisions inherited from 06, 11–12 | 06, 11, 12 | Mobile-usable own-current-sheet view and empty state for a provisioned authenticated client |
-| 14 | AI assistant chat | RF-18 | RN-05, RN-16, RN-23, RN-29, RN-30; RNF01, RNF05, RNF06 | DEC-08 B; DEC-07 NB | 06, 12, 13 | Isolated authenticated-client chat using current context with controlled failures |
-| 15 | Dynamic training adaptation | RF-19 | RN-12–RN-18, RN-29–RN-31; RNF04–RNF06 | DEC-04/07/08/15 B | 11, 14 | Approved adaptation creates a new current version without unrelated loss |
-| 16 | MVP end-to-end verification | All MVP RFs (verification only) | RN/RNF above; RNF01–RNF06 | DEC-16 B for formal sign-off | 02–15 | Verified critical journey, including identity provisioning/first access, contracts, isolation, responsiveness, and failure handling |
+| # | Task | Requirement ownership/integration | Prerequisites | Scope | Result |
+| --- | --- | --- | --- | --- | --- |
+| 01 | Project foundation | Enabler | None | Completed | Approved runnable/testable skeleton |
+| 02 | Authentication | RF-04 | 01 | Completed | Active identities authenticate; anonymous access rejected |
+| 03 | Authorization | RF-05 | 02 | Completed | Backend role/policy boundaries |
+| 04 | Client registration and search | RF-01, RF-02 | 01–03 | Completed | Local Account/Client creation and admin search |
+| 05 | Client profile and status | RF-03 except deferred CA-03.4 | 04 | Completed reduced scope | Updates, active state, history preservation |
+| 06 | Client identity provisioning | RF-01/RF-04/RF-05 integration | 02–05 | Completed | Client-only Keycloak identity, subject linkage, first access, reconciliation |
+| 07 | Onboarding invitations | RF-09 | 03, 04, 06; approved DEC-06 token policy | Completed | Client-bound e-mail invitation outcome |
+| 08 | Secure onboarding access | RF-10 | 07; DEC-06 | MVP future | Valid scoped link/form entry |
+| 09 | Physical and health onboarding | RF-11, RF-12 | 03, 08; DEC-06/18 | MVP future | Authoritative structured onboarding draft |
+| 10 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 09; DEC-06/08/18 | MVP extension | Resumable AI orchestration over structured data |
+| 11 | Onboarding completion | RF-13 | 09, 10; DEC-06 | MVP future | Shared validated completion/readiness |
+| 12 | Training version lifecycle | RF-17 | 03, 11; DEC-07/15/17 | MVP future | Immutable versions/current/professional attribution |
+| 13 | Initial AI training generation | RF-15; RF-17 integration | 11, 12; DEC-07/08/15/18 | MVP future | Safe structured proposal through lifecycle |
+| 14 | Current training view | RF-16; RF-17 integration | 06, 12, 13 | MVP future | Mobile own-current-plan/exercise view |
+| 15 | AI assistant chat | RF-18 | 06, 13, 14; DEC-08/18 | MVP future | Own-context read-only training assistant |
+| 16 | Dynamic training adaptation | RF-19; RF-17 integration | 12, 15; DEC-07/08/15 | MVP future | Approved new version, history preserved |
+| 17 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–16; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |
+| 18 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06; EXT-DEC-SOC-01 | Post-MVP extension | Author-owned private/shared updates |
+| 19 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06; EXT-DEC-EQP-01 | Original post-MVP + extension | Admin catalog and active total by type/model |
+| 20 | Anonymous gym occupancy | RF-23–RF-25X; RN-37 boundary | 03, 06 plus access inputs; DEC-10/11 | Original post-MVP, blocked | Privacy-safe current count/mobile display |
+| 21 | Opt-in visible presence | EXT-RF-PRES-01 | 06, 20; DEC-10/EXT-DEC-PRES-01 | Post-MVP extension, blocked | Consent-based minimal named presence |
 
-“B” means blocking; “NB” means non-blocking for that task. Each task file contains the exact CA ownership and implementation boundary.
+## Completed-task history and later impact
 
-## Effect on completed tasks
+Tasks 01–06 retain the scope that was actually implemented. They are not
+rewritten as owners of later client-facing features:
 
-Tasks 02–05 remain completed according to their original scopes and are not
-retroactively credited with the new behavior. The approved flow exposes these
-integration gaps:
+- Tasks 02–03 established authentication/authorization; Task 06 subsequently
+  supplied real provisioned client identities and verified client-role denial.
+- Tasks 04–05 own local client/account CRUD and active-state behavior; they did
+  not implement conversational onboarding, social, equipment, or presence.
+- Task 06 owns the later-approved Keycloak provisioning integration and is now a
+  prerequisite for every authenticated client task.
+- CA-03.4 remains deferred and must not be reported as implemented.
 
-- Task 02 established OIDC authentication but did not create client identities
-  or their first-access credentials.
-- Task 03 established reusable authorization but must be re-verified with a
-  genuinely provisioned `client` role and direct administrative API attempts.
-- Task 04 created the local account/client atomically with a nullable
-  `keycloak_subject`; it did not provision Keycloak.
-- Task 05 made `account_active` authoritative for application login and remains
-  separate from physical access; Task 06 must verify that behavior for a
-  provisioned client.
+No future task may assume a database client has a usable login unless Task 06
+provisioning or its explicit reconciliation completed.
 
-Task 06 owns only this missing cross-system integration and its compensation
-behavior. It integration-verifies RF-01, RF-04, and RF-05 without transferring
-their original CA ownership from Tasks 02–04.
+## Coverage and reproducibility checks
 
-## Explicitly outside the MVP
+- Original MVP ownership remains complete: RF-04 (02), RF-05 (03), RF-01/RF-02
+  (04), RF-03 reduced scope (05), RF-09 (07), RF-10 (08), RF-11/RF-12 (09),
+  RF-13 (11), RF-17 (12), RF-15 (13), RF-16 (14), RF-18 (15), RF-19 (16).
+- EXT-RF-AI-01 is owned by Task 10 and integration-verified in Task 17.
+- EXT-RF-SOC-01, EXT-RF-EQP-01, and EXT-RF-PRES-01 have explicit future owners.
+- RF-32/RF-33 remain original requirements; only quantity is an extension.
+- RF-24X/RF-25X anonymous count is separate from EXT-RF-PRES-01 named presence.
+- Every authenticated client task depends directly or transitively on Task 06
+  and requires server-side identity resolution.
+- A clean implementation run stops at unresolved blocking decisions instead of
+  silently inventing onboarding, AI, social, equipment, occupancy, or privacy
+  models.
 
-RF-06–RF-08, RF-14, and RF-20–RF-33 (including RF-24X/RF-25X) are outside this plan. This excludes password recovery, employee CRUD, post-completion self-review, biometrics/catraca, attendance/occupancy, billing/plans, dashboards, classes, and equipment. Rules that mention unspecified manual training, exercise catalogs, completed-workout history, audit/export, or notification flows constrain the MVP where applicable but do not authorize inventing those flows; DEC-15 must define any required implementation.
+## Next executable task
 
-## Coverage and ownership check
-
-Every MVP RF appears in an owning task: RF-04 (02), RF-05 (03), RF-01/RF-02 (04), RF-03 (05), RF-09 (07), RF-10 (08), RF-11/RF-12 (09), RF-13 (10), RF-17 (11), RF-15 (12), RF-16 (13), RF-18 (14), and RF-19 (15). Task 06 integrates RF-01/RF-04/RF-05 without changing ownership; Task 16 only re-verifies integration. No out-of-MVP RF is assigned implementation responsibility.
+Task 07 is next in dependency order. Its token-policy prerequisite is approved;
+use the Terra/Medium prompt at the end of
+`docs/tasks/07-onboarding-invitations.md`.

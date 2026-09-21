@@ -25,16 +25,21 @@ Capture and persist the approved physical and health onboarding fields with stri
 
 ## Required reading
 
-Read `AGENTS.md`; RF-11/RF-12 and CA-11.1–CA-12.3; RN-05, RN-11, RN-23, RN-29; RNF02–RNF04; DEC-04, DEC-06, DEC-17, DEC-18; sections 4.1, 7.1, and 10.
+Read `AGENTS.md`; RF-11/RF-12 and CA-11.1–CA-12.3; EXT-RF-AI-01 only for the stable structured-data handoff to Task 10; RN-05, RN-11, RN-23, RN-29; RNF02–RNF04; DEC-04, DEC-06, DEC-17, DEC-18, DEC-19; `docs/requirements.md` sections 3.1, 4.1, 7.1, 9.2, and 11.
 
 ## Scope
 
 Implement the approved onboarding schema, backend validation/persistence, draft retrieval while editable, and a responsive form with distinct physical, complaints, medications, and history/conditions areas. Enforce token/client binding and approved staff access at every endpoint.
 
+Expose the same server-side field schema and validation as a reusable
+application boundary for Task 10. Structured fields remain authoritative; this
+task does not implement AI conversation behavior.
+
 ## Out of scope
 
 - Choosing missing fields, units, validation ranges, or retention rules.
-- Completing the onboarding (Task 10), post-completion self-review (RF-14), AI severity assessment, or training generation.
+- Conversational onboarding (Task 10), completion (Task 11), post-completion
+  self-review (RF-14), AI severity assessment, or training generation.
 - Broad medical records or diagnosis functionality.
 
 ## Acceptance criteria
@@ -57,6 +62,6 @@ Add schema/validation unit tests, persistence and authorization integration test
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
-## Ready-to-use Codex prompt
+## Ready-to-use Terra/Medium Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/09-physical-and-health-onboarding.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/09-physical-and-health-onboarding.md`, then only the requirements and extension sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task and provide the reusable authoritative structured schema/validation boundary needed by Task 10. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

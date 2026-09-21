@@ -25,7 +25,7 @@ Send and track client-bound onboarding invitations through the approved e-mail i
 
 ## Required reading
 
-Read `AGENTS.md`; RF-09 and CA-09.1–CA-09.3; RN-23, RN-32; RNF01, RNF05, RNF06; TEC-09; DEC-03 and DEC-06; RF-06/CA-06.4 only for the shared-infrastructure boundary; sections 6.2 and 10.
+Read `AGENTS.md`; RF-09 and CA-09.1–CA-09.3; RN-23, RN-32; RNF01, RNF05, RNF06; TEC-09; DEC-03, DEC-04, DEC-06, and DEC-17; RF-06/CA-06.4 only for the shared-infrastructure boundary; `docs/requirements.md` sections 2.2, 6, 8, and 11.
 
 ## Scope
 
@@ -58,6 +58,6 @@ Add unit tests for invitation/token creation and provider outcome mapping, API a
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
-## Ready-to-use Codex prompt
+## Ready-to-use Terra/Medium Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/07-onboarding-invitations.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/07-onboarding-invitations.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task and require a successfully provisioned/reconciled Task 06 client identity. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.

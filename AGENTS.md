@@ -4,12 +4,23 @@
 
 This repository contains the Academia Inteligente system.
 
-The complete specification is located at:
+The primary consolidated implementation specification is located at:
 
 `docs/requirements.md`
 
-Before implementing a requirement, read its RF, acceptance criteria,
-related business rules, and applicable non-functional requirements.
+Traceability sources remain authoritative for their respective purpose:
+
+- `requirements.md`: preserved historical/source specification;
+- `docs/decisions.md`: chronological approved decisions;
+- `docs/product-extensions.md`: approved additions beyond the original source.
+
+If these documents appear to conflict, first check whether
+`docs/decisions.md` explicitly resolves the conflict. Use the recorded decision
+when it does; otherwise stop the affected task and request a human decision.
+
+Before implementing a requirement, read its RF or extension requirement,
+acceptance criteria, related business rules, applicable non-functional
+requirements, and decision gates in `docs/requirements.md`.
 
 Treat the acceptance criteria as the definition of completion.
 
@@ -20,12 +31,16 @@ Use the architecture defined in `docs/requirements.md`.
 Current stack:
 
 - Frontend: React + TypeScript + Vite
-- Backend: NestJS + Python
+- Backend: Python 3.13 / FastAPI modular monolith; NestJS has no current MVP responsibility
 - Database: PostgreSQL
 - API: REST + JSON + OpenAPI
-- Authentication: Keycloak/OIDC or the established project implementation
+- Authentication: Keycloak/OIDC with local Account identity linkage
 - Infrastructure: Docker Compose
 - AI: provider-independent adapter/integration layer
+
+Exact approved versions and infrastructure choices are recorded in DEC-03 and
+summarized in `docs/requirements.md`. Do not reintroduce historical technology
+alternatives as active architecture.
 
 Do not introduce major technologies or architectural changes without approval.
 
@@ -47,8 +62,9 @@ Do not create unnecessary top-level directories.
 
 For each task:
 
-1. Identify the RFs explicitly requested in the prompt.
-2. Read those RFs, their acceptance criteria, related business rules,
+1. Identify the original RFs and product-extension IDs explicitly requested in
+   the prompt.
+2. Read those requirements, their acceptance criteria, related business rules,
    and applicable non-functional requirements in `docs/requirements.md`.
 3. Inspect the existing implementation before editing.
 4. Identify dependencies between the requested RFs and existing modules.

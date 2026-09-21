@@ -23,7 +23,7 @@ Validate invitation tokens and open only the onboarding associated with the inte
 
 ## Required reading
 
-Read `AGENTS.md`; RF-10 and CA-10.1–CA-10.3; RN-05, RN-23, RN-32; RNF01–RNF03; DEC-06; sections 4.1 and 10.
+Read `AGENTS.md`; RF-10 and CA-10.1–CA-10.3; RN-05, RN-23, RN-32; RNF01–RNF03; DEC-06; `docs/requirements.md` sections 2.2, 4.1, 8, 9.2, and 11.
 
 ## Scope
 
@@ -31,7 +31,8 @@ Implement token validation and client/onboarding scoping at the backend plus the
 
 ## Out of scope
 
-- Physical or health form fields (Task 09) and completion (Task 10).
+- Physical or health form fields (Task 09), conversational onboarding (Task 10),
+  and completion (Task 11).
 - General authentication/password recovery.
 - Inventing token lifetimes or post-completion edit behavior.
 
@@ -52,6 +53,6 @@ Add token validation unit tests and API/UI integration cases for valid, malforme
 - Report files changed, tests executed/results, important decisions, and unresolved issues.
 - Do not commit or push unless explicitly requested.
 
-## Ready-to-use Codex prompt
+## Ready-to-use Terra/Medium Codex prompt
 
-Read `AGENTS.md`, then `docs/tasks/08-secure-onboarding-access.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
+Use Terra with Medium reasoning. Read `AGENTS.md`, then `docs/tasks/08-secure-onboarding-access.md`, then only the requirements sections/IDs listed under Required reading. Inspect the existing repository before modifying files. Implement only this task, preserving the separate authenticated client identity and token-bound entry paths. Stop and ask if an unresolved DEC item requires a material human decision. Run relevant tests, review the Git diff, and provide the completion report required by `AGENTS.md` and this task. Do not commit or push.
