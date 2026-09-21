@@ -20,6 +20,23 @@ palette, or page composition.
 - Establish shared foundations in Task 08 before building more client screens.
   Task 18 checks consistency after major MVP screens exist.
 
+## Language and copy
+
+- Follow EXT-RF-LANG-01 in `docs/requirements.md`: application-controlled UI
+  copy is Brazilian Portuguese (`pt-BR`) across public, client, and admin areas.
+  Keep this design document, task prompts, source identifiers, and API contracts
+  in English. Do not translate user-authored text or proper names.
+- Cover headings, navigation, buttons, form labels/help, validation, loading,
+  empty, success, error and authorization states, dialogs, toasts, document
+  titles, accessible names, and in-app AI onboarding/training responses. Do not
+  surface raw English provider errors to users.
+- Use appropriate `pt-BR` presentation of dates, times, numbers, and currency
+  where displayed. Keep established English gym or technical terms such as
+  “bulking” when they are clearer than an artificial translation.
+- Reuse shared wording and formatting helpers where available. Check real
+  phone, tablet, and desktop flows for unintended English copy; language
+  changes must not weaken validation, privacy, or accessibility.
+
 ## Tokens and foundations
 
 - **Typography:** Use a freely available or system-compatible sans-serif
@@ -53,8 +70,10 @@ palette, or page composition.
 - **Public/entry:** A bold but simple brand header, concise orientation, and
   unmistakable primary sign-in action. Auth callback, expired session,
   unauthorized route, loading, and error states belong to the same system.
-  The Keycloak-hosted credential page is outside the React presentation scope;
-  changing its theme needs a separate approved integration task.
+  The Keycloak-hosted credential page is outside the React presentation scope,
+  but login and first-access screens shown to users must still be in Portuguese.
+  Prefer supported locale configuration; a custom theme, if needed, requires a
+  separately scoped integration task.
 - **ClientShell:** Reusable authenticated navigation, page header, main action,
   content width, responsive sections, and feedback. On phone, prioritize the
   current client action and touch navigation instead of shrinking desktop

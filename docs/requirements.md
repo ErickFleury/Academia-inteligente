@@ -1,42 +1,34 @@
 # Academia Inteligente — Canonical Implementation Requirements
 
-This is the primary consolidated specification for future implementation. It
-preserves every original identifier and acceptance criterion while integrating
-approved decisions and explicitly labeled product extensions. The historical
-source specification is preserved unchanged at `requirements.md`.
-
-**Original source:** `requirements.md`, derived from
-`Codex-Requisitos (teste academia)(1).docx`, Universidade Federal de Goiás,
-Engenharia de Computação, EMC, September 2026.
+This is the sole canonical specification for future implementation. It
+preserves every requirement identifier and acceptance criterion while
+integrating approved decisions and explicitly labeled product extensions.
 
 **Coverage:** all 33 original functional requirements and 110 functional
 acceptance criteria, 6 non-functional requirements and 18 non-functional
 acceptance criteria, 37 business rules, 10 technology entries, 18 original DEC
-questions, approved chronological decisions, and 4 approved product-extension
+questions, approved chronological decisions, and 5 approved product-extension
 requirements.
 
-**Authority and conflict order:**
-
-1. `requirements.md` remains the authoritative historical/source statement of
-   original RF/CA/RNF/RN/TEC/DEC content.
-2. `docs/decisions.md` is the authoritative chronological record of approved
-   resolutions and interpretations.
-3. `docs/product-extensions.md` is the authoritative record of approved
-   additions beyond the original specification.
-4. This document consolidates those sources for implementation. If they appear
-   to conflict, use an explicit approved decision; otherwise stop the affected
-   task and request a human decision.
-5. `docs/implementation-plan.md` and `docs/tasks/` define execution order and
-   verified status, but do not create product requirements by themselves.
+**Authority:** This document is the only source of implementation requirements.
+`docs/decisions.md` and `docs/product-extensions.md` retain supporting history
+and detail, but do not override this specification. If they appear to conflict,
+stop the affected task and request a human decision before changing this file.
+`docs/implementation-plan.md` and `docs/tasks/` define execution order and
+verified status, but do not create product requirements by themselves.
 
 `docs/frontend-design.md` governs UI presentation and reuse; it does not add or
 change RF/CA/RNF/RN requirements or their acceptance status.
 
-Unchecked acceptance boxes preserve source traceability; they are not evidence
-that a criterion is unimplemented or failed. Current verified status appears in
-section 11 and is based only on completed tasks and test evidence.
+Implementation documentation, task prompts, code identifiers, and API contracts
+remain in English. The language of user-facing application UI is governed by
+EXT-RF-LANG-01 in section 3.1.
 
-## 1 Contexto e orientação de uso
+Unchecked acceptance boxes preserve requirement traceability; they are not evidence
+that a criterion is unimplemented or failed. Current verified status appears in
+section 9.3 and is based only on completed tasks and test evidence.
+
+## 1 Context and usage guidance
 
 ### 1.1 Product purpose and vision
 
@@ -62,48 +54,62 @@ progress sharing, and opt-in visible presence according to their own scope and
 decision gates. This journey expresses dependencies; it does not move every
 stage into the original MVP.
 
-### 1.2 Como interpretar este documento
+### 1.2 How to interpret this document
 
-O anexo informa que parte dos requisitos ainda pode não ser necessária, estar classificada incorretamente ou divergir do que foi solicitado pelo professor. Ele não identifica individualmente todos esses casos. Por isso, os itens foram preservados e os conflitos foram registrados na seção 9. A presença de um item neste arquivo não significa que ele pertence automaticamente à próxima entrega.
+The requirement catalog notes that some requirements may not be needed yet, may be
+classified incorrectly, or may differ from what the professor requested. It
+does not identify every such item. The items are therefore retained, and
+conflicts are recorded in section 9. An item's presence here does not
+automatically place it in the next delivery.
 
-| Identificador | Significado |
+| Identifier | Meaning |
 | --- | --- |
-| RF-01 a RF-33 | Requisitos funcionais do anexo; RF-24X e RF-25X conservam o sufixo original. |
-| CA-XX.Y | Critério de aceitação associado ao requisito funcional original. |
-| RNF01 a RNF06 | Requisitos não funcionais, com a numeração original. |
-| CA-RNFXX.Y | Critério de aceitação não funcional original. |
-| RN-01 a RN-37 | Regras de negócio com os identificadores originais. |
-| TEC-01 a TEC-10 | Identificadores adicionados para referenciar as dez entradas da tabela de tecnologias. |
-| DEC-01 a DEC-18 | Original decision questions; section 9 records which are now resolved and which remain open. |
+| RF-01 to RF-33 | Functional requirements; RF-24X and RF-25X retain their original suffix. |
+| CA-XX.Y | Acceptance criterion associated with an original functional requirement. |
+| RNF01 to RNF06 | Non-functional requirements with their original numbering. |
+| CA-RNFXX.Y | Original non-functional acceptance criterion. |
+| RN-01 to RN-37 | Business rules with their original identifiers. |
+| TEC-01 to TEC-10 | Identifiers added to reference the ten technology-table entries. |
+| DEC-01 through DEC-18 | Original decision questions; section 9 records which are now resolved and which remain open. |
 | EXT-RF-* / EXT-CA-* | Approved additions from `docs/product-extensions.md`, never original RF/CA identifiers. |
 
-Os requisitos e critérios foram reorganizados com ajustes de grafia, sem supressão de condições. As notas de implementação, a sequência sugerida e as pendências são orientações desta consolidação e estão identificadas como tais.
+The requirements and criteria were reorganized with spelling adjustments,
+without removing conditions. Implementation notes, the suggested sequence, and
+open questions are identified as guidance from this consolidation.
 
-### 1.3 Instruções para o Codex
+### 1.3 Instructions for Codex
 
 1. Read this file before planning functionality and identify the affected RF,
    extension requirements, RNF, RN, decisions, and acceptance criteria.
-2. Trabalhar no escopo da tarefa atual. Usar o MVP da seção 8 como referência de prioridade, respeitando suas dependências e pendências.
-3. Aplicar as regras de negócio e os requisitos não funcionais pertinentes mesmo quando a tarefa mencionar apenas um RF.
-4. Não transformar alternativas tecnológicas, itens condicionais ou dúvidas do anexo em decisões silenciosas. Resolver apenas as pendências que afetem a tarefa; avançar no trabalho independente delas.
-5. Preservar os identificadores para permitir rastrear tarefas, alterações e validações até os requisitos.
-6. Usar as caixas de aceitação como acompanhamento: marcar um item somente depois de implementá-lo e verificar seu comportamento.
-7. Não ampliar o escopo por inferência de um diagrama ou pela existência de uma regra sem fluxo funcional detalhado. Registrar a necessidade e relacioná-la à decisão correspondente.
+2. Work within the current task's scope. Use the MVP in section 8 as a priority
+   reference while respecting its dependencies and open questions.
+3. Apply relevant business rules and non-functional requirements even when a
+   task names only one RF.
+4. Do not silently decide among technology alternatives, conditional items, or
+   questions in this specification. Resolve only open items that affect the task and
+   continue work independent of them.
+5. Preserve identifiers so tasks, changes, and validation remain traceable to
+   requirements.
+6. Use acceptance checkboxes for tracking: mark an item only after its behavior
+   has been implemented and verified.
+7. Do not expand scope by inferring a complete feature from a diagram or a rule
+   that lacks a detailed functional flow. Record the need and link it to the
+   corresponding decision.
 8. Follow the workflow constraints and task system in the implementation plan.
 9. For client-owned protected resources, derive the local account/client from
    the authenticated Keycloak `sub`; a browser-supplied `client_id` is never
    proof of ownership.
 
-## 2 Atores e responsabilidades mencionados
+## 2 Actors and responsibilities mentioned
 
-| Ator ou termo | Responsabilidade indicada no anexo |
+| Actor or term | Responsibility indicated by the requirements |
 | --- | --- |
-| Cliente ou aluno | Preencher e consultar seus dados, acessar ficha e chat, comprar plano e consultar informações disponibilizadas pela academia. |
-| Atendente | Realizar atividades de atendimento e cadastrar foto facial do cliente conforme permissões. |
-| Instrutor, professor ou profissional | Avaliar sugestões da IA, modificar fichas e montar treinos manualmente; permanecer identificado como responsável pelo que criou ou alterou. |
-| Administrador ou usuário administrativo | Executar as operações administrativas previstas, conforme autorização. |
-| Funcionário | Categoria usada nos requisitos de cadastro e autorização; inclui responsabilidades que precisam ser distribuídas entre os perfis operacionais. |
-| Visitante | Consultar equipamentos disponíveis, conforme RF-33. |
+| Client or student | Enter and view their own data, access the training plan and chat, purchase a plan, and consult information made available by the gym. |
+| Attendant | Perform service activities and register a client's facial photo according to permissions. |
+| Instructor, teacher, or professional | Evaluate AI suggestions, modify training plans, and create training manually; remain identifiable as responsible for plans they create or change. |
+| Administrator or administrative user | Carry out authorized administrative operations. |
+| Employee | Category used in registration and authorization requirements; its responsibilities must be distributed among operational roles. |
+| Visitor | Consult available equipment under RF-33. |
 
 DEC-04 resolves the current role baseline: Keycloak realm roles are `client`,
 `employee`, `attendant`, `instructor`, and `admin`; attendant and instructor are
@@ -156,453 +162,464 @@ and future employees are provisioned by an authorized employee-management flow.
 The same Account abstraction is intended for later employee/admin identities;
 it is not client-specific credential storage.
 
-## 3 Requisitos funcionais
+## 3 Functional requirements
 
-Os 33 requisitos abaixo mantêm a numeração e todos os critérios de aceitação do anexo. “Fora do MVP informado” significa apenas que o item não aparece na lista inicial de MVP; ele continua fazendo parte do catálogo de requisitos.
+The 33 requirements below retain their numbering and all their
+acceptance criteria. “Outside the stated MVP” means only that an item is not in
+the original MVP list; it remains in the requirement catalog.
 
-### RF-01 Cadastrar cliente
+### RF-01 Register client
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Permitir que um usuário administrativo registre um novo cliente e o vincule a um e-mail.
+Allow an administrative user to register a new client and link the client to an
+e-mail address.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-01.1:** com os campos obrigatórios válidos, o sistema cria o cliente e gera identificador único.
-- [ ] **CA-01.2:** e-mail já associado a outra conta ativa é rejeitado.
-- [ ] **CA-01.3:** campos inválidos retornam mensagem de validação e nenhum cadastro parcial é criado.
+- [ ] **CA-01.1:** with valid required fields, the system creates the client and generates a unique identifier.
+- [ ] **CA-01.2:** an e-mail address already associated with another active account is rejected.
+- [ ] **CA-01.3:** invalid fields return a validation message, and no partial registration is created.
 
-### RF-02 Consultar e pesquisar clientes
+### RF-02 View and search clients
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Permitir a usuários administrativos localizar e consultar clientes cadastrados.
+Allow administrative users to find and view registered clients.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-02.1:** o administrador consegue listar clientes.
-- [ ] **CA-02.2:** pesquisa por nome ou e-mail retorna registros correspondentes.
-- [ ] **CA-02.3:** usuário sem autorização não consegue consultar dados de terceiros.
+- [ ] **CA-02.1:** the administrator can list clients.
+- [ ] **CA-02.2:** a search by name or e-mail returns matching records.
+- [ ] **CA-02.3:** an unauthorized user cannot view third-party data.
 
-### RF-03 Atualizar e alterar estado do cliente
+### RF-03 Update client data and status
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Permitir alteração dos dados cadastrais básicos e ativação/desativação do cliente.
+Allow changes to basic registration data and client activation/deactivation.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-03.1:** alterações válidas permanecem após recarregar a página.
-- [ ] **CA-03.2:** cliente desativado deixa de ser tratado como usuário habilitado.
-- [ ] **CA-03.3:** desativar não apaga automaticamente seu histórico.
-- [ ] **CA-03.4:** clientes habilitados precisam ter uma foto do rosto válida para a biometria.
+- [ ] **CA-03.1:** valid changes persist after reloading the page.
+- [ ] **CA-03.2:** a deactivated client is no longer treated as an enabled user.
+- [ ] **CA-03.3:** deactivation does not automatically erase the client's history.
+- [ ] **CA-03.4:** enabled clients need a valid facial photo for biometrics.
 
-**Nota de consolidação:** O critério CA-03.4 depende da biometria de RF-22, que não aparece no MVP informado. A relação entre cliente ativo, cliente habilitado, foto válida e pagamento precisa ser definida em DEC-05.
+**Consolidation note:** CA-03.4 depends on RF-22 biometrics, which is not in the
+stated MVP. The relationship among an active client, an enabled client, a valid
+photo, and payment needed definition under DEC-05; the approved result and
+deferral are recorded in section 9.
 
-### RF-04 Autenticar usuário
+### RF-04 Authenticate user
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Identificar cliente, funcionário ou administrador antes de permitir o acesso às áreas protegidas.
+Identify a client, employee, or administrator before allowing access to
+protected areas.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-04.1:** credenciais válidas de usuário ativo iniciam uma sessão autenticada.
-- [ ] **CA-04.2:** credenciais inválidas não iniciam sessão.
-- [ ] **CA-04.3:** rotas protegidas sem sessão válida retornam estado de não autenticado.
+- [ ] **CA-04.1:** valid credentials for an active user start an authenticated session.
+- [ ] **CA-04.2:** invalid credentials do not start a session.
+- [ ] **CA-04.3:** protected routes without a valid session return an unauthenticated state.
 
-### RF-05 Autorizar funções conforme perfil
+### RF-05 Authorize functions by role
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Separar permissões de cliente, Funcionário e Administrador.
+Separate Client, Employee, and Administrator permissions.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-05.1:** cliente não acessa funções administrativas.
-- [ ] **CA-05.2:** administrador acessa operações administrativas previstas.
-- [ ] **CA-05.3:** tentativa de invocar diretamente uma API proibida é rejeitada, mesmo sem usar a interface.
+- [ ] **CA-05.1:** a client cannot access administrative functions.
+- [ ] **CA-05.2:** an administrator can access the specified administrative operations.
+- [ ] **CA-05.3:** a direct call to a forbidden API is rejected, even without using the interface.
 
-**Nota de consolidação:** O anexo também menciona atendentes e instrutores. Detalhar suas permissões sem presumir que todos os funcionários possuem os mesmos acessos; ver DEC-04.
+**Consolidation note:** The requirements also mention attendants and instructors.
+Their permissions need detail without assuming that all employees have the same
+access; see DEC-04.
 
-### RF-06 Recuperar acesso por e-mail
+### RF-06 Recover access by e-mail
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir recuperação de conta vinculada ao e-mail.
+Allow recovery of an account linked to an e-mail address.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-06.1:** solicitação válida gera mensagem de recuperação.
-- [ ] **CA-06.2:** token expirado ou já utilizado é recusado.
-- [ ] **CA-06.3:** depois da recuperação, o usuário consegue autenticar-se com o novo mecanismo/credencial.
-- [ ] **CA-06.4:** o servidor SMTP deve ser isolado em um docker
+- [ ] **CA-06.1:** a valid request generates a recovery message.
+- [ ] **CA-06.2:** an expired or previously used token is rejected.
+- [ ] **CA-06.3:** after recovery, the user can authenticate with the new mechanism/credential.
+- [ ] **CA-06.4:** the SMTP server must be isolated in a Docker container.
 
-**Nota de consolidação:** CA-06.4 é uma restrição técnica de implantação do serviço de e-mail, preservada aqui para rastreabilidade e também registrada na seção 6.2. A escolha entre SMTP e API de e-mail está em DEC-03.
+**Consolidation note:** CA-06.4 is a technical deployment constraint for the
+e-mail service, retained for traceability and also recorded in section 6.2.
+DEC-03 records the SMTP versus e-mail API choice.
 
-### RF-07 Cadastrar funcionário
+### RF-07 Register employee
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir o cadastro básico de funcionários.
+Allow basic employee registration.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-07.1:** administrador consegue criar um funcionário com os dados obrigatórios.
-- [ ] **CA-07.2:** o funcionário recebe identificador único.
-- [ ] **CA-07.3:** duplicidade incompatível de conta/e-mail é recusada.
+- [ ] **CA-07.1:** an administrator can create an employee with the required data.
+- [ ] **CA-07.2:** the employee receives a unique identifier.
+- [ ] **CA-07.3:** an incompatible duplicate account/e-mail is rejected.
 
-### RF-08 Consultar, atualizar e desativar funcionário
+### RF-08 View, update, and deactivate employee
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Manter dados e estado dos funcionários cadastrados.
+Maintain registered employees' data and status.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-08.1:** administrador consegue listar e consultar funcionários.
-- [ ] **CA-08.2:** alterações válidas persistem.
-- [ ] **CA-08.3:** funcionário desativado perde as permissões vinculadas à conta.
+- [ ] **CA-08.1:** an administrator can list and view employees.
+- [ ] **CA-08.2:** valid changes persist.
+- [ ] **CA-08.3:** a deactivated employee loses permissions linked to the account.
 
-### RF-09 Enviar convite de onboarding por e-mail
+### RF-09 Send onboarding invitation by e-mail
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Enviar ao cliente cadastrado um e-mail contendo link para realização do primeiro onboarding.
+Send a registered client an e-mail containing a link for the first onboarding.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-09.1:** ao acionar o convite, mensagem é enviada ao e-mail vinculado.
-- [ ] **CA-09.2:** o link aponta para o onboarding daquele cliente.
-- [ ] **CA-09.3:** falha de envio fica registrada como falha e não como conclusão.
+- [ ] **CA-09.1:** triggering the invitation sends a message to the linked e-mail address.
+- [ ] **CA-09.2:** the link points to that client's onboarding.
+- [ ] **CA-09.3:** a delivery failure is recorded as a failure, not as completion.
 
-### RF-10 Acessar onboarding por link seguro
+### RF-10 Access onboarding through a secure link
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Abrir o formulário a partir do link recebido por e-mail.
+Open the form from the link received by e-mail.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-10.1:** token válido abre o formulário correspondente.
-- [ ] **CA-10.2:** token inválido ou expirado é rejeitado.
-- [ ] **CA-10.3:** um token não permite abrir o onboarding de outro cliente.
+- [ ] **CA-10.1:** a valid token opens the corresponding form.
+- [ ] **CA-10.2:** an invalid or expired token is rejected.
+- [ ] **CA-10.3:** a token cannot open another client's onboarding.
 
-### RF-11 Registrar dados físicos
+### RF-11 Record physical data
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Registrar os detalhes físicos previstos no formulário aprovado para orientar o treino.
+Record the physical details specified in the approved form to guide training.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-11.1:** todos os campos físicos definidos no esquema do onboarding podem ser preenchidos e persistidos.
-- [ ] **CA-11.2:** campos marcados como obrigatórios são validados.
-- [ ] **CA-11.3:** reabrir o formulário recupera corretamente os dados salvos enquanto ele estiver editável.
+- [ ] **CA-11.1:** all physical fields defined in the onboarding schema can be completed and persisted.
+- [ ] **CA-11.2:** fields marked as required are validated.
+- [ ] **CA-11.3:** reopening the form correctly retrieves saved data while it remains editable.
 
-**Nota de consolidação:** O esquema aprovado, os campos obrigatórios e suas validações não estão completamente definidos; ver DEC-06.
+**Consolidation note:** The approved schema, required fields, and their validation are not fully defined; see DEC-06.
 
-### RF-12 Registrar medicações e condições de saúde do cliente
+### RF-12 Record client medications and health conditions
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Registrar as informações médicas mencionadas na reunião, incluindo queixas, medicamentos e problemas/condições anteriores informados pelo cliente.
+Record the medical information mentioned in the meeting, including complaints, medications, and prior problems/conditions reported by the client.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-12.1:** o formulário possui áreas identificáveis para queixas, medicações e histórico/problemas relevantes.
-- [ ] **CA-12.2:** dados submetidos ficam associados apenas ao cliente correto.
-- [ ] **CA-12.3:** usuário sem permissão não obtém essas informações por interface nem API.
+- [ ] **CA-12.1:** the form has identifiable areas for complaints, medications, and relevant history/problems.
+- [ ] **CA-12.2:** submitted data is associated only with the correct client.
+- [ ] **CA-12.3:** a user without permission cannot obtain this information through the interface or API.
 
-### RF-13 Validar e concluir onboarding
+### RF-13 Validate and complete onboarding
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Marcar o formulário como concluído quando o cliente finalizar o preenchimento necessário.
+Mark the form complete when the client finishes providing the required information.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-13.1:** formulário incompleto nos campos obrigatórios não pode ser concluído.
-- [ ] **CA-13.2:** ao concluir, o sistema registra estado e data/hora da conclusão.
-- [ ] **CA-13.3:** a IA pode identificar que há onboarding válido disponível.
+- [ ] **CA-13.1:** a form with incomplete required fields cannot be completed.
+- [ ] **CA-13.2:** on completion, the system records the completion state and date/time.
+- [ ] **CA-13.3:** the AI can identify that valid onboarding is available.
 
-### RF-14 Consultar o próprio onboarding
+### RF-14 View own onboarding
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir ao cliente revisar os dados por ele informados.
+Allow the client to review the data they provided.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-14.1:** cliente autenticado consulta apenas o próprio onboarding.
-- [ ] **CA-14.2:** valores exibidos correspondem ao conteúdo persistido.
-- [ ] **CA-14.3:** consulta de outro cliente é bloqueada.
+- [ ] **CA-14.1:** an authenticated client views only their own onboarding.
+- [ ] **CA-14.2:** displayed values match the persisted content.
+- [ ] **CA-14.3:** access to another client's onboarding is blocked.
 
-### RF-15 Gerar ficha de treino utilizando IA
+### RF-15 Generate a training plan using AI
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Gerar uma orientação/ficha inicial utilizando as informações preenchidas no onboarding.
+Generate initial guidance/a training plan using the information provided during onboarding.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-15.1:** tentativa sem onboarding concluído não gera ficha.
-- [ ] **CA-15.2:** com onboarding válido, uma chamada bem-sucedida à IA produz uma ficha estruturada e persistível.
-- [ ] **CA-15.3:** a ficha fica associada exclusivamente ao cliente que solicitou/recebeu a geração.
-- [ ] **CA-15.4:** a IA irá verificar se os dados de saúde do cliente não são muito graves, caso seja, o plano não é criado pois o treino seria perigoso para o cliente.
-- [ ] **CA-15.5:** a ficha será criada baseada nos dados do onboard de cada cliente.
+- [ ] **CA-15.1:** an attempt without completed onboarding does not generate a plan.
+- [ ] **CA-15.2:** with valid onboarding, a successful AI call produces a structured, persistable plan.
+- [ ] **CA-15.3:** the plan is associated exclusively with the client who requested/received the generation.
+- [ ] **CA-15.4:** the AI checks whether the client's health data indicates a case that is too severe; if so, no plan is created because training would be dangerous for the client.
+- [ ] **CA-15.5:** the plan is created based on each client's onboarding data.
 
-**Nota de consolidação:** Aplicar RN-12 a RN-19 e RN-29 a RN-31. O documento não define o critério de gravidade nem o fluxo completo entre sugestão, revisão e ficha vigente; ver DEC-07.
+**Consolidation note:** Apply RN-12 through RN-19 and RN-29 through RN-31. The document does not define the severity criterion or the complete flow from suggestion to review to current plan; see DEC-07.
 
-### RF-16 Visualizar ficha de treino atual
+### RF-16 View current training plan
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Exibir ao cliente sua ficha vigente em formato utilizável especialmente no celular.
+Display the client's current plan in a format usable especially on a mobile phone.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-16.1:** cliente com ficha visualiza a versão atual.
-- [ ] **CA-16.2:** cliente sem ficha recebe estado vazio apropriado.
-- [ ] **CA-16.3:** um cliente não consegue consultar a ficha de outro.
+- [ ] **CA-16.1:** a client with a plan can view the current version.
+- [ ] **CA-16.2:** a client without a plan receives an appropriate empty state.
+- [ ] **CA-16.3:** one client cannot view another client's plan.
 
-### RF-17 Persistir e versionar a ficha
+### RF-17 Persist and version the training plan
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Manter a ficha gerada e criar nova versão quando alterações dinâmicas forem efetivadas.
+Keep the generated plan and create a new version when dynamic changes take effect.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-17.1:** primeira geração cria a versão inicial.
-- [ ] **CA-17.2:** alteração efetivada cria versão posterior e passa a identificá-la como atual.
-- [ ] **CA-17.3:** atualizar a página não perde a versão vigente.
+- [ ] **CA-17.1:** the first generation creates the initial version.
+- [ ] **CA-17.2:** an effective change creates a subsequent version and identifies it as current.
+- [ ] **CA-17.3:** refreshing the page does not lose the current version.
 
-**Nota de consolidação:** Versionamento também deve preservar treinos já executados e a identificação do profissional responsável, conforme RN-18 e RN-31.
+**Consolidation note:** Versioning must also preserve previously completed workouts and identification of the responsible professional, as required by RN-18 and RN-31.
 
-### RF-18 Conversar com assistente de IA
+### RF-18 Converse with the AI assistant
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Disponibilizar chat para o cliente conversar sobre seu treino e fornecer contexto adicional.
+Provide a chat where the client can discuss their training and provide additional context.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-18.1:** cliente autenticado envia mensagem e recebe resposta.
-- [ ] **CA-18.2:** o assistente recebe contexto da ficha vigente e, quando necessário, do onboarding daquele cliente.
-- [ ] **CA-18.3:** mensagens de um cliente não aparecem na conversa de outro.
-- [ ] **CA-18.4:** indisponibilidade do provedor retorna erro controlado e não corrompe o treino.
+- [ ] **CA-18.1:** an authenticated client sends a message and receives a response.
+- [ ] **CA-18.2:** the assistant receives context from the current plan and, when needed, that client's onboarding.
+- [ ] **CA-18.3:** one client's messages do not appear in another client's conversation.
+- [ ] **CA-18.4:** provider unavailability returns a controlled error and does not corrupt the training plan.
 
-### RF-19 Alterar dinamicamente o treino via IA
+### RF-19 Dynamically adapt training through AI
 
-**Escopo:** MVP informado no anexo.
+**Scope:** stated MVP.
 
-Adaptar a ficha quando o cliente relatar pelo chat que dor, limitação ou problema anterior está interferindo no treino.
+Adapt the plan when the client reports through chat that pain, a limitation, or a previous problem is interfering with training.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-19.1:** em cenário de teste no qual o cliente relata que um problema interfere em determinado exercício, a IA produz uma adaptação relacionada ao contexto.
-- [ ] **CA-19.2:** a mudança aprovada pelo fluxo resulta em nova versão atual.
-- [ ] **CA-19.3:** partes não relacionadas não são apagadas indevidamente.
-- [ ] **CA-19.4:** a ficha alterada permanece após nova autenticação.
+- [ ] **CA-19.1:** in a test scenario where the client reports that a problem interferes with a particular exercise, the AI produces a context-related adaptation.
+- [ ] **CA-19.2:** a change approved through the flow results in a new current version.
+- [ ] **CA-19.3:** unrelated parts are not improperly removed.
+- [ ] **CA-19.4:** the modified plan remains after reauthentication.
 
-**Nota de consolidação:** O texto exige mudança aprovada, mas não detalha quem aprova nem os estados da proposta. Definir esse fluxo em DEC-07; preservar a ficha aprovada conforme RN-16 e RN-17.
+**Consolidation note:** The text requires an approved change but does not detail who approves it or the proposal states. Define this flow under DEC-07; preserve the approved plan as required by RN-16 and RN-17.
 
-### RF-20 Receber evento de uso da catraca externo
+### RF-20 Receive an external turnstile-use event
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Disponibilizar endpoint REST para que o serviço externo informe o resultado de uma identificação facial.
+Provide a REST endpoint for the external service to report a facial-identification result.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-20.1:** requisição autenticada e válida é aceita conforme o JSON documentado.
-- [ ] **CA-20.2:** JSON malformado retorna erro de validação.
-- [ ] **CA-20.3:** integração não exige que a aplicação implemente algoritmo de funcionamento da catraca.
-- [ ] **CA-20.4:** evento duplicado com mesmo identificador não cria registros duplicados.
+- [ ] **CA-20.1:** an authenticated, valid request is accepted according to the documented JSON.
+- [ ] **CA-20.2:** malformed JSON returns a validation error.
+- [ ] **CA-20.3:** the integration does not require the application to implement the turnstile's operating algorithm.
+- [ ] **CA-20.4:** a duplicate event with the same identifier does not create duplicate records.
 
-**Nota de consolidação:** O resultado facial vem de um serviço externo. O contrato JSON, a autenticação da integração e a relação com a decisão de liberar a catraca ainda precisam ser definidos; ver DEC-11.
+**Consolidation note:** The facial result comes from an external service. The JSON contract, integration authentication, and relationship to the turnstile-release decision still need definition; see DEC-11.
 
-### RF-21 Verificar identidade e habilitação do usuário para acesso
+### RF-21 Verify the user's identity and eligibility for access
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Associar a identidade informada pelo serviço facial ao cliente e verificar se a conta está habilitada.
+Associate the identity reported by the facial service with the client and check whether the account is enabled.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-21.1:** identidade externa conhecida é associada ao cliente correspondente.
-- [ ] **CA-21.2:** identidade desconhecida gera decisão de negação/identidade desconhecida.
-- [ ] **CA-21.3:** cliente explicitamente desativado não é retornado como habilitado.
-- [ ] **CA-21.4:** resposta de reconhecimento deve ter uma precisão aceitável de no mínimo 95% para ser aceito
+- [ ] **CA-21.1:** a known external identity is associated with the corresponding client.
+- [ ] **CA-21.2:** an unknown identity produces a denial/unknown-identity decision.
+- [ ] **CA-21.3:** an explicitly deactivated client is not returned as enabled.
+- [ ] **CA-21.4:** the recognition response must have acceptable precision of at least 95% to be accepted.
 
-**Nota de consolidação:** O valor mínimo de 95% foi preservado. “Precisão” pode se referir à qualidade do modelo ou à confiança de uma correspondência; a métrica e seu uso precisam ser esclarecidos em DEC-09. Identificação não substitui autorização de entrada: aplicar RN-06, RN-35 e RN-36.
+**Consolidation note:** The 95% minimum is preserved. “Precision” may refer to model quality or match confidence; the metric and its use need clarification under DEC-09. Identification does not replace entry authorization: apply RN-06, RN-35, and RN-36.
 
-### RF-22 Inserção dos dados iniciais de biometria de cada cliente.
+### RF-22 Enter initial biometric data for each client
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Um atendente poderá cadastrar uma foto de rosto válida para o cliente, os dados dessa foto serão usados para a biometria da entrada.
+An attendant may register a valid facial photo for the client; data from that photo will be used for entry biometrics.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-22.1:** A foto deve passar um limiar de precisão previamente escolhido.
-- [ ] **CA-22.2:** Caso outra foto seja cadastrada, ela deverá substituir a antiga que já estava cadastrada, a antiga então será descartada.
-- [ ] **CA-22.3:** Apenas funcionários devem ter o poder de mudar os dados da foto de biometria associada a cada cliente.
+- [ ] **CA-22.1:** the photo must pass a previously selected precision threshold.
+- [ ] **CA-22.2:** if another photo is registered, it must replace the existing one, and the old photo is then discarded.
+- [ ] **CA-22.3:** only employees may change the biometric-photo data associated with each client.
 
-**Nota de consolidação:** O descarte da foto anterior precisa coexistir com a rastreabilidade das alterações críticas prevista em RN-26 e RN-27. Definir permissões, limiar da foto e política de retenção em DEC-04, DEC-09 e DEC-18.
+**Consolidation note:** Discarding the previous photo must coexist with traceability of critical changes required by RN-26 and RN-27. Define permissions, photo threshold, and retention policy under DEC-04, DEC-09, and DEC-18.
 
-### RF-23 Registrar entrada, saída e frequência
+### RF-23 Record entry, exit, and attendance
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Persistir eventos de acesso usados como histórico/frequência.
+Persist access events used as history/attendance.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-23.1:** evento de entrada válido cria registro de entrada.
-- [ ] **CA-23.2:** evento de saída válido cria registro de saída.
-- [ ] **CA-23.3:** evento repetido não conta duas vezes.
-- [ ] **CA-23.4:** os registros possuem data/hora e cliente relacionados.
+- [ ] **CA-23.1:** a valid entry event creates an entry record.
+- [ ] **CA-23.2:** a valid exit event creates an exit record.
+- [ ] **CA-23.3:** a repeated event is not counted twice.
+- [ ] **CA-23.4:** records include related date/time and client.
 
-### RF-24X Calcular lotação atual
+### RF-24X Calculate current occupancy
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Derivar a quantidade de pessoas atualmente presentes a partir dos eventos de entrada e saída.
+Derive the number of people currently present from entry and exit events.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-24.1:** uma entrada válida incrementa a lotação uma vez.
-- [ ] **CA-24.2:** uma saída válida decrementa a lotação uma vez.
-- [ ] **CA-24.3:** processamento duplicado do mesmo evento não altera novamente o total.
-- [ ] **CA-24.4:** o valor não é exibido como negativo.
+- [ ] **CA-24.1:** a valid entry increments occupancy once.
+- [ ] **CA-24.2:** a valid exit decrements occupancy once.
+- [ ] **CA-24.3:** duplicate processing of the same event does not change the total again.
+- [ ] **CA-24.4:** the value is not displayed as negative.
 
-**Nota de consolidação:** O sufixo X foi mantido, pois seu significado não é explicado. RN-37 descreve contagem por câmeras em espaços da academia, enquanto este RF calcula presença por entradas e saídas. Resolver DEC-02 e DEC-10 antes de escolher o comportamento.
+**Consolidation note:** The X suffix is retained because its meaning is not explained. RN-37 describes camera-based counting in gym spaces, whereas this RF calculates presence from entries and exits. Resolve DEC-02 and DEC-10 before choosing the behavior.
 
-### RF-25X Exibir lotação atual
+### RF-25X Display current occupancy
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Mostrar ao cliente a quantidade de pessoas treinando no momento.
+Show the client the number of people training at the moment.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-25.1:** página exibe o valor calculado por RF-24 para usuários.
-- [ ] **CA-25.2:** após novo evento processado, uma nova consulta reflete o novo total.
-- [ ] **CA-25.3:** informação é legível em viewport de celular.
+- [ ] **CA-25.1:** the page displays the value calculated by RF-24 for users.
+- [ ] **CA-25.2:** after a new event is processed, a new query reflects the new total.
+- [ ] **CA-25.3:** the information is legible in a mobile viewport.
 
-**Nota de consolidação:** O anexo referencia RF-24 neste critério, mas identifica a linha correspondente como RF-24X. Essa referência foi preservada e aponta para o item anterior. Ver DEC-02 e DEC-10.
+**Consolidation note:** CA-25.1 references RF-24, while the corresponding requirement is labeled RF-24X. This reference is preserved and points to the previous item. See DEC-02 and DEC-10.
 
-### RF-26 Registrar e atualizar situação de cobrança
+### RF-26 Record and update billing status
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Manter o controle básico de mensalidades/cobranças de cada cliente.
+Maintain basic control of each client's monthly fees/charges.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-26.1:** usuário autorizado registra competência/período, vencimento e situação.
-- [ ] **CA-26.2:** atualização persiste.
-- [ ] **CA-26.3:** registro fica associado ao cliente correto.
+- [ ] **CA-26.1:** an authorized user records the billing period, due date, and status.
+- [ ] **CA-26.2:** an update persists.
+- [ ] **CA-26.3:** the record is associated with the correct client.
 
-### RF-27 Consultar situação de cobrança
+### RF-27 View billing status
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir a consulta da situação financeira básica já registrada.
+Allow consultation of the basic financial status already recorded.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-27.1:** usuário autorizado consulta os registros do cliente.
-- [ ] **CA-27.2:** o cliente pode visualizar a própria situação quando essa tela fizer parte da interface.
-- [ ] **CA-27.3:** cliente não consulta mensalidade de terceiros.
+- [ ] **CA-27.1:** an authorized user views the client's records.
+- [ ] **CA-27.2:** the client can view their own status when that screen is part of the interface.
+- [ ] **CA-27.3:** a client cannot view another person's monthly fees.
 
-### RF-28 Disponibilizar dashboard administrativo
+### RF-28 Provide an administrative dashboard
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Apresentar uma página inicial administrativa consolidando informações do sistema.
+Present an administrative home page consolidating system information.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-28.1:** somente perfil autorizado acessa o dashboard.
-- [ ] **CA-28.2:** página carrega dados provenientes dos módulos existentes, como a fatura mensal, anual e total; número de clientes assinantes e funcionários; histórico de acesso dos clientes dividido por dias/horas e possíveis outros.
-- [ ] **CA-28.3:** falha de um indicador não concede acesso indevido nem exibe dados de outro contexto.
+- [ ] **CA-28.1:** only an authorized role can access the dashboard.
+- [ ] **CA-28.2:** the page loads data from existing modules, such as monthly, annual, and total billing; the number of subscribing clients and employees; client access history broken down by days/hours; and possibly other indicators.
+- [ ] **CA-28.3:** failure of one indicator does not grant unauthorized access or display data from another context.
 
-**Nota de consolidação:** Os indicadores financeiros dependem de definir o significado de fatura, faturamento e lucro; ver DEC-13.
+**Consolidation note:** Financial indicators depend on defining the meaning of invoice, revenue, and profit; see DEC-13.
 
-### RF-29 Exibir indicadores consolidados no dashboard
+### RF-29 Display consolidated dashboard indicators
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Tornar o dashboard útil apresentando indicadores oriundos das funções já solicitadas.
+Make the dashboard useful by showing indicators from already requested functions.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-29.1:** exibe ao menos quantidade de clientes ativos, histórico de frequência nas semanas e lotação atual.
-- [ ] **CA-29.2:** quando os módulos correspondentes estiverem implementados, pode exibir resumo de lucro total e por mês.
+- [ ] **CA-29.1:** display at least the number of active clients, attendance history over the weeks, and current occupancy.
+- [ ] **CA-29.2:** when the corresponding modules are implemented, a summary of total and monthly profit may be displayed.
 
-**Nota de consolidação:** O indicador de lotação depende de DEC-10. Lucro depende de uma definição de cálculo e de dados ainda não especificados, conforme DEC-13.
+**Consolidation note:** The occupancy indicator depends on DEC-10. Profit depends on a calculation definition and data not yet specified, as noted in DEC-13.
 
-### RF-30 Gerenciar agenda de aulas de ginástica
+### RF-30 Manage the gym class schedule
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir que um usuário administrativo registre os dias e horários que serão posteriormente exibidos.
+Allow an administrative user to record days and times that will later be displayed.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-30.1:** administrador cria aula com informações mínimas de identificação, data e horário.
-- [ ] **CA-30.2:** consegue alterar ou retirar uma ocorrência da agenda.
-- [ ] **CA-30.3:** alterações aparecem na visualização pública/autenticada correspondente.
+- [ ] **CA-30.1:** an administrator creates a class with at least identifying information, date, and time.
+- [ ] **CA-30.2:** an occurrence can be changed or removed from the schedule.
+- [ ] **CA-30.3:** changes appear in the corresponding public/authenticated view.
 
-**Nota de consolidação:** A regra de capacidade RN-25 é condicional. Recorrência, visibilidade da agenda e eventual fluxo de reservas precisam ser definidos em DEC-14.
+**Consolidation note:** The capacity rule RN-25 is conditional. Recurrence, schedule visibility, and any booking flow need definition under DEC-14.
 
-### RF-31 Disponibilizar a compra de planos de academia
+### RF-31 Provide purchase of gym plans
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir que um usuário compre um plano de academia que estará linkado a sua conta. Esse plano terá uma validade na data X, e deverá ser expirado quando passar pelo tempo de expiração necessitando de um novo pagamento para ser validado.
+Allow a user to purchase a gym plan linked to their account. The plan is valid until date X and expires after that time, requiring a new payment to become valid again.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-31.1:** Status do cliente de habilitado só deve mudar se o pagamento foi aceito com confirmação da API.
+- [ ] **CA-31.1:** the client's enabled status must change only if payment was accepted with API confirmation.
 
-**Nota de consolidação:** A confirmação do pagamento deve ser relacionada às demais condições de habilitação e entrada, sem apagar essas condições. Ver DEC-05 e DEC-12, além de RN-22, RN-24, RN-35 e RN-36.
+**Consolidation note:** Payment confirmation must be related to the other eligibility and entry conditions without removing them. See DEC-05 and DEC-12, as well as RN-22, RN-24, RN-35, and RN-36.
 
-### RF-32 Gerenciar equipamentos da academia
+### RF-32 Manage gym equipment
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir que usuário administrativo cadastre, consulte, atualize e desative os equipamentos disponibilizados pela academia, incluindo suas informações básicas e imagem de apresentação.
+Allow an administrative user to register, view, update, and deactivate equipment made available by the gym, including its basic information and display image.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-32.1:** usuário administrativo autorizado consegue cadastrar equipamento informando, no mínimo, nome e situação;
-- [ ] **CA-32.2:** o sistema permite associar uma imagem ao equipamento;
-- [ ] **CA-32.3:** equipamento cadastrado permanece disponível após nova consulta;
-- [ ] **CA-32.4:** usuário autorizado consegue alterar as informações do equipamento;
-- [ ] **CA-32.5:** O equipamento desativado deixa de aparecer como equipamento disponível ao cliente, sem necessidade de excluir seu registro.
+- [ ] **CA-32.1:** an authorized administrative user can register equipment with, at minimum, a name and status;
+- [ ] **CA-32.2:** the system allows an image to be associated with the equipment;
+- [ ] **CA-32.3:** registered equipment remains available on a subsequent query;
+- [ ] **CA-32.4:** an authorized user can change equipment information;
+- [ ] **CA-32.5:** deactivated equipment no longer appears as available to the client, without requiring deletion of its record.
 
-### RF-33 Consultar equipamentos disponíveis
+### RF-33 View available equipment
 
-**Escopo:** Fora do MVP informado no anexo.
+**Scope:** outside the stated MVP.
 
-Permitir que visitantes ou clientes visualizem os equipamentos disponibilizados pela academia, juntamente com suas informações básicas e respectivas imagens.
+Allow visitors or clients to view equipment made available by the gym, together with its basic information and corresponding images.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-33.1:** a interface apresenta a relação dos equipamentos ativos cadastrados;
-- [ ] **CA-33.2:** cada equipamento apresenta pelo menos nome e imagem, quando houver imagem cadastrada;
-- [ ] **CA-33.3:** o usuário consegue consultar informações adicionais do equipamento, quando cadastradas;
-- [ ] **CA-33.4:** equipamentos desativados não aparecem como disponíveis;
-- [ ] **CA-33.5:** a listagem permanece utilizável em dispositivos móveis.
+- [ ] **CA-33.1:** the interface presents the list of registered active equipment;
+- [ ] **CA-33.2:** each equipment item shows at least its name and image, when an image has been registered;
+- [ ] **CA-33.3:** the user can view additional equipment information when registered;
+- [ ] **CA-33.4:** deactivated equipment does not appear as available;
+- [ ] **CA-33.5:** the list remains usable on mobile devices.
 
 ### 3.1 Approved product-extension requirements
 
-These requirements originate in `docs/product-extensions.md`, not the original
-source. That file remains authoritative for full dependency, privacy, and
+These approved extensions are part of this canonical specification.
+`docs/product-extensions.md` retains supporting dependency, privacy, and
 unresolved-decision detail.
 
 #### EXT-RF-AI-01 — Conversational AI onboarding
@@ -672,6 +689,33 @@ lifecycle enforced; `EXT-CA-PRES-01.4` sensitive data excluded;
 `EXT-CA-PRES-01.5` anonymous count remains independent;
 `EXT-CA-PRES-01.6` staff visibility does not imply client/public visibility.
 
+#### EXT-RF-LANG-01 — Portuguese user-facing application
+
+**Scope:** approved cross-cutting extension for existing, MVP, and post-MVP UI.
+**Related originals:** RNF02, RNF03, RF-04, RF-10, RF-18.
+
+Application-controlled text shown to users in public, client, and
+administrative frontend areas must be in Brazilian Portuguese (`pt-BR`). This
+includes navigation, actions, form labels/help, validation, loading, empty,
+success, error and authorization states, dialogs, notifications, and accessible
+names. In-app AI onboarding and training-chat responses must address clients in
+Portuguese. Established technical or fitness terms commonly used in English,
+such as “bulking,” may remain in English when that is clearer to users.
+User-authored content, proper names, technical identifiers, API contracts,
+implementation documentation, and Codex task prompts are not translated by
+this requirement.
+
+Acceptance: `EXT-CA-LANG-01.1` application-controlled public/client/admin UI
+copy and accessible names are in `pt-BR`, including failure and empty states;
+`EXT-CA-LANG-01.2` in-app AI responses and client-facing generated guidance are
+in Portuguese without changing structured-data validation or safety rules;
+`EXT-CA-LANG-01.3` user-facing dates, times, numbers, and currency values use
+appropriate `pt-BR` formatting where displayed;
+`EXT-CA-LANG-01.4` login and first-access screens displayed through Keycloak
+are in Portuguese, without changing the approved authentication architecture;
+`EXT-CA-LANG-01.5` representative phone, tablet, and desktop flows have no
+unintended English application copy. Familiar gym/technical terms are allowed.
+
 No extension approves followers, friends, messages, comments, likes, rankings,
 leaderboards, or live equipment-use tracking.
 
@@ -691,150 +735,150 @@ Suggestions and chat responses do not become the current plan: approval,
 versioning, safety, professional responsibility, manual fallback, and history
 rules in RF-17/RF-19 and RN-12–RN-19/RN-31 continue to govern changes.
 
-## 4 Requisitos não funcionais
+## 4 Non-functional requirements
 
-Os seis RNF abaixo preservam todos os critérios do anexo. Parâmetros de medição que não foram definidos estão reunidos em DEC-16.
+The six RNFs below preserve all their criteria. Measurement parameters that were not defined are collected under DEC-16.
 
-### RNF01 Desempenho
+### RNF01 Performance
 
-O sistema deve apresentar respostas rápidas às operações realizadas pelos usuários.
+The system must respond quickly to operations performed by users.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-RNF01.1:** operações comuns de consulta, navegação e gravação devem apresentar resposta ao usuário em até 2 segundos em condições normais de uso.
-- [ ] **CA-RNF01.2:** operações que dependam de serviços externos ou processamento naturalmente mais demorado devem apresentar indicação de processamento, sem aparentar travamento da interface.
-- [ ] **CA-RNF01.3:** em caso de indisponibilidade ou demora de um serviço externo, o sistema deve retornar uma mensagem de erro controlada, sem bloquear indefinidamente a operação.
+- [ ] **CA-RNF01.1:** common query, navigation, and write operations must respond to the user within 2 seconds under normal usage conditions.
+- [ ] **CA-RNF01.2:** operations depending on external services or inherently longer processing must indicate that processing is under way, without making the interface appear frozen.
+- [ ] **CA-RNF01.3:** if an external service is unavailable or slow, the system must return a controlled error message without blocking the operation indefinitely.
 
-### RNF02 Usabilidade
+### RNF02 Usability
 
-O sistema deve possuir uma interface limpa, intuitiva e simples de utilizar, com baixa necessidade de treinamento.
+The system must have a clean, intuitive, easy-to-use interface requiring little training.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-RNF02.1:** as funcionalidades previstas para cada perfil devem ser acessíveis por meio de navegação e rótulos compreensíveis, sem exigir conhecimento técnico do sistema.
-- [ ] **CA-RNF02.2:** formulários devem indicar claramente campos obrigatórios, erros de preenchimento e ações disponíveis.
-- [ ] **CA-RNF02.3:** um usuário representativo deve conseguir executar as principais tarefas do seu perfil sem necessidade de treinamento específico além de uma orientação inicial.
+- [ ] **CA-RNF02.1:** functions intended for each role must be accessible through understandable navigation and labels, without requiring technical knowledge of the system.
+- [ ] **CA-RNF02.2:** forms must clearly indicate required fields, input errors, and available actions.
+- [ ] **CA-RNF02.3:** a representative user must be able to perform their role's main tasks without specific training beyond initial guidance.
 
-### RNF03 Responsividade
+### RNF03 Responsiveness
 
-A interface deverá adaptar-se a smartphones, tablets e computadores, priorizando uma boa experiência de uso em dispositivos móveis.
+The interface must adapt to smartphones, tablets, and computers, prioritizing a good mobile experience.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-RNF03.1:** as telas principais devem permanecer utilizáveis em smartphones, tablets e computadores, sem sobreposição ou corte de conteúdo.
-- [ ] **CA-RNF03.2:** menus, botões, formulários e elementos de interação devem permanecer acessíveis e utilizáveis em telas pequenas.
-- [ ] **CA-RNF03.3:** o conteúdo principal não deve exigir rolagem horizontal em smartphones nas resoluções suportadas pelo projeto.
+- [ ] **CA-RNF03.1:** main screens must remain usable on smartphones, tablets, and computers without overlapping or clipped content.
+- [ ] **CA-RNF03.2:** menus, buttons, forms, and interactive elements must remain accessible and usable on small screens.
+- [ ] **CA-RNF03.3:** main content must not require horizontal scrolling on smartphones at the resolutions supported by the project.
 
-### RNF04 Manutenibilidade
+### RNF04 Maintainability
 
-O sistema deverá ser desenvolvido de maneira a possuir baixa necessidade de manutenção, favorecendo organização do código, modularidade, facilidade de evolução e facilidade de correção de problemas.
+The system must be developed to require little maintenance, favoring code organization, modularity, ease of evolution, and ease of fixing problems.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-RNF04.1:** alterações em um módulo não devem exigir modificações generalizadas em outros módulos quando não houver dependência funcional necessária.
-- [ ] **CA-RNF04.2:** os componentes do sistema devem possuir responsabilidades bem definidas, evitando lógica duplicada e acoplamento desnecessário.
-- [ ] **CA-RNF04.3:** alterações relevantes devem possuir testes relacionados suficientes para detectar regressões nas funcionalidades afetadas.
+- [ ] **CA-RNF04.1:** changes in one module must not require widespread changes in other modules when there is no necessary functional dependency.
+- [ ] **CA-RNF04.2:** system components must have well-defined responsibilities, avoiding duplicated logic and unnecessary coupling.
+- [ ] **CA-RNF04.3:** significant changes must have sufficient related tests to detect regressions in affected functions.
 
-### RNF05 Disponibilidade
+### RNF05 Availability
 
-O sistema deverá estar disponível para utilização pelos usuários 24 horas por dia.
+The system must be available for users 24 hours a day.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-RNF05.1:** os serviços principais devem permanecer disponíveis continuamente, exceto durante manutenções programadas.
-- [ ] **CA-RNF05.2:** falhas de um serviço externo, como provedor de IA ou e-mail, não devem indisponibilizar funcionalidades internas que não dependam diretamente desse serviço.
-- [ ] **CA-RNF05.3:** durante indisponibilidade de um componente externo, o sistema deve informar a falha de forma controlada e permitir a continuidade das operações independentes.
+- [ ] **CA-RNF05.1:** core services must remain continuously available except during scheduled maintenance.
+- [ ] **CA-RNF05.2:** failures of an external service, such as an AI or e-mail provider, must not make internal functions unavailable if they do not directly depend on that service.
+- [ ] **CA-RNF05.3:** when an external component is unavailable, the system must report the failure in a controlled way and allow independent operations to continue.
 
-### RNF06 Integração
+### RNF06 Integration
 
-As integrações com sistemas externos deverão ser realizadas de forma desacoplada, permitindo que serviços externos possam ser substituídos ou atualizados sem exigir alterações generalizadas no sistema.
+External-system integrations must be decoupled so that external services can be replaced or updated without widespread system changes.
 
-**Critérios de aceitação**
+**Acceptance criteria**
 
-- [ ] **CA-RNF06.1:** a comunicação com cada serviço externo deve ocorrer por meio de uma interface ou camada de integração definida, evitando dependência direta espalhada pelo domínio da aplicação.
-- [ ] **CA-RNF06.2:** a substituição de um provedor externo compatível deve exigir alterações concentradas na respectiva camada de integração, sem modificar generalizadamente as regras de negócio.
-- [ ] **CA-RNF06.3:** falhas ou mudanças de contrato de um serviço externo devem ser tratadas pela camada de integração e não devem expor detalhes internos do provedor às demais camadas.
+- [ ] **CA-RNF06.1:** communication with each external service must use a defined interface or integration layer, avoiding direct dependencies scattered across the application domain.
+- [ ] **CA-RNF06.2:** replacing a compatible external provider must require changes concentrated in its integration layer, without widespread changes to business rules.
+- [ ] **CA-RNF06.3:** failures or contract changes in an external service must be handled by the integration layer and must not expose the provider's internals to other layers.
 
-### 4.1 Restrições transversais presentes em outras seções
+### 4.1 Cross-cutting constraints in other sections
 
-O anexo também registra restrições de qualidade e segurança dentro de regras de negócio e critérios funcionais. Elas continuam aplicáveis com seus IDs originais; esta tabela apenas facilita sua localização.
+Quality and security constraints also appear within business rules and functional criteria. They remain applicable under their original IDs; this table only helps locate them.
 
-| Tema | Referências e condição a observar |
+| Topic | References and applicable condition |
 | --- | --- |
-| Autenticação e autorização | RF-04, RF-05 e RN-02 a RN-05: controlar sessão, perfil e acesso também na API. |
-| Privacidade e segregação | RF-12, RF-18, RN-10, RN-11, RN-23, RN-28, RN-29 e RN-34: limitar acesso e exposição de dados de saúde, biometria, logs, exportações e contexto da IA. |
-| Integridade e histórico | RF-17, RF-20, RF-23, RF-24X, RN-01, RN-18, RN-20 e RN-33: manter identidade, histórico, relacionamentos e tratamento de duplicidade. |
-| Auditoria e rastreabilidade | RN-03, RN-09, RN-21, RN-26, RN-27, RN-31 e RN-32: registrar responsáveis, motivos, avisos e datas de forma consistente. |
-| Continuidade com falhas externas | RN-08, RN-19, RNF01, RNF05 e RNF06: prever alternativa para reconhecimento facial, treino manual e tratamento controlado de falhas. |
-| Qualidade biométrica | CA-21.4, CA-22.1 e RN-07: observar o mínimo de 95% citado e o limiar da foto, com métricas a esclarecer em DEC-09. |
-| Implantação | CA-06.4 e seção 6: contemplar isolamento do SMTP em contêiner, Docker Compose e a indicação de firewall. |
+| Authentication and authorization | RF-04, RF-05, and RN-02 through RN-05: control sessions, roles, and access in the API as well. |
+| Privacy and segregation | RF-12, RF-18, RN-10, RN-11, RN-23, RN-28, RN-29, and RN-34: limit access to and exposure of health data, biometrics, logs, exports, and AI context. |
+| Integrity and history | RF-17, RF-20, RF-23, RF-24X, RN-01, RN-18, RN-20, and RN-33: maintain identity, history, relationships, and duplicate handling. |
+| Audit and traceability | RN-03, RN-09, RN-21, RN-26, RN-27, RN-31, and RN-32: record responsible people, reasons, notices, and dates consistently. |
+| Continuity during external failures | RN-08, RN-19, RNF01, RNF05, and RNF06: provide alternatives for facial recognition, manual training-plan creation, and controlled failure handling. |
+| Biometric quality | CA-21.4, CA-22.1, and RN-07: observe the cited 95% minimum and the photo threshold, with metrics to be clarified under DEC-09. |
+| Deployment | CA-06.4 and section 6: cover SMTP container isolation, Docker Compose, and the firewall indication. |
 
-## 5 Regras de negócio
+## 5 Business rules
 
-Todas as 37 regras do anexo estão preservadas abaixo, inclusive aquelas que também descrevem funções ou restrições não funcionais. Regras condicionais mantêm suas condições de aplicação.
+All 37 business rules are preserved below, including those that also describe functions or non-functional constraints. Conditional rules retain their conditions of application.
 
-| ID | Regra de negócio | Aplicação indicada |
+| ID | Business rule | Indicated application |
 | --- | --- | --- |
-| RN-01 | Cada pessoa deve possuir identidade única no sistema segundo o identificador definido pelo projeto. | Cadastro |
-| RN-02 | Usuário inativo não poderá autenticar-se normalmente. | Autenticação |
-| RN-03 | Funcionário inativado perde as permissões operacionais, mas seu histórico permanece associado a ele. | Funcionários/Auditoria |
-| RN-04 | Toda operação protegida deve considerar o perfil/permissão do usuário autenticado. | Segurança |
-| RN-05 | Um cliente somente pode visualizar dados pertencentes ao próprio contexto, salvo funções especificamente compartilhadas. | Privacidade |
-| RN-06 | Reconhecimento facial identifica/verifica a pessoa; a autorização de entrada deve ocorrer em etapa separada. | Biometria/Acesso |
-| RN-07 | Correspondência facial abaixo do limiar configurado nunca deve ser convertida automaticamente em identificação positiva. | Biometria |
-| RN-08 | Deve existir fluxo alternativo para falha de reconhecimento facial. | Biometria |
-| RN-09 | Toda liberação manual que contorne uma regra normal de acesso deve registrar responsável e motivo. | Controle de acesso |
-| RN-10 | Dados biométricos devem ser tratados separadamente dos dados cadastrais comuns. | LGPD |
-| RN-11 | Informações médicas, lesões ou restrições registradas não devem ficar disponíveis a funcionários sem necessidade funcional. | LGPD |
-| RN-12 | Sugestões geradas pela IA poderão ser vistas pelos funcionários instrutores para avaliar sua validade. | IA |
-| RN-13 | A IA não deve criar sugestões de treino para clientes com casos graves de saúde (como problemas cardíacos graves) | IA/Treino |
-| RN-14 | O professor deve conseguir modificar integralmente uma sugestão. | IA/Treino |
-| RN-15 | Restrições do cliente possuem precedência sobre otimizações sugeridas pela IA. | IA/Treino |
-| RN-16 | A IA não deve modificar silenciosamente uma ficha já aprovada. | IA/Treino |
-| RN-17 | Alteração proposta pela IA em ficha existente deve resultar em nova proposta/versão. | IA/Treino |
-| RN-18 | Treinos antigos executados não podem ser modificados retroativamente ao atualizar a ficha atual. | Histórico |
-| RN-19 | A falha do serviço de IA não poderá impedir o instrutor de montar treino manualmente. | Disponibilidade funcional |
-| RN-20 | Um exercício inativo pode permanecer em fichas históricas, mas não deve ser selecionável normalmente em novas prescrições. | Exercícios |
-| RN-21 | Avaliações devem possuir data e responsável para permitir evolução cronológica. | Avaliação |
-| RN-22 | Apenas planos ativos podem originar novas matrículas. | Planos |
-| RN-23 | Informações sensíveis não devem aparecer desnecessariamente em logs técnicos. | LGPD |
-| RN-24 | Se a academia bloquear inadimplentes, o bloqueio deverá ser aplicado pelo motor de regras de acesso, não pelo reconhecimento facial. | Financeiro/Acesso |
-| RN-25 | Se forem oferecidas aulas com limite de participantes, reservas confirmadas não podem exceder capacidade sem ação excepcional autorizada. | Agenda |
-| RN-26 | Alterações críticas de permissão, biometria e configuração devem gerar aviso. | Aviso |
-| RN-27 | O usuário que executar uma ação problemática não deve poder apagar livremente a evidência da própria ação. | Auditoria |
-| RN-28 | Exportações devem respeitar as mesmas permissões existentes nas telas/APIs. | Segurança |
-| RN-29 | Dados de um cliente jamais devem compor contexto de IA destinado a outro cliente. | IA/Privacidade |
-| RN-30 | Respostas da IA não devem ser apresentadas como diagnóstico médico. | IA |
-| RN-31 | O professor/profissional deve permanecer identificável como responsável pelas fichas que ele alterou/criou. | Treino |
-| RN-32 | Todo registro temporal deve utilizar padrão consistente de data/hora para preservar a rastreabilidade. | Sistema |
-| RN-33 | Exclusão/inativação de entidade não deve quebrar relacionamentos históricos necessários para auditoria. | Integridade |
-| RN-34 | Dados biométricos não devem ser enviados para relatórios operacionais comuns. | LGPD |
-| RN-35 | Caso o aluno não possua uma matrícula válida, o sistema deverá impedir seu acesso. São consideradas situações inválidas: matrícula inexistente ou matrícula vencida. | Controle de acesso |
-| RN-36 | A liberação da catraca somente deverá ocorrer após o sistema validar identidade do aluno, existência da matrícula, validade da matrícula, modalidade contratada e quantidade de acessos permitida. | Autorização de entrada |
-| RN-37 | O sistema de lotação da academia deve apresentar, de forma auxiliar, a quantidade de pessoas que estão em certos espaços da academia, através da contagem de pessoas com uso de modelo de visão computacional vinculado às câmeras de vigilância. | Lotação de academia |
+| RN-01 | Each person must have a unique identity in the system according to the identifier defined by the project. | Registration |
+| RN-02 | An inactive user cannot authenticate normally. | Authentication |
+| RN-03 | A deactivated employee loses operational permissions, but their history remains associated with them. | Employees/Audit |
+| RN-04 | Every protected operation must consider the authenticated user's role/permission. | Security |
+| RN-05 | A client may view only data belonging to their own context, except for specifically shared functions. | Privacy |
+| RN-06 | Facial recognition identifies/verifies the person; entry authorization must occur in a separate step. | Biometrics/Access |
+| RN-07 | A facial match below the configured threshold must never be automatically converted into a positive identification. | Biometrics |
+| RN-08 | An alternative flow must exist for facial-recognition failure. | Biometrics |
+| RN-09 | Every manual release that bypasses a normal access rule must record the responsible person and reason. | Access control |
+| RN-10 | Biometric data must be handled separately from ordinary registration data. | LGPD |
+| RN-11 | Recorded medical information, injuries, or restrictions must not be available to employees without a functional need. | LGPD |
+| RN-12 | AI-generated suggestions may be viewed by instructor employees to assess their validity. | AI |
+| RN-13 | AI must not create training suggestions for clients with severe health cases (such as severe heart problems). | AI/Training |
+| RN-14 | The instructor must be able to modify a suggestion in full. | AI/Training |
+| RN-15 | Client restrictions take precedence over optimizations suggested by AI. | AI/Training |
+| RN-16 | AI must not silently modify an already approved training plan. | AI/Training |
+| RN-17 | An AI-proposed change to an existing plan must result in a new proposal/version. | AI/Training |
+| RN-18 | Previously completed workouts cannot be modified retroactively when the current plan is updated. | History |
+| RN-19 | Failure of the AI service must not prevent the instructor from creating a training plan manually. | Functional availability |
+| RN-20 | An inactive exercise may remain in historical plans but must not normally be selectable for new prescriptions. | Exercises |
+| RN-21 | Evaluations must have a date and responsible person to allow chronological tracking. | Evaluation |
+| RN-22 | Only active plans may give rise to new enrollments. | Plans |
+| RN-23 | Sensitive information must not appear unnecessarily in technical logs. | LGPD |
+| RN-24 | If the gym blocks delinquent clients, the block must be applied by the access-rules engine, not by facial recognition. | Finance/Access |
+| RN-25 | If classes with participant limits are offered, confirmed reservations cannot exceed capacity without an authorized exception. | Schedule |
+| RN-26 | Critical changes to permissions, biometrics, and configuration must generate a notice. | Notice |
+| RN-27 | A user who performs a problematic action must not be free to erase evidence of their own action. | Audit |
+| RN-28 | Exports must respect the same permissions as the screens/APIs. | Security |
+| RN-29 | One client's data must never be included in AI context intended for another client. | AI/Privacy |
+| RN-30 | AI responses must not be presented as medical diagnoses. | AI |
+| RN-31 | The instructor/professional must remain identifiable as responsible for plans they changed/created. | Training |
+| RN-32 | Every temporal record must use a consistent date/time format to preserve traceability. | System |
+| RN-33 | Deletion/deactivation of an entity must not break historical relationships needed for audit. | Integrity |
+| RN-34 | Biometric data must not be sent to ordinary operational reports. | LGPD |
+| RN-35 | If a student does not have a valid enrollment, the system must prevent their access. Missing or expired enrollment is invalid. | Access control |
+| RN-36 | The turnstile must be released only after the system validates the student's identity, the existence and validity of the enrollment, the contracted modality, and the permitted number of accesses. | Entry authorization |
+| RN-37 | As auxiliary information, the gym occupancy system must show the number of people in certain gym spaces by counting people using a computer-vision model connected to surveillance cameras. | Gym occupancy |
 
-**Nota de classificação:** RN-37 descreve uma funcionalidade de contagem e apresentação de lotação por visão computacional. RN-08, RN-09, RN-12, RN-14, RN-19, RN-21 e RN-26 também implicam fluxos que precisam ser detalhados. Sua numeração original foi mantida; ver DEC-10, DEC-11 e DEC-15.
+**Classification note:** RN-37 describes a computer-vision occupancy counting and display function. RN-08, RN-09, RN-12, RN-14, RN-19, RN-21, and RN-26 also imply flows requiring detail. Their original numbering is preserved; see DEC-10, DEC-11, and DEC-15.
 
-## 6 Tecnologias e restrições técnicas
+## 6 Technologies and technical constraints
 
-### 6.1 Historical technology entries from the source
+### 6.1 Historical technology entries
 
 The following TEC entries are preserved for traceability only. Where they list
 alternatives, DEC-03's approved baseline below—not the historical alternative—is
 the active implementation architecture.
 
-| ID | Camada | Tecnologia indicada | Motivo registrado no anexo |
+| ID | Layer | Indicated technology | Recorded rationale |
 | --- | --- | --- | --- |
-| TEC-01 | Frontend | React + TypeScript | Componentização, forte ecossistema e boa adequação para interface SPA responsiva |
-| TEC-02 | Build frontend | Vite | Setup simples para projeto React/TypeScript e build de produção |
-| TEC-03 | Backend | NestJS + Python | Arquitetura modular, controllers/services/guards e bom suporte a REST/OpenAPI; Adicionar Firewall; Adicionar docker |
-| TEC-04 | Banco | PostgreSQL | Dados do domínio são fortemente relacionais e necessitam constraints/transações |
-| TEC-05 | Auth | Keycloak/OIDC, ou autenticação segura integrada ao backend em escopo reduzido | Evita reinventar vários mecanismos de identidade e permite papéis padronizados |
-| TEC-06 | API | REST + JSON + OpenAPI | Adequado à interface web e à integração externa de reconhecimento |
-| TEC-07 | IA | Adaptador para provedor de LLM | Evita acoplamento do domínio a um único fornecedor |
-| TEC-08 | Infra | Docker Compose | Facilita reproduzir frontend/backend/banco/identidade localmente e em qualquer outra máquina |
-| TEC-09 | E-mail | SMTP ou API de provedor de e-mail | Necessário ao convite e recuperação |
-| TEC-10 | Testes | Unitários + integração + contrato da API | Particularmente importante para IA e integração facial |
+| TEC-01 | Frontend | React + TypeScript | Componentization, strong ecosystem, and good suitability for a responsive SPA interface |
+| TEC-02 | Frontend build | Vite | Simple setup for a React/TypeScript project and production build |
+| TEC-03 | Backend | NestJS + Python | Modular architecture, controllers/services/guards, and good REST/OpenAPI support; add firewall; add Docker |
+| TEC-04 | Database | PostgreSQL | Domain data is strongly relational and requires constraints/transactions |
+| TEC-05 | Auth | Keycloak/OIDC, or secure authentication integrated into the backend for reduced scope | Avoids reinventing multiple identity mechanisms and allows standardized roles |
+| TEC-06 | API | REST + JSON + OpenAPI | Suitable for the web interface and external recognition integration |
+| TEC-07 | AI | Adapter for an LLM provider | Avoids coupling the domain to a single provider |
+| TEC-08 | Infrastructure | Docker Compose | Makes it easier to reproduce frontend/backend/database/identity locally and on any other machine |
+| TEC-09 | E-mail | SMTP or e-mail provider API | Needed for invitations and recovery |
+| TEC-10 | Tests | Unit + integration + API contract | Particularly important for AI and facial integration |
 
 ### 6.1.1 Approved current technology baseline (DEC-03)
 
@@ -851,44 +895,44 @@ the active implementation architecture.
 | Tests | pytest/FastAPI `TestClient`; Vitest + React Testing Library. No Jest/Supertest for the Python backend. |
 | Hosting | Undecided. |
 
-Exact pinned versions and amendment history remain authoritative in DEC-03;
-this document does not authorize upgrades.
+The pinned versions above are canonical; DEC-03 retains their amendment history.
+This document does not authorize upgrades.
 
-### 6.2 Restrições técnicas que também devem orientar o trabalho
+### 6.2 Technical constraints that must also guide the work
 
-- **SMTP isolado:** CA-06.4 exige que o servidor SMTP seja isolado em um contêiner Docker. Essa exigência deve ser compatibilizada com a alternativa de API de e-mail indicada em TEC-09.
-- **Backend:** TEC-03 cita NestJS e Python conjuntamente. A responsabilidade de cada um não está definida; não interpretar a indicação como uma escolha automática entre as duas tecnologias.
-- **Firewall:** a linha do backend pede a adição de firewall, mas não especifica produto, local de execução, portas ou regras.
-- **Contêineres e execução:** TEC-03 menciona Docker e TEC-08 indica Docker Compose para reproduzir frontend, backend, banco e identidade em outras máquinas.
-- **Autenticação:** TEC-05 oferece Keycloak/OIDC ou autenticação segura integrada ao backend em escopo reduzido. Escolher e registrar uma abordagem antes de consolidar a implementação de identidade.
-- **Contratos de API:** TEC-06 indica REST, JSON e OpenAPI. RF-20 exige contrato JSON documentado, autenticação da integração, validação e tratamento de eventos duplicados.
-- **IA desacoplada:** TEC-07 e RNF06 exigem uma camada de integração que evite prender o domínio a um único provedor de LLM. O fornecedor e o modelo não estão definidos.
-- **Serviço facial externo:** RF-20 pressupõe uma integração externa de identificação. O funcionamento da catraca não precisa ser implementado pela aplicação, conforme CA-20.3; as regras de autorização continuam pertencendo ao sistema.
-- **Contagem por câmeras:** RN-37 menciona um modelo de visão computacional ligado às câmeras de vigilância. Não informa modelo, biblioteca, protocolo das câmeras nem associação desse processamento ao Python.
-- **Pagamentos:** RF-31 exige confirmação por API, mas não escolhe gateway ou provedor de pagamento.
-- **Testes:** TEC-10 prevê testes unitários, de integração e de contrato da API, com atenção às integrações de IA e reconhecimento facial.
+- **Isolated SMTP:** CA-06.4 requires the SMTP server to be isolated in a Docker container. This requirement must be reconciled with the e-mail API alternative in TEC-09.
+- **Backend:** TEC-03 mentions NestJS and Python together. Their responsibilities are not defined; the entry must not be interpreted as an automatic choice between the two technologies.
+- **Firewall:** the backend entry calls for a firewall but does not specify product, execution location, ports, or rules.
+- **Containers and execution:** TEC-03 mentions Docker, and TEC-08 indicates Docker Compose for reproducing frontend, backend, database, and identity on other machines.
+- **Authentication:** TEC-05 offers Keycloak/OIDC or secure backend-integrated authentication in a reduced scope. Choose and record an approach before consolidating identity implementation.
+- **API contracts:** TEC-06 indicates REST, JSON, and OpenAPI. RF-20 requires a documented JSON contract, integration authentication, validation, and duplicate-event handling.
+- **Decoupled AI:** TEC-07 and RNF06 require an integration layer that avoids tying the domain to one LLM provider. The provider and model are not defined.
+- **External facial service:** RF-20 assumes an external identification integration. The application need not implement the turnstile's operation algorithm, per CA-20.3; authorization rules remain the system's responsibility.
+- **Camera-based counting:** RN-37 mentions a computer-vision model connected to surveillance cameras. It specifies no model, library, camera protocol, or association of that processing with Python.
+- **Payments:** RF-31 requires API confirmation but does not select a payment gateway or provider.
+- **Tests:** TEC-10 calls for unit, integration, and API-contract tests, with attention to AI and facial-recognition integrations.
 
 Choices still unspecified must be handled under DEC-08–DEC-16 and extension
 decision gates. Do not add providers or infrastructure as if they were approved.
 
-## 7 Referências de domínio e arquitetura
+## 7 Domain and architecture references
 
-### 7.1 Modelo de dados apresentado nos diagramas
+### 7.1 Data model shown in the diagrams
 
-O anexo contém diferentes representações do modelo de dados. Elas servem de referência para o domínio, mas não constituem um esquema único e completamente conciliado.
+The domain diagrams contain different representations of the data model. They serve as references but do not form one fully reconciled schema.
 
-| Área | Entidades e conceitos representados |
+| Area | Represented entities and concepts |
 | --- | --- |
-| Identidade e administração | Usuário, cliente, funcionário, administrador, perfil, permissão, sessão, recuperação, configuração e auditoria. |
-| Academia e oferta | Academia, plano, assinatura ou matrícula, cobrança, pagamento, aula de ginástica e equipamento. |
-| Onboarding e saúde | Onboarding, dados físicos, queixas, medicações, condições de saúde e avaliações. |
-| Treinos | Ficha de treino, versão da ficha, item da ficha, exercício e treino executado. |
-| IA | Interações, conversa, mensagens e propostas de alteração de treino. |
-| Acesso físico | Biometria, identificação facial, catraca, decisão de acesso, liberação manual, registros de entrada e saída e frequência. |
+| Identity and administration | User, client, employee, administrator, role, permission, session, recovery, configuration, and audit. |
+| Gym and offerings | Gym, plan, subscription or enrollment, charge, payment, gym class, and equipment. |
+| Onboarding and health | Onboarding, physical data, complaints, medications, health conditions, and evaluations. |
+| Training | Training plan, plan version, plan item, exercise, and completed workout. |
+| AI | Interactions, conversation, messages, and training-change proposals. |
+| Physical access | Biometrics, facial identification, turnstile, access decision, manual release, entry and exit records, and attendance. |
 
-Referências conceituais recorrentes incluem o vínculo do cliente ao onboarding e à ficha, o versionamento da ficha, a associação de itens a exercícios, o vínculo de contratação com plano e cliente e a associação dos registros de acesso ao cliente.
+Recurring conceptual references include the client's link to onboarding and the plan, plan versioning, association of items with exercises, the contracting link to plan and client, and the association of access records with the client.
 
-Os diagramas variam em nomenclatura e detalhamento, incluindo assinatura versus matrícula e a associação de interações de IA a itens ou versões. Antes de criar migrações, conciliar esses pontos com os RF e RN da tarefa; ver DEC-17. A existência de uma entidade no diagrama não define, por si só, um novo fluxo completo de interface ou CRUD.
+The diagrams vary in terminology and detail, including subscription versus enrollment and association of AI interactions with items or versions. Before creating migrations, reconcile these points with the task's RFs and RNs; see DEC-17. An entity's presence in a diagram does not by itself define a complete new interface or CRUD flow.
 
 ### 7.1.1 Implementation-oriented domain model
 
@@ -919,14 +963,14 @@ Ownership rules apply at the backend: authenticated clients receive only their
 own protected aggregates unless an explicit shared-visibility requirement says
 otherwise.
 
-### 7.2 Limites de arquitetura
+### 7.2 Architecture boundaries
 
-A fonte menciona diagramas de MER e microsserviços e indica arquitetura modular no backend. As imagens incorporadas concentram-se em entidades e relacionamentos; não estabelecem uma divisão inequívoca dos serviços, seus contratos ou sua implantação.
+Historical diagrams mention ER modeling and microservices and indicate a modular backend architecture. The embedded images focus on entities and relationships; they do not establish an unambiguous division of services, their contracts, or their deployment.
 
-Portanto, a fronteira entre módulos e processos, a distribuição de responsabilidades entre NestJS e Python, a autenticação escolhida e o desenho de implantação precisam ser registrados em DEC-03. O requisito de desacoplamento das integrações permanece válido em qualquer solução adotada.
+Therefore, the boundary between modules and processes, allocation of responsibilities between NestJS and Python, selected authentication, and deployment design need to be recorded under DEC-03. The requirement for decoupled integrations remains valid under any chosen solution.
 
 DEC-03 has since selected the current boundary in section 6.1.1; the paragraph
-above remains historical source context, not an active alternative.
+above remains historical modeling context, not an active alternative.
 
 ### 7.3 Cross-cutting authenticated API rules
 
@@ -943,33 +987,33 @@ above remains historical source context, not an active alternative.
 - External adapters receive only the minimum permitted client context and map
   provider failures to controlled application errors.
 
-## 8 MVP e sequência de implementação
+## 8 MVP and implementation sequence
 
-### 8.1 MVP explicitamente informado
+### 8.1 Explicitly stated MVP
 
-O anexo inclui os seguintes 15 requisitos no MVP:
+The stated MVP includes the following 15 requirements:
 
-`RF-01`, `RF-02`, `RF-03`, `RF-04`, `RF-05`, `RF-09`, `RF-10`, `RF-11`, `RF-12`, `RF-13`, `RF-15`, `RF-16`, `RF-17`, `RF-18` e `RF-19`.
+`RF-01`, `RF-02`, `RF-03`, `RF-04`, `RF-05`, `RF-09`, `RF-10`, `RF-11`, `RF-12`, `RF-13`, `RF-15`, `RF-16`, `RF-17`, `RF-18`, and `RF-19`.
 
-O caminho crítico informado é:
+The stated critical path is:
 
-Cadastro → Acesso → E-mail → Onboarding → Geração por IA → Ficha → Chat → Adaptação dinâmica.
+Registration → Access → E-mail → Onboarding → AI generation → Training plan → Chat → Dynamic adaptation.
 
-Essa lista não dispensa os RNF e RN associados aos requisitos escolhidos.
+This list does not waive the RNFs and RNs associated with the selected requirements.
 
 DEC-19 adds `EXT-RF-AI-01` to the planned MVP onboarding experience without
 claiming that it existed in the original MVP list. `EXT-RF-SOC-01`,
 `EXT-RF-EQP-01`, and `EXT-RF-PRES-01` are approved post-MVP extensions.
 
-### 8.2 Dependências que precisam ser conciliadas
+### 8.2 Dependencies requiring reconciliation
 
-| Dependência | Implicação para o MVP |
+| Dependency | Implication for the MVP |
 | --- | --- |
-| RF-03 exige foto válida para clientes habilitados, enquanto RF-22 não integra o MVP. | Definir como ocorre a habilitação inicial e em que etapa a biometria será necessária; DEC-05. |
-| RF-09 exige infraestrutura de e-mail. | Definir envio e tratamento de falha antes de validar os convites, mesmo que recuperação de acesso por RF-06 fique para outra entrega. |
-| RF-15 e RF-19 dependem de contexto de saúde e aprovação de alterações. | Definir bloqueios, revisão e versionamento junto de RN-12 a RN-19; DEC-07. |
-| RN-14 e RN-19 exigem edição integral pelo professor e montagem manual de treino. | Detalhar como esses fluxos se encaixam na entrega que usar IA; não considerá-los implementados apenas porque RF-15 está pronto. |
-| RF-04 e RF-05 pressupõem usuários e permissões disponíveis. | Definir o provisionamento inicial e a matriz de permissões; DEC-04. |
+| RF-03 requires a valid photo for enabled clients, while RF-22 is not in the MVP. | Define how initial enablement occurs and when biometrics becomes necessary; DEC-05. |
+| RF-09 requires e-mail infrastructure. | Define sending and failure handling before validating invitations, even if RF-06 access recovery is delivered later. |
+| RF-15 and RF-19 depend on health context and change approval. | Define blocks, review, and versioning alongside RN-12 through RN-19; DEC-07. |
+| RN-14 and RN-19 require full instructor editing and manual training-plan creation. | Detail how those flows fit into the AI delivery; do not consider them implemented merely because RF-15 is ready. |
+| RF-04 and RF-05 presume available users and permissions. | Define initial provisioning and the permission matrix; DEC-04. |
 
 The reproducible dependency path now is:
 
@@ -980,19 +1024,19 @@ view → own-context AI chat → approved adaptation → later client modules`.
 The original secure-link/form flow remains alongside conversational onboarding
 until a later approved decision replaces it.
 
-### 8.3 Sequência sugerida para o Codex
+### 8.3 Suggested sequence for Codex
 
-Esta ordem é uma orientação de execução adicionada nesta consolidação; não altera a composição do MVP.
+This order is implementation guidance added in this consolidation; it does not change MVP membership.
 
-| Etapa | Trabalho | Referências principais |
+| Step | Work | Main references |
 | --- | --- | --- |
-| 1 | Conciliar decisões que afetem a primeira entrega e preparar a estrutura tecnológica necessária. | DEC-01, DEC-03, DEC-04, DEC-05, TEC-01 a TEC-10 e RNF04/RNF06. |
-| 2 | Implementar autenticação, autorização, cadastro e consulta de clientes. | RF-04, RF-05, RF-01, RF-02 e RF-03. |
-| 3 | Implementar convites por e-mail e formulário de onboarding com isolamento de dados. | RF-09, RF-10, RF-11, RF-12 e RF-13. |
-| 4 | Implementar a primeira ficha, visualização e versionamento, junto dos fluxos profissionais necessários. | RF-15, RF-16, RF-17 e RN-12 a RN-19. |
-| 5 | Implementar chat e propostas de adaptação, preservando aprovação e histórico. | RF-18, RF-19, RN-16 a RN-18 e RN-29 a RN-31. |
-| 6 | Verificar o percurso completo do MVP e os critérios não funcionais aplicáveis. | Critérios dos RF incluídos, RNF01 a RNF06 e regras pertinentes. |
-| 7 | Implementar os demais módulos em tarefas específicas conforme a prioridade definida para o projeto. | Demais RF, incluindo a decisão sobre RF-24X/RF-25X e RN-37. |
+| 1 | Reconcile decisions affecting the first delivery and prepare the necessary technical foundation. | DEC-01, DEC-03, DEC-04, DEC-05, TEC-01 through TEC-10, and RNF04/RNF06. |
+| 2 | Implement authentication, authorization, client registration, and client search/view. | RF-04, RF-05, RF-01, RF-02, and RF-03. |
+| 3 | Implement e-mail invitations and the onboarding form with data isolation. | RF-09, RF-10, RF-11, RF-12, and RF-13. |
+| 4 | Implement the first plan, viewing, and versioning, along with necessary professional flows. | RF-15, RF-16, RF-17, and RN-12 through RN-19. |
+| 5 | Implement chat and adaptation proposals while preserving approval and history. | RF-18, RF-19, RN-16 through RN-18, and RN-29 through RN-31. |
+| 6 | Verify the full MVP journey and applicable non-functional criteria. | Criteria of included RFs, RNF01 through RNF06, and relevant rules. |
+| 7 | Implement remaining modules in specific tasks according to project priorities. | Remaining RFs, including the decision on RF-24X/RF-25X and RN-37. |
 
 ### 8.4 Scope classification
 
@@ -1001,6 +1045,7 @@ Esta ordem é uma orientação de execução adicionada nesta consolidação; n�
 | Client/account CRUD, auth, authorization | Original MVP; Tasks 02–06 implemented/integration-verified | RF-01–RF-05; DEC-03–DEC-05, DEC-17 |
 | Secure-link structured onboarding | Original MVP; planned | RF-09–RF-13; DEC-06, DEC-18 |
 | Conversational onboarding | Approved MVP extension; planned | EXT-RF-AI-01; DEC-06, DEC-08, DEC-18 |
+| Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
 | Training generation/version/current view/chat/adaptation | Original MVP; planned | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
 | Employee management, recovery, onboarding self-review | Original post-MVP; not started | RF-06–RF-08, RF-14 |
 | Progress sharing | Approved post-MVP extension; planned | EXT-RF-SOC-01; EXT-DEC-SOC-01 |
@@ -1013,8 +1058,8 @@ Esta ordem é uma orientação de execução adicionada nesta consolidação; n�
 
 ## 9 Approved and unresolved decisions
 
-`docs/decisions.md` is the chronological authority. This section replaces the
-historical presentation of every DEC as unresolved.
+This section gives the canonical status of each decision. `docs/decisions.md`
+retains the chronological decision history.
 
 | ID | Status | Canonical result or remaining question | Affected work |
 | --- | --- | --- | --- |
@@ -1023,7 +1068,7 @@ historical presentation of every DEC as unresolved.
 | DEC-03 | **Resolved** | Python/FastAPI modular monolith, PostgreSQL/SQLAlchemy/Alembic, React/TS/Vite/MUI, Keycloak/OIDC, SMTP/Mailpit, Docker Compose/Linux/UFW, provider-independent AI adapters, and approved pinned baseline. NestJS has no MVP role. | All architecture and external adapters. |
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
-| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. Schema, required fields/types/units/ranges, editability, and recovery-token policy remain unresolved. | Task 07 may proceed; Tasks 09–12 and EXT-RF-AI-01 remain blocked by their relevant unresolved portions. |
+| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. Schema, required fields/types/units/ranges, editability, and recovery-token policy remain unresolved. | Tasks 07 and 09 are complete; Tasks 10–12 and EXT-RF-AI-01 remain blocked by their relevant unresolved portions. |
 | DEC-07 | Unresolved; blocking | Health severity criteria, proposal/review/approval states, approvers, and activation rules. | Training generation/adaptation. |
 | DEC-08 | Unresolved; blocking | AI provider/model, contracts, structured outputs, context limits, retention/error behavior. | Conversational onboarding, RF-15, RF-18, RF-19. |
 | DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
@@ -1038,7 +1083,8 @@ historical presentation of every DEC as unresolved.
 | DEC-18 | Unresolved; blocking sensitive-data work | Health/biometric storage, access, logging, retention, replacement and audit-evidence policy. | Health onboarding, AI health context, biometrics. |
 
 DEC-19 is a later approved decision, not an original question: it records the
-client-facing direction and the four extension requirements in section 3.1.
+client-facing direction and four of the extension requirements in section 3.1.
+EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 
 ### 9.1 Extension decision gates
 
@@ -1079,9 +1125,11 @@ unchecked boxes or planned files.
 | RF-03 | Original MVP | **Partially implemented** | DEC-05 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred and not satisfied. |
 | Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
-| Frontend design system and existing UI restyle | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 08; preserves Tasks 01–07 behavior. |
-| RF-10–RF-13 | Original MVP | Planned | DEC-06/DEC-18 | Tasks 09–10 and 12; not yet implemented. |
+| Frontend design system and existing UI restyle | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 08: shared MUI theme, shells, and restyle; preserves Tasks 01–07 behavior. |
+| RF-10 | Original MVP | Implemented | DEC-06 | Task 09: secure client-scoped invitation validation and intentional redemption. |
+| RF-11–RF-13 | Original MVP | Planned | DEC-06/DEC-18 | Tasks 10 and 12; not yet implemented. |
 | EXT-RF-AI-01 | Approved MVP extension | Planned | DEC-06/08/18 | Task 11; not yet implemented. |
+| EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
 | RF-15–RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 13–17. |
 | MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
@@ -1091,63 +1139,63 @@ unchecked boxes or planned files.
 | EXT-RF-PRES-01 | Approved post-MVP extension | Blocked | DEC-10/EXT-DEC-PRES-01 | Task 23. |
 | Remaining RF-06–RF-08, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
-## 10 Fluxo de trabalho do Codex
+## 10 Codex workflow
 
 ### 10.1 Historical task-model constraints
 
-- Delimitar a funcionalidade, o módulo e os arquivos ou pastas que podem ser alterados.
-- Não alterar camadas, Docker, autenticação, banco ou frontend quando estiverem fora do escopo da tarefa.
-- Não adicionar novas dependências sem justificar e solicitar aprovação.
-- Criar ou ajustar apenas os testes relacionados à funcionalidade.
-- Rodar apenas os testes relacionados à tarefa.
-- The source requested a completion response of at most 10 lines. Current
+- Define the functionality, module, and files or folders that may be changed.
+- Do not change layers, Docker, authentication, database, or frontend when outside the task's scope.
+- Do not add dependencies without justification and approval.
+- Create or adjust only tests related to the functionality.
+- Run only tests related to the task.
+- Earlier task guidance requested a completion response of at most 10 lines. Current
   `AGENTS.md` and task-file completion requirements govern the actual report
   format while preserving the same required content.
 
-### 10.2 Modelo de tarefa com rastreabilidade
+### 10.2 Traceable task template
 
-O modelo abaixo mantém a estrutura do anexo e acrescenta referências aos identificadores deste arquivo. Substituir os campos entre colchetes a cada tarefa.
+The template below uses identifiers in this file. Replace bracketed fields for each task.
 
 ```text
-Tarefa: implementar [funcionalidade específica].
+Task: implement [specific functionality].
 
-Contexto:
-- Ler AGENTS.md e docs/requirements.md.
-- Consultar requirements.md para proveniência original, docs/decisions.md para
-  decisões cronológicas e docs/product-extensions.md para extensões aprovadas.
-- O sistema possui [módulos relevantes].
-- A funcionalidade pertence ao módulo [nome].
-- Requisitos funcionais: [RF-XX].
-- Requisitos não funcionais: [RNFXX].
-- Regras de negócio: [RN-XX].
-- Decisões já registradas: [DEC-XX e a decisão correspondente].
+Context:
+- Read AGENTS.md and docs/requirements.md.
+- Use docs/requirements.md as the canonical specification; consult
+  docs/decisions.md and docs/product-extensions.md only for supporting history.
+- The system has [relevant modules].
+- The functionality belongs to module [name].
+- Functional requirements: [RF-XX].
+- Non-functional requirements: [RNFXX].
+- Business rules: [RN-XX].
+- Recorded decisions: [DEC-XX and the corresponding decision].
 
-Escopo permitido:
-- Alterar somente [arquivos/pastas].
-- Não alterar [camadas ou módulos fora da tarefa].
-- Não adicionar dependências sem justificar e solicitar aprovação.
+Permitted scope:
+- Change only [files/folders].
+- Do not change [layers or modules outside the task].
+- Do not add dependencies without justification and approval.
 
-Comportamento esperado:
-1. [Comportamento ligado ao requisito].
-2. [Comportamento ligado ao requisito].
+Expected behavior:
+1. [Behavior tied to the requirement].
+2. [Behavior tied to the requirement].
 
-Critérios de aceitação:
-- [CA-XX.Y e condição verificável].
-- [CA-XX.Z e condição verificável].
+Acceptance criteria:
+- [CA-XX.Y and verifiable condition].
+- [CA-XX.Z and verifiable condition].
 
-Testes:
-- Criar ou ajustar apenas testes relacionados à funcionalidade.
-- Rodar apenas os testes relacionados.
-- Registrar o resultado e informar o que não foi possível verificar.
+Tests:
+- Create or adjust only tests related to the functionality.
+- Run only the related tests.
+- Record results and report what could not be verified.
 
-Resposta final:
-- No máximo 10 linhas.
-- Informar arquivos alterados, testes executados e pendências.
+Final response:
+- At most 10 lines.
+- Report changed files, tests run, and pending issues.
 ```
 
-### 10.3 Conclusão de uma tarefa
+### 10.3 Task completion
 
-Considerar uma tarefa concluída quando os critérios de aceitação previstos para ela forem verificados, as regras de negócio pertinentes forem respeitadas, os testes relacionados tiverem resultado registrado e as limitações remanescentes estiverem explícitas. Marcar apenas os critérios efetivamente atendidos; manter os demais pendentes.
+Consider a task complete when its acceptance criteria have been verified, the relevant business rules have been followed, related test results have been recorded, and remaining limitations are explicit. Mark only criteria actually met; leave the others pending.
 
 ## 11 Terminal unresolved-decision index
 
@@ -1159,8 +1207,8 @@ by inference.
   original catalog/MVP.
 - **DEC-02:** RF-24X/RF-25X suffix meaning; affects occupancy work.
 - **DEC-06:** onboarding schema/editability and recovery-token policies; its
-  invitation-token policy is approved for Task 07, while remaining portions
-  block Tasks 09–12.
+  invitation-token policy is complete in Tasks 07 and 09, while remaining
+  portions block Tasks 10–12.
 - **DEC-07:** AI health severity and review/approval lifecycle; blocks training
   generation/adaptation tasks.
 - **DEC-08:** AI provider and contracts; blocks conversational onboarding and AI

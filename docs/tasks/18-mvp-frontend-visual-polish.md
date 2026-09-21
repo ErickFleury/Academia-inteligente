@@ -8,8 +8,9 @@ Task 08 design system consistently before final end-to-end verification.
 ## Requirements covered
 
 Presentation and usability verification for implemented MVP UI: RF-01–RF-05,
-RF-09–RF-13, RF-15–RF-19, and EXT-RF-AI-01. This task introduces no new
-product behavior and does not replace acceptance testing in Task 19.
+RF-09–RF-13, RF-15–RF-19, EXT-RF-AI-01, and EXT-RF-LANG-01. This task
+introduces no new product behavior and does not replace acceptance testing in
+Task 19.
 
 ## Related rules and constraints
 
@@ -27,7 +28,8 @@ product behavior and does not replace acceptance testing in Task 19.
 ## Required reading
 
 Read `AGENTS.md`; `docs/frontend-design.md`; `docs/requirements.md`
-sections 2–4, 8, 9.2, and 11; `docs/product-extensions.md` EXT-RF-AI-01;
+sections 2–4, 8, 9.2, and 11; `docs/product-extensions.md` EXT-RF-AI-01 and
+EXT-RF-LANG-01;
 RNF01–RNF04 and applicable MVP RF/CA; Task 08 and completed UI task reports
 for Tasks 09–17; DEC-16 for formal acceptance limits.
 
@@ -35,6 +37,9 @@ for Tasks 09–17; DEC-16 for formal acceptance limits.
 
 - Audit implemented entry, admin, onboarding, training, AI chat, adaptation,
   loading, empty, error, and feedback states against the shared theme/shells.
+- Audit Portuguese (`pt-BR`) user-visible copy, accessible names, and localized
+  value formatting across those states; report any Keycloak-hosted language gap
+  requiring separate integration work.
 - Resolve inconsistent type hierarchy, spacing, controls, transitions,
   unnecessary visual duplication, and copy using existing shared components.
 - Check phone, tablet, and desktop edge cases; keyboard/focus, semantic
@@ -56,6 +61,8 @@ for Tasks 09–17; DEC-16 for formal acceptance limits.
   and chat, remain readable and operable; no ordinary client horizontal scroll.
 - Loading transitions, empty states, errors, copy, focus, labels, and contrast
   are consistent and accessible without changing business outcomes.
+- EXT-CA-LANG-01.1–EXT-CA-LANG-01.5 are checked for implemented MVP flows,
+  with any unresolved hosted-page gap reported rather than claimed as passed.
 - Existing feature tests remain green or any unresolved issue is reported
   precisely for Task 19/its owning feature.
 
@@ -77,6 +84,7 @@ unrelated changes. Do not commit or push.
 Use Terra with Medium reasoning. Read `AGENTS.md`, then
 `docs/tasks/18-mvp-frontend-visual-polish.md`, then its Required reading.
 Inspect the implemented MVP frontend and Task 08 shared UI. Polish visual,
-responsive, loading/empty/error, copy, and accessibility consistency without
-changing business behavior; follow `docs/frontend-design.md`. Run relevant
+responsive, loading/empty/error, `pt-BR` user-visible copy, and accessibility
+consistency without changing business behavior; follow
+`docs/frontend-design.md`. Run relevant
 frontend checks, review the diff, and report results. Do not commit or push.

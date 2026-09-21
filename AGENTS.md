@@ -4,19 +4,15 @@
 
 This repository contains the Academia Inteligente system.
 
-The primary consolidated implementation specification is located at:
+The sole canonical implementation specification is located at:
 
 `docs/requirements.md`
 
-Traceability sources remain authoritative for their respective purpose:
-
-- `requirements.md`: preserved historical/source specification;
-- `docs/decisions.md`: chronological approved decisions;
-- `docs/product-extensions.md`: approved additions beyond the original source.
-
-If these documents appear to conflict, first check whether
-`docs/decisions.md` explicitly resolves the conflict. Use the recorded decision
-when it does; otherwise stop the affected task and request a human decision.
+`docs/decisions.md` and `docs/product-extensions.md` retain supporting decision
+and extension history. They do not replace `docs/requirements.md` as the source
+of implementation requirements. If a supporting document appears to conflict
+with the canonical specification, stop the affected task and request a human
+decision before changing the requirement.
 
 Before implementing a requirement, read its RF or extension requirement,
 acceptance criteria, related business rules, applicable non-functional
@@ -38,9 +34,9 @@ Current stack:
 - Infrastructure: Docker Compose
 - AI: provider-independent adapter/integration layer
 
-Exact approved versions and infrastructure choices are recorded in DEC-03 and
-summarized in `docs/requirements.md`. Do not reintroduce historical technology
-alternatives as active architecture.
+Exact approved versions and infrastructure choices are specified in
+`docs/requirements.md`; DEC-03 retains their decision history. Do not
+reintroduce historical technology alternatives as active architecture.
 
 Do not introduce major technologies or architectural changes without approval.
 
@@ -50,6 +46,10 @@ Do not introduce major technologies or architectural changes without approval.
 must reuse the established MUI theme, shared components, and client/admin
 shells, maintaining consistent responsive and accessible behavior. Add a new
 shared pattern only when existing components cannot express the needed UI.
+All application-controlled text users see in public, client, and admin UI must
+be in Brazilian Portuguese (`pt-BR`), including accessible labels, feedback,
+and in-app AI responses. Familiar technical/gym terms may remain in English.
+Keep documentation, task prompts, code identifiers, and API contracts in English.
 
 ## Project Structure
 

@@ -2,18 +2,24 @@
 
 ## Specification and architecture envelope
 
-`docs/requirements.md` is the primary consolidated implementation
-specification. `requirements.md` preserves the original 33 RFs, their CA, 6
-RNFs, 37 RN, 10 TEC entries, original MVP, and DEC questions.
-`docs/decisions.md` is the chronological decision authority, while
-`docs/product-extensions.md` owns approved behavior added beyond the original
-source. `docs/frontend-design.md` owns the approved visual direction and shared
-UI conventions. An unresolved conflict stops only the affected task.
+`docs/requirements.md` is the sole canonical implementation specification. It
+contains the 33 RFs and their CA, 6 RNFs, 37 RN, 10 TEC entries, MVP scope,
+DEC status, and approved extensions. `docs/decisions.md` and
+`docs/product-extensions.md` retain supporting history; `docs/frontend-design.md`
+defines shared visual conventions. A conflict with the canonical specification
+stops the affected task until a human resolves it.
 
 The original MVP remains RF-01–RF-05, RF-09–RF-13, and RF-15–RF-19. DEC-19
 adds EXT-RF-AI-01 conversational onboarding to the planned MVP experience; it
 does not rewrite the historical MVP. EXT-RF-SOC-01, EXT-RF-EQP-01, and
 EXT-RF-PRES-01 are approved post-MVP extensions.
+EXT-RF-LANG-01 is an approved cross-cutting `pt-BR` user-interface requirement
+for existing, MVP, and later screens; implementation docs and prompts remain
+English. All future UI tasks inherit it through `AGENTS.md` and
+`docs/frontend-design.md`; Task 18 audits MVP coverage and Task 19 verifies it.
+If supported Keycloak locale configuration cannot meet the user-facing login
+and first-access criteria, a separately scoped integration task is needed
+before Task 19 can report EXT-CA-LANG-01.4 as passed.
 
 The approved architecture remains a React/TypeScript/Vite/MUI frontend,
 Python/FastAPI modular monolith, PostgreSQL with SQLAlchemy/Alembic, Keycloak
@@ -49,10 +55,10 @@ browser-provided client ID as proof of ownership.
 2. **Identity and clients (Tasks 02–06, completed):** authentication,
    authorization, local client/account behavior, lifecycle, Keycloak
    provisioning, client-only role, first access, and reconciliation.
-3. **Visual foundation (Task 08, future):** shared MUI theme, primitives,
+3. **Visual foundation (Task 08, completed):** shared MUI theme, primitives,
    ClientShell/AdminShell, and retroactive restyling of frontend work from
    completed Tasks 01–07; no change to their historical business scope.
-4. **Onboarding (Task 07 completed; Tasks 09–12 future):** invitation and
+4. **Onboarding (Tasks 07 and 09 completed; Tasks 10–12 future):** invitation,
    secure form access, authoritative structured health data, conversational AI
    orchestration, and shared completion using Task 08 UI foundations.
 5. **Training and client AI (Tasks 13–17, future):** version lifecycle, initial
@@ -79,7 +85,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-03 | Resolved; inherited architecture baseline for every task. |
 | DEC-04 | Resolved for current roles/provisioning; inherited by authorization, health, training, and future employee work. |
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
-| DEC-06 | Invitation-token policy resolved for Task 07; schema, validation, and editability remain blocking for Tasks 09–12. |
+| DEC-06 | Invitation-token policy resolved for Tasks 07 and 09; schema, validation, and editability remain blocking for Tasks 10–12. |
 | DEC-07 | Blocking Tasks 13, 14, and 17: severity and review/approval lifecycle. |
 | DEC-08 | Blocking Tasks 11, 14, 16, and 17: AI provider/contract/context/failures. |
 | DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
@@ -106,8 +112,8 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 05 | Client profile and status | RF-03 except deferred CA-03.4 | 04 | Completed reduced scope | Updates, active state, history preservation |
 | 06 | Client identity provisioning | RF-01/RF-04/RF-05 integration | 02–05 | Completed | Client-only Keycloak identity, subject linkage, first access, independent durable reconciliation |
 | 07 | Onboarding invitations | RF-09 | 03, 04, 06; approved DEC-06 token policy | Completed | Client-bound e-mail invitation outcome |
-| 08 | Frontend design system and existing UI restyle | Visual enabler; no new RF ownership | 01–07 | MVP visual foundation | Shared MUI tokens/primitives/shells; retroactive UI restyle |
-| 09 | Secure onboarding access | RF-10 | 07, 08; DEC-06 | MVP future | Valid scoped link/form entry |
+| 08 | Frontend design system and existing UI restyle | Visual enabler; no new RF ownership | 01–07 | Completed | Shared MUI tokens/primitives/shells; retroactive UI restyle |
+| 09 | Secure onboarding access | RF-10 | 07, 08; DEC-06 | Completed | Valid scoped onboarding entry and intentional token redemption |
 | 10 | Physical and health onboarding | RF-11, RF-12 | 03, 08, 09; DEC-06/18 | MVP future | Authoritative structured onboarding draft |
 | 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | MVP extension | Resumable AI orchestration over structured data |
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | MVP future | Shared validated completion/readiness |
@@ -136,6 +142,9 @@ rewritten as owners of later client-facing features:
   prerequisite for every authenticated client task.
 - Task 07 owns invitations; Task 08 restyles its frontend alongside other
   completed screens without retroactively changing Task 07 behavior.
+- Task 08 owns the completed shared MUI design foundation and restyle. Task 09
+  owns completed secure, client-scoped invitation-token access; neither task
+  implements the physical/health onboarding schema or completion flows.
 - CA-03.4 remains deferred and must not be reported as implemented.
 
 No future task may assume a database client has a usable login unless Task 06
@@ -154,6 +163,9 @@ provisioning or its explicit reconciliation completed.
   and requires server-side identity resolution.
 - Every future UI task uses `docs/frontend-design.md` and Task 08 shared
   foundations; Task 18 polishes the integrated MVP before Task 19 verifies it.
+- Existing and future public, client, and admin UI must meet EXT-RF-LANG-01;
+  Keycloak-hosted screens shown to users require Portuguese too. Historical
+  completed task scope is not rewritten to claim this was already verified.
 - Task 08 covers existing authentication, authorization states, client
   registration/search/details/profile/status/provisioning, invitation, shells,
   navigation, forms, dialogs, loading/error/empty states, and feedback without
@@ -167,6 +179,8 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 08, the frontend design system and existing UI restyle, is next in
-dependency order. Use the Terra/Medium prompt at the end of
-`docs/tasks/08-frontend-design-system-and-existing-ui-restyle.md`.
+Task 10, physical and health onboarding, is next in dependency order. It cannot
+start until the relevant remaining DEC-06 onboarding-schema and DEC-18
+sensitive-data decisions are approved. Use the Terra/Medium prompt at the end
+of `docs/tasks/10-physical-and-health-onboarding.md` once those decisions are
+available.

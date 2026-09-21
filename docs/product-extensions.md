@@ -2,11 +2,10 @@
 
 ## Purpose and authority
 
-This document is the authoritative record of approved product behavior that
-extends, rather than reinterprets, the historical specification in
-`requirements.md`. Original RF, CA, RNF, RN, TEC, and DEC identifiers remain
-unchanged. The consolidated implementation view is maintained in
-`docs/requirements.md`.
+This document retains the approval history and detail for product extensions.
+The sole canonical implementation specification is `docs/requirements.md`,
+which includes these extensions. Original RF, CA, RNF, RN, TEC, and DEC
+identifiers remain unchanged.
 
 Extension IDs use `EXT-RF-<AREA>-NN`; their acceptance criteria use
 `EXT-CA-<AREA>-NN.N`. An extension does not become part of the original MVP
@@ -192,6 +191,49 @@ visible profile fields, source and freshness of “currently present,” revocat
 staff access, and retention. DEC-10 remains separately unresolved for occupancy
 source-of-truth behavior. Implementation must stop until both relevant decisions
 are approved.
+
+## EXT-RF-LANG-01 — Portuguese user-facing application
+
+**Status:** approved cross-cutting extension for existing, MVP, and post-MVP UI.
+
+**Description:** Application-controlled text visible in public, client, and
+administrative frontend areas must be in Brazilian Portuguese (`pt-BR`).
+Documentation, Codex prompts, code identifiers, and API contracts remain in
+English. Established gym or technical terms commonly used in English, such as
+“bulking,” may remain when clearer to users. This does not require translating
+user-authored content or proper names.
+
+**Actors:** visitors, clients, employees, attendants, instructors, and admins
+using application UI; clients using in-app AI conversations.
+
+**Acceptance criteria**
+
+- **EXT-CA-LANG-01.1:** application-controlled public, client, and admin UI
+  copy and accessible names are in `pt-BR`, including loading, empty,
+  validation, error, success, and authorization states.
+- **EXT-CA-LANG-01.2:** in-app AI responses and client-facing generated
+  guidance are in Portuguese without bypassing structured-data validation or
+  safety rules.
+- **EXT-CA-LANG-01.3:** displayed dates, times, numbers, and currency values
+  use appropriate `pt-BR` formatting.
+- **EXT-CA-LANG-01.4:** Keycloak-hosted login and first-access screens shown
+  to users are in Portuguese without changing the approved auth architecture.
+- **EXT-CA-LANG-01.5:** representative phone, tablet, and desktop flows have
+  no unintended English application copy; familiar gym/technical terms may
+  remain in English.
+
+**Dependencies:** the shared frontend design system, existing UI flows, and
+the Keycloak identity integration for hosted credential screens. Future UI
+tasks inherit this rule; Tasks 18–19 audit and verify MVP coverage.
+
+**Related originals:** RF-04, RF-10, RF-18, RNF02, RNF03.
+
+**Privacy/security:** language changes must not expose provider internals,
+authentication details, or another client's data in error or AI responses.
+
+**Unresolved decisions:** none for the language policy. Any provider-specific
+Keycloak UI change remains a separate scoped integration step if configuration
+alone is insufficient.
 
 ## Explicit exclusions
 
