@@ -1,13 +1,16 @@
 export type Session = {
   accessToken: string
   expiresAt: number
+  lastActivityAt: number
   roles: string[]
   idToken?: string
+  refreshToken?: string
 }
 
 const sessionKey = 'academia.session'
 const verifierKey = 'academia.pkce.verifier'
 const stateKey = 'academia.oidc.state'
+export const sessionIdleTimeoutMs = 5 * 60 * 1000
 
 function oidcConfig() {
   return {
@@ -57,7 +60,12 @@ export class OidcSessionClient {
 
     try {
       const session = JSON.parse(serialized) as Session
-      if (!session.accessToken || session.expiresAt <= Date.now()) {
+      if (
+        !session.accessToken
+        || !session.refreshToken
+        || !session.lastActivityAt
+        || session.lastActivityAt + sessionIdleTimeoutMs <= Date.now()
+      ) {
         this.clearSession()
         return null
       }
@@ -71,6 +79,55 @@ export class OidcSessionClient {
       this.clearSession()
       return null
     }
+  }
+
+  recordActivity(): Session | null {
+    const session = this.getSession()
+    if (!session) return null
+    const activeSession = { ...session, lastActivityAt: Date.now() }
+    this.storeSession(activeSession)
+    return activeSession
+  }
+
+  async refreshSession(): Promise<Session | null> {
+    const session = this.getSession()
+    if (!session?.refreshToken) return null
+
+    const { issuer, clientId } = oidcConfig()
+    let response: Response
+    try {
+      response = await fetch(`${issuer}/protocol/openid-connect/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: clientId,
+          refresh_token: session.refreshToken,
+        }),
+      })
+    } catch {
+      this.clearSession()
+      return null
+    }
+    if (!response.ok) {
+      this.clearSession()
+      return null
+    }
+    const payload = await this.tokenPayload(response)
+    if (!payload.access_token || !payload.expires_in || !payload.refresh_token) {
+      this.clearSession()
+      return null
+    }
+    const refreshed = {
+      accessToken: payload.access_token,
+      expiresAt: Date.now() + payload.expires_in * 1000,
+      lastActivityAt: session.lastActivityAt,
+      roles: rolesFromAccessToken(payload.access_token),
+      idToken: payload.id_token ?? session.idToken,
+      refreshToken: payload.refresh_token,
+    }
+    this.storeSession(refreshed)
+    return refreshed
   }
 
   async startLogin(): Promise<void> {
@@ -118,22 +175,18 @@ export class OidcSessionClient {
     })
     if (!tokenResponse.ok) throw new Error('Unable to start the authenticated session')
 
-    const payload = (await tokenResponse.json()) as {
-      access_token?: string
-      expires_in?: number
-      id_token?: string
+    const payload = await this.tokenPayload(tokenResponse)
+    if (!payload.access_token || !payload.expires_in || !payload.refresh_token) {
+      throw new Error('Invalid authentication response')
     }
-    if (!payload.access_token || !payload.expires_in) throw new Error('Invalid authentication response')
-
-    sessionStorage.setItem(
-      sessionKey,
-      JSON.stringify({
-        accessToken: payload.access_token,
-        expiresAt: Date.now() + payload.expires_in * 1000,
-        roles: rolesFromAccessToken(payload.access_token),
-        idToken: payload.id_token,
-      }),
-    )
+    this.storeSession({
+      accessToken: payload.access_token,
+      expiresAt: Date.now() + payload.expires_in * 1000,
+      lastActivityAt: Date.now(),
+      roles: rolesFromAccessToken(payload.access_token),
+      idToken: payload.id_token,
+      refreshToken: payload.refresh_token,
+    })
     sessionStorage.removeItem(verifierKey)
     sessionStorage.removeItem(stateKey)
     window.history.replaceState({}, '', currentUrl.pathname)
@@ -159,5 +212,23 @@ export class OidcSessionClient {
     const logoutUrl = new URL(`${issuer}/protocol/openid-connect/logout`)
     logoutUrl.search = logoutParameters.toString()
     return logoutUrl
+  }
+
+  private storeSession(session: Session): void {
+    sessionStorage.setItem(sessionKey, JSON.stringify(session))
+  }
+
+  private async tokenPayload(response: Response): Promise<{
+    access_token?: string
+    expires_in?: number
+    id_token?: string
+    refresh_token?: string
+  }> {
+    return response.json() as Promise<{
+      access_token?: string
+      expires_in?: number
+      id_token?: string
+      refresh_token?: string
+    }>
   }
 }

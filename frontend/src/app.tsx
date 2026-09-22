@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { AdminShell, ClientShell, PublicShell } from './components/application-shell'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
-import { OidcSessionClient, type Session } from './auth'
+import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
 import { ClientManagement } from './client-management'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
@@ -42,6 +42,50 @@ export function App() {
       .then(() => setSession(oidcSessionClient.getSession()))
       .catch(() => setAuthenticationError('Não foi possível iniciar a sessão. Tente novamente.'))
       .finally(() => setCompletingLogin(false))
+  }, [])
+
+  useEffect(() => {
+    let refreshing = false
+    let lastRecordedActivity = 0
+    const refreshIfNeeded = async () => {
+      const current = oidcSessionClient.getSession()
+      if (!current) {
+        setSession(null)
+        return
+      }
+      if (current.expiresAt - Date.now() > 60_000 || refreshing) return
+      refreshing = true
+      try {
+        setSession(await oidcSessionClient.refreshSession())
+      } finally {
+        refreshing = false
+      }
+    }
+    const recordActivity = () => {
+      if (Date.now() - lastRecordedActivity < 1_000) return
+      lastRecordedActivity = Date.now()
+      const current = oidcSessionClient.recordActivity()
+      if (current) setSession(current)
+      void refreshIfNeeded()
+    }
+    const activityEvents = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const
+    activityEvents.forEach((event) => window.addEventListener(event, recordActivity, { passive: true }))
+    const timer = window.setInterval(() => {
+      const current = oidcSessionClient.getSession()
+      if (!current) {
+        setSession(null)
+        return
+      }
+      if (Date.now() - current.lastActivityAt >= sessionIdleTimeoutMs) {
+        clearSession()
+        return
+      }
+      void refreshIfNeeded()
+    }, 1_000)
+    return () => {
+      activityEvents.forEach((event) => window.removeEventListener(event, recordActivity))
+      window.clearInterval(timer)
+    }
   }, [])
 
   const isProtectedRoute = window.location.pathname === '/dashboard'

@@ -145,6 +145,12 @@ and future employees are provisioned by an authorized employee-management flow.
   relationship. Client-domain data belongs to Client, not Account.
 - Credentials remain exclusively in Keycloak. PostgreSQL stores no password,
   temporary password, required-action token, or authentication secret.
+- An active browser session renews OIDC access tokens with refresh-token
+  rotation only while activity continues. Five consecutive minutes without
+  browser activity ends the session. Tokens are kept only in browser
+  `sessionStorage`, cleared on timeout, refresh failure, or sign-out, and never
+  stored in PostgreSQL, URLs, or logs. **Origin:** approved decision —
+  `docs/decisions.md` DEC-04 session-renewal amendment.
 - Administrative client creation first persists the local Account/Client pair
   and a durable, per-client provisioning record. It reports a distinct pending
   state while an independent background reconciliation provisions one Keycloak

@@ -37,7 +37,7 @@ test('stores a usable session after a valid OIDC callback', async () => {
     'fetch',
     vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ access_token: 'access-token', expires_in: 300 }),
+      json: async () => ({ access_token: 'access-token', refresh_token: 'refresh-token', expires_in: 300 }),
     }),
   )
 
@@ -52,7 +52,7 @@ test('stores a usable session after a valid OIDC callback', async () => {
 test('hides administrative navigation and denies the administrative page to a client', () => {
   sessionStorage.setItem(
     'academia.session',
-    JSON.stringify({ accessToken: 'access-token', expiresAt: Date.now() + 300_000, roles: ['client'] }),
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
   window.history.replaceState({}, '', '/admin')
 
@@ -65,7 +65,7 @@ test('hides administrative navigation and denies the administrative page to a cl
 test('opens the own onboarding form only for an authenticated client', async () => {
   sessionStorage.setItem(
     'academia.session',
-    JSON.stringify({ accessToken: 'access-token', expiresAt: Date.now() + 300_000, roles: ['client'] }),
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
   window.history.replaceState({}, '', '/onboarding')
   vi.stubGlobal(
@@ -96,7 +96,7 @@ test('opens the own onboarding form only for an authenticated client', async () 
 test('shows administrative navigation and page to an administrator', () => {
   sessionStorage.setItem(
     'academia.session',
-    JSON.stringify({ accessToken: 'access-token', expiresAt: Date.now() + 300_000, roles: ['admin'] }),
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['admin'] }),
   )
   window.history.replaceState({}, '', '/admin')
   vi.stubGlobal(
@@ -113,7 +113,7 @@ test('shows administrative navigation and page to an administrator', () => {
 test('returns to the sign-in state when the client API rejects a stale session', async () => {
   sessionStorage.setItem(
     'academia.session',
-    JSON.stringify({ accessToken: 'stale-token', expiresAt: Date.now() + 300_000, roles: ['admin'] }),
+    JSON.stringify({ accessToken: 'stale-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['admin'] }),
   )
   window.history.replaceState({}, '', '/admin')
   vi.stubGlobal(
@@ -132,8 +132,10 @@ test('ends the provider session and clears the local session when signing out', 
     'academia.session',
     JSON.stringify({
       accessToken: 'access-token',
+      refreshToken: 'refresh-token',
       idToken: 'id-token',
       expiresAt: Date.now() + 300_000,
+      lastActivityAt: Date.now(),
       roles: ['admin'],
     }),
   )

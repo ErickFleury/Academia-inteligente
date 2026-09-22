@@ -67,6 +67,16 @@ Python/FastAPI. Major-version changes require explicit approval in a later task.
 
 **Status:** approved — 2026-09-20
 
+**Session-renewal amendment — 2026-09-22:** An authenticated browser session
+uses OIDC refresh-token rotation to renew access tokens while the user remains
+active. Five consecutive minutes without authenticated browser activity ends
+the local session; no automatic refresh occurs after that boundary. Access and
+refresh tokens remain only in browser `sessionStorage`, are cleared on timeout,
+refresh failure, or sign-out, and are never persisted in PostgreSQL, URLs, or
+application logs. Keycloak's realm and client idle-session limits match the
+five-minute inactivity policy. This does not change `account_active`, role
+authorization, or physical-access eligibility.
+
 Keycloak realm roles are `client`, `employee`, `attendant`, `instructor`, and
 `admin`. Attendant and instructor are specialised employee roles.
 
