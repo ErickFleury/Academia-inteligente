@@ -117,7 +117,7 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
             : conversation.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role}>{item.content}</ChatMessage>)}
         </Stack>
         {conversation.messages.length === 0 && <Box><Button disabled={pending !== null} onClick={() => void submit('Quero começar meu onboarding.')} variant="contained">Começar conversa</Button></Box>}
-        {draft?.status !== 'completed' && <Card component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ position: 'sticky', bottom: 16 }}>
+        {draft?.status !== 'completed' && !conversation.completion_ready && <Card component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ position: 'sticky', bottom: 16 }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField

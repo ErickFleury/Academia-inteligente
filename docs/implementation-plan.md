@@ -92,7 +92,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
 | DEC-06 | Invitation-token policy is resolved for Tasks 07 and 09; schema, validation, and editable-draft behavior are resolved for Task 10. Recovery-token policy remains unresolved for later affected work. |
 | DEC-07 | Resolved for Tasks 13–14: instructor-only approval/activation and no automatic health-risk generation block; Task 17 preserves the lifecycle. |
-| DEC-08 | Resolved for Tasks 11 and 14: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output; Ollama is also available as a local development/test adapter. Later AI tasks retain their own applicable gates. |
+| DEC-08 | Resolved for Tasks 11, 14, and 16: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output where applicable; Ollama is also available as a local development/test adapter. Task 16 uses plain conversational output only and has no plan-mutation authority. |
 | DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
 | DEC-10 | Blocking Task 22 and Task 23: occupancy sources/meaning/freshness. Do not infer a source of truth. |
 | DEC-11 | Blocking Task 22 where external/access events are its inputs. |
@@ -100,7 +100,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-15 | Blocking Tasks 13, 14, and 17 wherever manual/professional/audit flows are required. |
 | DEC-16 | Blocking formal RNF sign-off in Task 19. |
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
-| DEC-18 | Health/onboarding policy is resolved for Task 10 and client-only AI conversation handling/five-day raw retention is resolved for Task 11. Biometric behavior still gates affected work. |
+| DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric behavior still gates affected work. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
 | EXT-DEC-SOC-01 | Blocking Task 20 audience/moderation/deletion/retention model. |
 | EXT-DEC-EQP-01 | Blocking Task 21 persistence/grouping model. |
@@ -125,7 +125,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | Completed | Immutable versions/current/professional attribution and manual proposal path |
 | 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed | Completed-onboarding-scoped structured AI proposal through lifecycle; instructor review required |
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | Completed | Mobile own-current-plan/exercise view with empty/loading/error states |
-| 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | MVP future | Own-context read-only training assistant |
+| 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed | Client-only 30-day persisted, read-only training assistant |
 | 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | MVP future | Approved new version, history preserved |
 | 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | MVP visual polish | Final consistency, responsive, accessibility pass |
 | 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |
@@ -184,6 +184,5 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 16, AI assistant chat, is next in dependency order. It consumes the
-authenticated client's current plan and may use only that client's permitted
-onboarding context.
+Task 17, dynamic training adaptation, is next in dependency order. It must
+preserve Task 16's read-only boundary and create only reviewed plan proposals.

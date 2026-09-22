@@ -11,6 +11,7 @@ from app.integrations.ai import (
     OpenAiConfig,
     OpenAiResponsesOnboardingProvider,
     onboarding_ai_provider_from_environment,
+    training_chat_provider_from_environment,
 )
 
 
@@ -166,3 +167,26 @@ def test_unsupported_provider_fails_cleanly(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setenv("AI_PROVIDER", "unsupported")
     with pytest.raises(AiProviderError):
         onboarding_ai_provider_from_environment()
+
+
+@pytest.mark.parametrize("provider", ["openai", "ollama"])
+def test_training_chat_uses_the_same_provider_neutral_contract(
+    monkeypatch: pytest.MonkeyPatch, provider: str
+) -> None:
+    monkeypatch.setenv("AI_PROVIDER", provider)
+    if provider == "openai":
+        monkeypatch.setenv("OPENAI_API_KEY", "key")
+    selected = training_chat_provider_from_environment()
+    assert hasattr(selected, "training_chat")
+
+
+def test_ollama_training_chat_maps_plain_shared_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        ai,
+        "urlopen",
+        lambda request, timeout: BytesIO(ollama_response({"assistant_message": "Faça com calma."})),
+    )
+    result = OllamaOnboardingProvider(
+        OllamaConfig("http://ollama:11434", "qwen3:4b", 30)
+    ).training_chat({"current_user_message": "Como faço?"})
+    assert result.assistant_message == "Faça com calma."

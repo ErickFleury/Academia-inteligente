@@ -124,6 +124,11 @@ def test_ready_turn_extracts_valid_data_without_completing(database_session: Ses
     assert onboarding.training_goal == "Ganhar força"
     assert onboarding.status == "draft"
     assert len(provider.extraction_contexts) == 1
+    assistant = database_session.scalar(
+        select(OnboardingAiMessage).where(OnboardingAiMessage.role == "assistant")
+    )
+    assert assistant is not None
+    assert "Já reuni todas as informações necessárias" in assistant.content
 
 
 def test_invalid_final_extraction_preserves_existing_draft(database_session: Session) -> None:

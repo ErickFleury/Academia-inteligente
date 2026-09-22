@@ -59,6 +59,11 @@ _LABELS = {
     "health_conditions": "detalhes de condições de saúde",
 }
 
+_INTERVIEW_COMPLETE_MESSAGE = (
+    "Perfeito! Já reuni todas as informações necessárias para o seu onboarding. "
+    "Revise os dados e clique em “Concluir onboarding” quando estiver pronto."
+)
+
 
 class OnboardingConversationService:
     def __init__(
@@ -136,6 +141,7 @@ class OnboardingConversationService:
                     OnboardingDraftUpdate.model_validate(complete.model_dump()),
                     commit=False,
                 )
+                text = _INTERVIEW_COMPLETE_MESSAGE
             except (AiConversationUnavailableError, ValidationError):
                 ready = False
                 text = self._recovery_message(onboarding)

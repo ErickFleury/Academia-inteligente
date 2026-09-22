@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,6 +11,12 @@ from app.database import get_database_session
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.training.chat_service import (
+    TrainingChatNotFoundError,
+    TrainingChatService,
+    TrainingChatState,
+    TrainingChatUnavailableError,
+)
 from app.modules.training.current_service import CurrentTrainingPlanService
 from app.modules.training.generation_service import (
     CompletedOnboardingRequiredError,
@@ -35,10 +43,50 @@ router = APIRouter(prefix="/training", tags=["training"])
 service = TrainingLifecycleService()
 generation_service = InitialTrainingGenerationService()
 current_service = CurrentTrainingPlanService()
+chat_service = TrainingChatService()
 Instructor = Annotated[
     AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "instructor"))
 ]
 DatabaseSession = Annotated[Session, Depends(get_database_session)]
+
+
+class TrainingChatMessageRequest(BaseModel):
+    message: str = Field(max_length=4000)
+    client_request_id: UUID
+
+    @field_validator("message")
+    @classmethod
+    def nonempty_message(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("message must not be empty")
+        return value
+
+
+class TrainingChatMessageResponse(BaseModel):
+    role: str
+    content: str
+    created_at: datetime
+
+
+class TrainingChatResponse(BaseModel):
+    messages: list[TrainingChatMessageResponse]
+
+
+Client = Annotated[
+    AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "client"))
+]
+
+
+def training_chat_response(state: TrainingChatState) -> TrainingChatResponse:
+    return TrainingChatResponse(
+        messages=[
+            TrainingChatMessageResponse(
+                role=message.role, content=message.content, created_at=message.created_at
+            )
+            for message in state.messages
+        ]
+    )
 
 
 def version_response(session: Session, version: TrainingPlanVersion) -> dict[str, object]:
@@ -92,6 +140,44 @@ def get_current_plan(
     """Return the current version for only the caller's resolved client."""
     version = current_service.find_for_subject(session, client_user.subject)
     return {"plan": version_response(session, version) if version else None}
+
+
+@router.get("/chat", response_model=TrainingChatResponse)
+def get_training_chat(session: DatabaseSession, client_user: Client) -> TrainingChatResponse:
+    """Return raw training chat only to the client who owns it."""
+    try:
+        return training_chat_response(chat_service.state_for_subject(session, client_user.subject))
+    except TrainingChatNotFoundError:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "Authenticated client not found"
+        ) from None
+
+
+@router.post("/chat/messages", response_model=TrainingChatResponse)
+def send_training_chat_message(
+    payload: TrainingChatMessageRequest,
+    session: DatabaseSession,
+    client_user: Client,
+) -> TrainingChatResponse:
+    """Persist a client message and its plain conversational AI response."""
+    try:
+        return training_chat_response(
+            chat_service.submit_for_subject(
+                session,
+                client_user.subject,
+                message=payload.message,
+                client_request_id=payload.client_request_id,
+            )
+        )
+    except TrainingChatNotFoundError:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "Authenticated client not found"
+        ) from None
+    except TrainingChatUnavailableError:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "AI training chat is temporarily unavailable",
+        ) from None
 
 
 @router.post("/initial-proposal", status_code=status.HTTP_201_CREATED)

@@ -17,6 +17,10 @@ class TrainingGenerationProvider(Protocol):
     def generate_training(self, context: dict[str, object]) -> "AiTrainingGenerationResponse": ...
 
 
+class TrainingChatProvider(Protocol):
+    def training_chat(self, context: dict[str, object]) -> "AiTrainingChatResponse": ...
+
+
 class AiProviderError(Exception):
     def __init__(self, category: str, *, retryable: bool) -> None:
         super().__init__(category)
@@ -39,6 +43,13 @@ class AiTrainingGenerationResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     plan: dict[str, Any]
+
+
+class AiTrainingChatResponse(BaseModel):
+    """Plain client-facing reply; chat never carries a plan mutation."""
+
+    model_config = ConfigDict(extra="forbid")
+    assistant_message: str = Field(min_length=1, max_length=4000)
 
 
 class OnboardingAiProvider(Protocol):
@@ -75,6 +86,13 @@ _TRAINING_GENERATION = (
     "fornecido. Respeite limitações, queixas, medicamentos e condições relatadas; não invente "
     "fatos, não faça diagnóstico e não prescreva tratamento. A proposta será obrigatoriamente "
     "revisada por um instrutor antes de poder ser aprovada ou ativada. Retorne apenas o esquema."
+)
+_TRAINING_CHAT = (
+    "Você é o assistente de treino da Academia Inteligente. Responda em português brasileiro, "
+    "de forma clara e conversacional, usando somente o contexto fornecido do próprio cliente. "
+    "Explique o treino e exercícios, mas não invente informações, não faça diagnóstico médico, "
+    "não dê instruções de medicação e não altere, aprove ou ative nenhum plano. Quando houver "
+    "um pedido de alteração, explique que a mudança precisa passar pela revisão profissional."
 )
 
 
@@ -146,6 +164,17 @@ def _training_schema() -> dict[str, object]:
     }
 
 
+def _training_chat_schema() -> dict[str, object]:
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 4000}
+        },
+        "required": ["assistant_message"],
+    }
+
+
 @dataclass(frozen=True)
 class OpenAiConfig:
     api_key: str
@@ -210,6 +239,11 @@ class _Provider:
     def generate_training(self, context: dict[str, object]) -> AiTrainingGenerationResponse:
         return self._call(
             context, _TRAINING_GENERATION, _training_schema(), AiTrainingGenerationResponse
+        )  # type: ignore[return-value]
+
+    def training_chat(self, context: dict[str, object]) -> AiTrainingChatResponse:
+        return self._call(
+            context, _TRAINING_CHAT, _training_chat_schema(), AiTrainingChatResponse
         )  # type: ignore[return-value]
 
 
@@ -300,4 +334,9 @@ def onboarding_ai_provider_from_environment() -> OnboardingAiProvider:
 
 def training_generation_provider_from_environment() -> TrainingGenerationProvider:
     """Select the same configurable adapter family used by onboarding."""
+    return onboarding_ai_provider_from_environment()  # type: ignore[return-value]
+
+
+def training_chat_provider_from_environment() -> TrainingChatProvider:
+    """Use the same provider selector without coupling training chat to either adapter."""
     return onboarding_ai_provider_from_environment()  # type: ignore[return-value]

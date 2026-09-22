@@ -8,7 +8,9 @@ import { ClientManagement } from './client-management'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
 import { OnboardingForm } from './onboarding-form'
+import { getOwnOnboardingDraft } from './onboarding-draft'
 import { CurrentTrainingPage } from './current-training-page'
+import { TrainingChatPage } from './training-chat-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -16,6 +18,7 @@ export function App() {
   const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
   const loginCompletionStarted = useRef(false)
   const loginRedirectStarted = useRef(false)
 
@@ -29,6 +32,20 @@ export function App() {
       .catch(() => setAuthenticationError('Não foi possível iniciar a sessão. Tente novamente.'))
       .finally(() => setCompletingLogin(false))
   }, [])
+
+  useEffect(() => {
+    const isClientHome = window.location.pathname === '/' || window.location.pathname === '/dashboard'
+    if (!session?.roles.includes('client') || !isClientHome) {
+      setOnboardingComplete(null)
+      return
+    }
+    let active = true
+    setOnboardingComplete(null)
+    void getOwnOnboardingDraft(session.accessToken)
+      .then((draft) => active && setOnboardingComplete(draft.status === 'completed'))
+      .catch(() => active && setOnboardingComplete(null))
+    return () => { active = false }
+  }, [session])
 
   useEffect(() => {
     if (
@@ -93,8 +110,9 @@ export function App() {
   const isOnboardingRoute = window.location.pathname === '/onboarding'
   const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
   const isCurrentTrainingRoute = window.location.pathname === '/treino'
+  const isTrainingChatRoute = window.location.pathname === '/assistente'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
 
   function clearSession() {
@@ -153,6 +171,10 @@ export function App() {
     return <CurrentTrainingPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
+  if (isTrainingChatRoute && session) {
+    return <TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} />
+  }
+
   if (isAdministrativeRoute && !isAdministrator) {
     return (
       <ClientShell onSignOut={endSession}>
@@ -191,8 +213,9 @@ export function App() {
                 <Typography color="text.secondary">Novos recursos pessoais aparecerão aqui conforme forem disponibilizados.</Typography>
                 {!isAdministrator && (
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}>
-                    <Button component="a" href="/onboarding" variant="contained">Preencher onboarding</Button>
+                    {onboardingComplete === false && <Button component="a" href="/onboarding" variant="contained">Preencher onboarding</Button>}
                     <Button component="a" href="/treino" variant="outlined">Ver meu treino</Button>
+                    <Button component="a" href="/assistente" variant="outlined">Assistente de treino</Button>
                   </Stack>
                 )}
                 {isAdministrator && <Box><Button component="a" href="/admin" variant="contained">Administração</Button></Box>}

@@ -423,6 +423,17 @@ Provide a chat where the client can discuss their training and provide additiona
 - [ ] **CA-18.3:** one client's messages do not appear in another client's conversation.
 - [ ] **CA-18.4:** provider unavailability returns a controlled error and does not corrupt the training plan.
 
+**Approved implementation policy (DEC-08/DEC-18, Task 16):** training chat is
+a separate client-owned persisted conversation. Responses are conversational
+Brazilian Portuguese text only and never directly mutate a training plan or
+version. Context is limited to the authenticated client's current approved
+plan, relevant own completed-onboarding facts when necessary, bounded summary,
+and bounded recent messages. Raw messages and summary are client-only and
+eligible for cleanup after 30 days; this does not affect authoritative plans or
+plan history. The frontend UUID idempotency and one-retry provider policy apply;
+Ollama retains its configurable local timeout. Any actual plan change remains
+the Task 17 proposal/review flow.
+
 ### RF-19 Dynamically adapt training through AI
 
 **Scope:** stated MVP.
@@ -1148,7 +1159,8 @@ unchecked boxes or planned files.
 | RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13: immutable version lifecycle, current selection, responsibility metadata, and manual proposal path. |
 | RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14: completed-onboarding-scoped, structured AI proposal only; instructor review remains mandatory. |
 | RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
-| RF-18/RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 16–17. |
+| RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16: client-only persisted conversational training chat, bounded own-context, idempotency, controlled failures, and no direct plan mutation. |
+| RF-19 | Original MVP | Planned | DEC-07/08/15 | Task 17 remains the only plan-adaptation/proposal flow. |
 | MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |

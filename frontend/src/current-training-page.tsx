@@ -36,6 +36,7 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
     <ClientShell onSignOut={onSignOut}>
       <Stack spacing={{ xs: 2.5, sm: 3 }} sx={{ maxWidth: 860, minWidth: 0 }}>
         <PageHeader
+          action={<Button component="a" href="/assistente" variant="outlined">Assistente de treino</Button>}
           eyebrow="Treino atual"
           title="Meu treino"
           description="Use esta ficha durante o treino. Siga as orientações e ajuste a carga somente com acompanhamento profissional."

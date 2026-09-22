@@ -77,3 +77,24 @@ test('reuses the same client request id when a conversation submission is retrie
     JSON.parse(fetchMock.mock.calls[3][1].body).client_request_id,
   )
 })
+
+test('ends the interview composer once the structured onboarding is ready', async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        messages: [{ role: 'assistant', content: 'Já reuni todas as informações necessárias.', created_at: '2026-09-22T00:00:00Z' }],
+        missing_required_fields: [],
+        completion_ready: true,
+      }),
+    })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ ...emptyDraft, status: 'draft' }) })
+  vi.stubGlobal('fetch', fetchMock)
+
+  render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
+
+  expect(await screen.findByText('Já reuni todas as informações necessárias.')).toBeInTheDocument()
+  expect(screen.queryByLabelText('Escreva sua resposta')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Concluir onboarding' })).toBeEnabled()
+})

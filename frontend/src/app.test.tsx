@@ -112,6 +112,31 @@ test('opens the current training page only for an authenticated client', async (
   expect(screen.getByText('Seu treino ainda não está disponível')).toBeInTheDocument()
 })
 
+test('does not show onboarding form navigation after the client completes onboarding', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'completed' }) }))
+
+  render(<App />)
+
+  await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Preencher onboarding' })).not.toBeInTheDocument())
+  expect(screen.queryByText('onboarding', { exact: false })).not.toBeInTheDocument()
+})
+
+test('shows onboarding form navigation for a client with a draft', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'draft' }) }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('link', { name: 'Preencher onboarding' })).toHaveAttribute('href', '/onboarding')
+})
+
 test('shows administrative navigation and page to an administrator', () => {
   sessionStorage.setItem(
     'academia.session',

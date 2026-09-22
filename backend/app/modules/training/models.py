@@ -91,3 +91,53 @@ class TrainingPlanItem(Base):
     repetitions: Mapped[str] = mapped_column(String(100), nullable=False)
     load_guidance: Mapped[str] = mapped_column(String(500), nullable=False)
     rest_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class TrainingAiConversation(Base):
+    """Client-owned raw training-chat context with independently bounded retention."""
+
+    __tablename__ = "training_ai_conversation"
+    __table_args__ = (Index("ix_training_ai_conversation_raw_expires_at", "raw_expires_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    client_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("client.id"), unique=True, nullable=False
+    )
+    summary: Mapped[str | None] = mapped_column(Text)
+    raw_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class TrainingAiMessage(Base):
+    """Sensitive client/assistant message retained only for the approved window."""
+
+    __tablename__ = "training_ai_message"
+    __table_args__ = (
+        UniqueConstraint("conversation_id", "sequence", name="uq_training_ai_message_sequence"),
+        UniqueConstraint(
+            "conversation_id", "client_request_id", name="uq_training_ai_message_request"
+        ),
+        UniqueConstraint(
+            "conversation_id",
+            "reply_to_client_request_id",
+            name="uq_training_ai_message_reply",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("training_ai_conversation.id"), nullable=False
+    )
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    client_request_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    reply_to_client_request_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

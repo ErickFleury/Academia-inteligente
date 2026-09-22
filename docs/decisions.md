@@ -401,6 +401,27 @@ authoritative structured onboarding and returns a schema-constrained plan
 proposal. The backend validates the Task 13 plan model before persistence;
 provider output never approves or activates a version.
 
+**Task 16 training-chat amendment — 2026-09-22:** the client-facing training
+assistant is a separate, persisted, client-owned conversation. Its response
+contract is plain conversational Brazilian Portuguese text only; it does not
+produce field updates, plan patches, or adaptation proposals. It may receive
+only the authenticated client's current approved plan, its exercises and
+permitted metadata, relevant completed-onboarding facts when functionally
+needed, a bounded summary, and bounded recent messages. It must never mutate,
+approve, activate, or otherwise change a training-plan version; dynamic changes
+remain exclusively in Task 17's proposal/review workflow.
+
+Raw training-chat messages and its supporting summary are retained for 30 days
+and are then eligible for the same simple opportunistic cleanup pattern used by
+onboarding chat. Raw training chat is visible only to its owning client, never
+to another client, attendant, ordinary administrator, or instructor. The
+frontend creates a UUID for each logical message and retries with the same UUID;
+client/conversation plus that UUID is the server-side idempotency key. Existing
+provider-neutral adapters implement the same contract for OpenAI and Ollama.
+OpenAI keeps the ten-second-per-attempt, one-retry policy; Ollama retains its
+separate configurable local-development timeout. Raw messages, prompts,
+provider responses, health details, and credentials must not be logged.
+
 ## DEC-17 — Application identity and client-account relationship
 
 **Status:** approved — 2026-09-20
