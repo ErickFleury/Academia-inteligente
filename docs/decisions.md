@@ -263,6 +263,13 @@ Completed-workout history is not rewritten by version changes. Task 13 records
 the lifecycle/audit metadata; full instructor profile, exercise catalog, AI
 generation, and completed-workout workflows remain future tasks.
 
+**Task 14 amendment — 2026-09-22:** AI training generation is not automatically
+blocked by a health-risk classification. Relevant client-reported health,
+medication, limitation, and complaint data must influence the structured
+proposal, but may not prevent its creation. The safety control is mandatory
+instructor review: AI creates only a `proposal` and can never approve or
+activate it. This is the approved current interpretation of CA-15.4 and RN-13.
+
 ## DEC-18 — Health-data storage, access, and audit evidence
 
 **Status:** partially approved — 2026-09-21
@@ -364,6 +371,13 @@ This does not replace OpenAI or change its ten-second production timeout.
 For reproducible local use, Ollama may run as an optional internal Docker
 Compose profile with a persistent model volume; it is not exposed on a host
 port and is not a production infrastructure requirement.
+
+**Task 14 amendment — 2026-09-22:** initial training generation reuses the
+same compatible, environment-configured provider/model selection behind a
+provider-neutral contract. It receives only the requesting client's completed
+authoritative structured onboarding and returns a schema-constrained plan
+proposal. The backend validates the Task 13 plan model before persistence;
+provider output never approves or activates a version.
 
 ## DEC-17 — Application identity and client-account relationship
 

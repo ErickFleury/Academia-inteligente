@@ -9,6 +9,12 @@ from app.database import get_database_session
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.training.generation_service import (
+    CompletedOnboardingRequiredError,
+    InitialTrainingGenerationService,
+    InvalidTrainingGenerationError,
+    TrainingGenerationUnavailableError,
+)
 from app.modules.training.models import TrainingPlanItem, TrainingPlanVersion
 from app.modules.training.schema import (
     ManualPlanCreate,
@@ -26,6 +32,7 @@ from app.modules.training.service import (
 
 router = APIRouter(prefix="/training", tags=["training"])
 service = TrainingLifecycleService()
+generation_service = InitialTrainingGenerationService()
 Instructor = Annotated[
     AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "instructor"))
 ]
@@ -71,6 +78,34 @@ def lifecycle_error(error: Exception) -> HTTPException:
     if isinstance(error, ImmutableTrainingVersionError):
         return HTTPException(409, "Approved, current, and historical versions are immutable")
     return HTTPException(409, "Invalid training version transition")
+
+
+@router.post("/initial-proposal", status_code=status.HTTP_201_CREATED)
+def generate_initial_proposal(
+    session: DatabaseSession,
+    client_user: Annotated[
+        AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "client"))
+    ],
+) -> dict[str, object]:
+    """Create only an AI proposal for the authenticated client's completed onboarding."""
+    try:
+        proposal = generation_service.generate_for_subject(session, client_user.subject)
+        return version_response(session, proposal)
+    except CompletedOnboardingRequiredError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Completed onboarding is required before generating a training proposal",
+        ) from None
+    except InvalidTrainingGenerationError:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI training proposal could not be validated",
+        ) from None
+    except TrainingGenerationUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI training generation is temporarily unavailable",
+        ) from None
 
 
 @router.post("/plans", status_code=status.HTTP_201_CREATED)

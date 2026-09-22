@@ -372,10 +372,10 @@ Generate initial guidance/a training plan using the information provided during 
 - [ ] **CA-15.1:** an attempt without completed onboarding does not generate a plan.
 - [ ] **CA-15.2:** with valid onboarding, a successful AI call produces a structured, persistable plan.
 - [ ] **CA-15.3:** the plan is associated exclusively with the client who requested/received the generation.
-- [ ] **CA-15.4:** the AI checks whether the client's health data indicates a case that is too severe; if so, no plan is created because training would be dangerous for the client.
+- [ ] **CA-15.4:** relevant health data influences the AI proposal. Under the approved Task 14 interpretation of DEC-07, it does not automatically block proposal generation; mandatory instructor review is the safety gate before approval or activation.
 - [ ] **CA-15.5:** the plan is created based on each client's onboarding data.
 
-**Consolidation note:** Apply RN-12 through RN-19 and RN-29 through RN-31. The document does not define the severity criterion or the complete flow from suggestion to review to current plan; see DEC-07.
+**Consolidation note:** Apply RN-12 through RN-19 and RN-29 through RN-31. DEC-07 resolves the current proposal/review flow: AI may create only a structured proposal, and an instructor must review it before approval or activation.
 
 ### RF-16 View current training plan
 
@@ -837,7 +837,7 @@ All 37 business rules are preserved below, including those that also describe fu
 | RN-10 | Biometric data must be handled separately from ordinary registration data. | LGPD |
 | RN-11 | Recorded medical information, injuries, or restrictions must not be available to employees without a functional need. | LGPD |
 | RN-12 | AI-generated suggestions may be viewed by instructor employees to assess their validity. | AI |
-| RN-13 | AI must not create training suggestions for clients with severe health cases (such as severe heart problems). | AI/Training |
+| RN-13 | AI proposals must incorporate relevant client-reported health information. Under the approved Task 14 DEC-07 interpretation, this does not automatically block proposal generation; an instructor must review before approval or activation. | AI/Training |
 | RN-14 | The instructor must be able to modify a suggestion in full. | AI/Training |
 | RN-15 | Client restrictions take precedence over optimizations suggested by AI. | AI/Training |
 | RN-16 | AI must not silently modify an already approved training plan. | AI/Training |
@@ -1075,8 +1075,8 @@ retains the chronological decision history.
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
 | DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, 11, and 12 may proceed. |
-| DEC-07 | **Resolved for Task 13** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Concurrency-safe proposal editing and immutable history apply. | Tasks 13–17; health-severity criteria remain a Task 14 gate. |
-| DEC-08 | **Resolved for Task 11** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. | Task 11 may proceed; later AI tasks need their own applicable contracts. |
+| DEC-07 | **Resolved for Tasks 13–14** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Concurrency-safe proposal editing and immutable history apply. | Tasks 13–17. |
+| DEC-08 | **Resolved for Tasks 11 and 14** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. Task 14 reuses the compatible adapter/model configuration for structured proposal generation. | Tasks 11, 14, and later AI tasks with their own scope-specific safety contracts. |
 | DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
 | DEC-10 | Unresolved; blocking occupancy implementation | Relationship/source of truth between access-event presence and auxiliary camera counts, spaces, freshness, and failure behavior. | RF-24X/RF-25X, RN-37, EXT-RF-PRES-01. |
 | DEC-11 | Unresolved | Access-integration payload/auth/idempotency, recognition versus authorization/release, alternatives and manual override. | RF-20–RF-23. |
@@ -1138,7 +1138,8 @@ unchecked boxes or planned files.
 | EXT-RF-AI-01 | Approved MVP extension | Implemented | DEC-06/08/18 | Task 11: client-scoped resumable interview, final validated structured extraction, bounded context, idempotency, and five-day raw-message retention. |
 | EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
 | RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13: immutable version lifecycle, current selection, responsibility metadata, and manual proposal path. |
-| RF-15/RF-16/RF-18/RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 14–17. |
+| RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14: completed-onboarding-scoped, structured AI proposal only; instructor review remains mandatory. |
+| RF-16/RF-18/RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 15–17. |
 | MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |
@@ -1217,10 +1218,10 @@ by inference.
 - **DEC-06:** recovery-token policy remains unresolved. The invitation-token
   policy, structured schema, editable-draft behavior, and completion
   prerequisites are approved.
-- **DEC-07:** AI health severity and review/approval lifecycle; blocks training
-  generation/adaptation tasks.
-- **DEC-08:** resolved for Task 11 conversational onboarding. Later AI tasks
-  still require their own applicable contracts and safety decisions.
+- **DEC-07:** resolved for Tasks 13–14. Later adaptation work must preserve the
+  approved proposal/review lifecycle.
+- **DEC-08:** resolved for Tasks 11 and 14. Later AI work still requires its
+  own applicable contracts and safety decisions.
 - **DEC-09:** biometric metrics and thresholds; blocks relevant RF-21/RF-22 work.
 - **DEC-10:** occupancy source/meaning/freshness; blocks Task 22 and contributes
   to the Task 23 block.

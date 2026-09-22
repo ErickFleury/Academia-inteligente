@@ -1,4 +1,4 @@
-"""Provider-neutral contracts and HTTP adapters for onboarding interviews."""
+"""Provider-neutral contracts and HTTP adapters for AI features."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class TrainingGenerationProvider(Protocol):
-    def generate(self, *, prompt: str) -> str: ...
+    def generate_training(self, context: dict[str, object]) -> "AiTrainingGenerationResponse": ...
 
 
 class AiProviderError(Exception):
@@ -32,6 +32,13 @@ class AiInterviewTurnResponse(BaseModel):
 class AiOnboardingExtractionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     onboarding: dict[str, Any]
+
+
+class AiTrainingGenerationResponse(BaseModel):
+    """Provider-neutral envelope; domain validation remains in training."""
+
+    model_config = ConfigDict(extra="forbid")
+    plan: dict[str, Any]
 
 
 class OnboardingAiProvider(Protocol):
@@ -62,6 +69,12 @@ _INTERVIEW = (
 _EXTRACTION = (
     "Extraia somente fatos explicitamente informados para o esquema. "
     "Não invente, diagnostique ou prescreva."
+)
+_TRAINING_GENERATION = (
+    "Gere uma proposta inicial de treino de academia em português usando somente o onboarding "
+    "fornecido. Respeite limitações, queixas, medicamentos e condições relatadas; não invente "
+    "fatos, não faça diagnóstico e não prescreva tratamento. A proposta será obrigatoriamente "
+    "revisada por um instrutor antes de poder ser aprovada ou ativada. Retorne apenas o esquema."
 )
 
 
@@ -98,6 +111,38 @@ def _extraction_schema() -> dict[str, object]:
             }
         },
         "required": ["onboarding"],
+    }
+
+
+def _training_schema() -> dict[str, object]:
+    item = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "exercise_name": {"type": "string", "minLength": 1, "maxLength": 200},
+            "sets": {"type": "integer", "minimum": 1, "maximum": 100},
+            "repetitions": {"type": "string", "minLength": 1, "maxLength": 100},
+            "load_guidance": {"type": "string", "minLength": 1, "maxLength": 500},
+            "rest_seconds": {"type": "integer", "minimum": 0, "maximum": 3600},
+        },
+        "required": ["exercise_name", "sets", "repetitions", "load_guidance", "rest_seconds"],
+    }
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "plan": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "name": {"type": "string", "minLength": 1, "maxLength": 200},
+                    "objective": {"type": "string", "minLength": 1, "maxLength": 2000},
+                    "items": {"type": "array", "minItems": 1, "maxItems": 100, "items": item},
+                },
+                "required": ["name", "objective", "items"],
+            }
+        },
+        "required": ["plan"],
     }
 
 
@@ -160,6 +205,11 @@ class _Provider:
     def extract_onboarding(self, context: dict[str, object]) -> AiOnboardingExtractionResponse:
         return self._call(
             context, _EXTRACTION, _extraction_schema(), AiOnboardingExtractionResponse
+        )  # type: ignore[return-value]
+
+    def generate_training(self, context: dict[str, object]) -> AiTrainingGenerationResponse:
+        return self._call(
+            context, _TRAINING_GENERATION, _training_schema(), AiTrainingGenerationResponse
         )  # type: ignore[return-value]
 
 
@@ -246,3 +296,8 @@ def onboarding_ai_provider_from_environment() -> OnboardingAiProvider:
     if provider == "ollama":
         return OllamaOnboardingProvider()
     raise AiProviderError("configuration", retryable=False)
+
+
+def training_generation_provider_from_environment() -> TrainingGenerationProvider:
+    """Select the same configurable adapter family used by onboarding."""
+    return onboarding_ai_provider_from_environment()  # type: ignore[return-value]

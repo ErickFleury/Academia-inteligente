@@ -68,6 +68,56 @@ def test_openai_final_extraction_uses_shared_contract(monkeypatch: pytest.Monkey
     assert result.onboarding["training_goal"] == "Força"
 
 
+def test_openai_training_generation_uses_structured_plan_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = {
+        "name": "Plano inicial",
+        "objective": "Força",
+        "items": [
+            {
+                "exercise_name": "Agachamento",
+                "sets": 3,
+                "repetitions": "8",
+                "load_guidance": "Carga confortável",
+                "rest_seconds": 90,
+            }
+        ],
+    }
+    monkeypatch.setattr(
+        ai, "urlopen", lambda request, timeout: BytesIO(openai_response({"plan": plan}))
+    )
+    result = OpenAiResponsesOnboardingProvider(OpenAiConfig("key", "model", 10)).generate_training(
+        {"completed_onboarding": {"training_goal": "Força"}}
+    )
+    assert result.plan == plan
+
+
+def test_ollama_training_generation_maps_the_same_structured_plan_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = {
+        "name": "Plano inicial",
+        "objective": "Condicionamento",
+        "items": [
+            {
+                "exercise_name": "Bicicleta ergométrica",
+                "sets": 1,
+                "repetitions": "10 minutos",
+                "load_guidance": "Ritmo confortável",
+                "rest_seconds": 0,
+            }
+        ],
+    }
+    monkeypatch.setattr(
+        ai, "urlopen", lambda request, timeout: BytesIO(ollama_response({"plan": plan}))
+    )
+    result = OllamaOnboardingProvider(
+        OllamaConfig("http://ollama:11434", "qwen3:4b", 30)
+    ).generate_training({"completed_onboarding": {"training_goal": "Condicionamento"}})
+    assert result.plan == plan
+
+
 @pytest.mark.parametrize("provider", ["openai", "ollama"])
 def test_provider_selection(monkeypatch: pytest.MonkeyPatch, provider: str) -> None:
     monkeypatch.setenv("AI_PROVIDER", provider)

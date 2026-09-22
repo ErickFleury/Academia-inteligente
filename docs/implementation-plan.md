@@ -87,8 +87,8 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-04 | Resolved for current roles/provisioning; inherited by authorization, health, training, and future employee work. |
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
 | DEC-06 | Invitation-token policy is resolved for Tasks 07 and 09; schema, validation, and editable-draft behavior are resolved for Task 10. Recovery-token policy remains unresolved for later affected work. |
-| DEC-07 | Blocking Tasks 13, 14, and 17: severity and review/approval lifecycle. |
-| DEC-08 | Resolved for Task 11: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output; Ollama is also available as a local development/test adapter. Later AI tasks retain their own applicable gates. |
+| DEC-07 | Resolved for Tasks 13–14: instructor-only approval/activation and no automatic health-risk generation block; Task 17 preserves the lifecycle. |
+| DEC-08 | Resolved for Tasks 11 and 14: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output; Ollama is also available as a local development/test adapter. Later AI tasks retain their own applicable gates. |
 | DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
 | DEC-10 | Blocking Task 22 and Task 23: occupancy sources/meaning/freshness. Do not infer a source of truth. |
 | DEC-11 | Blocking Task 22 where external/access events are its inputs. |
@@ -119,7 +119,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | Completed | Client-only resumable AI interview, final validated extraction, and bounded retention |
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | Completed | Shared validation with intentional atomic completion and timestamp |
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | Completed | Immutable versions/current/professional attribution and manual proposal path |
-| 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | MVP future | Safe structured proposal through lifecycle |
+| 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed | Completed-onboarding-scoped structured AI proposal through lifecycle; instructor review required |
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | MVP future | Mobile own-current-plan/exercise view |
 | 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | MVP future | Own-context read-only training assistant |
 | 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | MVP future | Approved new version, history preserved |
@@ -180,6 +180,6 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 13, training version lifecycle, is next in dependency order. It consumes
-the completed-onboarding contract from Task 12 and must not treat conversational
-readiness as RF-13 completion.
+Task 15, current training view, is next in dependency order. It consumes the
+Task 14 proposal/review lifecycle and must show only the authenticated client's
+current version.
