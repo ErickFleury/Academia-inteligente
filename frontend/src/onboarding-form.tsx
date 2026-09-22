@@ -89,17 +89,20 @@ function BooleanSelect({
   label,
   value,
   onChange,
+  disabled = false,
 }: {
   id: string
   label: string
   value: boolean | null
   onChange: (value: boolean | null) => void
+  disabled?: boolean
 }) {
   return (
     <FormControl fullWidth>
       <InputLabel id={`${id}-label`}>{label}</InputLabel>
       <Select
         id={id}
+        disabled={disabled}
         label={label}
         labelId={`${id}-label`}
         onChange={(event) => onChange(booleanFromSelect(event.target.value))}
@@ -276,16 +279,16 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
           </Stack>
         </Section>
         <Section title="Limitações e queixas">
-          <BooleanSelect id="limitations-answer" label="Você tem alguma limitação ou queixa relevante?" onChange={(value) => update('has_limitations_or_complaints', value)} value={values.has_limitations_or_complaints} />
-          {values.has_limitations_or_complaints && <TextField fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte quais são as limitações ou queixas" multiline minRows={4} onChange={(event) => update('limitations_or_complaints', event.target.value)} value={values.limitations_or_complaints ?? ''} />}
+          <BooleanSelect disabled={draft?.status === 'completed'} id="limitations-answer" label="Você tem alguma limitação ou queixa relevante?" onChange={(value) => update('has_limitations_or_complaints', value)} value={values.has_limitations_or_complaints} />
+          {values.has_limitations_or_complaints && <TextField disabled={draft?.status === 'completed'} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte quais são as limitações ou queixas" multiline minRows={4} onChange={(event) => update('limitations_or_complaints', event.target.value)} value={values.limitations_or_complaints ?? ''} />}
         </Section>
         <Section title="Medicações">
-          <BooleanSelect id="medications-answer" label="Você utiliza alguma medicação?" onChange={(value) => update('uses_medications', value)} value={values.uses_medications} />
-          {values.uses_medications && <TextField fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Quais medicações você utiliza?" multiline minRows={4} onChange={(event) => update('medications', event.target.value)} value={values.medications ?? ''} />}
+          <BooleanSelect disabled={draft?.status === 'completed'} id="medications-answer" label="Você utiliza alguma medicação?" onChange={(value) => update('uses_medications', value)} value={values.uses_medications} />
+          {values.uses_medications && <TextField disabled={draft?.status === 'completed'} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Quais medicações você utiliza?" multiline minRows={4} onChange={(event) => update('medications', event.target.value)} value={values.medications ?? ''} />}
         </Section>
         <Section title="Condições e histórico de saúde">
-          <BooleanSelect id="health-conditions-answer" label="Você tem alguma condição de saúde ou histórico relevante?" onChange={(value) => update('has_health_conditions', value)} value={values.has_health_conditions} />
-          {values.has_health_conditions && <TextField fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte as condições ou o histórico relevante" multiline minRows={4} onChange={(event) => update('health_conditions', event.target.value)} value={values.health_conditions ?? ''} />}
+          <BooleanSelect disabled={draft?.status === 'completed'} id="health-conditions-answer" label="Você tem alguma condição de saúde ou histórico relevante?" onChange={(value) => update('has_health_conditions', value)} value={values.has_health_conditions} />
+          {values.has_health_conditions && <TextField disabled={draft?.status === 'completed'} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte as condições ou o histórico relevante" multiline minRows={4} onChange={(event) => update('health_conditions', event.target.value)} value={values.health_conditions ?? ''} />}
         </Section>
         {draft?.status !== 'completed' && <Box><Button disabled={saving} onClick={() => void saveDraft()} size="large" variant="contained">{saving ? 'Salvando rascunho…' : 'Salvar rascunho'}</Button></Box>}
         <OnboardingCompletion completedAt={draft?.completed_at ?? null} missingFields={missingFields(values)} onComplete={() => void complete()} submitting={completing} />

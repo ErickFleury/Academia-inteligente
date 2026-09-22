@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.modules.clients.models import Client
 from app.modules.training.models import TrainingPlan, TrainingPlanItem, TrainingPlanVersion
 from app.modules.training.schema import PlanOrigin, TrainingPlanVersionInput
 
@@ -119,16 +120,35 @@ class TrainingLifecycleService:
             raise InvalidTrainingTransitionError
         if version.revision != expected_revision:
             raise ConcurrentTrainingUpdateError
+        plan = session.scalar(
+            select(TrainingPlan).where(TrainingPlan.id == plan_id).with_for_update()
+        )
+        if plan is None:
+            raise TrainingVersionNotFoundError
+        # Lock the client row so concurrent activations for distinct plans cannot
+        # both pass the client-wide current-plan constraint.
+        session.scalar(select(Client).where(Client.id == plan.client_id).with_for_update())
+        current_plans = session.scalars(
+            select(TrainingPlan)
+            .where(TrainingPlan.client_id == plan.client_id, TrainingPlan.is_current)
+            .with_for_update()
+        ).all()
         for current in session.scalars(
             select(TrainingPlanVersion)
-            .where(TrainingPlanVersion.plan_id == plan_id, TrainingPlanVersion.status == "current")
+            .where(
+                TrainingPlanVersion.plan_id.in_([item.id for item in current_plans]),
+                TrainingPlanVersion.status == "current",
+            )
             .with_for_update()
         ):
             current.status = "superseded"
-        # Flush the old current state first so the partial unique index never
-        # observes two current versions, while retaining one transaction.
+        for current_plan in current_plans:
+            current_plan.is_current = False
+        # Flush the old states first so the partial unique indexes never observe
+        # two current versions/plans, while retaining one transaction.
         session.flush()
         version.status = "current"
+        plan.is_current = True
         session.commit()
         session.refresh(version)
         return version

@@ -952,7 +952,7 @@ cardinalities remain undecided.
 | Employee/role authorization | Later employee profile linked to Account; Keycloak roles and backend policy enforce specialization. Exact employee schema awaits RF-07/RF-08 work. |
 | Onboarding / structured data | Client-owned draft/completed aggregate for approved physical and health fields. Structured values are authoritative; completion/timestamps follow RF-13. Health access is need-to-know. |
 | AI onboarding conversation/message | Client-owned resumable EXT-RF-AI-01 interaction that maps into structured onboarding. Raw messages and summary are client-only and retained for five days; structured data remains authoritative. |
-| TrainingPlan / TrainingPlanVersion / TrainingPlanItem | Client-owned plan aggregate, immutable/versioned current/history states, responsible professional, structured exercise items. Approval states await DEC-07/DEC-15. |
+| TrainingPlan / TrainingPlanVersion / TrainingPlanItem | Client-owned plan aggregate, immutable/versioned current/history states, responsible professional, structured exercise items. At most one plan may be current for a client; activating another preserves the prior plan as superseded. |
 | Exercise | Referenced prescription content; inactive exercises remain in history under RN-20. Full management flow awaits DEC-15. |
 | AI training conversation/message/proposal | Client-scoped RF-18/RF-19 context and proposed changes. A proposal is not a current approved plan; changes use the version lifecycle. |
 | Equipment / logical type-model | RF-32 administrative records and RF-33 catalog. EXT-RF-EQP-01 grouping/count model awaits EXT-DEC-EQP-01; count is not live availability. |
@@ -1083,7 +1083,7 @@ retains the chronological decision history.
 | DEC-12 | Unresolved | Plan/enrollment/payment model, validity/modalities/access allowance, confirmation, renewal, delinquency and purchasable plans. | RF-31, RN-22/RN-24/RN-35/RN-36. |
 | DEC-13 | Unresolved | Financial meanings and calculations, periods and filters; profit is not automatically revenue. | RF-26–RF-29. |
 | DEC-14 | Unresolved | Class recurrence, visibility, reservation/capacity and authorized exceptions. | RF-30/RN-25. |
-| DEC-15 | **Resolved for Task 13 lifecycle/manual authoring** | Instructors may manually create and edit proposals; the minimum version/item model and responsibility metadata are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Task 13 may proceed; later affected tasks need their remaining gates. |
+| DEC-15 | **Resolved for Tasks 13 and 15 lifecycle/manual authoring** | Instructors may manually create and edit proposals; the minimum version/item model, responsibility metadata, and one current plan per client are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Tasks 13 and 15 may proceed; later affected tasks need their remaining gates. |
 | DEC-16 | Unresolved; blocking formal RNF sign-off | Reference load, timeouts, viewports, usability protocol and continuous-availability measurement. | Formal end-to-end RNF verification. |
 | DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
 | DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention remains unresolved. | Tasks 10 and 11 may proceed; biometrics remain gated. |
@@ -1139,7 +1139,8 @@ unchecked boxes or planned files.
 | EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
 | RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13: immutable version lifecycle, current selection, responsibility metadata, and manual proposal path. |
 | RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14: completed-onboarding-scoped, structured AI proposal only; instructor review remains mandatory. |
-| RF-16/RF-18/RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 15–17. |
+| RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
+| RF-18/RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 16–17. |
 | MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |

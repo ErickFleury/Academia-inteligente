@@ -120,7 +120,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | Completed | Shared validation with intentional atomic completion and timestamp |
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | Completed | Immutable versions/current/professional attribution and manual proposal path |
 | 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed | Completed-onboarding-scoped structured AI proposal through lifecycle; instructor review required |
-| 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | MVP future | Mobile own-current-plan/exercise view |
+| 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | Completed | Mobile own-current-plan/exercise view with empty/loading/error states |
 | 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | MVP future | Own-context read-only training assistant |
 | 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | MVP future | Approved new version, history preserved |
 | 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | MVP visual polish | Final consistency, responsive, accessibility pass |
@@ -180,6 +180,6 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 15, current training view, is next in dependency order. It consumes the
-Task 14 proposal/review lifecycle and must show only the authenticated client's
-current version.
+Task 16, AI assistant chat, is next in dependency order. It consumes the
+authenticated client's current plan and may use only that client's permitted
+onboarding context.

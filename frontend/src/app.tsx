@@ -8,6 +8,7 @@ import { ClientManagement } from './client-management'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
 import { OnboardingForm } from './onboarding-form'
+import { CurrentTrainingPage } from './current-training-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -92,7 +93,9 @@ export function App() {
   const isAdministrativeRoute = window.location.pathname === '/admin'
   const isOnboardingRoute = window.location.pathname === '/onboarding'
   const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
+  const isCurrentTrainingRoute = window.location.pathname === '/treino'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
 
   function clearSession() {
@@ -130,15 +133,15 @@ export function App() {
     return <SignInEntry message="Sessão necessária para acessar esta página." onSignIn={() => void oidcSessionClient.startLogin()} />
   }
 
-  if (isClientOnboardingRoute && !session) {
-    return <SignInEntry message="Entre para acessar seu onboarding." onSignIn={() => void oidcSessionClient.startLogin()} />
+  if (isClientRoute && !session) {
+    return <SignInEntry message="Entre para acessar sua área de treino." onSignIn={() => void oidcSessionClient.startLogin()} />
   }
 
-  if (isClientOnboardingRoute && !session?.roles.includes('client')) {
+  if (isClientRoute && !session?.roles.includes('client')) {
     return (
       <ClientShell onSignOut={endSession}>
-        <PageHeader eyebrow="Acesso protegido" title="Onboarding indisponível" />
-        <Alert severity="error" variant="outlined">Você não tem permissão para acessar este onboarding.</Alert>
+        <PageHeader eyebrow="Acesso protegido" title="Área do cliente indisponível" />
+        <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta área.</Alert>
       </ClientShell>
     )
   }
@@ -149,6 +152,10 @@ export function App() {
 
   if (isOnboardingRoute && session) {
     return <OnboardingForm accessToken={session.accessToken} onSignOut={endSession} />
+  }
+
+  if (isCurrentTrainingRoute && session) {
+    return <CurrentTrainingPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
   if (isAdministrativeRoute && !isAdministrator) {
@@ -187,7 +194,12 @@ export function App() {
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">Seu espaço está pronto</Typography>
                 <Typography color="text.secondary">Novos recursos pessoais aparecerão aqui conforme forem disponibilizados.</Typography>
-                {!isAdministrator && <Box><Button component="a" href="/onboarding" variant="contained">Preencher onboarding</Button></Box>}
+                {!isAdministrator && (
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}>
+                    <Button component="a" href="/onboarding" variant="contained">Preencher onboarding</Button>
+                    <Button component="a" href="/treino" variant="outlined">Ver meu treino</Button>
+                  </Stack>
+                )}
                 {isAdministrator && <Box><Button component="a" href="/admin" variant="contained">Administração</Button></Box>}
               </Stack>
             </CardContent>

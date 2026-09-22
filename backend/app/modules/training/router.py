@@ -9,6 +9,7 @@ from app.database import get_database_session
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.training.current_service import CurrentTrainingPlanService
 from app.modules.training.generation_service import (
     CompletedOnboardingRequiredError,
     InitialTrainingGenerationService,
@@ -33,6 +34,7 @@ from app.modules.training.service import (
 router = APIRouter(prefix="/training", tags=["training"])
 service = TrainingLifecycleService()
 generation_service = InitialTrainingGenerationService()
+current_service = CurrentTrainingPlanService()
 Instructor = Annotated[
     AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "instructor"))
 ]
@@ -78,6 +80,18 @@ def lifecycle_error(error: Exception) -> HTTPException:
     if isinstance(error, ImmutableTrainingVersionError):
         return HTTPException(409, "Approved, current, and historical versions are immutable")
     return HTTPException(409, "Invalid training version transition")
+
+
+@router.get("/current")
+def get_current_plan(
+    session: DatabaseSession,
+    client_user: Annotated[
+        AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "client"))
+    ],
+) -> dict[str, object | None]:
+    """Return the current version for only the caller's resolved client."""
+    version = current_service.find_for_subject(session, client_user.subject)
+    return {"plan": version_response(session, version) if version else None}
 
 
 @router.post("/initial-proposal", status_code=status.HTTP_201_CREATED)

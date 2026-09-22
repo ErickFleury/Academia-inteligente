@@ -100,8 +100,10 @@ test('prevents incomplete completion and displays the completed state after the 
   const completeDraft = {
     ...emptyDraft,
     training_goal: 'Ganhar força', training_experience: 'beginner', height_cm: 170,
-    weight_kg: '70.50', has_limitations_or_complaints: false,
-    uses_medications: false, has_health_conditions: false,
+    weight_kg: '70.50', has_limitations_or_complaints: true,
+    limitations_or_complaints: 'Evitar impacto alto', uses_medications: true,
+    medications: 'Medicação informada', has_health_conditions: true,
+    health_conditions: 'Histórico informado',
   }
   const fetchMock = vi.fn()
     .mockResolvedValueOnce({ ok: true, json: async () => completeDraft })
@@ -112,6 +114,13 @@ test('prevents incomplete completion and displays the completed state after the 
   expect(await screen.findByRole('button', { name: 'Concluir onboarding' })).toBeEnabled()
   fireEvent.click(screen.getByRole('button', { name: 'Concluir onboarding' }))
   expect(await screen.findByText('Seu onboarding foi concluído com sucesso.')).toBeInTheDocument()
+  expect(screen.getByLabelText('Experiência de treino')).toHaveAttribute('aria-disabled', 'true')
+  expect(screen.getByLabelText('Você tem alguma limitação ou queixa relevante?')).toHaveAttribute('aria-disabled', 'true')
+  expect(screen.getByLabelText('Você utiliza alguma medicação?')).toHaveAttribute('aria-disabled', 'true')
+  expect(screen.getByLabelText('Você tem alguma condição de saúde ou histórico relevante?')).toHaveAttribute('aria-disabled', 'true')
+  expect(screen.getByLabelText('Conte quais são as limitações ou queixas')).toBeDisabled()
+  expect(screen.getByLabelText('Quais medicações você utiliza?')).toBeDisabled()
+  expect(screen.getByLabelText('Conte as condições ou o histórico relevante')).toBeDisabled()
   expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8000/onboarding/me/completion')
   expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST' })
 })

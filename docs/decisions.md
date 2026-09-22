@@ -270,6 +270,12 @@ proposal, but may not prevent its creation. The safety control is mandatory
 instructor review: AI creates only a `proposal` and can never approve or
 activate it. This is the approved current interpretation of CA-15.4 and RN-13.
 
+**Task 15 amendment — 2026-09-22:** a client may have at most one `current`
+training plan across all of their plans. Activating an approved version makes
+any previously current plan for that same client `superseded`, preserving its
+version and item history. This adds a client-wide current-plan invariant without
+changing the established version states or instructor-only activation rule.
+
 ## DEC-18 — Health-data storage, access, and audit evidence
 
 **Status:** partially approved — 2026-09-21

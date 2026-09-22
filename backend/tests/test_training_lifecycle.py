@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base
 from app.modules.clients.models import Account, Client
-from app.modules.training.models import TrainingPlanVersion
+from app.modules.training.models import TrainingPlan, TrainingPlanVersion
 from app.modules.training.schema import TrainingPlanItemInput, TrainingPlanVersionInput
 from app.modules.training.service import (
     ConcurrentTrainingUpdateError,
@@ -133,3 +133,47 @@ def test_new_current_supersedes_previous_and_conflicts_are_rejected(session: Ses
         .order_by(TrainingPlanVersion.version_number)
     ).all()
     assert statuses == ["superseded", "current"]
+
+
+def test_activating_a_different_plan_supersedes_the_client_previous_current_plan(
+    session: Session,
+) -> None:
+    service = TrainingLifecycleService()
+    client = client_id(session)
+    first = service.create_proposal(
+        session,
+        client_id=client,
+        data=data("Primeiro"),
+        created_by="instructor-1",
+        origin="instructor",
+    )
+    first = service.approve(
+        session, plan_id=first.plan_id, version_number=1, actor="instructor-1", expected_revision=1
+    )
+    service.activate(session, plan_id=first.plan_id, version_number=1, expected_revision=1)
+    second = service.create_proposal(
+        session,
+        client_id=client,
+        data=data("Segundo"),
+        created_by="instructor-1",
+        origin="instructor",
+    )
+    second = service.approve(
+        session, plan_id=second.plan_id, version_number=1, actor="instructor-1", expected_revision=1
+    )
+    service.activate(session, plan_id=second.plan_id, version_number=1, expected_revision=1)
+
+    assert (
+        session.scalar(
+            select(TrainingPlanVersion.status).where(TrainingPlanVersion.plan_id == first.plan_id)
+        )
+        == "superseded"
+    )
+    assert (
+        session.scalar(
+            select(TrainingPlanVersion.status).where(TrainingPlanVersion.plan_id == second.plan_id)
+        )
+        == "current"
+    )
+    plans = session.scalars(select(TrainingPlan).where(TrainingPlan.client_id == client)).all()
+    assert [plan.is_current for plan in plans] == [False, True]

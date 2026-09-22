@@ -93,6 +93,20 @@ test('opens the own onboarding form only for an authenticated client', async () 
   expect(await screen.findByRole('heading', { name: 'Conte um pouco sobre você' })).toBeInTheDocument()
 })
 
+test('opens the current training page only for an authenticated client', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/treino')
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ plan: null }) }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Meu treino' })).toBeInTheDocument()
+  expect(screen.getByText('Seu treino ainda não está disponível')).toBeInTheDocument()
+})
+
 test('shows administrative navigation and page to an administrator', () => {
   sessionStorage.setItem(
     'academia.session',
