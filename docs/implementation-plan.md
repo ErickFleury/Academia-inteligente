@@ -118,7 +118,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 10 | Physical and health onboarding | RF-11, RF-12 | 03, 08, 09; DEC-06/18 | Completed | Client-scoped structured draft, separated health data, validation, and audit metadata |
 | 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | Completed | Client-only resumable AI interview, final validated extraction, and bounded retention |
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | Completed | Shared validation with intentional atomic completion and timestamp |
-| 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | MVP future | Immutable versions/current/professional attribution |
+| 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | Completed | Immutable versions/current/professional attribution and manual proposal path |
 | 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | MVP future | Safe structured proposal through lifecycle |
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | MVP future | Mobile own-current-plan/exercise view |
 | 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | MVP future | Own-context read-only training assistant |

@@ -1,3 +1,204 @@
-from fastapi import APIRouter
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.database import get_database_session
+from app.modules.identity.authorization import require_roles
+from app.modules.identity.router import get_authenticated_identity
+from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.training.models import TrainingPlanItem, TrainingPlanVersion
+from app.modules.training.schema import (
+    ManualPlanCreate,
+    ProposalUpdate,
+    TrainingPlanVersionInput,
+    VersionAction,
+)
+from app.modules.training.service import (
+    ConcurrentTrainingUpdateError,
+    ImmutableTrainingVersionError,
+    InvalidTrainingTransitionError,
+    TrainingLifecycleService,
+    TrainingVersionNotFoundError,
+)
 
 router = APIRouter(prefix="/training", tags=["training"])
+service = TrainingLifecycleService()
+Instructor = Annotated[
+    AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "instructor"))
+]
+DatabaseSession = Annotated[Session, Depends(get_database_session)]
+
+
+def version_response(session: Session, version: TrainingPlanVersion) -> dict[str, object]:
+    return {
+        "plan_id": str(version.plan_id),
+        "version_number": version.version_number,
+        "status": version.status,
+        "name": version.name,
+        "objective": version.objective,
+        "origin": version.origin,
+        "created_by": version.created_by,
+        "created_at": version.created_at.isoformat(),
+        "approved_by": version.approved_by,
+        "approved_at": version.approved_at.isoformat() if version.approved_at else None,
+        "revision": version.revision,
+        "items": [
+            {
+                "exercise_name": item.exercise_name,
+                "sets": item.sets,
+                "repetitions": item.repetitions,
+                "load_guidance": item.load_guidance,
+                "rest_seconds": item.rest_seconds,
+                "position": item.position,
+            }
+            for item in session.scalars(
+                select(TrainingPlanItem)
+                .where(TrainingPlanItem.version_id == version.id)
+                .order_by(TrainingPlanItem.position)
+            )
+        ],
+    }
+
+
+def lifecycle_error(error: Exception) -> HTTPException:
+    if isinstance(error, TrainingVersionNotFoundError):
+        return HTTPException(404, "Training version not found")
+    if isinstance(error, ConcurrentTrainingUpdateError):
+        return HTTPException(409, "Training version changed; reload before saving")
+    if isinstance(error, ImmutableTrainingVersionError):
+        return HTTPException(409, "Approved, current, and historical versions are immutable")
+    return HTTPException(409, "Invalid training version transition")
+
+
+@router.post("/plans", status_code=status.HTTP_201_CREATED)
+def create_manual_proposal(
+    payload: ManualPlanCreate, session: DatabaseSession, instructor: Instructor
+) -> dict[str, object]:
+    try:
+        version = service.create_proposal(
+            session,
+            client_id=UUID(payload.client_id),
+            data=payload,
+            created_by=instructor.subject,
+            origin="instructor",
+        )
+        return version_response(session, version)
+    except ValueError:
+        raise HTTPException(422, "Invalid client identifier") from None
+
+
+@router.patch("/plans/{plan_id}/versions/{version_number}")
+def revise_proposal(
+    plan_id: UUID,
+    version_number: int,
+    payload: ProposalUpdate,
+    session: DatabaseSession,
+    instructor: Instructor,
+) -> dict[str, object]:
+    try:
+        return version_response(
+            session,
+            service.revise(
+                session,
+                plan_id=plan_id,
+                version_number=version_number,
+                data=payload,
+                actor=instructor.subject,
+                expected_revision=payload.expected_revision,
+            ),
+        )
+    except (
+        TrainingVersionNotFoundError,
+        ImmutableTrainingVersionError,
+        ConcurrentTrainingUpdateError,
+        InvalidTrainingTransitionError,
+    ) as error:
+        raise lifecycle_error(error) from None
+
+
+@router.post("/plans/{plan_id}/versions/{version_number}/approve")
+def approve_proposal(
+    plan_id: UUID,
+    version_number: int,
+    payload: VersionAction,
+    session: DatabaseSession,
+    instructor: Instructor,
+) -> dict[str, object]:
+    try:
+        return version_response(
+            session,
+            service.approve(
+                session,
+                plan_id=plan_id,
+                version_number=version_number,
+                actor=instructor.subject,
+                expected_revision=payload.expected_revision,
+            ),
+        )
+    except (
+        TrainingVersionNotFoundError,
+        ImmutableTrainingVersionError,
+        ConcurrentTrainingUpdateError,
+        InvalidTrainingTransitionError,
+    ) as error:
+        raise lifecycle_error(error) from None
+
+
+@router.post("/plans/{plan_id}/versions/{version_number}/activate")
+def activate_approved(
+    plan_id: UUID,
+    version_number: int,
+    payload: VersionAction,
+    session: DatabaseSession,
+    instructor: Instructor,
+) -> dict[str, object]:
+    try:
+        return version_response(
+            session,
+            service.activate(
+                session,
+                plan_id=plan_id,
+                version_number=version_number,
+                expected_revision=payload.expected_revision,
+            ),
+        )
+    except (
+        TrainingVersionNotFoundError,
+        ImmutableTrainingVersionError,
+        ConcurrentTrainingUpdateError,
+        InvalidTrainingTransitionError,
+    ) as error:
+        raise lifecycle_error(error) from None
+
+
+@router.post(
+    "/plans/{plan_id}/versions/{version_number}/revisions", status_code=status.HTTP_201_CREATED
+)
+def create_revision(
+    plan_id: UUID,
+    version_number: int,
+    payload: TrainingPlanVersionInput,
+    session: DatabaseSession,
+    instructor: Instructor,
+) -> dict[str, object]:
+    try:
+        return version_response(
+            session,
+            service.create_revision(
+                session,
+                plan_id=plan_id,
+                version_number=version_number,
+                data=payload,
+                actor=instructor.subject,
+            ),
+        )
+    except (
+        TrainingVersionNotFoundError,
+        ImmutableTrainingVersionError,
+        ConcurrentTrainingUpdateError,
+        InvalidTrainingTransitionError,
+    ) as error:
+        raise lifecycle_error(error) from None

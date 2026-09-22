@@ -9,6 +9,7 @@ from alembic import context
 from app.database import Base
 from app.modules.clients import models  # noqa: F401 - registers metadata
 from app.modules.onboarding import models as onboarding_models  # noqa: F401 - registers metadata
+from app.modules.training import models as training_models  # noqa: F401 - registers metadata
 
 config = context.config
 if config.config_file_name is not None:

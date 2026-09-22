@@ -1075,7 +1075,7 @@ retains the chronological decision history.
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
 | DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, 11, and 12 may proceed. |
-| DEC-07 | Unresolved; blocking | Health severity criteria, proposal/review/approval states, approvers, and activation rules. | Training generation/adaptation. |
+| DEC-07 | **Resolved for Task 13** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Concurrency-safe proposal editing and immutable history apply. | Tasks 13–17; health-severity criteria remain a Task 14 gate. |
 | DEC-08 | **Resolved for Task 11** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. | Task 11 may proceed; later AI tasks need their own applicable contracts. |
 | DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
 | DEC-10 | Unresolved; blocking occupancy implementation | Relationship/source of truth between access-event presence and auxiliary camera counts, spaces, freshness, and failure behavior. | RF-24X/RF-25X, RN-37, EXT-RF-PRES-01. |
@@ -1083,7 +1083,7 @@ retains the chronological decision history.
 | DEC-12 | Unresolved | Plan/enrollment/payment model, validity/modalities/access allowance, confirmation, renewal, delinquency and purchasable plans. | RF-31, RN-22/RN-24/RN-35/RN-36. |
 | DEC-13 | Unresolved | Financial meanings and calculations, periods and filters; profit is not automatically revenue. | RF-26–RF-29. |
 | DEC-14 | Unresolved | Class recurrence, visibility, reservation/capacity and authorized exceptions. | RF-30/RN-25. |
-| DEC-15 | Unresolved; blocking where invoked | Manual/review training, exercise maintenance, evaluations, completed workouts, critical notices, audit/export flows. | RF-15–RF-19 and related RN. |
+| DEC-15 | **Resolved for Task 13 lifecycle/manual authoring** | Instructors may manually create and edit proposals; the minimum version/item model and responsibility metadata are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Task 13 may proceed; later affected tasks need their remaining gates. |
 | DEC-16 | Unresolved; blocking formal RNF sign-off | Reference load, timeouts, viewports, usability protocol and continuous-availability measurement. | Formal end-to-end RNF verification. |
 | DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
 | DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention remains unresolved. | Tasks 10 and 11 may proceed; biometrics remain gated. |
@@ -1137,7 +1137,8 @@ unchecked boxes or planned files.
 | RF-13 | Original MVP | Implemented | DEC-06 | Task 12: shared authoritative validation, intentional atomic completion timestamp, and a downstream completed-onboarding contract. |
 | EXT-RF-AI-01 | Approved MVP extension | Implemented | DEC-06/08/18 | Task 11: client-scoped resumable interview, final validated structured extraction, bounded context, idempotency, and five-day raw-message retention. |
 | EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
-| RF-15–RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 13–17. |
+| RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13: immutable version lifecycle, current selection, responsibility metadata, and manual proposal path. |
+| RF-15/RF-16/RF-18/RF-19 | Original MVP | Planned | DEC-07/08/15/18 | Tasks 14–17. |
 | MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |

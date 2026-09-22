@@ -230,6 +230,39 @@ same validation succeeds.
 After completion, client edits are disabled and completed information is not
 silently overwritten; a future approved revision/replacement flow is required.
 
+## DEC-07 and DEC-15 — Training version lifecycle, review, and manual authoring
+
+**Status:** resolved for Task 13 — 2026-09-22
+
+Each training-plan version has exactly one lifecycle state: `proposal`,
+`approved`, `current`, or `superseded`. AI and an instructor may create a
+proposal. Both may edit proposal content, but every write uses concurrency-safe
+revision checking so one actor cannot silently overwrite another actor's work.
+
+Only an identity with the `instructor` role may formally approve and activate a
+version. AI may never approve or activate a plan. Approval records
+`approved_by` and `approved_at`; all versions record `created_by`, `created_at`,
+and whether their original source was `ai` or `instructor`. Task 13 temporarily
+uses the authenticated Keycloak instructor identity directly; it does not
+create a full local instructor profile.
+
+An instructor may create a complete manual proposal without AI. A minimum plan
+version contains plan name, objective, and ordered exercise items with exercise
+name, sets, repetitions, load/load guidance, and rest. The manual and AI flows
+are respectively:
+
+`instructor proposal → instructor edit → instructor approve → instructor activate → current`
+
+`AI proposal → AI/instructor edit → instructor approve → instructor activate → current`.
+
+At most one version per plan may be `current`. Activating an approved version
+atomically supersedes the previous current version. Content in `approved`,
+`current`, and `superseded` versions is immutable. A later change creates a new
+proposal version, preserving all earlier versions and their items unchanged.
+Completed-workout history is not rewritten by version changes. Task 13 records
+the lifecycle/audit metadata; full instructor profile, exercise catalog, AI
+generation, and completed-workout workflows remain future tasks.
+
 ## DEC-18 — Health-data storage, access, and audit evidence
 
 **Status:** partially approved — 2026-09-21
