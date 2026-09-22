@@ -11,22 +11,27 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
 })
 
-test('renders a sign-in action without a session', () => {
+test('redirects an unauthenticated visitor directly to Keycloak login', async () => {
+  const startLogin = vi.spyOn(OidcSessionClient.prototype, 'startLogin').mockResolvedValue()
   render(<App />)
 
   expect(screen.getByRole('heading', { name: 'Academia Inteligente' })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+  expect(await screen.findByText('Redirecionando para o login')).toBeInTheDocument()
+  expect(startLogin).toHaveBeenCalledOnce()
 })
 
-test('shows an unauthenticated state for a protected route without a session', () => {
+test('redirects an unauthenticated protected route directly to Keycloak login', async () => {
+  const startLogin = vi.spyOn(OidcSessionClient.prototype, 'startLogin').mockResolvedValue()
   window.history.replaceState({}, '', '/dashboard')
 
   render(<App />)
 
-  expect(screen.getByText('Sessão necessária para acessar esta página.')).toBeInTheDocument()
+  expect(await screen.findByText('Redirecionando para o login')).toBeInTheDocument()
+  expect(startLogin).toHaveBeenCalledOnce()
 })
 
 test('stores a usable session after a valid OIDC callback', async () => {
@@ -125,6 +130,7 @@ test('shows administrative navigation and page to an administrator', () => {
 })
 
 test('returns to the sign-in state when the client API rejects a stale session', async () => {
+  const startLogin = vi.spyOn(OidcSessionClient.prototype, 'startLogin').mockResolvedValue()
   sessionStorage.setItem(
     'academia.session',
     JSON.stringify({ accessToken: 'stale-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['admin'] }),
@@ -137,7 +143,8 @@ test('returns to the sign-in state when the client API rejects a stale session',
 
   render(<App />)
 
-  expect(await screen.findByText('Sessão necessária para acessar esta página.')).toBeInTheDocument()
+  expect(await screen.findByText('Redirecionando para o login')).toBeInTheDocument()
+  expect(startLogin).toHaveBeenCalledOnce()
   expect(sessionStorage.getItem('academia.session')).toBeNull()
 })
 

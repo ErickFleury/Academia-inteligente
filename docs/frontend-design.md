@@ -67,9 +67,10 @@ palette, or page composition.
 
 ## Layout and interaction
 
-- **Public/entry:** A bold but simple brand header, concise orientation, and
-  unmistakable primary sign-in action. Auth callback, expired session,
-  unauthorized route, loading, and error states belong to the same system.
+- **Public/entry:** An unauthenticated route redirects directly to the Keycloak
+  sign-in flow; it does not render a separate welcome/entry screen. Auth
+  callback, redirecting, expired-session, unauthorized-route, loading, and
+  error states belong to the same system. A controlled error may offer retry.
   The Keycloak-hosted credential page is outside the React presentation scope,
   but login and first-access screens shown to users must still be in Portuguese.
   Prefer supported locale configuration; a custom theme, if needed, requires a

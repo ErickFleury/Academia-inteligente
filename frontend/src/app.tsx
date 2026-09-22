@@ -12,27 +12,12 @@ import { CurrentTrainingPage } from './current-training-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
-function SignInEntry({ message, onSignIn }: { message?: string; onSignIn: () => void }) {
-  return (
-    <PublicShell>
-      <Stack spacing={3} sx={{ maxWidth: 650, py: { xs: 2, sm: 5 } }}>
-        <Typography color="primary.main" variant="overline">Plataforma de gestão e treino</Typography>
-        <Typography component="h2" variant="h1">Seu ritmo. Sua evolução.</Typography>
-        <Typography color="text.secondary" sx={{ fontSize: { xs: '1rem', sm: '1.125rem' }, maxWidth: 540 }}>
-          Acesse sua área ou as operações administrativas com uma sessão segura.
-        </Typography>
-        {message && <StatusNotice severity="info">{message}</StatusNotice>}
-        <Box><Button onClick={onSignIn} size="large" variant="contained">Entrar</Button></Box>
-      </Stack>
-    </PublicShell>
-  )
-}
-
 export function App() {
   const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
   const loginCompletionStarted = useRef(false)
+  const loginRedirectStarted = useRef(false)
 
   useEffect(() => {
     if (!new URL(window.location.href).searchParams.has('code') || loginCompletionStarted.current) return
@@ -44,6 +29,21 @@ export function App() {
       .catch(() => setAuthenticationError('Não foi possível iniciar a sessão. Tente novamente.'))
       .finally(() => setCompletingLogin(false))
   }, [])
+
+  useEffect(() => {
+    if (
+      session
+      || completingLogin
+      || authenticationError
+      || new URL(window.location.href).searchParams.has('code')
+      || loginRedirectStarted.current
+    ) return
+    loginRedirectStarted.current = true
+    void oidcSessionClient.startLogin().catch(() => {
+      loginRedirectStarted.current = false
+      setAuthenticationError('Não foi possível abrir o login. Tente novamente.')
+    })
+  }, [authenticationError, completingLogin, session])
 
   useEffect(() => {
     let refreshing = false
@@ -89,7 +89,6 @@ export function App() {
     }
   }, [])
 
-  const isProtectedRoute = window.location.pathname === '/dashboard'
   const isAdministrativeRoute = window.location.pathname === '/admin'
   const isOnboardingRoute = window.location.pathname === '/onboarding'
   const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
@@ -123,18 +122,14 @@ export function App() {
         <Stack spacing={3} sx={{ maxWidth: 650, py: { xs: 2, sm: 5 } }}>
           <Typography component="h1" variant="h2">Não foi possível entrar</Typography>
           <Alert severity="error" variant="outlined">{authenticationError}</Alert>
-          <Box><Button onClick={() => void oidcSessionClient.startLogin()} variant="contained">Tentar novamente</Button></Box>
+          <Box><Button onClick={() => setAuthenticationError(null)} variant="contained">Tentar novamente</Button></Box>
         </Stack>
       </PublicShell>
     )
   }
 
-  if ((isProtectedRoute || isAdministrativeRoute) && !session) {
-    return <SignInEntry message="Sessão necessária para acessar esta página." onSignIn={() => void oidcSessionClient.startLogin()} />
-  }
-
-  if (isClientRoute && !session) {
-    return <SignInEntry message="Entre para acessar sua área de treino." onSignIn={() => void oidcSessionClient.startLogin()} />
+  if (!session) {
+    return <PublicShell><LoadingState label="Redirecionando para o login" /></PublicShell>
   }
 
   if (isClientRoute && !session?.roles.includes('client')) {
@@ -209,5 +204,5 @@ export function App() {
     )
   }
 
-  return <SignInEntry onSignIn={() => void oidcSessionClient.startLogin()} />
+  return null
 }
