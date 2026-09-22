@@ -145,6 +145,13 @@ and future employees are provisioned by an authorized employee-management flow.
   relationship. Client-domain data belongs to Client, not Account.
 - Credentials remain exclusively in Keycloak. PostgreSQL stores no password,
   temporary password, required-action token, or authentication secret.
+- Keycloak-hosted login, first-access, password, informational, and related
+  authentication pages use the repository-managed `academia` login theme. They
+  remain server-rendered by Keycloak and follow the shared visual, responsive,
+  accessibility, and `pt-BR` conventions in `docs/frontend-design.md`; this
+  does not move credential handling into the React application. **Origin:**
+  approved implementation decision — `docs/decisions.md` DEC-03 Keycloak
+  login-theme amendment.
 - An active browser session renews OIDC access tokens with refresh-token
   rotation only while activity continues. Five consecutive minutes without
   browser activity ends the session. Tokens are kept only in browser
@@ -1132,6 +1139,7 @@ unchecked boxes or planned files.
 | Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
 | Frontend design system and existing UI restyle | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 08: shared MUI theme, shells, and restyle; preserves Tasks 01–07 behavior. |
+| Keycloak authentication theme | Cross-cutting UI integration | Implemented | DEC-03; `docs/frontend-design.md` | Repository-managed `academia` theme is selected by the managed realm and supplied through Docker Compose; Keycloak continues to own credentials and OIDC flows. |
 | RF-10 | Original MVP | Implemented | DEC-06 | Task 09: secure client-scoped invitation validation and intentional redemption. |
 | RF-11/RF-12 | Original MVP | Implemented | DEC-06/DEC-18 | Task 10: client-scoped structured draft, physical/health validation, separate persistence, and non-sensitive audit evidence. |
 | RF-13 | Original MVP | Implemented | DEC-06 | Task 12: shared authoritative validation, intentional atomic completion timestamp, and a downstream completed-onboarding contract. |

@@ -90,7 +90,9 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
+      - keycloak_data:/opt/keycloak/data
       - ./backend/app/modules/identity/keycloak/realm-academia.json:/opt/keycloak/data/import/realm-academia.json:ro
+      - ./keycloak/themes/academia:/opt/keycloak/themes/academia:ro
 
   mailpit:
     image: axllent/mailpit:v1.30.7
@@ -138,4 +140,5 @@ services:
 volumes:
   frontend_node_modules:
   postgres_data:
+  keycloak_data:
   ollama_data:

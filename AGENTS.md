@@ -46,6 +46,9 @@ Do not introduce major technologies or architectural changes without approval.
 must reuse the established MUI theme, shared components, and client/admin
 shells, maintaining consistent responsive and accessible behavior. Add a new
 shared pattern only when existing components cannot express the needed UI.
+Keycloak-hosted authentication pages use the repository-managed `academia`
+theme and must follow the same design document; do not introduce a separate
+authentication visual language or move credential handling into React.
 All application-controlled text users see in public, client, and admin UI must
 be in Brazilian Portuguese (`pt-BR`), including accessible labels, feedback,
 and in-app AI responses. Familiar technical/gym terms may remain in English.

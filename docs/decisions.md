@@ -7,6 +7,22 @@
 The MVP uses a modular-monolith architecture. Authentication is provided by
 Keycloak through OIDC.
 
+### Keycloak login-theme amendment — 2026-09-22
+
+Keycloak uses the repository-managed `academia` login theme for the
+user-facing authentication experience. The theme is mounted into the Keycloak
+container by Docker Compose and selected by the managed `academia` realm, so a
+clean local deployment does not require an admin-console theme selection. It
+follows `docs/frontend-design.md`, including Portuguese copy, responsive
+behavior, accessible focus/error states, and the application's visual tokens.
+It extends the supported Keycloak `keycloak.v2` login theme through resources
+and CSS rather than replacing authentication templates unnecessarily.
+
+This is presentation/deployment integration only: Keycloak continues to own
+credentials, required actions, errors, sessions, and OIDC behavior. It does
+not alter roles, provisioning, account activity, PKCE, redirect URIs, or token
+handling.
+
 | Area | Approved decision |
 | --- | --- |
 | Main architecture | Modular monolith |

@@ -1,7 +1,12 @@
 {
   "realm": "academia",
+  "displayName": "Academia Inteligente",
   "enabled": true,
   "registrationAllowed": false,
+  "loginTheme": "academia",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["pt-BR"],
+  "defaultLocale": "pt-BR",
   "ssoSessionIdleTimeout": 300,
   "clientSessionIdleTimeout": 300,
   "smtpServer": {

@@ -71,10 +71,21 @@ palette, or page composition.
   sign-in flow; it does not render a separate welcome/entry screen. Auth
   callback, redirecting, expired-session, unauthorized-route, loading, and
   error states belong to the same system. A controlled error may offer retry.
-  The Keycloak-hosted credential page is outside the React presentation scope,
-  but login and first-access screens shown to users must still be in Portuguese.
-  Prefer supported locale configuration; a custom theme, if needed, requires a
-  separately scoped integration task.
+  React only starts the OIDC redirect; it never renders or receives credentials.
+  Keycloak-hosted credential, first-access, password-reset, informational, and
+  logout pages are part of the application experience and use the
+  repository-managed `academia` login theme at
+  `keycloak/themes/academia/login`. The theme extends `keycloak.v2` and favors
+  CSS/resources over template overrides, preserving Keycloak form semantics,
+  required actions, and accessible error associations. It uses the same
+  ink/chalk/coral tokens, system-compatible typography, 8 px-derived spacing,
+  surfaces, input/button hierarchy, visible focus treatment, and pt-BR
+  localization as the React application. Its branding is Academia Inteligente,
+  never Keycloak implementation terminology. The theme is mounted by Docker
+  Compose and selected by the managed realm configuration, so it must work on a
+  clean deployment without an admin-console change. Verify it on phone,
+  tablet, and desktop; decorative backgrounds may not obscure forms or cause
+  horizontal scrolling.
 - **ClientShell:** Reusable authenticated navigation, page header, main action,
   content width, responsive sections, and feedback. On phone, prioritize the
   current client action and touch navigation instead of shrinking desktop
@@ -130,3 +141,8 @@ pieces; a genuinely new pattern should be added to the shared system with its
 states documented here. Task 18 performs a final MVP visual/accessibility
 pass after the major screens are implemented; Task 19 verifies the integrated
 MVP. Design work alone does not satisfy RF/CA or formal RNF criteria.
+
+The Keycloak `academia` theme is a later, cross-cutting authentication
+presentation integration. It does not retroactively change Task 08 or the
+authentication/provisioning task scopes, and it must preserve the existing OIDC
+and Keycloak security behavior.

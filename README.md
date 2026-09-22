@@ -19,6 +19,17 @@ registration/search, and Keycloak-provisioned client first access.
    `http://localhost:8000/health`, API OpenAPI at `http://localhost:8000/docs`,
    Keycloak at `http://localhost:8080`, and Mailpit at `http://localhost:8025`.
 
+The Keycloak login and first-access screens use the repository-managed
+`academia` theme from `keycloak/themes/academia`. Docker Compose mounts it into
+the Keycloak container and the managed realm selects it. Its `/opt/keycloak/data`
+directory is backed by the `keycloak_data` Docker volume, preserving provisioned
+identities and realm state across normal container recreation. After changing theme
+resources, recreate Keycloak with
+`docker compose up -d --force-recreate keycloak`; a pre-existing realm is not
+overwritten by `--import-realm`, so set the realm's Login theme to `academia`
+once in the local admin console or recreate the local Keycloak realm/volume if
+you need its imported settings reapplied.
+
 Use the `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` values from `.env` to
 sign in to the application. `KEYCLOAK_ADMIN` credentials are only for the
 Keycloak administration console. The frontend origin must be listed in

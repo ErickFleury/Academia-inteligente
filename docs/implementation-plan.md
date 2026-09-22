@@ -17,9 +17,11 @@ EXT-RF-LANG-01 is an approved cross-cutting `pt-BR` user-interface requirement
 for existing, MVP, and later screens; implementation docs and prompts remain
 English. All future UI tasks inherit it through `AGENTS.md` and
 `docs/frontend-design.md`; Task 18 audits MVP coverage and Task 19 verifies it.
-If supported Keycloak locale configuration cannot meet the user-facing login
-and first-access criteria, a separately scoped integration task is needed
-before Task 19 can report EXT-CA-LANG-01.4 as passed.
+The repository-managed Keycloak `academia` theme now provides the shared visual
+and Portuguese presentation for login and first-access screens. It is a
+cross-cutting authentication presentation integration, not a retroactive change
+to the historical scopes of Tasks 02, 06, or 08. Task 19 still verifies the
+integrated EXT-CA-LANG-01.4 journey.
 
 The approved architecture remains a React/TypeScript/Vite/MUI frontend,
 Python/FastAPI modular monolith, PostgreSQL with SQLAlchemy/Alembic, Keycloak
@@ -58,6 +60,8 @@ browser-provided client ID as proof of ownership.
 3. **Visual foundation (Task 08, completed):** shared MUI theme, primitives,
    ClientShell/AdminShell, and retroactive restyling of frontend work from
    completed Tasks 01–07; no change to their historical business scope.
+   The later Keycloak `academia` theme extends this visual system to the
+   server-rendered authentication experience without changing its OIDC flow.
 4. **Onboarding (Tasks 07 and 09–12 completed):**
    invitation, secure form access, authoritative structured health data,
    conversational AI orchestration, and shared completion using Task 08 UI
