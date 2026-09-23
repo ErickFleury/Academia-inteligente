@@ -81,12 +81,12 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
   }
 
   if (!conversation) {
-    return <ClientShell onSignOut={onSignOut}><LoadingState label="Carregando conversa de onboarding" /></ClientShell>
+    return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando conversa de onboarding" /></ClientShell>
   }
 
   const missing = conversation.missing_required_fields.map((field) => fieldLabels[field] ?? field)
   return (
-    <ClientShell onSignOut={onSignOut}>
+    <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={3} sx={{ maxWidth: 880 }}>
         <PageHeader
           action={<Button component="a" href="/onboarding" variant="outlined">Preencher formulário</Button>}

@@ -39,18 +39,35 @@ export const theme = createTheme({
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
-        root: { minHeight: 44, borderRadius: 10, paddingInline: 20 },
+        root: {
+          minHeight: 44,
+          borderRadius: 10,
+          paddingInline: 20,
+          '&.Mui-disabled': { color: alpha(chalk, 0.46) },
+        },
         outlined: { borderColor: alpha(chalk, 0.35), '&:hover': { borderColor: coral, backgroundColor: alpha(coral, 0.08) } },
       },
     },
     MuiTextField: { defaultProps: { variant: 'outlined', size: 'medium' } },
     MuiOutlinedInput: {
       styleOverrides: {
-        root: { backgroundColor: alpha(chalk, 0.035), '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#90CBE9' } },
+        root: {
+          backgroundColor: alpha(chalk, 0.035),
+          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#90CBE9' },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderWidth: 2 },
+        },
       },
     },
+    MuiFormHelperText: { styleOverrides: { root: { marginInline: 0, lineHeight: 1.35 } } },
     MuiCard: {
-      styleOverrides: { root: { border: `1px solid ${alpha(chalk, 0.13)}`, boxShadow: 'none', backgroundImage: 'none' } },
+      styleOverrides: {
+        root: {
+          border: `1px solid ${alpha(chalk, 0.13)}`,
+          borderRadius: 16,
+          boxShadow: 'none',
+          backgroundImage: 'none',
+        },
+      },
     },
     MuiAlert: { styleOverrides: { root: { alignItems: 'center', borderRadius: 10 } } },
     MuiChip: { styleOverrides: { root: { fontWeight: 750, borderRadius: 8 } } },

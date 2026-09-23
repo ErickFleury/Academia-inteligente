@@ -52,6 +52,10 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
       onUnauthenticated()
       return 'Sua sessão expirou. Entre novamente.'
     }
+    if (reason instanceof ApiRequestError && reason.message === 'An account already uses this e-mail address') {
+      return 'Já existe uma conta com este e-mail.'
+    }
+    if (reason instanceof ApiRequestError) return fallback
     return reason instanceof Error ? reason.message : fallback
   }
 
@@ -187,7 +191,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
         </CardContent>
       </Card>
 
-      <Stack component="section" spacing={1.5} aria-label="Resultados de clientes">
+      <Stack aria-busy={loading} component="section" spacing={1.5} aria-label="Resultados de clientes">
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between' }}>
           <Typography component="h2" variant="h3">Clientes cadastrados</Typography>
           {!loading && <Typography color="text.secondary" variant="body2">{clients.length} {clients.length === 1 ? 'resultado' : 'resultados'}</Typography>}
@@ -201,14 +205,14 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
                     aria-label={`${client.name} — ${client.email} (${accountStatus(client)})`}
                     color="inherit"
                     onClick={() => void handleSelect(client.id)}
-                    sx={{ alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5, textAlign: 'left', width: '100%' }}
+                    sx={{ alignItems: 'center', gap: 1.5, justifyContent: 'space-between', px: 2, py: 1.5, textAlign: 'left', width: '100%' }}
                     variant="text"
                   >
                     <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                      <Typography noWrap sx={{ color: 'text.primary', fontWeight: 750 }}>{client.name} — {client.email} ({accountStatus(client)})</Typography>
+                      <Typography sx={{ color: 'text.primary', fontWeight: 750, overflowWrap: 'anywhere' }}>{client.name} — {client.email}</Typography>
                       <Typography color="text.secondary" variant="body2">Selecionar para consultar ou editar</Typography>
                     </Stack>
-                    <Chip color={client.account_active ? 'success' : 'default'} label={accountStatus(client)} size="small" sx={{ ml: 2 }} />
+                    <Chip color={client.account_active ? 'success' : 'default'} label={accountStatus(client)} size="small" />
                   </Button>
                 </Card>
               </Box>

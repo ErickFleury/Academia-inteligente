@@ -203,10 +203,10 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
     }
   }
 
-  if (loading) return <ClientShell onSignOut={onSignOut}><LoadingState label="Carregando seu onboarding" /></ClientShell>
+  if (loading) return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando seu onboarding" /></ClientShell>
 
   return (
-    <ClientShell onSignOut={onSignOut}>
+    <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={3} sx={{ maxWidth: 840 }}>
         <PageHeader
           action={<Button component="a" href="/onboarding/conversa" variant="outlined">Responder por conversa</Button>}

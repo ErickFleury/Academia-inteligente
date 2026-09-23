@@ -1,7 +1,13 @@
 import { AppBar, Box, Button, Container, Stack, Toolbar, Typography } from '@mui/material'
-import type { ReactNode } from 'react'
+import { createContext, useContext, type ReactNode } from 'react'
 
 type ShellProps = { children: ReactNode; onSignOut?: () => void }
+
+const OnboardingNavigationContext = createContext<boolean | null>(null)
+
+export function ClientNavigationStateProvider({ children, onboardingComplete }: { children: ReactNode; onboardingComplete: boolean | null }) {
+  return <OnboardingNavigationContext.Provider value={onboardingComplete}>{children}</OnboardingNavigationContext.Provider>
+}
 
 function Brand({ heading = false }: { heading?: boolean }) {
   return (
@@ -12,7 +18,30 @@ function Brand({ heading = false }: { heading?: boolean }) {
   )
 }
 
-function BaseShell({ children, onSignOut, area }: ShellProps & { area: string }) {
+function ClientNavigation() {
+  const currentPath = window.location.pathname
+  const onboardingComplete = useContext(OnboardingNavigationContext)
+  const links = [
+    { href: '/', label: 'Início' },
+    ...(onboardingComplete === false ? [{ href: '/onboarding', label: 'Onboarding' }] : []),
+    { href: '/treino', label: 'Meu treino' },
+    { href: '/assistente', label: 'Assistente' },
+  ]
+  return (
+    <Box component="nav" aria-label="Navegação da área do cliente" sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 }, py: 1 }}>
+        <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', rowGap: 0.5 }} useFlexGap>
+          {links.map((link) => {
+            const active = currentPath === link.href || (link.href === '/' && currentPath === '/dashboard')
+            return <Button aria-current={active ? 'page' : undefined} color={active ? 'primary' : 'inherit'} component="a" href={link.href} key={link.href} size="small" variant={active ? 'contained' : 'text'}>{link.label}</Button>
+          })}
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+function BaseShell({ children, onSignOut, area, navigation }: ShellProps & { area: string; navigation?: ReactNode }) {
   return (
     <Box sx={{ minHeight: '100vh', background: 'linear-gradient(160deg, #10181B 0%, #162427 52%, #10181B 100%)' }}>
       <AppBar color="transparent" elevation={0} position="sticky" sx={{ backdropFilter: 'blur(14px)', borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -22,6 +51,7 @@ function BaseShell({ children, onSignOut, area }: ShellProps & { area: string })
           <Box sx={{ flexGrow: 1 }} />
           {onSignOut && <Button color="inherit" onClick={onSignOut}>Sair</Button>}
         </Toolbar>
+        {navigation}
       </AppBar>
       <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>{children}</Container>
     </Box>
@@ -43,6 +73,6 @@ export function AdminShell({ children, onSignOut }: ShellProps) {
   return <BaseShell area="Administração" onSignOut={onSignOut}>{children}</BaseShell>
 }
 
-export function ClientShell({ children, onSignOut }: ShellProps) {
-  return <BaseShell area="Área do cliente" onSignOut={onSignOut}>{children}</BaseShell>
+export function ClientShell({ children, onSignOut, showClientNavigation = false }: ShellProps & { showClientNavigation?: boolean }) {
+  return <BaseShell area="Área do cliente" navigation={showClientNavigation ? <ClientNavigation /> : undefined} onSignOut={onSignOut}>{children}</BaseShell>
 }

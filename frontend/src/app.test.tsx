@@ -104,7 +104,9 @@ test('opens the current training page only for an authenticated client', async (
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
   window.history.replaceState({}, '', '/treino')
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ plan: null }) }))
+  vi.stubGlobal('fetch', vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ plan: null }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => [] }))
 
   render(<App />)
 
@@ -121,8 +123,30 @@ test('does not show onboarding form navigation after the client completes onboar
 
   render(<App />)
 
-  await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Preencher onboarding' })).not.toBeInTheDocument())
-  expect(screen.queryByText('onboarding', { exact: false })).not.toBeInTheDocument()
+  await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Onboarding' })).not.toBeInTheDocument())
+  expect(screen.queryByRole('link', { name: 'Preencher onboarding' })).not.toBeInTheDocument()
+})
+
+test('keeps onboarding navigation hidden on client routes after onboarding completion', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/treino')
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) {
+      return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    }
+    if (url.endsWith('/training/current')) {
+      return Promise.resolve({ ok: true, json: async () => ({ plan: null }) })
+    }
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Meu treino' })).toBeInTheDocument()
+  await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Onboarding' })).not.toBeInTheDocument())
 })
 
 test('shows onboarding form navigation for a client with a draft', async () => {
@@ -135,6 +159,8 @@ test('shows onboarding form navigation for a client with a draft', async () => {
   render(<App />)
 
   expect(await screen.findByRole('link', { name: 'Preencher onboarding' })).toHaveAttribute('href', '/onboarding')
+  expect(screen.getByRole('navigation', { name: 'Navegação da área do cliente' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('shows administrative navigation and page to an administrator', () => {

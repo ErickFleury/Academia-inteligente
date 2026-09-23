@@ -66,9 +66,9 @@ browser-provided client ID as proof of ownership.
    invitation, secure form access, authoritative structured health data,
    conversational AI orchestration, and shared completion using Task 08 UI
    foundations.
-5. **Training and client AI (Tasks 13–17, future):** version lifecycle, initial
+5. **Training and client AI (Tasks 13–17, completed):** version lifecycle, initial
    generation, mobile personal plan, client-facing chat, approved adaptation.
-6. **MVP visual polish (Task 18, future):** consistency, responsiveness,
+6. **MVP visual polish (Task 18, completed):** consistency, responsiveness,
    loading/empty/error states, copy, and accessibility after major MVP UI.
 7. **MVP verification (Task 19, future):** original MVP plus EXT-RF-AI-01,
    including client identity and cross-client isolation.
@@ -127,7 +127,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | Completed | Mobile own-current-plan/exercise view with empty/loading/error states |
 | 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed + follow-up | Client-only 30-day persisted assistant; may refine only the single active AI initial draft through validated structured output |
 | 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | Completed | AI-detected, client-confirmed structured proposals, instructor review, immutable current version, history preserved |
-| 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | MVP visual polish | Final consistency, responsive, accessibility pass |
+| 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | Completed | Shared consistency, responsive, accessibility, loading/empty/error, and pt-BR copy pass; Task 19 retains end-to-end verification. |
 | 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |
 | 20 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06, 08; EXT-DEC-SOC-01 | Post-MVP extension | Author-owned private/shared updates |
 | 21 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06, 08; EXT-DEC-EQP-01 | Original post-MVP + extension | Admin catalog and active total by type/model |
@@ -167,7 +167,7 @@ provisioning or its explicit reconciliation completed.
 - Every authenticated client task depends directly or transitively on Task 06
   and requires server-side identity resolution.
 - Every future UI task uses `docs/frontend-design.md` and Task 08 shared
-  foundations; Task 18 polishes the integrated MVP before Task 19 verifies it.
+  foundations; Task 18 has polished the integrated MVP before Task 19 verifies it.
 - Existing and future public, client, and admin UI must meet EXT-RF-LANG-01;
   Keycloak-hosted screens shown to users require Portuguese too. Historical
   completed task scope is not rewritten to claim this was already verified.
@@ -184,6 +184,6 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 18, MVP frontend visual polish, is next in dependency order. It evaluates
-the integrated client/admin experience after Tasks 01–17 without changing
+Task 19, MVP end-to-end verification, is next in dependency order. It verifies
+the integrated MVP after the Task 18 visual polish without changing established
 business behavior.

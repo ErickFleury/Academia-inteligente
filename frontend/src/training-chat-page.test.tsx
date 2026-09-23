@@ -31,7 +31,7 @@ test('sends a Portuguese client training-chat message with a frontend UUID', asy
   })
 })
 
-test('reuses its client request UUID for a retry and explains that chat cannot alter the plan', async () => {
+test('reuses its client request UUID for a retry and explains the draft-review boundary', async () => {
   const fetchMock = vi.fn()
     .mockResolvedValueOnce({ ok: true, json: async () => ({ messages: [] }) })
     .mockResolvedValueOnce({ ok: true, json: async () => [] })
@@ -43,7 +43,7 @@ test('reuses its client request UUID for a retry and explains that chat cannot a
 
   render(<TrainingChatPage accessToken="access-token" onSignOut={vi.fn()} />)
   await screen.findByText('Seu espaço para tirar dúvidas')
-  expect(screen.getByText('O assistente explica seu treino, mas não altera o seu plano.')).toBeInTheDocument()
+  expect(screen.getByText(/Seu plano atual só muda após revisão profissional/)).toBeInTheDocument()
   fireEvent.change(screen.getByLabelText('Escreva sua pergunta'), { target: { value: 'Troque meu exercício' } })
   fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
   expect(await screen.findByText('O assistente de treino está indisponível no momento. Tente novamente.')).toBeInTheDocument()

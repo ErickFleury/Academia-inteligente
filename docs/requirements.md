@@ -1196,7 +1196,7 @@ unchecked boxes or planned files.
 | RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
 | RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16 plus follow-up: client-only persisted training chat, bounded own-context, idempotency, controlled failures, and narrow validated refinement of its sole active AI draft only. |
 | RF-19 | Original MVP | Implemented | DEC-07/08/15 | Task 17: client-confirmed structured adaptation proposals, instructor review, immutable current-version transition, and preserved history. |
-| MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
+| MVP frontend polish | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 18: shared visual, responsive, loading/empty/error, pt-BR copy, and accessibility consistency pass; Task 19 retains end-to-end verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |
 | RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Planned | EXT-DEC-EQP-01 | Task 21. |

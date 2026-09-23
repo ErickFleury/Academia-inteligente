@@ -1,7 +1,7 @@
 import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 
-import { AdminShell, ClientShell, PublicShell } from './components/application-shell'
+import { AdminShell, ClientNavigationStateProvider, ClientShell, PublicShell } from './components/application-shell'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
 import { ClientManagement } from './client-management'
@@ -35,8 +35,7 @@ export function App() {
   }, [])
 
   useEffect(() => {
-    const isClientHome = window.location.pathname === '/' || window.location.pathname === '/dashboard'
-    if (!session?.roles.includes('client') || !isClientHome) {
+    if (!session?.roles.includes('client')) {
       setOnboardingComplete(null)
       return
     }
@@ -155,19 +154,23 @@ export function App() {
 
   if (isClientRoute && !session?.roles.includes('client')) {
     return (
-      <ClientShell onSignOut={endSession}>
-        <PageHeader eyebrow="Acesso protegido" title="Área do cliente indisponível" />
-        <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta área.</Alert>
-      </ClientShell>
+      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
+        <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
+          <PageHeader eyebrow="Acesso protegido" title="Área do cliente indisponível" />
+          <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta área.</Alert>
+        </ClientShell>
+      </ClientNavigationStateProvider>
     )
   }
 
   if (isInstructorAdaptationsRoute && !isInstructor) {
     return (
-      <ClientShell onSignOut={endSession}>
-        <PageHeader eyebrow="Acesso protegido" title="Área do instrutor indisponível" />
-        <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta página.</Alert>
-      </ClientShell>
+      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
+        <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
+          <PageHeader eyebrow="Acesso protegido" title="Área do instrutor indisponível" />
+          <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta página.</Alert>
+        </ClientShell>
+      </ClientNavigationStateProvider>
     )
   }
 
@@ -176,27 +179,29 @@ export function App() {
   }
 
   if (isOnboardingConversationRoute && session) {
-    return <OnboardingConversationPage accessToken={session.accessToken} onSignOut={endSession} />
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OnboardingConversationPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isOnboardingRoute && session) {
-    return <OnboardingForm accessToken={session.accessToken} onSignOut={endSession} />
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OnboardingForm accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isCurrentTrainingRoute && session) {
-    return <CurrentTrainingPage accessToken={session.accessToken} onSignOut={endSession} />
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><CurrentTrainingPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isTrainingChatRoute && session) {
-    return <TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} />
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isAdministrativeRoute && !isAdministrator) {
     return (
-      <ClientShell onSignOut={endSession}>
-        <PageHeader eyebrow="Acesso protegido" title="Área restrita" />
-        <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta página.</Alert>
-      </ClientShell>
+      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
+        <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
+          <PageHeader eyebrow="Acesso protegido" title="Área restrita" />
+          <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta página.</Alert>
+        </ClientShell>
+      </ClientNavigationStateProvider>
     )
   }
 
@@ -218,7 +223,8 @@ export function App() {
 
   if (session) {
     return (
-      <ClientShell onSignOut={endSession}>
+      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
+      <ClientShell onSignOut={endSession} showClientNavigation={!isAdministrator && session.roles.includes('client')}>
         <Stack spacing={3} sx={{ maxWidth: 760 }}>
           <PageHeader eyebrow="Sessão segura" title="Bem-vindo à Academia Inteligente" />
           <StatusNotice severity="success">Sessão autenticada.</StatusNotice>
@@ -240,6 +246,7 @@ export function App() {
           </Card>
         </Stack>
       </ClientShell>
+      </ClientNavigationStateProvider>
     )
   }
 

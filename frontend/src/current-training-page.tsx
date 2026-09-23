@@ -49,11 +49,11 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
   }
 
   if (plan === undefined) {
-    return <ClientShell onSignOut={onSignOut}><LoadingState label="Carregando seu treino" /></ClientShell>
+    return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando seu treino" /></ClientShell>
   }
 
   return (
-    <ClientShell onSignOut={onSignOut}>
+    <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={{ xs: 2.5, sm: 3 }} sx={{ maxWidth: 860, minWidth: 0 }}>
         <PageHeader
           action={<Button component="a" href="/assistente" variant="outlined">Assistente de treino</Button>}
@@ -121,12 +121,12 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                   <Typography color="warning.main" variant="overline">Rascunho — ainda não aprovado</Typography>
                   <Chip color="warning" label="Aguardando instrutor" size="small" />
                 </Stack>
-                <Typography component="h2" variant="h3">{draft.name}</Typography>
-                <Typography color="text.secondary">{draft.objective}</Typography>
+                <Typography component="h2" sx={{ overflowWrap: 'anywhere' }} variant="h3">{draft.name}</Typography>
+                <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{draft.objective}</Typography>
                 <StatusNotice severity="info">Este é apenas um rascunho. Seu instrutor precisa revisar, aprovar e ativar a ficha antes que ela se torne seu treino atual.</StatusNotice>
                 <Stack divider={<Divider flexItem />} spacing={0}>
                   {draft.items.map((item) => <Box component="article" key={item.position} sx={{ minWidth: 0, py: 1.5 }}>
-                    <Typography component="h3" variant="h4">{item.position}. {item.exercise_name}</Typography>
+                    <Typography component="h3" sx={{ overflowWrap: 'anywhere' }} variant="h4">{item.position}. {item.exercise_name}</Typography>
                     <Typography color="text.secondary" variant="body2">{item.sets} séries · {item.repetitions} repetições · {restLabel(item.rest_seconds)}</Typography>
                     <Typography color="text.secondary" variant="body2">{item.load_guidance}</Typography>
                   </Box>)}

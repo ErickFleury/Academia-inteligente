@@ -55,10 +55,11 @@ test('creates a client and refreshes the administrative list', async () => {
     method: 'POST',
     headers: { Authorization: 'Bearer admin-token' },
   })
-  expect(screen.getByText('Ada Lovelace — ada@example.test (Ativo)')).toBeInTheDocument()
+  expect(screen.getByText('Ada Lovelace — ada@example.test')).toBeInTheDocument()
+  expect(screen.getByText('Ativo')).toBeInTheDocument()
 })
 
-test('searches by name or e-mail and shows an API validation message', async () => {
+test('searches by name or e-mail and shows a Portuguese API validation message', async () => {
   const fetchMock = vi
     .fn()
     .mockResolvedValueOnce({ ok: true, json: async () => [] })
@@ -87,7 +88,7 @@ test('searches by name or e-mail and shows an API validation message', async () 
   })
   fireEvent.click(screen.getByRole('button', { name: 'Pesquisar' }))
 
-  expect(await screen.findByText('Grace Hopper — grace@example.test (Ativo)')).toBeInTheDocument()
+  expect(await screen.findByText('Grace Hopper — grace@example.test')).toBeInTheDocument()
   expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8000/clients?query=grace%40example')
   fireEvent.change(screen.getByRole('textbox', { name: /^e-mail/i }), {
     target: { value: 'duplicate@example.test' },
@@ -97,7 +98,7 @@ test('searches by name or e-mail and shows an API validation message', async () 
   })
   fireEvent.click(screen.getByRole('button', { name: 'Cadastrar cliente' }))
 
-  expect(await screen.findByText('An account already uses this e-mail address')).toBeInTheDocument()
+  expect(await screen.findByText('Já existe uma conta com este e-mail.')).toBeInTheDocument()
 })
 
 test('updates a selected client profile and deactivates its application account', async () => {
@@ -137,7 +138,8 @@ test('updates a selected client profile and deactivates its application account'
     email: 'ada@example.test',
     account_active: false,
   })
-  expect(screen.getByText('Ada Byron — ada@example.test (Inativo)')).toBeInTheDocument()
+  expect(screen.getByText('Ada Byron — ada@example.test')).toBeInTheDocument()
+  expect(screen.getByText('Inativo')).toBeInTheDocument()
 })
 
 test('offers identity reconciliation for a legacy client', async () => {

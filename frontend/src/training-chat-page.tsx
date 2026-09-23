@@ -58,12 +58,12 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível revisar a proposta.') }
   }
 
-  if (!chat || hasCurrentPlan === null) return <ClientShell onSignOut={onSignOut}><LoadingState label="Carregando assistente de treino" /></ClientShell>
+  if (!chat || hasCurrentPlan === null) return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando assistente de treino" /></ClientShell>
 
   const suggestions = chat.messages.filter((item) => item.role === 'assistant' && item.adaptation_suggested && item.reply_to_client_request_id && item.adaptation_reason)
 
   return (
-    <ClientShell onSignOut={onSignOut}>
+    <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={3} sx={{ maxWidth: 880, minWidth: 0 }}>
         <PageHeader
           action={<Button component="a" href="/treino" variant="outlined">Ver meu treino</Button>}
@@ -72,12 +72,12 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
           title="Como posso ajudar hoje?"
         />
         {error && <Stack spacing={1} sx={{ alignItems: 'flex-start' }}><StatusNotice severity="error">{error}</StatusNotice>{retry && <Button onClick={() => void submit(retry.message, retry.id)} variant="outlined">Tentar novamente</Button>}</Stack>}
-        <Stack aria-live="polite" spacing={1.5} sx={{ minHeight: 280 }}>
+        <Stack aria-live="polite" aria-relevant="additions" spacing={1.5} sx={{ minHeight: 280 }}>
           {chat.messages.length === 0
             ? <EmptyState description="Pergunte sobre os exercícios, séries, repetições ou orientações do seu treino atual." title="Seu espaço para tirar dúvidas" />
             : chat.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role}>{item.content}</ChatMessage>)}
         </Stack>
-        <Card component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ position: 'sticky', bottom: 16 }}>
+        <Card aria-busy={pending !== null} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} placeholder="Ex.: Como devo fazer este exercício?" value={message} />
@@ -100,7 +100,7 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
           <Typography color="text.secondary" variant="body2">Status: {proposal.status === 'proposed' ? 'Aguardando sua revisão' : proposal.status === 'pending_instructor_review' ? 'Aguardando revisão do instrutor' : proposal.status === 'client_rejected' ? 'Você recusou esta proposta' : proposal.status}</Typography>
           {proposal.status === 'proposed' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button onClick={() => void reviewProposal(proposal.id, true)} variant="contained">Aceitar para revisão profissional</Button><Button onClick={() => void reviewProposal(proposal.id, false)} variant="outlined">Recusar</Button></Stack>}
         </Stack></CardContent></Card>)}
-        <Box><StatusNotice severity="info">O assistente explica seu treino, mas não altera o seu plano.</StatusNotice></Box>
+        <Box><StatusNotice severity="info">O assistente explica seu treino e pode atualizar apenas o rascunho de IA em edição. Seu plano atual só muda após revisão profissional.</StatusNotice></Box>
       </Stack>
     </ClientShell>
   )
