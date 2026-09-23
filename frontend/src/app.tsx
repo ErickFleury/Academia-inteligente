@@ -13,6 +13,7 @@ import { CurrentTrainingPage } from './current-training-page'
 import { TrainingChatPage } from './training-chat-page'
 import { InstructorAdaptationsPage } from './instructor-adaptations-page'
 import { ProgressPage } from './progress-page'
+import { ProgressModerationPage } from './progress-moderation-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -108,6 +109,7 @@ export function App() {
   }, [])
 
   const isAdministrativeRoute = window.location.pathname === '/admin'
+  const isProgressModerationRoute = window.location.pathname === '/admin/publicacoes'
   const isOnboardingRoute = window.location.pathname === '/onboarding'
   const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
   const isCurrentTrainingRoute = window.location.pathname === '/treino'
@@ -200,7 +202,7 @@ export function App() {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><ProgressPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
-  if (isAdministrativeRoute && !isAdministrator) {
+  if ((isAdministrativeRoute || isProgressModerationRoute) && !isAdministrator) {
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
         <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
@@ -211,12 +213,16 @@ export function App() {
     )
   }
 
+  if (isProgressModerationRoute && session) {
+    return <ProgressModerationPage accessToken={session.accessToken} onSignOut={endSession} />
+  }
+
   if (isAdministrativeRoute && session) {
     return (
       <AdminShell onSignOut={endSession}>
         <Stack spacing={3}>
           <PageHeader
-            action={<Button component="a" href="/admin" variant="outlined">Administração</Button>}
+            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button component="a" href="/admin/publicacoes" variant="outlined">Moderar publicações</Button><Button component="a" href="/admin" variant="outlined">Administração</Button></Stack>}
             description="Cadastre, localize e acompanhe o estado de acesso dos clientes."
             eyebrow="Operação"
             title="Clientes"

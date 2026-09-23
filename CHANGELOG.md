@@ -4,6 +4,12 @@
 
 ### Changed
 
+- Added permanent administrator-led client-account erasure, removing the
+  linked Keycloak identity and all client-owned application records.
+- Added administrator controls to hide, restore, or tombstone shared progress
+  posts, including an optional moderation reason and an administration screen.
+- Correctly handle empty successful API responses when completing account
+  erasure.
 - Enforced one active training-plan draft per client, regardless of whether AI
   or an instructor created it.
 - Allowed the training AI to refine the client's sole draft while preserving

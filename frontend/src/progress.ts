@@ -11,4 +11,4 @@ export const getProgressFeed = (token: string) => request<ProgressUpdate[]>('/pr
 export const createProgressUpdate = (token: string, content: string, visibility: 'private' | 'shared') => request<ProgressUpdate>('/progress', token, { method: 'POST', body: JSON.stringify({ content, visibility }) })
 export const deleteProgressUpdate = (token: string, id: string) => request<void>(`/progress/${id}`, token, { method: 'DELETE' })
 export const getModerationUpdates = (token: string) => request<ProgressUpdate[]>('/progress/moderation/updates', token)
-export const moderateProgressUpdate = (token: string, id: string, action: 'hide' | 'restore', reason: string) => request<ProgressUpdate>(`/progress/moderation/updates/${id}`, token, { method: 'POST', body: JSON.stringify({ action, reason }) })
+export const moderateProgressUpdate = (token: string, id: string, action: 'hide' | 'restore' | 'delete', reason?: string) => request<ProgressUpdate>(`/progress/moderation/updates/${id}`, token, { method: 'POST', body: JSON.stringify({ action, reason }) })

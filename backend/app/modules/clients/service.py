@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, delete, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -15,6 +15,23 @@ from app.modules.identity.keycloak_admin import (
     KeycloakAdminClient,
     KeycloakIdentityConflictError,
     KeycloakProvisioningError,
+)
+from app.modules.onboarding.models import (
+    Onboarding,
+    OnboardingAiConversation,
+    OnboardingAiMessage,
+    OnboardingAuditEvent,
+    OnboardingInvitation,
+)
+from app.modules.progress.models import ProgressUpdate
+from app.modules.training.models import (
+    TrainingAdaptationOperation,
+    TrainingAdaptationProposal,
+    TrainingAiConversation,
+    TrainingAiMessage,
+    TrainingPlan,
+    TrainingPlanItem,
+    TrainingPlanVersion,
 )
 
 email_pattern = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -214,6 +231,77 @@ class ClientService:
             client.account.account_active = account_active
         self._commit_client(session)
         return summary_from_client(client)
+
+    def erase(self, session: Session, client_id: UUID) -> bool:
+        """Irreversibly erase the approved client's local and Keycloak identity data."""
+        client = self._client(session, client_id)
+        if client is None:
+            return False
+        subject = client.account.keycloak_subject
+        if subject:
+            self.provisioner.delete_identity(subject)
+        conversation_ids = select(OnboardingAiConversation.id).where(
+            OnboardingAiConversation.client_id == client.id
+        )
+        training_conversation_ids = select(TrainingAiConversation.id).where(
+            TrainingAiConversation.client_id == client.id
+        )
+        proposal_ids = select(TrainingAdaptationProposal.id).where(
+            TrainingAdaptationProposal.client_id == client.id
+        )
+        version_ids = select(TrainingPlanVersion.id).where(
+            TrainingPlanVersion.client_id == client.id
+        )
+        session.execute(
+            delete(OnboardingAiMessage).where(
+                OnboardingAiMessage.conversation_id.in_(conversation_ids)
+            )
+        )
+        session.execute(
+            delete(OnboardingAiConversation).where(OnboardingAiConversation.client_id == client.id)
+        )
+        session.execute(
+            delete(OnboardingAuditEvent).where(OnboardingAuditEvent.client_id == client.id)
+        )
+        session.execute(
+            delete(OnboardingInvitation).where(OnboardingInvitation.client_id == client.id)
+        )
+        session.execute(delete(Onboarding).where(Onboarding.client_id == client.id))
+        session.execute(
+            delete(TrainingAiMessage).where(
+                TrainingAiMessage.conversation_id.in_(training_conversation_ids)
+            )
+        )
+        session.execute(
+            delete(TrainingAiConversation).where(TrainingAiConversation.client_id == client.id)
+        )
+        session.execute(
+            delete(TrainingAdaptationOperation).where(
+                TrainingAdaptationOperation.proposal_id.in_(proposal_ids)
+            )
+        )
+        session.execute(
+            delete(TrainingAdaptationProposal).where(
+                TrainingAdaptationProposal.client_id == client.id
+            )
+        )
+        session.execute(
+            delete(TrainingPlanItem).where(TrainingPlanItem.version_id.in_(version_ids))
+        )
+        session.execute(
+            delete(TrainingPlanVersion).where(TrainingPlanVersion.client_id == client.id)
+        )
+        session.execute(delete(TrainingPlan).where(TrainingPlan.client_id == client.id))
+        session.execute(delete(ProgressUpdate).where(ProgressUpdate.client_id == client.id))
+        session.execute(
+            delete(ClientIdentityReconciliation).where(
+                ClientIdentityReconciliation.account_id == client.account.id
+            )
+        )
+        session.delete(client)
+        session.delete(client.account)
+        session.commit()
+        return True
 
     def _ensure_identity(self, session: Session, pending: ClientIdentityReconciliation) -> str:
         try:

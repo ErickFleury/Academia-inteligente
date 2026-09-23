@@ -24,12 +24,18 @@ class KeycloakIdentityConflictError(KeycloakProvisioningError):
     """A conflicting Keycloak identity already exists."""
 
 
+class KeycloakIdentityMissingError(KeycloakProvisioningError):
+    """The external identity was already removed."""
+
+
 class ClientIdentityProvisioner(Protocol):
     def ensure_client_identity(
         self, email: str, reconciliation_id: UUID, subject: str | None
     ) -> str: ...
 
     def update_email(self, subject: str, email: str) -> None: ...
+
+    def delete_identity(self, subject: str) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -94,6 +100,20 @@ class KeycloakAdminClient:
             {"username": email, "email": email},
             subject,
         )
+
+    def delete_identity(self, subject: str) -> None:
+        """Permanently remove a Keycloak user for the approved erasure workflow."""
+        token = self._access_token()
+        try:
+            self._request(
+                "DELETE",
+                f"/admin/realms/{self._config.realm}/users/{subject}",
+                token,
+                subject=subject,
+            )
+        except KeycloakIdentityMissingError:
+            # A stale external reference cannot retain access and is already erased.
+            return
 
     def _access_token(self) -> str:
         body = urlencode(
@@ -219,6 +239,10 @@ class KeycloakAdminClient:
                     return response.headers.get("Location", "")
                 content = response.read()
         except HTTPError as error:
+            if error.code == 404:
+                raise KeycloakIdentityMissingError(
+                    "Client identity is already absent", subject
+                ) from None
             if error.code == 409:
                 raise KeycloakIdentityConflictError(
                     "A conflicting Keycloak identity already exists", subject

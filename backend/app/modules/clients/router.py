@@ -15,6 +15,7 @@ from app.modules.clients.service import (
     DuplicateEmailError,
 )
 from app.modules.identity.authorization import require_roles
+from app.modules.identity.keycloak_admin import KeycloakProvisioningError
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
 
@@ -192,3 +193,18 @@ def update_client(
     if client is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
     return response_from_summary(client)
+
+
+@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+def erase_client(client_id: UUID, session: DatabaseSession, administrator: Administrator) -> None:
+    """Perform the approved irreversible privacy erasure for one client."""
+    del administrator
+    try:
+        erased = client_service.erase(session, client_id)
+    except KeycloakProvisioningError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Client identity erasure is temporarily unavailable",
+        ) from None
+    if not erased:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")

@@ -23,6 +23,7 @@ import {
   provisionClientIdentity,
   sendOnboardingInvitation,
   updateClient,
+  eraseClient,
 } from './clients'
 
 type ClientManagementProps = {
@@ -158,6 +159,16 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
     }
   }
 
+  async function handleErase() {
+    if (!selectedClient || !window.confirm(`Excluir permanentemente ${selectedClient.name} e todos os seus dados? Esta ação não pode ser desfeita.`)) return
+    try {
+      await eraseClient(accessToken, selectedClient.id)
+      setClients((items) => items.filter((item) => item.id !== selectedClient.id))
+      setSelectedClient(null)
+      setSuccess('Conta e dados do cliente excluídos permanentemente.')
+    } catch (reason) { setError(errorMessage(reason, 'Não foi possível excluir a conta do cliente.')) }
+  }
+
   return (
     <Stack spacing={3} sx={{ width: '100%' }}>
       <Stack aria-live="polite" spacing={1}>
@@ -242,6 +253,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: ClientManag
                 {selectedClient.identity_provisioned === false && <Button onClick={() => void handleProvisionIdentity()} variant="outlined">Provisionar acesso</Button>}
                 {selectedClient.identity_provisioned === true && selectedClient.account_active && <Button onClick={() => void handleSendOnboardingInvitation()} variant="outlined">Enviar convite de onboarding</Button>}
               </Stack>
+              <Button color="error" onClick={() => void handleErase()} variant="outlined">Excluir conta permanentemente</Button>
             </Stack>
           </CardContent>
         </Card>

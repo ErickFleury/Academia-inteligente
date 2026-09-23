@@ -38,7 +38,7 @@ async function request<T>(accessToken: string, path: string, init?: RequestInit)
     const body = (await response.json().catch(() => null)) as { detail?: string } | null
     throw new ApiRequestError(body?.detail || 'Não foi possível concluir a solicitação.', response.status)
   }
-  return response.json() as Promise<T>
+  return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>)
 }
 
 export function createClient(accessToken: string, name: string, email: string): Promise<Client> {
@@ -77,4 +77,8 @@ export function updateClient(
     method: 'PATCH',
     body: JSON.stringify(updates),
   })
+}
+
+export function eraseClient(accessToken: string, clientId: string): Promise<void> {
+  return request(accessToken, `/clients/${clientId}`, { method: 'DELETE' })
 }

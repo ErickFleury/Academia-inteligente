@@ -152,7 +152,10 @@ def moderate_update(
         return own_response(
             session,
             service.moderate(
-                session, update_id, payload.action, payload.reason.strip() if payload.reason else None
+                session,
+                update_id,
+                payload.action,
+                payload.reason.strip() if payload.reason else None,
             ),
         )
     except (ProgressNotFoundError, ProgressStateError) as exc:
