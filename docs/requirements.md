@@ -381,6 +381,7 @@ Generate initial guidance/a training plan using the information provided during 
 - [ ] **CA-15.3:** the plan is associated exclusively with the client who requested/received the generation.
 - [ ] **CA-15.4:** relevant health data influences the AI proposal. Under the approved Task 14 interpretation of DEC-07, it does not automatically block proposal generation; mandatory instructor review is the safety gate before approval or activation.
 - [ ] **CA-15.5:** the plan is created based on each client's onboarding data.
+- [ ] **CA-15.6:** AI generation creates a `proposal` only when the client has no existing `proposal`; it must not create a second draft for that client.
 
 **Consolidation note:** Apply RN-12 through RN-19 and RN-29 through RN-31. DEC-07 resolves the current proposal/review flow: AI may create only a structured proposal, and an instructor must review it before approval or activation.
 
@@ -407,6 +408,7 @@ Keep the generated plan and create a new version when dynamic changes take effec
 - [ ] **CA-17.1:** the first generation creates the initial version.
 - [ ] **CA-17.2:** an effective change creates a subsequent version and identifies it as current.
 - [ ] **CA-17.3:** refreshing the page does not lose the current version.
+- [ ] **CA-17.4:** a client has at most one plan version in `proposal` state at any time, regardless of whether AI or an instructor created it.
 
 **Consolidation note:** Versioning must also preserve previously completed workouts and identification of the responsible professional, as required by RN-18 and RN-31.
 
@@ -422,6 +424,7 @@ Provide a chat where the client can discuss their training and provide additiona
 - [ ] **CA-18.2:** the assistant receives context from the current plan and, when needed, that client's onboarding.
 - [ ] **CA-18.3:** one client's messages do not appear in another client's conversation.
 - [ ] **CA-18.4:** provider unavailability returns a controlled error and does not corrupt the training plan.
+- [ ] **CA-18.5:** when the client has a `proposal`, the AI may edit only that sole draft; its authority does not depend on whether AI or an instructor created the draft.
 
 **Approved implementation policy (DEC-08/DEC-18, Task 16):** training chat is
 a separate client-owned persisted conversation. Responses are conversational
@@ -437,15 +440,18 @@ plan history. The frontend UUID idempotency and one-retry provider policy apply;
 Ollama retains its configurable local timeout. Any actual plan change remains
 the Task 17 proposal/review flow.
 
-**Approved initial-draft follow-up:** after completed onboarding, a client may
-request one initial AI-origin `proposal` draft from the personal training area;
-repeated requests reuse that active draft. While exactly one such draft remains
-in `proposal`, the client may clearly request changes through the training chat.
+**Approved single-draft rule:** a client may have at most one training-plan
+`proposal` at a time. AI generation and an instructor may each create that
+draft only when no `proposal` already exists for the client. Repeated AI
+generation requests reuse the existing draft rather than creating another one.
+While that sole draft remains in `proposal`, the client may clearly request
+changes through the training chat. The AI may edit that draft regardless of
+whether AI or an instructor created it, but it may edit no other plan state.
 The provider returns a complete structured replacement, which the backend
 validates using the authoritative training-plan schema and applies with
-concurrency protection. This exception never affects manual drafts or
-approved/current/superseded versions, and it never approves or activates a
-plan; instructor review is still mandatory.
+concurrency protection. The AI never edits an approved, current, superseded,
+or historical version, and never approves or activates a plan; instructor
+review remains mandatory.
 
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
@@ -796,7 +802,56 @@ rules in RF-17/RF-19 and RN-12–RN-19/RN-31 continue to govern changes.
 
 ## 4 Non-functional requirements
 
-The six RNFs below preserve all their criteria. Measurement parameters that were not defined are collected under DEC-16.
+The six RNFs below preserve all their criteria. DEC-16 defines their approved
+personal-use measurement protocol; it does not impose commercial-scale load,
+redundancy, or a production uptime SLA.
+
+### 4.0.1 Approved RNF measurement protocol (DEC-16)
+
+The system is intended for personal use. Formal MVP verification uses the
+following bounded conditions:
+
+- **Reference data and load:** use approximately 50 synthetic clients with
+  representative onboarding, training, and conversation history. Normal load
+  is one active user; the burst check issues three simultaneous requests.
+- **Performance and timeouts:** execute each representative common internal
+  operation ten times. At least nine executions must complete within two
+  seconds. Operations that depend on external services must show visible
+  processing feedback within 200 milliseconds and must end with either a valid
+  result or a controlled error under the timeout/retry policy approved for that
+  adapter. OpenAI retains its ten-second-per-attempt timeout and one retry;
+  Ollama retains its separately configurable local timeout.
+- **Responsive behavior:** verify the critical journey at 360×800 smartphone,
+  768×1024 tablet, and 1366×768 computer viewports. Controls and content must
+  remain usable, and the smartphone viewport must not require horizontal
+  scrolling.
+- **Usability:** the intended user must complete the documented client,
+  instructor, and administrator critical journeys from a checklist without
+  consulting source code or receiving step-by-step assistance. A blocked task
+  fails the check; confusing but completable steps are recorded as findings.
+- **Accessibility:** critical journeys must support keyboard navigation,
+  visible focus, readable contrast, and accessible labels. Automated checks
+  must report no critical accessibility violations.
+- **Availability and recovery:** while the personal host, network, and required
+  infrastructure are running, execute an eight-hour local soak with a core
+  health check every minute and no unexplained core-service outage. Planned
+  maintenance and host/network downtime are excluded. After a normal stack
+  restart, core functions must recover within five minutes without data loss or
+  manual database repair. High availability and redundant infrastructure are
+  not required.
+- **Failure isolation:** simulated AI and e-mail failures must return controlled
+  errors and must not make independent internal functions unavailable or
+  corrupt authoritative data.
+- **Maintainability and integration:** the full affected automated suite must
+  pass; significant changed behavior requires regression coverage; business
+  rules remain in service/domain modules; and fake compatible adapters must
+  demonstrate that provider-specific contracts and failures do not leak into
+  domain or public API contracts.
+
+Task 19 must record the environment, commands, results, and evidence for every
+RNF criterion. These conditions approve formal MVP verification only; a later
+deployment with broader users or infrastructure requires a new measurement
+decision.
 
 ### RNF01 Performance
 
@@ -1005,7 +1060,7 @@ cardinalities remain undecided.
 | Employee/role authorization | Later employee profile linked to Account; Keycloak roles and backend policy enforce specialization. Exact employee schema awaits RF-07/RF-08 work. |
 | Onboarding / structured data | Client-owned draft/completed aggregate for approved physical and health fields. Structured values are authoritative; completion/timestamps follow RF-13. Health access is need-to-know. |
 | AI onboarding conversation/message | Client-owned resumable EXT-RF-AI-01 interaction that maps into structured onboarding. Raw messages and summary are client-only and retained for five days; structured data remains authoritative. |
-| TrainingPlan / TrainingPlanVersion / TrainingPlanItem | Client-owned plan aggregate, immutable/versioned current/history states, responsible professional, structured exercise items. At most one plan may be current for a client; activating another preserves the prior plan as superseded. |
+| TrainingPlan / TrainingPlanVersion / TrainingPlanItem | Client-owned plan aggregate, immutable/versioned current/history states, responsible professional, structured exercise items. At most one plan may be current and at most one version may be a `proposal` for a client; activating another preserves the prior plan as superseded. |
 | Exercise | Referenced prescription content; inactive exercises remain in history under RN-20. Full management flow awaits DEC-15. |
 | AI training conversation/message/proposal | Client-scoped RF-18/RF-19 context and proposed changes. A proposal is not a current approved plan; changes use the version lifecycle. |
 | Equipment / logical type-model | RF-32 administrative records and RF-33 catalog. EXT-RF-EQP-01 grouping/count model awaits EXT-DEC-EQP-01; count is not live availability. |
@@ -1137,7 +1192,7 @@ retains the chronological decision history.
 | DEC-13 | Unresolved | Financial meanings and calculations, periods and filters; profit is not automatically revenue. | RF-26–RF-29. |
 | DEC-14 | Unresolved | Class recurrence, visibility, reservation/capacity and authorized exceptions. | RF-30/RN-25. |
 | DEC-15 | **Resolved for Tasks 13, 15, and 17** | Instructors may manually create and edit proposals; the minimum version/item model, responsibility metadata, one current plan per client, and Task 17 review of recognized exercise candidates are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Tasks 13, 15, and 17 may proceed; later affected tasks need their remaining gates. |
-| DEC-16 | Unresolved; blocking formal RNF sign-off | Reference load, timeouts, viewports, usability protocol and continuous-availability measurement. | Formal end-to-end RNF verification. |
+| DEC-16 | **Resolved for personal-use MVP verification** | One normal active user, a three-request burst, approximately 50 synthetic clients, ten-run performance samples, approved adapter timeouts, three representative viewports, checklist-based intended-user testing, accessibility checks, an eight-hour local availability soak, five-minute restart recovery, failure isolation, and maintainability/integration evidence. No commercial-scale load, high availability, redundancy, or production uptime SLA is required. | Task 19 formal end-to-end RNF verification may proceed. |
 | DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
 | DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention remains unresolved. | Tasks 10 and 11 may proceed; biometrics remain gated. |
 
@@ -1191,10 +1246,10 @@ unchecked boxes or planned files.
 | RF-13 | Original MVP | Implemented | DEC-06 | Task 12: shared authoritative validation, intentional atomic completion timestamp, and a downstream completed-onboarding contract. |
 | EXT-RF-AI-01 | Approved MVP extension | Implemented | DEC-06/08/18 | Task 11: client-scoped resumable interview, final validated structured extraction, bounded context, idempotency, and five-day raw-message retention. |
 | EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
-| RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13: immutable version lifecycle, current selection, responsibility metadata, and manual proposal path. |
-| RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14 plus follow-up: completed-onboarding-scoped, reusable single AI draft and validated AI-draft refinement; instructor review remains mandatory. |
+| RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13 plus follow-up: immutable version lifecycle, current selection, responsibility metadata, manual proposal path, and the client-wide single-draft rule. |
+| RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14 plus follow-up: completed-onboarding-scoped AI generation and reuse of the sole client draft; instructor review remains mandatory. |
 | RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
-| RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16 plus follow-up: client-only persisted training chat, bounded own-context, idempotency, controlled failures, and narrow validated refinement of its sole active AI draft only. |
+| RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16 plus follow-up: client-only persisted training chat, bounded own-context, idempotency, controlled failures, and validated editing of the sole client draft regardless of creator. |
 | RF-19 | Original MVP | Implemented | DEC-07/08/15 | Task 17: client-confirmed structured adaptation proposals, instructor review, immutable current-version transition, and preserved history. |
 | MVP frontend polish | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 18: shared visual, responsive, loading/empty/error, pt-BR copy, and accessibility consistency pass; Task 19 retains end-to-end verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
@@ -1288,7 +1343,10 @@ by inference.
 - **DEC-14:** class scheduling/capacity/reservation model; blocks RF-30 details.
 - **DEC-15:** resolved for Task 17's exercise-candidate review scope; remaining
   catalog/evaluation flows retain their separate gates.
-- **DEC-16:** RNF measurement protocol; blocks formal Task 19 sign-off.
+- **DEC-16:** resolved for personal-use MVP RNF measurement; Task 19 formal
+  verification may proceed under the bounded load, viewport, usability,
+  accessibility, availability/recovery, failure-isolation, maintainability, and
+  integration protocol in section 4.0.1.
 - **DEC-18:** health/onboarding and Task 11 AI-conversation storage, access,
   logging, retention, and failure-safety policy are approved. Biometric behavior
   remains pending.

@@ -428,10 +428,10 @@ provider output never approves or activates a version.
 
 **Initial-draft follow-up — 2026-09-23:** after completed onboarding, the
 client may explicitly request an initial AI-generated training draft from the
-personal training area. There may be at most one active AI-origin `proposal`
-draft for a client; a repeat request reuses that draft rather than calling the
-provider or creating another one. This rule does not restrict an instructor's
-separate manual proposals.
+personal training area. A client may have at most one active `proposal`,
+regardless of origin. AI or an instructor may create it only when none exists;
+a repeat AI request reuses the existing draft rather than calling the provider
+or creating another one.
 
 **Task 16 training-chat amendment — 2026-09-22:** the client-facing training
 assistant is a separate, persisted, client-owned conversation. Its response
@@ -456,14 +456,15 @@ OpenAI keeps the ten-second-per-attempt, one-retry policy; Ollama retains its
 separate configurable local-development timeout. Raw messages, prompts,
 provider responses, health details, and credentials must not be logged.
 
-**AI-draft refinement follow-up — 2026-09-23:** when exactly one active
-AI-origin initial draft exists, the owning client's training chat may update
-that draft only after the client clearly asks for a change. The adapter returns
-a full structured draft; the backend validates it through the Task 13 plan
-schema and revises it with optimistic concurrency. It cannot update a manual
-instructor draft, an approved/current/superseded version, or any other
-client's draft. This narrowly scoped proposal refinement does not approve,
-activate, or change a current plan, and instructor review remains mandatory.
+**Single-draft refinement follow-up — 2026-09-23:** when exactly one active
+draft exists, the owning client's training chat may update that draft only
+after the client clearly asks for a change. The AI may edit the sole draft
+regardless of whether AI or an instructor created it. The adapter returns a
+full structured draft; the backend validates it through the Task 13 plan schema
+and revises it with optimistic concurrency. It cannot update an approved,
+current, or superseded version or any other client's draft. This narrowly
+scoped proposal refinement does not approve, activate, or change a current
+plan, and instructor review remains mandatory.
 
 **Task 17 adaptation amendment — 2026-09-23:** adaptation generation uses the
 same provider-neutral OpenAI/Ollama boundary, structured-output validation,
@@ -485,6 +486,47 @@ However, the client must still explicitly confirm the suggested draft before
 structured Task 17 generation begins, and must separately accept that resulting
 proposal before instructor review. The suggestion cannot modify a plan, create
 a version, or bypass any Task 17 human-review boundary.
+
+## DEC-16 — Personal-use non-functional measurement protocol
+
+**Status:** approved for Task 19 — 2026-09-23
+
+The system is intended for personal use, so formal MVP verification does not
+assume commercial traffic, redundant infrastructure, or a production uptime
+SLA. The approved reference dataset is approximately 50 synthetic clients with
+representative related history. Normal load is one active user, with a burst
+check of three simultaneous requests.
+
+Representative common internal operations are executed ten times; at least
+nine executions must complete within the existing two-second requirement.
+External operations show visible processing feedback within 200 milliseconds
+and complete with a valid result or controlled error under their approved
+adapter timeout/retry policy. OpenAI keeps its ten-second timeout per attempt
+and one retry; Ollama keeps its separately configurable local timeout.
+
+Critical journeys are checked at 360×800 smartphone, 768×1024 tablet, and
+1366×768 computer viewports. They must remain usable, and the smartphone view
+must not require horizontal scrolling. The intended user performs the
+documented client, instructor, and administrator journeys from a checklist
+without source-code consultation or step-by-step assistance. A blocked journey
+fails; confusing but completable steps are findings. Keyboard access, visible
+focus, readable contrast, accessible labels, and the absence of critical
+automated accessibility violations are required.
+
+Availability means availability while the personal host, network, and required
+infrastructure are running. Verification uses an eight-hour local soak with a
+core health check each minute and no unexplained core outage. Planned
+maintenance and host/network downtime are excluded. A normal stack restart must
+restore core functions within five minutes without data loss or manual database
+repair. High availability and redundant infrastructure are not required.
+
+Simulated AI and e-mail failures must remain controlled, preserve authoritative
+data, and leave independent internal operations available. The affected test
+suite must pass, significant changes require regression coverage, business
+rules remain in service/domain modules, and fake compatible adapters must prove
+provider details do not leak into domain or public API contracts. Task 19 must
+record its environment, commands, results, and criterion-level evidence. Any
+future multi-user or broader deployment requires a new measurement decision.
 
 ## DEC-17 — Application identity and client-account relationship
 

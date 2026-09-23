@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Client
@@ -31,7 +32,21 @@ class InvalidTrainingTransitionError(TrainingLifecycleError):
     pass
 
 
+class ActiveTrainingProposalExistsError(TrainingLifecycleError):
+    pass
+
+
 class TrainingLifecycleService:
+    def find_proposal(self, session: Session, *, client_id: UUID) -> TrainingPlanVersion | None:
+        return session.scalar(
+            select(TrainingPlanVersion)
+            .where(
+                TrainingPlanVersion.client_id == client_id,
+                TrainingPlanVersion.status == "proposal",
+            )
+            .order_by(TrainingPlanVersion.created_at.desc())
+        )
+
     def create_proposal(
         self,
         session: Session,
@@ -41,10 +56,19 @@ class TrainingLifecycleService:
         created_by: str,
         origin: PlanOrigin,
     ) -> TrainingPlanVersion:
-        plan = TrainingPlan(client_id=client_id)
-        session.add(plan)
-        session.flush()
-        return self._new_version(session, plan.id, 1, data, created_by, origin)
+        self._lock_client(session, client_id)
+        if self.find_proposal(session, client_id=client_id) is not None:
+            raise ActiveTrainingProposalExistsError
+        try:
+            plan = TrainingPlan(client_id=client_id)
+            session.add(plan)
+            session.flush()
+            return self._new_version(session, plan.id, client_id, 1, data, created_by, origin)
+        except IntegrityError:
+            session.rollback()
+            if self.find_proposal(session, client_id=client_id) is not None:
+                raise ActiveTrainingProposalExistsError from None
+            raise
 
     def revise(
         self,
@@ -79,6 +103,9 @@ class TrainingLifecycleService:
         source = self._version(session, plan_id, version_number, lock=True)
         if source.status == "proposal":
             raise InvalidTrainingTransitionError
+        self._lock_client(session, source.client_id)
+        if self.find_proposal(session, client_id=source.client_id) is not None:
+            raise ActiveTrainingProposalExistsError
         next_number = (
             session.scalar(
                 select(func.max(TrainingPlanVersion.version_number)).where(
@@ -87,7 +114,9 @@ class TrainingLifecycleService:
             )
             or 0
         ) + 1
-        return self._new_version(session, plan_id, next_number, data, actor, "instructor")
+        return self._new_version(
+            session, plan_id, source.client_id, next_number, data, actor, "instructor"
+        )
 
     def approve(
         self,
@@ -157,6 +186,7 @@ class TrainingLifecycleService:
         self,
         session: Session,
         plan_id: UUID,
+        client_id: UUID,
         number: int,
         data: TrainingPlanVersionInput,
         actor: str,
@@ -164,6 +194,7 @@ class TrainingLifecycleService:
     ) -> TrainingPlanVersion:
         version = TrainingPlanVersion(
             plan_id=plan_id,
+            client_id=client_id,
             version_number=number,
             status="proposal",
             name=data.name.strip(),
@@ -209,3 +240,9 @@ class TrainingLifecycleService:
         if version is None:
             raise TrainingVersionNotFoundError
         return version
+
+    @staticmethod
+    def _lock_client(session: Session, client_id: UUID) -> None:
+        client = session.scalar(select(Client).where(Client.id == client_id).with_for_update())
+        if client is None:
+            raise TrainingVersionNotFoundError

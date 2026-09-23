@@ -242,7 +242,7 @@ def test_chat_does_not_offer_adaptation_without_a_current_plan(session: Session)
     assert state.messages[-1].adaptation_suggested is False
 
 
-def test_chat_can_update_only_the_single_active_ai_draft(session: Session) -> None:
+def test_chat_can_update_the_single_active_draft(session: Session) -> None:
     ada = create_client(session, "ada", "ada@example.test")
     lifecycle = TrainingLifecycleService()
     draft = lifecycle.create_proposal(
@@ -301,7 +301,7 @@ def test_chat_can_update_only_the_single_active_ai_draft(session: Session) -> No
     assert provider.contexts[0]["editable_training_draft"] is not None
 
 
-def test_chat_never_updates_a_manual_draft(session: Session) -> None:
+def test_chat_can_update_an_instructor_draft(session: Session) -> None:
     ada = create_client(session, "ada", "ada@example.test")
     lifecycle = TrainingLifecycleService()
     manual = lifecycle.create_proposal(
@@ -324,36 +324,36 @@ def test_chat_never_updates_a_manual_draft(session: Session) -> None:
         created_by="instrutor",
         origin="instructor",
     )
-    service = TrainingChatService(
-        FakeProvider(
-            AiTrainingChatResponse(
-                assistant_message="Posso explicar esta ficha.",
-                draft_update={
-                    "name": "Não deve alterar",
-                    "objective": "Não deve alterar",
-                    "items": [
-                        {
-                            "exercise_name": "Outro",
-                            "sets": 2,
-                            "repetitions": "10",
-                            "load_guidance": "Leve",
-                            "rest_seconds": 60,
-                        }
-                    ],
-                },
-            )
+    provider = FakeProvider(
+        AiTrainingChatResponse(
+            assistant_message="Atualizei o rascunho conforme solicitado.",
+            draft_update={
+                "name": "Rascunho ajustado",
+                "objective": "Força sem desconforto",
+                "items": [
+                    {
+                        "exercise_name": "Outro",
+                        "sets": 2,
+                        "repetitions": "10",
+                        "load_guidance": "Leve",
+                        "rest_seconds": 60,
+                    }
+                ],
+            },
         )
     )
+    service = TrainingChatService(provider)
 
     service.submit_for_subject(
         session, "ada", message="Altere meu treino", client_request_id=uuid4()
     )
 
-    unchanged = session.scalar(
+    updated = session.scalar(
         select(TrainingPlanVersion).where(TrainingPlanVersion.id == manual.id)
     )
-    assert unchanged is not None
-    assert unchanged.name == "Rascunho do instrutor" and unchanged.revision == 1
+    assert updated is not None
+    assert updated.name == "Rascunho ajustado" and updated.revision == 2
+    assert provider.contexts[0]["editable_training_draft"] is not None
 
 
 def test_retry_and_failure_leave_training_plan_unchanged(session: Session) -> None:

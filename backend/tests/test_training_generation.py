@@ -25,6 +25,8 @@ from app.modules.training.generation_service import (
     TrainingGenerationUnavailableError,
 )
 from app.modules.training.models import TrainingPlan, TrainingPlanVersion
+from app.modules.training.schema import TrainingPlanVersionInput
+from app.modules.training.service import TrainingLifecycleService
 
 
 class FakeProvider:
@@ -159,7 +161,7 @@ def test_generates_only_client_scoped_proposal_using_completed_onboarding(sessio
     assert ada.id != grace.id
 
 
-def test_reuses_the_single_active_ai_draft_without_calling_the_provider_again(
+def test_reuses_the_single_active_draft_without_calling_the_provider_again(
     session: Session,
 ) -> None:
     create_client(session, "ada", "ada@example.test")
@@ -173,6 +175,27 @@ def test_reuses_the_single_active_ai_draft_without_calling_the_provider_again(
     assert first.id == second.id
     assert provider.calls == 1
     assert len(session.scalars(select(TrainingPlanVersion)).all()) == 1
+
+
+def test_reuses_an_instructor_draft_without_calling_the_provider(session: Session) -> None:
+    ada = create_client(session, "ada", "ada@example.test")
+    complete_onboarding(session, "ada")
+    draft = TrainingLifecycleService().create_proposal(
+        session,
+        client_id=ada.id,
+        data=TrainingPlanVersionInput.model_validate(proposal().plan),
+        created_by="instructor-1",
+        origin="instructor",
+    )
+    provider = FakeProvider(proposal())
+
+    result = InitialTrainingGenerationService(provider=provider).generate_for_subject(
+        session, "ada"
+    )
+
+    assert result.id == draft.id
+    assert result.origin == "instructor"
+    assert provider.calls == 0
 
 
 def test_invalid_or_unavailable_provider_response_persists_nothing(session: Session) -> None:

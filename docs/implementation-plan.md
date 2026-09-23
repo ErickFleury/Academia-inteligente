@@ -98,7 +98,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-11 | Blocking Task 22 where external/access events are its inputs. |
 | DEC-12–DEC-14 | Blocking future plan/payment/financial/class tasks respectively. |
 | DEC-15 | Resolved for Task 17's recognized-exercise candidate and instructor-review scope. Task 21 remains the catalog boundary. |
-| DEC-16 | Blocking formal RNF sign-off in Task 19. |
+| DEC-16 | Resolved for personal-use MVP verification: bounded single-user load, representative viewport/usability/accessibility checks, eight-hour local soak, restart recovery, failure isolation, and maintainability/integration evidence. Task 19 formal RNF sign-off may proceed. |
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
 | DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric behavior still gates affected work. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
@@ -123,9 +123,9 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | Completed | Client-only resumable AI interview, final validated extraction, and bounded retention |
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | Completed | Shared validation with intentional atomic completion and timestamp |
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | Completed | Immutable versions/current/professional attribution and manual proposal path |
-| 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed + follow-up | Client-triggered, completed-onboarding-scoped reusable AI proposal through lifecycle; instructor review required |
+| 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed + follow-up | Client-triggered, completed-onboarding-scoped generation that reuses the sole client proposal regardless of origin; instructor review required |
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | Completed | Mobile own-current-plan/exercise view with empty/loading/error states |
-| 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed + follow-up | Client-only 30-day persisted assistant; may refine only the single active AI initial draft through validated structured output |
+| 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed + follow-up | Client-only 30-day persisted assistant; may refine only the sole client draft, regardless of creator, through validated structured output |
 | 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | Completed | AI-detected, client-confirmed structured proposals, instructor review, immutable current version, history preserved |
 | 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | Completed | Shared consistency, responsive, accessibility, loading/empty/error, and pt-BR copy pass; Task 19 retains end-to-end verification. |
 | 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |

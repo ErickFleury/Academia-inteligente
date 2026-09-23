@@ -62,7 +62,7 @@ class TrainingChatState:
 
 
 class TrainingChatService:
-    """Client-scoped chat; only its active AI proposal may be revised by the AI."""
+    """Client-scoped chat; the sole active proposal may be revised by the AI."""
 
     def __init__(self, provider: TrainingChatProvider | None = None) -> None:
         self._provider = provider or training_chat_provider_from_environment()
@@ -189,15 +189,13 @@ class TrainingChatService:
     def _editable_ai_draft(session: Session, client_id: UUID) -> TrainingPlanVersion | None:
         drafts = session.scalars(
             select(TrainingPlanVersion)
-            .join(TrainingPlan, TrainingPlanVersion.plan_id == TrainingPlan.id)
             .where(
-                TrainingPlan.client_id == client_id,
+                TrainingPlanVersion.client_id == client_id,
                 TrainingPlanVersion.status == "proposal",
-                TrainingPlanVersion.origin == "ai",
             )
             .order_by(TrainingPlanVersion.created_at.desc())
         ).all()
-        # Do not silently choose between legacy duplicate AI drafts.
+        # Do not silently choose between legacy duplicate drafts.
         return drafts[0] if len(drafts) == 1 else None
 
     @staticmethod

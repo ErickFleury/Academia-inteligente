@@ -10,6 +10,7 @@ from app.modules.clients.models import Account, Client
 from app.modules.training.models import TrainingPlan, TrainingPlanVersion
 from app.modules.training.schema import TrainingPlanItemInput, TrainingPlanVersionInput
 from app.modules.training.service import (
+    ActiveTrainingProposalExistsError,
     ConcurrentTrainingUpdateError,
     ImmutableTrainingVersionError,
     TrainingLifecycleService,
@@ -88,6 +89,29 @@ def test_initial_proposal_approval_activation_and_immutable_history(session: Ses
             actor="instructor-1",
             expected_revision=1,
         )
+
+
+def test_client_cannot_have_two_proposals_even_with_different_origins(session: Session) -> None:
+    service = TrainingLifecycleService()
+    client = client_id(session)
+    first = service.create_proposal(
+        session,
+        client_id=client,
+        data=data("Rascunho do instrutor"),
+        created_by="instructor-1",
+        origin="instructor",
+    )
+
+    with pytest.raises(ActiveTrainingProposalExistsError):
+        service.create_proposal(
+            session,
+            client_id=client,
+            data=data("Rascunho da IA"),
+            created_by="ai",
+            origin="ai",
+        )
+
+    assert service.find_proposal(session, client_id=client).id == first.id
 
 
 def test_new_current_supersedes_previous_and_conflicts_are_rejected(session: Session) -> None:

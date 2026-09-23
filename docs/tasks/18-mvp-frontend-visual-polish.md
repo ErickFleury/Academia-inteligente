@@ -71,7 +71,7 @@ for Tasks 09–17; DEC-16 for formal acceptance limits.
 Run the relevant frontend tests, typecheck/lint, build, and targeted responsive
 and keyboard/accessibility checks. Adjust tests only for actual shared UI
 behavior or presentation restructuring. Record remaining formal RNF items
-pending DEC-16 rather than claiming a pass.
+for Task 19 verification under DEC-16 rather than claiming a Task 18 pass.
 
 ## Completion requirements
 

@@ -15,7 +15,8 @@ Provide a mobile-first client view of the authenticated client's current trainin
 - RN-18: historical data must not be rewritten while displaying the current version.
 - RNF01–RNF03: prompt loading/error feedback and usable smartphone, tablet, and desktop layouts.
 - Resolved lifecycle decisions inherited from Tasks 13–14 determine which version is “current”; this task must not reinterpret them.
-- DEC-16 is **non-blocking** for implementation but required later for formal performance/device measurement.
+- DEC-16 was non-blocking for Task 15 implementation and is now resolved for
+  formal personal-use performance/device measurement in Task 19.
 
 ## Prerequisites
 
@@ -42,7 +43,7 @@ Reuse Task 08 ClientShell, loading/error/empty states, and typography. On phones
 
 - Editing, version creation, chat, adaptation, history browsing, or onboarding display.
 - Choosing a new training schema or exposing another client's/admin-wide sheets.
-- Formal RNF benchmarks before DEC-16 is resolved.
+- Formal RNF benchmarking, which belongs to Task 19 under resolved DEC-16.
 
 ## Acceptance criteria
 

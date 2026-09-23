@@ -14,13 +14,16 @@ Verify the complete MVP critical path, cross-module security boundaries, externa
 
 - Recheck the RN mappings in `docs/implementation-plan.md`, especially RN-02, RN-04, RN-05, RN-11–RN-19, RN-23, and RN-29–RN-33.
 - RNF01–RNF06 and CA-RNF01.1–CA-RNF06.3 apply across the integrated system.
-- DEC-16 is **blocking for formal RNF acceptance** because load, timeout, viewport, usability, and availability measurement conditions are undefined.
+- DEC-16 is resolved for personal-use formal RNF acceptance. Apply its bounded
+  reference load, timing, viewport, intended-user, accessibility, eight-hour
+  soak, restart-recovery, failure-isolation, maintainability, and integration
+  evidence protocol; do not substitute commercial-scale assumptions.
 - All earlier blocking decisions must already be resolved; do not repair missing decisions through test assumptions.
 
 ## Prerequisites
 
 - Tasks 02–18 complete; Task 01 baseline remains healthy.
-- DEC-16 recorded for formal RNF sign-off. If absent, run objective checks that are possible and report the unverified RNF criteria rather than claiming them.
+- DEC-16 is recorded and approved for formal personal-use RNF sign-off.
 
 ## Required reading
 

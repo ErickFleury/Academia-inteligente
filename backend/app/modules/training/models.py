@@ -47,6 +47,13 @@ class TrainingPlanVersion(Base):
     __tablename__ = "training_plan_version"
     __table_args__ = (
         Index(
+            "uq_client_training_plan_proposal",
+            "client_id",
+            unique=True,
+            postgresql_where=text("status = 'proposal'"),
+            sqlite_where=text("status = 'proposal'"),
+        ),
+        Index(
             "uq_training_plan_current_version",
             "plan_id",
             unique=True,
@@ -58,6 +65,7 @@ class TrainingPlanVersion(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     plan_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("training_plan.id"), nullable=False)
+    client_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("client.id"), nullable=False)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="proposal")
     name: Mapped[str] = mapped_column(String(200), nullable=False)

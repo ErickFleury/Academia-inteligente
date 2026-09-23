@@ -125,8 +125,8 @@ palette, or page composition.
   and dense admin tables should not gain decorative imagery.
 - Check representative phone, tablet, and desktop layouts for every UI task.
   Client flows must avoid ordinary horizontal scrolling and keep touch targets,
-  actions, inputs, and navigation usable. Exact formal test viewports remain
-  subject to DEC-16.
+  actions, inputs, and navigation usable. DEC-16 defines the exact formal test
+  viewports for personal-use MVP verification.
 - Preserve semantic headings/landmarks, labels, keyboard access, visible
   focus, screen-reader-compatible controls, validation text, readable sizes,
   disabled states, and adequate text/control contrast. Recheck RNF02/RNF03

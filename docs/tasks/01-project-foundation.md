@@ -15,7 +15,9 @@ No RF or functional CA is owned by this enabling task. It prepares the architect
 - TEC-01–TEC-10 and requirements sections 6–7 define the allowed architecture envelope.
 - DEC-03 is **blocking**: authentication approach, NestJS/Python responsibilities, runtime topology, e-mail direction, and tool versions must be recorded first.
 - DEC-17 is **non-blocking** because this task creates no domain schema or migrations; those must wait for the relevant later task.
-- DEC-16 is **non-blocking**: measurement thresholds can be finalized later, but test seams and observability should remain possible.
+- DEC-16 was non-blocking for Task 01 and is now resolved for personal-use MVP
+  verification; the foundation must retain the required test seams and
+  observability.
 
 ## Prerequisites
 

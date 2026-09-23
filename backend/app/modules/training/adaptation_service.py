@@ -463,6 +463,7 @@ class TrainingAdaptationService:
         now = datetime.now(UTC)
         version = TrainingPlanVersion(
             plan_id=plan.id,
+            client_id=plan.client_id,
             version_number=next_number,
             status="current",
             name=data.name.strip(),

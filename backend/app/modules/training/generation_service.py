@@ -16,9 +16,8 @@ from app.modules.onboarding.draft_service import (
     OnboardingDraftService,
 )
 from app.modules.onboarding.models import Onboarding
-from app.modules.training.models import TrainingPlan, TrainingPlanVersion
 from app.modules.training.schema import TrainingPlanVersionInput
-from app.modules.training.service import TrainingLifecycleService
+from app.modules.training.service import ActiveTrainingProposalExistsError, TrainingLifecycleService
 
 
 class CompletedOnboardingRequiredError(Exception):
@@ -34,7 +33,7 @@ class InvalidTrainingGenerationError(Exception):
 
 
 class InitialTrainingGenerationService:
-    """Validates external output before creating an AI-owned proposal version."""
+    """Validates external output before creating the client's sole proposal version."""
 
     def __init__(
         self,
@@ -60,18 +59,9 @@ class InitialTrainingGenerationService:
         ):
             raise CompletedOnboardingRequiredError
 
-        # A client can have one active initial AI draft. Reusing it prevents a
-        # second provider call and leaves manual/instructor proposals untouched.
-        existing = session.scalar(
-            select(TrainingPlanVersion)
-            .join(TrainingPlan, TrainingPlanVersion.plan_id == TrainingPlan.id)
-            .where(
-                TrainingPlan.client_id == scope.client_id,
-                TrainingPlanVersion.status == "proposal",
-                TrainingPlanVersion.origin == "ai",
-            )
-            .order_by(TrainingPlanVersion.created_at.desc())
-        )
+        # Every client has at most one proposal, regardless of its creator.
+        # Reusing it prevents a provider call and preserves the single-draft rule.
+        existing = self._lifecycle.find_proposal(session, client_id=scope.client_id)
         if existing is not None:
             return existing
 
@@ -93,13 +83,20 @@ class InitialTrainingGenerationService:
 
         # Validation happens before lifecycle persistence, so malformed output
         # cannot create a partial plan or version.
-        return self._lifecycle.create_proposal(
-            session,
-            client_id=scope.client_id,
-            data=proposal,
-            created_by="ai",
-            origin="ai",
-        )
+        try:
+            return self._lifecycle.create_proposal(
+                session,
+                client_id=scope.client_id,
+                data=proposal,
+                created_by="ai",
+                origin="ai",
+            )
+        except ActiveTrainingProposalExistsError:
+            # Another request created the sole draft while the provider was running.
+            existing = self._lifecycle.find_proposal(session, client_id=scope.client_id)
+            if existing is not None:
+                return existing
+            raise
 
     @staticmethod
     def _retry(operation: Callable[[], object]):

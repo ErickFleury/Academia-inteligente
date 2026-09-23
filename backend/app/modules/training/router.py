@@ -49,6 +49,7 @@ from app.modules.training.schema import (
     VersionAction,
 )
 from app.modules.training.service import (
+    ActiveTrainingProposalExistsError,
     ConcurrentTrainingUpdateError,
     ImmutableTrainingVersionError,
     InvalidTrainingTransitionError,
@@ -220,6 +221,8 @@ def lifecycle_error(error: Exception) -> HTTPException:
         return HTTPException(404, "Training version not found")
     if isinstance(error, ConcurrentTrainingUpdateError):
         return HTTPException(409, "Training version changed; reload before saving")
+    if isinstance(error, ActiveTrainingProposalExistsError):
+        return HTTPException(409, "Client already has a training proposal")
     if isinstance(error, ImmutableTrainingVersionError):
         return HTTPException(409, "Approved, current, and historical versions are immutable")
     return HTTPException(409, "Invalid training version transition")
@@ -431,6 +434,8 @@ def create_manual_proposal(
         return version_response(session, version)
     except ValueError:
         raise HTTPException(422, "Invalid client identifier") from None
+    except (ActiveTrainingProposalExistsError, TrainingVersionNotFoundError) as error:
+        raise lifecycle_error(error) from None
 
 
 @router.patch("/plans/{plan_id}/versions/{version_number}")
@@ -542,6 +547,7 @@ def create_revision(
         TrainingVersionNotFoundError,
         ImmutableTrainingVersionError,
         ConcurrentTrainingUpdateError,
+        ActiveTrainingProposalExistsError,
         InvalidTrainingTransitionError,
     ) as error:
         raise lifecycle_error(error) from None
