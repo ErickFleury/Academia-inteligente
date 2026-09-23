@@ -31,8 +31,10 @@ once in the local admin console or recreate the local Keycloak realm/volume if
 you need its imported settings reapplied.
 
 Use the `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` values from `.env` to
-sign in to the application. `KEYCLOAK_ADMIN` credentials are only for the
-Keycloak administration console. The frontend origin must be listed in
+sign in to the application. The bootstrap application administrator needs only
+those credentials: Keycloak does not require an e-mail address, first name, or
+last name for it. `KEYCLOAK_ADMIN` credentials are only for the Keycloak
+administration console. The frontend origin must be listed in
 `CORS_ALLOWED_ORIGINS` (the local default is `http://localhost:5173`).
 
 When an administrator creates a client, the backend creates a Keycloak user

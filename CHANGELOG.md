@@ -11,3 +11,6 @@
 - Added database-level proposal uniqueness and a migration that preserves
   legacy duplicate drafts as superseded history.
 - Defined the personal-use MVP non-functional verification protocol in DEC-16.
+- Resolved EXT-DEC-SOC-01 for controlled progress sharing: private-by-default
+  posts, an active-client shared audience, and shared-only administrator
+  hide/restore moderation with auditable reasons.

@@ -107,10 +107,17 @@ RN-33, RNF02–RNF04.
 derived into social content. Backend checks authorship and visibility without
 trusting a browser-provided client ID.
 
-**Unresolved decisions:** `EXT-DEC-SOC-01` must define whether “shared” means all
-authenticated clients or explicit recipients/groups, plus any moderation,
-deletion, and retention rules. The progress-sharing implementation task must
-stop before persistence/API design if this remains unresolved.
+**Decision status:** `EXT-DEC-SOC-01` is approved for Task 20. New updates are
+private by default; shared updates are visible to all active authenticated
+clients, with no recipients, groups, followers, or guest audience. Private
+updates remain author-only and are not visible to administrators merely because
+of their role. Administrators can hide or restore shared updates only, with a
+required reason; they cannot edit client content. Authors alone may edit or
+delete their updates. Deletion immediately removes content from every view,
+leaving a contentless tombstone and minimum audit metadata; hidden content is
+retained so it can be restored. Active updates remain until author deletion or a
+future approved account-deletion/anonymization policy. This approval adds no
+reporting workflow or other social-network feature.
 
 ## EXT-RF-EQP-01 — Equipment quantities by logical type/model
 

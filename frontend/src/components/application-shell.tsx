@@ -26,6 +26,7 @@ function ClientNavigation() {
     ...(onboardingComplete === false ? [{ href: '/onboarding', label: 'Onboarding' }] : []),
     { href: '/treino', label: 'Meu treino' },
     { href: '/assistente', label: 'Assistente' },
+    { href: '/progresso', label: 'Progresso' },
   ]
   return (
     <Box component="nav" aria-label="Navegação da área do cliente" sx={{ borderTop: '1px solid', borderColor: 'divider' }}>

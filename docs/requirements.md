@@ -724,6 +724,39 @@ Acceptance: `EXT-CA-SOC-01.1` authenticated ownership;
 `EXT-CA-SOC-01.4` author-only mutation/deletion; `EXT-CA-SOC-01.5` no automatic
 sensitive content; `EXT-CA-SOC-01.6` no unapproved social-network features.
 
+**Approved implementation policy (EXT-DEC-SOC-01):** a new progress update is
+private by default. Its author may explicitly make it shared, in which case it
+is visible to all active authenticated clients; there are no recipients,
+groups, followers, or guest viewers. Private updates remain visible only to the
+author, and administrator status alone does not grant access to them.
+
+Administrators may list and moderate shared updates only. They may hide or
+restore a shared update, each time supplying a moderation reason; they may not
+edit its content or create an update for a client. A hidden update is absent
+from other-client feeds, while its author can see that it is hidden and the
+reason. The author alone may edit or delete their own update. Deletion removes
+the content immediately from every view and leaves only a contentless tombstone
+and minimum audit metadata. Active updates are retained until author deletion
+or a future approved account-deletion/anonymization policy; hidden updates keep
+their content and moderation state so that they can be restored.
+
+Audit evidence for author edits/deletions and administrative hide/restore
+actions contains only actor ID, update ID, action, timestamp, and the required
+moderation reason. It never duplicates the update content or sensitive domain
+data in logs. The UI warns authors not to post health, payment, credential,
+attendance, biometric, or presence data. This policy does not add reporting,
+comments, likes, direct messages, rankings, or leaderboards.
+
+**Deletion amendment — 2026-09-23:** an administrator may also delete a shared
+update, with an optional reason. This leaves a contentless tombstone visible to
+no client and retained only while its author account exists. An administrator
+may permanently erase a client account: delete the Keycloak identity and every
+local record attached to the client, including onboarding, invitations, plans
+and history, conversations, adaptations, progress updates/tombstones, account
+linkage, and pending identity reconciliation. No audit record is retained, so
+the account cannot be reidentified. This irreversible privacy erasure is
+distinct from reversible account deactivation.
+
 #### EXT-RF-EQP-01 — Equipment quantity by logical type/model
 
 **Scope:** approved post-MVP extension. **Related originals:** RF-32, RF-33,
@@ -1204,7 +1237,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 
 | ID | Status | Required decision | Expected task |
 | --- | --- | --- | --- |
-| EXT-DEC-SOC-01 | Unresolved; blocking | Shared audience semantics, moderation, deletion, and retention. | Controlled progress sharing. |
+| EXT-DEC-SOC-01 | **Resolved for Task 20** | Private by default; shared updates are visible to active authenticated clients; shared-only administrator hide/restore moderation with a reason; author-only edit/delete; contentless deletion tombstone and stated lifecycle. | Controlled progress sharing may proceed. |
 | EXT-DEC-EQP-01 | Unresolved; blocking persistence design | Canonical logical type/model and individual-unit versus aggregate inventory representation. | Equipment catalog and quantities. |
 | EXT-DEC-PRES-01 | Unresolved; blocking | Consent lifecycle, visible fields, source/freshness, revocation, staff access, and retention for named presence. | Opt-in visible presence. |
 

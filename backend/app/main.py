@@ -7,6 +7,7 @@ from app.health.router import router as health_router
 from app.modules.clients.router import router as clients_router
 from app.modules.identity.router import router as identity_router
 from app.modules.onboarding.router import router as onboarding_router
+from app.modules.progress.router import router as progress_router
 from app.modules.training.router import router as training_router
 
 
@@ -25,13 +26,14 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
     app.include_router(health_router)
     app.include_router(identity_router)
     app.include_router(clients_router)
     app.include_router(onboarding_router)
+    app.include_router(progress_router)
     app.include_router(training_router)
     return app
 

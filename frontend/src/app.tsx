@@ -12,6 +12,7 @@ import { getOwnOnboardingDraft } from './onboarding-draft'
 import { CurrentTrainingPage } from './current-training-page'
 import { TrainingChatPage } from './training-chat-page'
 import { InstructorAdaptationsPage } from './instructor-adaptations-page'
+import { ProgressPage } from './progress-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -111,9 +112,10 @@ export function App() {
   const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
   const isCurrentTrainingRoute = window.location.pathname === '/treino'
   const isTrainingChatRoute = window.location.pathname === '/assistente'
+  const isProgressRoute = window.location.pathname === '/progresso'
   const isInstructorAdaptationsRoute = window.location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
   const isInstructor = session?.roles.includes('instructor') ?? false
 
@@ -192,6 +194,10 @@ export function App() {
 
   if (isTrainingChatRoute && session) {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
+  }
+
+  if (isProgressRoute && session) {
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><ProgressPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isAdministrativeRoute && !isAdministrator) {

@@ -578,3 +578,37 @@ The new extensions do not approve a general social network, real-time equipment
 availability, or disclosure of private data. `DEC-10` remains unresolved, and
 named presence cannot be implemented until its separate privacy/persistence
 decision (`EXT-DEC-PRES-01`) is approved.
+
+## EXT-DEC-SOC-01 — Controlled progress-sharing audience and moderation
+
+**Status:** approved for Task 20 — 2026-09-23
+
+The feature is intentionally a small, client-owned progress feed rather than a
+social network. An update is private by default. Its author may explicitly set
+it to shared, which makes it visible to all active authenticated clients. There
+are no explicit recipients, groups, followers, or guest viewers. Private
+updates remain author-only; an administrator cannot access one solely because
+of the administrative role.
+
+Administrators may moderate shared updates only. They can hide or restore an
+update and must provide a reason. A hidden update disappears from other-client
+feeds, but its author sees the moderation state and reason. Administrators
+cannot edit a client's content or create an update for a client. The author
+alone can edit or delete their own update.
+
+Author deletion immediately removes the content from all views and retains only
+a contentless tombstone plus minimum audit metadata. Hidden updates retain their
+content and moderation state for possible restoration. Active updates persist
+until author deletion or a future approved account-deletion/anonymization
+workflow; no retention duration is inferred. Audit records contain actor ID,
+update ID, action, timestamp, and moderation reason where applicable, never
+content or automatically derived sensitive domain data. The interface warns
+authors not to publish health, payment, credential, attendance, biometric, or
+presence data. This decision does not approve reporting, comments, likes,
+direct messages, rankings, or leaderboards.
+
+**Deletion amendment — 2026-09-23:** administrators may delete shared progress
+updates with an optional reason, leaving a contentless tombstone. They may also
+irreversibly erase a client: delete the Keycloak identity and all attached local
+records with no retained audit record, for anonymity. Erasure overrides normal
+history preservation only for this explicitly requested privacy workflow.

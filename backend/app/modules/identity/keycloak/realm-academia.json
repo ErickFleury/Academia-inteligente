@@ -7,6 +7,16 @@
   "internationalizationEnabled": true,
   "supportedLocales": ["pt-BR"],
   "defaultLocale": "pt-BR",
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 100
+    }
+  ],
   "ssoSessionIdleTimeout": 300,
   "clientSessionIdleTimeout": 300,
   "smtpServer": {
@@ -85,8 +95,6 @@
     {
       "username": "${APP_ADMIN_USERNAME}",
       "enabled": true,
-      "email": "${APP_ADMIN_USERNAME}",
-      "emailVerified": true,
       "attributes": { "account_active": ["true"] },
       "realmRoles": ["admin"],
       "credentials": [
