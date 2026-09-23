@@ -186,6 +186,10 @@ class TrainingLifecycleService:
             select(TrainingPlanItem).where(TrainingPlanItem.version_id == version.id)
         ).all():
             session.delete(item)
+        # Free the version/position unique slots before adding the replacement
+        # items. Without this flush, a same-position replacement can be
+        # inserted before SQLAlchemy emits the deletes.
+        session.flush()
         for position, item in enumerate(data.items, start=1):
             session.add(
                 TrainingPlanItem(version_id=version.id, position=position, **item.model_dump())

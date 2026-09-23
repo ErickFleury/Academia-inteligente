@@ -11,6 +11,7 @@ import { OnboardingForm } from './onboarding-form'
 import { getOwnOnboardingDraft } from './onboarding-draft'
 import { CurrentTrainingPage } from './current-training-page'
 import { TrainingChatPage } from './training-chat-page'
+import { InstructorAdaptationsPage } from './instructor-adaptations-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -111,9 +112,11 @@ export function App() {
   const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
   const isCurrentTrainingRoute = window.location.pathname === '/treino'
   const isTrainingChatRoute = window.location.pathname === '/assistente'
+  const isInstructorAdaptationsRoute = window.location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
   const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
+  const isInstructor = session?.roles.includes('instructor') ?? false
 
   function clearSession() {
     oidcSessionClient.clearSession()
@@ -157,6 +160,19 @@ export function App() {
         <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta área.</Alert>
       </ClientShell>
     )
+  }
+
+  if (isInstructorAdaptationsRoute && !isInstructor) {
+    return (
+      <ClientShell onSignOut={endSession}>
+        <PageHeader eyebrow="Acesso protegido" title="Área do instrutor indisponível" />
+        <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta página.</Alert>
+      </ClientShell>
+    )
+  }
+
+  if (isInstructorAdaptationsRoute && session) {
+    return <InstructorAdaptationsPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
   if (isOnboardingConversationRoute && session) {

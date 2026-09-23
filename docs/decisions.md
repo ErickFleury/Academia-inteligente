@@ -292,6 +292,31 @@ any previously current plan for that same client `superseded`, preserving its
 version and item history. This adds a client-wide current-plan invariant without
 changing the established version states or instructor-only activation rule.
 
+**Task 17 amendment — 2026-09-23:** AI-generated training adaptations are
+retained structured proposals, distinct from raw training chat and from a
+training-plan version. An adaptation is generated only after the client has
+explicitly confirmed that they want a proposal; ordinary Task 16 chat remains
+conversational and read-only. A proposal may add, remove, replace, or adjust
+one or more plan items. A single item change is sufficient and unaffected items
+must be preserved.
+
+The client may accept a proposal for professional review or reject it. Client
+acceptance moves it to `pending_instructor_review`; it never activates a plan.
+An instructor may edit every structured operation, approve, or reject it. Only
+instructor approval creates a new immutable current version atomically,
+superseding the prior current version. The AI and client may never approve or
+activate a plan. Repeated decisions do not create duplicate versions; a
+proposal based on a non-current version is marked `superseded` rather than
+merged automatically. Proposals and their audit metadata are retained with
+training history, independently of raw-chat retention.
+
+For Task 17, AI may identify a recognized real-world exercise not already
+stored by the application. It must be a reviewable candidate, distinguishable
+from an existing exercise, and may include descriptive equipment requirements.
+It must not silently create a catalog entity or invent fictional exercises.
+Task 21 remains the future authoritative equipment catalog boundary; until it
+exists, instructor review is the normalization boundary.
+
 ## DEC-18 — Health-data storage, access, and audit evidence
 
 **Status:** partially approved — 2026-09-21
@@ -401,10 +426,19 @@ authoritative structured onboarding and returns a schema-constrained plan
 proposal. The backend validates the Task 13 plan model before persistence;
 provider output never approves or activates a version.
 
+**Initial-draft follow-up — 2026-09-23:** after completed onboarding, the
+client may explicitly request an initial AI-generated training draft from the
+personal training area. There may be at most one active AI-origin `proposal`
+draft for a client; a repeat request reuses that draft rather than calling the
+provider or creating another one. This rule does not restrict an instructor's
+separate manual proposals.
+
 **Task 16 training-chat amendment — 2026-09-22:** the client-facing training
 assistant is a separate, persisted, client-owned conversation. Its response
-contract is plain conversational Brazilian Portuguese text only; it does not
-produce field updates, plan patches, or adaptation proposals. It may receive
+contract is conversational Brazilian Portuguese and does not produce field
+updates, plan patches, or adaptation proposals. It may carry a non-binding
+signal that an adaptation may be useful, pending the later Task 17 client
+confirmation. It may receive
 only the authenticated client's current approved plan, its exercises and
 permitted metadata, relevant completed-onboarding facts when functionally
 needed, a bounded summary, and bounded recent messages. It must never mutate,
@@ -421,6 +455,36 @@ provider-neutral adapters implement the same contract for OpenAI and Ollama.
 OpenAI keeps the ten-second-per-attempt, one-retry policy; Ollama retains its
 separate configurable local-development timeout. Raw messages, prompts,
 provider responses, health details, and credentials must not be logged.
+
+**AI-draft refinement follow-up — 2026-09-23:** when exactly one active
+AI-origin initial draft exists, the owning client's training chat may update
+that draft only after the client clearly asks for a change. The adapter returns
+a full structured draft; the backend validates it through the Task 13 plan
+schema and revises it with optimistic concurrency. It cannot update a manual
+instructor draft, an approved/current/superseded version, or any other
+client's draft. This narrowly scoped proposal refinement does not approve,
+activate, or change a current plan, and instructor review remains mandatory.
+
+**Task 17 adaptation amendment — 2026-09-23:** adaptation generation uses the
+same provider-neutral OpenAI/Ollama boundary, structured-output validation,
+minimized own-client context, one-retry failure policy, and provider timeout
+rules. Its contract contains only a structured proposal explanation and
+operations; it cannot mutate a plan directly. Context contains the
+authenticated client's base current version, source own chat message, bounded
+recent own chat/summary, and only health context relevant to the requested
+change. The frontend creates a UUID for each logical adaptation request; the
+backend keys idempotency by client, base version, and that UUID. Provider or
+validation failure persists no proposal, plan version, or current-pointer
+change.
+
+**AI-initiated suggestion amendment — 2026-09-23:** Task 16 chat may identify
+from the authenticated client's own conversation that a training change could
+be useful. It may then present a non-binding, persisted suggestion and reason
+in Portuguese. The client does not need to manually initiate an adaptation.
+However, the client must still explicitly confirm the suggested draft before
+structured Task 17 generation begins, and must separately accept that resulting
+proposal before instructor review. The suggestion cannot modify a plan, create
+a version, or bypass any Task 17 human-review boundary.
 
 ## DEC-17 — Application identity and client-account relationship
 

@@ -425,14 +425,35 @@ Provide a chat where the client can discuss their training and provide additiona
 
 **Approved implementation policy (DEC-08/DEC-18, Task 16):** training chat is
 a separate client-owned persisted conversation. Responses are conversational
-Brazilian Portuguese text only and never directly mutate a training plan or
-version. Context is limited to the authenticated client's current approved
+Brazilian Portuguese and never directly mutate a current, approved, or
+historical training plan/version. A
+response may carry a non-binding persisted adaptation-suggestion signal for the
+Task 17 confirmation flow; it is not a plan patch or proposal. Context is
+limited to the authenticated client's current approved
 plan, relevant own completed-onboarding facts when necessary, bounded summary,
 and bounded recent messages. Raw messages and summary are client-only and
 eligible for cleanup after 30 days; this does not affect authoritative plans or
 plan history. The frontend UUID idempotency and one-retry provider policy apply;
 Ollama retains its configurable local timeout. Any actual plan change remains
 the Task 17 proposal/review flow.
+
+**Approved initial-draft follow-up:** after completed onboarding, a client may
+request one initial AI-origin `proposal` draft from the personal training area;
+repeated requests reuse that active draft. While exactly one such draft remains
+in `proposal`, the client may clearly request changes through the training chat.
+The provider returns a complete structured replacement, which the backend
+validates using the authoritative training-plan schema and applies with
+concurrency protection. This exception never affects manual drafts or
+approved/current/superseded versions, and it never approves or activates a
+plan; instructor review is still mandatory.
+
+**Approved interaction amendment (Task 17):** the assistant may proactively
+recognize from the authenticated client's own training conversation that a
+change could be useful and offer a non-binding draft suggestion. The client
+need not formulate a separate adaptation request. The client must explicitly
+confirm that suggestion before structured proposal generation, then accept or
+reject the generated proposal before instructor review. This does not give the
+assistant authority to alter, approve, or activate a plan.
 
 ### RF-19 Dynamically adapt training through AI
 
@@ -448,6 +469,20 @@ Adapt the plan when the client reports through chat that pain, a limitation, or 
 - [ ] **CA-19.4:** the modified plan remains after reauthentication.
 
 **Consolidation note:** The text requires an approved change but does not detail who approves it or the proposal states. Define this flow under DEC-07; preserve the approved plan as required by RN-16 and RN-17.
+
+**Approved implementation policy (DEC-07/DEC-08/DEC-15, Task 17):** a
+client-confirmed AI adaptation is a separate retained structured proposal. It
+may add, remove, replace, or adjust a single plan item or several items, while
+preserving unrelated content. The AI can suggest a recognized exercise candidate
+not already stored, but cannot create a catalog record, approve, activate, or
+directly mutate a plan. The client accepts or rejects the proposal; acceptance
+only requests instructor review. An instructor may edit, approve, or reject the
+proposal. Approval atomically creates a new immutable current version and
+supersedes the previous current version. A stale-base proposal is superseded,
+not automatically merged. Raw Task 16 chat remains client-only and subject to
+its independent 30-day retention; the structured proposal remains in plan
+history. Task 21 will later constrain machine-dependent candidates to active
+gym-catalog equipment.
 
 ### RF-20 Receive an external turnstile-use event
 
@@ -1070,7 +1105,7 @@ This order is implementation guidance added in this consolidation; it does not c
 | Secure-link structured onboarding | Original MVP; partially implemented | RF-09–RF-13; DEC-06, DEC-18 |
 | Conversational onboarding | Approved MVP extension; implemented | EXT-RF-AI-01; DEC-06, DEC-08, DEC-18 |
 | Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
-| Training generation/version/current view/chat/adaptation | Original MVP; planned | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
+| Training generation/version/current view/chat/adaptation | Original MVP; partially implemented | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
 | Employee management, recovery, onboarding self-review | Original post-MVP; not started | RF-06–RF-08, RF-14 |
 | Progress sharing | Approved post-MVP extension; planned | EXT-RF-SOC-01; EXT-DEC-SOC-01 |
 | Equipment management/catalog | Original post-MVP; planned | RF-32, RF-33 |
@@ -1093,15 +1128,15 @@ retains the chronological decision history.
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
 | DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, 11, and 12 may proceed. |
-| DEC-07 | **Resolved for Tasks 13–14** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Concurrency-safe proposal editing and immutable history apply. | Tasks 13–17. |
-| DEC-08 | **Resolved for Tasks 11 and 14** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. Task 14 reuses the compatible adapter/model configuration for structured proposal generation. | Tasks 11, 14, and later AI tasks with their own scope-specific safety contracts. |
+| DEC-07 | **Resolved for Tasks 13–17** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Task 17 applies this lifecycle to client-confirmed proposals and immutable history. | Tasks 13–17. |
+| DEC-08 | **Resolved for Tasks 11, 14, 16, and 17** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output where applicable, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. Task 17 uses validated structured proposal output only after explicit client confirmation. | Tasks 11, 14, 16, 17, and later AI tasks with their own scope-specific safety contracts. |
 | DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
 | DEC-10 | Unresolved; blocking occupancy implementation | Relationship/source of truth between access-event presence and auxiliary camera counts, spaces, freshness, and failure behavior. | RF-24X/RF-25X, RN-37, EXT-RF-PRES-01. |
 | DEC-11 | Unresolved | Access-integration payload/auth/idempotency, recognition versus authorization/release, alternatives and manual override. | RF-20–RF-23. |
 | DEC-12 | Unresolved | Plan/enrollment/payment model, validity/modalities/access allowance, confirmation, renewal, delinquency and purchasable plans. | RF-31, RN-22/RN-24/RN-35/RN-36. |
 | DEC-13 | Unresolved | Financial meanings and calculations, periods and filters; profit is not automatically revenue. | RF-26–RF-29. |
 | DEC-14 | Unresolved | Class recurrence, visibility, reservation/capacity and authorized exceptions. | RF-30/RN-25. |
-| DEC-15 | **Resolved for Tasks 13 and 15 lifecycle/manual authoring** | Instructors may manually create and edit proposals; the minimum version/item model, responsibility metadata, and one current plan per client are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Tasks 13 and 15 may proceed; later affected tasks need their remaining gates. |
+| DEC-15 | **Resolved for Tasks 13, 15, and 17** | Instructors may manually create and edit proposals; the minimum version/item model, responsibility metadata, one current plan per client, and Task 17 review of recognized exercise candidates are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Tasks 13, 15, and 17 may proceed; later affected tasks need their remaining gates. |
 | DEC-16 | Unresolved; blocking formal RNF sign-off | Reference load, timeouts, viewports, usability protocol and continuous-availability measurement. | Formal end-to-end RNF verification. |
 | DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
 | DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention remains unresolved. | Tasks 10 and 11 may proceed; biometrics remain gated. |
@@ -1157,10 +1192,10 @@ unchecked boxes or planned files.
 | EXT-RF-AI-01 | Approved MVP extension | Implemented | DEC-06/08/18 | Task 11: client-scoped resumable interview, final validated structured extraction, bounded context, idempotency, and five-day raw-message retention. |
 | EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
 | RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13: immutable version lifecycle, current selection, responsibility metadata, and manual proposal path. |
-| RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14: completed-onboarding-scoped, structured AI proposal only; instructor review remains mandatory. |
+| RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14 plus follow-up: completed-onboarding-scoped, reusable single AI draft and validated AI-draft refinement; instructor review remains mandatory. |
 | RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
-| RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16: client-only persisted conversational training chat, bounded own-context, idempotency, controlled failures, and no direct plan mutation. |
-| RF-19 | Original MVP | Planned | DEC-07/08/15 | Task 17 remains the only plan-adaptation/proposal flow. |
+| RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16 plus follow-up: client-only persisted training chat, bounded own-context, idempotency, controlled failures, and narrow validated refinement of its sole active AI draft only. |
+| RF-19 | Original MVP | Implemented | DEC-07/08/15 | Task 17: client-confirmed structured adaptation proposals, instructor review, immutable current-version transition, and preserved history. |
 | MVP frontend polish | Visual implementation enabler | Planned | `docs/frontend-design.md` | Task 18, before verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |
@@ -1239,10 +1274,10 @@ by inference.
 - **DEC-06:** recovery-token policy remains unresolved. The invitation-token
   policy, structured schema, editable-draft behavior, and completion
   prerequisites are approved.
-- **DEC-07:** resolved for Tasks 13–14. Later adaptation work must preserve the
+- **DEC-07:** resolved for Tasks 13–17. Later adaptation work must preserve the
   approved proposal/review lifecycle.
-- **DEC-08:** resolved for Tasks 11 and 14. Later AI work still requires its
-  own applicable contracts and safety decisions.
+- **DEC-08:** resolved for Tasks 11, 14, 16, and 17. Later AI work still
+  requires its own applicable contracts and safety decisions.
 - **DEC-09:** biometric metrics and thresholds; blocks relevant RF-21/RF-22 work.
 - **DEC-10:** occupancy source/meaning/freshness; blocks Task 22 and contributes
   to the Task 23 block.
@@ -1251,8 +1286,8 @@ by inference.
   RF-31 and related physical-access work.
 - **DEC-13:** financial indicator meanings; blocks RF-28/RF-29 financial metrics.
 - **DEC-14:** class scheduling/capacity/reservation model; blocks RF-30 details.
-- **DEC-15:** manual/review/exercise/audit flows; blocks the affected training
-  tasks when those flows are required.
+- **DEC-15:** resolved for Task 17's exercise-candidate review scope; remaining
+  catalog/evaluation flows retain their separate gates.
 - **DEC-16:** RNF measurement protocol; blocks formal Task 19 sign-off.
 - **DEC-18:** health/onboarding and Task 11 AI-conversation storage, access,
   logging, retention, and failure-safety policy are approved. Biometric behavior

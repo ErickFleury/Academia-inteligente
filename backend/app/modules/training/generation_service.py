@@ -16,6 +16,7 @@ from app.modules.onboarding.draft_service import (
     OnboardingDraftService,
 )
 from app.modules.onboarding.models import Onboarding
+from app.modules.training.models import TrainingPlan, TrainingPlanVersion
 from app.modules.training.schema import TrainingPlanVersionInput
 from app.modules.training.service import TrainingLifecycleService
 
@@ -58,6 +59,21 @@ class InitialTrainingGenerationService:
             session, scope.client_id
         ):
             raise CompletedOnboardingRequiredError
+
+        # A client can have one active initial AI draft. Reusing it prevents a
+        # second provider call and leaves manual/instructor proposals untouched.
+        existing = session.scalar(
+            select(TrainingPlanVersion)
+            .join(TrainingPlan, TrainingPlanVersion.plan_id == TrainingPlan.id)
+            .where(
+                TrainingPlan.client_id == scope.client_id,
+                TrainingPlanVersion.status == "proposal",
+                TrainingPlanVersion.origin == "ai",
+            )
+            .order_by(TrainingPlanVersion.created_at.desc())
+        )
+        if existing is not None:
+            return existing
 
         # `completion_data` is the shared form/conversation-independent source
         # of truth. The provider never receives another client's data or identity.

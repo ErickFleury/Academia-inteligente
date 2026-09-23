@@ -21,6 +21,10 @@ class TrainingChatProvider(Protocol):
     def training_chat(self, context: dict[str, object]) -> "AiTrainingChatResponse": ...
 
 
+class TrainingAdaptationProvider(Protocol):
+    def generate_adaptation(self, context: dict[str, object]) -> "AiTrainingAdaptationResponse": ...
+
+
 class AiProviderError(Exception):
     def __init__(self, category: str, *, retryable: bool) -> None:
         super().__init__(category)
@@ -46,10 +50,21 @@ class AiTrainingGenerationResponse(BaseModel):
 
 
 class AiTrainingChatResponse(BaseModel):
-    """Plain client-facing reply; chat never carries a plan mutation."""
+    """Client-facing reply with an optional, non-binding adaptation suggestion."""
 
     model_config = ConfigDict(extra="forbid")
     assistant_message: str = Field(min_length=1, max_length=4000)
+    adaptation_suggested: bool = False
+    adaptation_reason: str | None = Field(default=None, max_length=2000)
+    draft_update: dict[str, Any] | None = None
+
+
+class AiTrainingAdaptationResponse(BaseModel):
+    """Provider-neutral structured proposal; never a plan mutation."""
+
+    model_config = ConfigDict(extra="forbid")
+    explanation: str = Field(min_length=1, max_length=2000)
+    operations: list[dict[str, Any]] = Field(min_length=1, max_length=100)
 
 
 class OnboardingAiProvider(Protocol):
@@ -91,8 +106,24 @@ _TRAINING_CHAT = (
     "Você é o assistente de treino da Academia Inteligente. Responda em português brasileiro, "
     "de forma clara e conversacional, usando somente o contexto fornecido do próprio cliente. "
     "Explique o treino e exercícios, mas não invente informações, não faça diagnóstico médico, "
-    "não dê instruções de medicação e não altere, aprove ou ative nenhum plano. Quando houver "
-    "um pedido de alteração, explique que a mudança precisa passar pela revisão profissional."
+    "não dê instruções de medicação e nunca aprove ou ative nenhum plano. Você nunca pode alterar "
+    "um plano atual, aprovado, histórico ou um rascunho criado por instrutor. Quando o relato "
+    "indicar que uma mudança pode ajudar, ofereça preparar uma proposta para revisão profissional "
+    "e sinalize adaptation_suggested=true com um adaptation_reason objetivo. Nunca sinalize uma "
+    "mudança sem uma razão concreta no relato do cliente. Se não houver uma ficha atual no "
+    "contexto, não ofereça alteração nem sinalize uma adaptação."
+    " Quando existir um editable_training_draft, ele é o único rascunho que você pode editar. "
+    "Se o cliente pedir uma alteração nesse rascunho, faça a alteração solicitada e retorne em "
+    "draft_update o plano completo atualizado. Não diga que fará a alteração sem enviar "
+    "draft_update. Use draft_update=null somente quando o cliente não pedir uma mudança no "
+    "rascunho ou quando não houver rascunho editável."
+)
+_TRAINING_ADAPTATION = (
+    "Gere uma proposta estruturada de adaptação de treino em português, usando somente o "
+    "contexto fornecido do próprio cliente. Não diagnostique, invente fatos ou prescreva "
+    "medicação. A proposta não está aprovada nem ativa. Preserve itens não afetados. Você "
+    "pode sugerir apenas exercícios reais e reconhecidos; candidatas novas exigem revisão do "
+    "instrutor e podem informar equipamento como texto descritivo."
 )
 
 
@@ -165,13 +196,66 @@ def _training_schema() -> dict[str, object]:
 
 
 def _training_chat_schema() -> dict[str, object]:
+    draft = _training_schema()["properties"]["plan"]
     return {
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 4000}
+            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 4000},
+            "adaptation_suggested": {"type": "boolean"},
+            "adaptation_reason": {"type": ["string", "null"], "maxLength": 2000},
+            "draft_update": {"anyOf": [draft, {"type": "null"}]},
         },
-        "required": ["assistant_message"],
+        "required": [
+            "assistant_message",
+            "adaptation_suggested",
+            "adaptation_reason",
+            "draft_update",
+        ],
+    }
+
+
+def _adaptation_schema() -> dict[str, object]:
+    item = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "exercise_name": {"type": "string", "minLength": 1, "maxLength": 200},
+            "sets": {"type": "integer", "minimum": 1, "maximum": 100},
+            "repetitions": {"type": "string", "minLength": 1, "maxLength": 100},
+            "load_guidance": {"type": "string", "minLength": 1, "maxLength": 500},
+            "rest_seconds": {"type": "integer", "minimum": 0, "maximum": 3600},
+            "equipment_requirement": {"type": ["string", "null"], "maxLength": 200},
+            "is_existing_exercise": {"type": "boolean"},
+        },
+        "required": [
+            "exercise_name",
+            "sets",
+            "repetitions",
+            "load_guidance",
+            "rest_seconds",
+            "equipment_requirement",
+            "is_existing_exercise",
+        ],
+    }
+    operation = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "operation_type": {"type": "string", "enum": ["add", "remove", "replace", "adjust"]},
+            "target_position": {"type": ["integer", "null"], "minimum": 1},
+            "item": {"anyOf": [item, {"type": "null"}]},
+        },
+        "required": ["operation_type", "target_position", "item"],
+    }
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "explanation": {"type": "string", "minLength": 1, "maxLength": 2000},
+            "operations": {"type": "array", "minItems": 1, "maxItems": 100, "items": operation},
+        },
+        "required": ["explanation", "operations"],
     }
 
 
@@ -242,8 +326,11 @@ class _Provider:
         )  # type: ignore[return-value]
 
     def training_chat(self, context: dict[str, object]) -> AiTrainingChatResponse:
+        return self._call(context, _TRAINING_CHAT, _training_chat_schema(), AiTrainingChatResponse)  # type: ignore[return-value]
+
+    def generate_adaptation(self, context: dict[str, object]) -> AiTrainingAdaptationResponse:
         return self._call(
-            context, _TRAINING_CHAT, _training_chat_schema(), AiTrainingChatResponse
+            context, _TRAINING_ADAPTATION, _adaptation_schema(), AiTrainingAdaptationResponse
         )  # type: ignore[return-value]
 
 
@@ -339,4 +426,8 @@ def training_generation_provider_from_environment() -> TrainingGenerationProvide
 
 def training_chat_provider_from_environment() -> TrainingChatProvider:
     """Use the same provider selector without coupling training chat to either adapter."""
+    return onboarding_ai_provider_from_environment()  # type: ignore[return-value]
+
+
+def training_adaptation_provider_from_environment() -> TrainingAdaptationProvider:
     return onboarding_ai_provider_from_environment()  # type: ignore[return-value]

@@ -11,6 +11,7 @@ from app.integrations.ai import (
     OpenAiConfig,
     OpenAiResponsesOnboardingProvider,
     onboarding_ai_provider_from_environment,
+    training_adaptation_provider_from_environment,
     training_chat_provider_from_environment,
 )
 
@@ -190,3 +191,42 @@ def test_ollama_training_chat_maps_plain_shared_response(monkeypatch: pytest.Mon
         OllamaConfig("http://ollama:11434", "qwen3:4b", 30)
     ).training_chat({"current_user_message": "Como faço?"})
     assert result.assistant_message == "Faça com calma."
+
+
+@pytest.mark.parametrize("provider", ["openai", "ollama"])
+def test_adaptation_uses_the_same_provider_neutral_contract(
+    monkeypatch: pytest.MonkeyPatch, provider: str
+) -> None:
+    monkeypatch.setenv("AI_PROVIDER", provider)
+    if provider == "openai":
+        monkeypatch.setenv("OPENAI_API_KEY", "key")
+    selected = training_adaptation_provider_from_environment()
+    assert hasattr(selected, "generate_adaptation")
+
+
+def test_ollama_adaptation_maps_the_shared_structured_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = {
+        "explanation": "Vamos revisar esta alteração com um instrutor.",
+        "operations": [
+            {
+                "operation_type": "adjust",
+                "target_position": 1,
+                "item": {
+                    "exercise_name": "Agachamento",
+                    "sets": 2,
+                    "repetitions": "8",
+                    "load_guidance": "Carga leve",
+                    "rest_seconds": 90,
+                    "equipment_requirement": None,
+                    "is_existing_exercise": True,
+                },
+            }
+        ],
+    }
+    monkeypatch.setattr(ai, "urlopen", lambda request, timeout: BytesIO(ollama_response(payload)))
+    result = OllamaOnboardingProvider(
+        OllamaConfig("http://ollama:11434", "qwen3:4b", 30)
+    ).generate_adaptation({"base_plan": {}})
+    assert result.operations[0]["operation_type"] == "adjust"

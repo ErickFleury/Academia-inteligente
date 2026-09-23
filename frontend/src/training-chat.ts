@@ -4,6 +4,10 @@ export type TrainingChatMessage = {
   role: 'user' | 'assistant'
   content: string
   created_at: string
+  client_request_id?: string | null
+  reply_to_client_request_id?: string | null
+  adaptation_suggested?: boolean
+  adaptation_reason?: string | null
 }
 
 export type TrainingChat = { messages: TrainingChatMessage[] }

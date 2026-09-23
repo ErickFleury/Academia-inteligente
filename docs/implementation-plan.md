@@ -91,13 +91,13 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-04 | Resolved for current roles/provisioning; inherited by authorization, health, training, and future employee work. |
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
 | DEC-06 | Invitation-token policy is resolved for Tasks 07 and 09; schema, validation, and editable-draft behavior are resolved for Task 10. Recovery-token policy remains unresolved for later affected work. |
-| DEC-07 | Resolved for Tasks 13–14: instructor-only approval/activation and no automatic health-risk generation block; Task 17 preserves the lifecycle. |
-| DEC-08 | Resolved for Tasks 11, 14, and 16: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output where applicable; Ollama is also available as a local development/test adapter. Task 16 uses plain conversational output only and has no plan-mutation authority. |
+| DEC-07 | Resolved for Tasks 13–17: instructor-only approval/activation and no automatic health-risk generation block; Task 17 applies the lifecycle to client-confirmed proposals. |
+| DEC-08 | Resolved for Tasks 11, 14, 16, and 17: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output where applicable; Ollama is also available as a local development/test adapter. Task 16 uses plain conversational output only and has no plan-mutation authority; Task 17 uses structured output only after explicit client confirmation. |
 | DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
 | DEC-10 | Blocking Task 22 and Task 23: occupancy sources/meaning/freshness. Do not infer a source of truth. |
 | DEC-11 | Blocking Task 22 where external/access events are its inputs. |
 | DEC-12–DEC-14 | Blocking future plan/payment/financial/class tasks respectively. |
-| DEC-15 | Blocking Tasks 13, 14, and 17 wherever manual/professional/audit flows are required. |
+| DEC-15 | Resolved for Task 17's recognized-exercise candidate and instructor-review scope. Task 21 remains the catalog boundary. |
 | DEC-16 | Blocking formal RNF sign-off in Task 19. |
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
 | DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric behavior still gates affected work. |
@@ -123,10 +123,10 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 11 | Conversational AI onboarding | EXT-RF-AI-01 | 06, 08, 10; DEC-06/08/18 | Completed | Client-only resumable AI interview, final validated extraction, and bounded retention |
 | 12 | Onboarding completion | RF-13 | 10, 11; DEC-06 | Completed | Shared validation with intentional atomic completion and timestamp |
 | 13 | Training version lifecycle | RF-17 | 03, 12; DEC-07/15/17 | Completed | Immutable versions/current/professional attribution and manual proposal path |
-| 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed | Completed-onboarding-scoped structured AI proposal through lifecycle; instructor review required |
+| 14 | Initial AI training generation | RF-15; RF-17 integration | 12, 13; DEC-07/08/15/18 | Completed + follow-up | Client-triggered, completed-onboarding-scoped reusable AI proposal through lifecycle; instructor review required |
 | 15 | Current training view | RF-16; RF-17 integration | 06, 08, 13, 14 | Completed | Mobile own-current-plan/exercise view with empty/loading/error states |
-| 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed | Client-only 30-day persisted, read-only training assistant |
-| 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | MVP future | Approved new version, history preserved |
+| 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed + follow-up | Client-only 30-day persisted assistant; may refine only the single active AI initial draft through validated structured output |
+| 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | Completed | AI-detected, client-confirmed structured proposals, instructor review, immutable current version, history preserved |
 | 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | MVP visual polish | Final consistency, responsive, accessibility pass |
 | 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |
 | 20 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06, 08; EXT-DEC-SOC-01 | Post-MVP extension | Author-owned private/shared updates |
@@ -184,5 +184,6 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 17, dynamic training adaptation, is next in dependency order. It must
-preserve Task 16's read-only boundary and create only reviewed plan proposals.
+Task 18, MVP frontend visual polish, is next in dependency order. It evaluates
+the integrated client/admin experience after Tasks 01–17 without changing
+business behavior.

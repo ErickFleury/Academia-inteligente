@@ -22,7 +22,13 @@ from app.modules.training.chat_service import (
     TrainingChatService,
     TrainingChatUnavailableError,
 )
-from app.modules.training.models import TrainingAiConversation, TrainingAiMessage, TrainingPlan
+from app.modules.training.models import (
+    TrainingAiConversation,
+    TrainingAiMessage,
+    TrainingPlan,
+    TrainingPlanItem,
+    TrainingPlanVersion,
+)
 from app.modules.training.schema import ManualPlanCreate, TrainingPlanItemInput
 from app.modules.training.service import TrainingLifecycleService
 
@@ -189,6 +195,165 @@ def test_idempotent_message_does_not_call_provider_or_create_duplicates(session:
     assert len(first.messages) == len(second.messages) == 2
     assert provider.calls == 1
     assert len(session.scalars(select(TrainingAiMessage)).all()) == 2
+
+
+def test_chat_persists_an_ai_detected_adaptation_suggestion(session: Session) -> None:
+    ada = create_client(session, "ada", "ada@example.test")
+    create_current_plan(session, ada)
+    request_id = uuid4()
+    service = TrainingChatService(
+        FakeProvider(
+            AiTrainingChatResponse(
+                assistant_message="Posso preparar uma proposta para revisão.",
+                adaptation_suggested=True,
+                adaptation_reason="Desconforto relatado no agachamento.",
+            )
+        )
+    )
+
+    state = service.submit_for_subject(
+        session,
+        "ada",
+        message="Meu joelho incomoda no agachamento.",
+        client_request_id=request_id,
+    )
+
+    suggestion = state.messages[-1]
+    assert suggestion.adaptation_suggested is True
+    assert suggestion.adaptation_reason == "Desconforto relatado no agachamento."
+    assert suggestion.reply_to_client_request_id == request_id
+    assert session.scalars(select(TrainingPlan)).all()[0].is_current is True
+
+
+def test_chat_does_not_offer_adaptation_without_a_current_plan(session: Session) -> None:
+    create_client(session, "ada", "ada@example.test")
+    service = TrainingChatService(
+        FakeProvider(
+            AiTrainingChatResponse(
+                assistant_message="Vamos conversar sobre isso.",
+                adaptation_suggested=True,
+                adaptation_reason="Desconforto relatado.",
+            )
+        )
+    )
+    state = service.submit_for_subject(
+        session, "ada", message="Meu joelho incomoda.", client_request_id=uuid4()
+    )
+    assert state.messages[-1].adaptation_suggested is False
+
+
+def test_chat_can_update_only_the_single_active_ai_draft(session: Session) -> None:
+    ada = create_client(session, "ada", "ada@example.test")
+    lifecycle = TrainingLifecycleService()
+    draft = lifecycle.create_proposal(
+        session,
+        client_id=ada.id,
+        data=ManualPlanCreate(
+            client_id=str(ada.id),
+            name="Rascunho inicial",
+            objective="Ganhar força",
+            items=[
+                TrainingPlanItemInput(
+                    exercise_name="Agachamento",
+                    sets=3,
+                    repetitions="8",
+                    load_guidance="Carga confortável",
+                    rest_seconds=90,
+                )
+            ],
+        ),
+        created_by="ai",
+        origin="ai",
+    )
+    provider = FakeProvider(
+        AiTrainingChatResponse(
+            assistant_message="Atualizei o seu rascunho para uma alternativa mais confortável.",
+            draft_update={
+                "name": "Rascunho inicial",
+                "objective": "Ganhar força sem desconforto no joelho",
+                "items": [
+                    {
+                        "exercise_name": "Leg press",
+                        "sets": 3,
+                        "repetitions": "10",
+                        "load_guidance": "Carga leve e sem dor",
+                        "rest_seconds": 90,
+                    }
+                ],
+            },
+        )
+    )
+
+    TrainingChatService(provider).submit_for_subject(
+        session,
+        "ada",
+        message="Atualize o rascunho para não usar agachamento.",
+        client_request_id=uuid4(),
+    )
+
+    updated = session.scalar(select(TrainingPlanVersion).where(TrainingPlanVersion.id == draft.id))
+    assert updated is not None
+    assert updated.status == "proposal" and updated.origin == "ai" and updated.revision == 2
+    assert updated.objective == "Ganhar força sem desconforto no joelho"
+    assert session.scalar(
+        select(TrainingPlanItem.exercise_name).where(TrainingPlanItem.version_id == draft.id)
+    ) == "Leg press"
+    assert provider.contexts[0]["editable_training_draft"] is not None
+
+
+def test_chat_never_updates_a_manual_draft(session: Session) -> None:
+    ada = create_client(session, "ada", "ada@example.test")
+    lifecycle = TrainingLifecycleService()
+    manual = lifecycle.create_proposal(
+        session,
+        client_id=ada.id,
+        data=ManualPlanCreate(
+            client_id=str(ada.id),
+            name="Rascunho do instrutor",
+            objective="Força",
+            items=[
+                TrainingPlanItemInput(
+                    exercise_name="Remada",
+                    sets=3,
+                    repetitions="10",
+                    load_guidance="Carga confortável",
+                    rest_seconds=60,
+                )
+            ],
+        ),
+        created_by="instrutor",
+        origin="instructor",
+    )
+    service = TrainingChatService(
+        FakeProvider(
+            AiTrainingChatResponse(
+                assistant_message="Posso explicar esta ficha.",
+                draft_update={
+                    "name": "Não deve alterar",
+                    "objective": "Não deve alterar",
+                    "items": [
+                        {
+                            "exercise_name": "Outro",
+                            "sets": 2,
+                            "repetitions": "10",
+                            "load_guidance": "Leve",
+                            "rest_seconds": 60,
+                        }
+                    ],
+                },
+            )
+        )
+    )
+
+    service.submit_for_subject(
+        session, "ada", message="Altere meu treino", client_request_id=uuid4()
+    )
+
+    unchanged = session.scalar(
+        select(TrainingPlanVersion).where(TrainingPlanVersion.id == manual.id)
+    )
+    assert unchanged is not None
+    assert unchanged.name == "Rascunho do instrutor" and unchanged.revision == 1
 
 
 def test_retry_and_failure_leave_training_plan_unchanged(session: Session) -> None:

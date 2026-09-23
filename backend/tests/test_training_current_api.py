@@ -97,7 +97,9 @@ def app_for(session: Session) -> FastAPI:
     return app
 
 
-def request(app: FastAPI, authorization: str | None) -> tuple[int, dict[str, object]]:
+def request(
+    app: FastAPI, authorization: str | None, path: str = "/training/current"
+) -> tuple[int, object]:
     sent: list[dict[str, object]] = []
     headers = [] if authorization is None else [(b"authorization", authorization.encode())]
     scope = {
@@ -106,8 +108,8 @@ def request(app: FastAPI, authorization: str | None) -> tuple[int, dict[str, obj
         "http_version": "1.1",
         "method": "GET",
         "scheme": "http",
-        "path": "/training/current",
-        "raw_path": b"/training/current",
+        "path": path,
+        "raw_path": path.encode(),
         "query_string": b"",
         "headers": headers,
         "client": ("testclient", 50000),
@@ -163,6 +165,43 @@ def test_client_without_current_plan_receives_an_empty_response(
     set_identity(monkeypatch, "ada", ("client",))
 
     assert request(app, "Bearer token") == (200, {"plan": None})
+    app.dependency_overrides.clear()
+
+
+def test_training_drafts_are_visible_only_to_the_owning_client(
+    session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ada = create_client(session, "ada", "ada@example.test")
+    grace = create_client(session, "grace", "grace@example.test")
+    lifecycle = TrainingLifecycleService()
+    for client, name in ((ada, "Rascunho da Ada"), (grace, "Rascunho da Grace")):
+        lifecycle.create_proposal(
+            session,
+            client_id=client.id,
+            data=TrainingPlanVersionInput(
+                name=name,
+                objective="Ganhar força com consistência",
+                items=[
+                    TrainingPlanItemInput(
+                        exercise_name="Agachamento",
+                        sets=3,
+                        repetitions="8",
+                        load_guidance="Carga confortável",
+                        rest_seconds=90,
+                    )
+                ],
+            ),
+            created_by="ai",
+            origin="ai",
+        )
+    app = app_for(session)
+    set_identity(monkeypatch, "ada", ("client",))
+
+    status, payload = request(app, "Bearer token", "/training/drafts")
+
+    assert status == 200
+    assert payload[0]["name"] == "Rascunho da Ada"
+    assert "Grace" not in json.dumps(payload)
     app.dependency_overrides.clear()
 
 

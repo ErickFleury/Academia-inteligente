@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { ClientShell } from './components/application-shell'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
-import { getCurrentTrainingPlan, type CurrentTrainingPlan } from './training-plan'
+import { createInitialTrainingProposal, getCurrentTrainingPlan, getOwnTrainingDrafts, type CurrentTrainingPlan, type TrainingPlanDraft } from './training-plan'
 
 type CurrentTrainingPageProps = { accessToken: string; onSignOut: () => void }
 
@@ -13,13 +13,20 @@ function restLabel(restSeconds: number) {
 
 export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingPageProps) {
   const [plan, setPlan] = useState<CurrentTrainingPlan | null | undefined>(undefined)
+  const [drafts, setDrafts] = useState<TrainingPlanDraft[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
 
   async function loadPlan() {
     setError(null)
     setPlan(undefined)
     try {
-      setPlan(await getCurrentTrainingPlan(accessToken))
+      const [currentPlan, ownDrafts] = await Promise.all([
+        getCurrentTrainingPlan(accessToken),
+        getOwnTrainingDrafts(accessToken),
+      ])
+      setPlan(currentPlan)
+      setDrafts(ownDrafts)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível carregar seu treino.')
       setPlan(null)
@@ -27,6 +34,19 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
   }
 
   useEffect(() => { void loadPlan() }, [accessToken])
+
+  async function generateDraft() {
+    setError(null)
+    setGenerating(true)
+    try {
+      const draft = await createInitialTrainingProposal(accessToken)
+      setDrafts((current) => [draft, ...current.filter((item) => item.plan_id !== draft.plan_id || item.version_number !== draft.version_number)])
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível gerar seu rascunho de treino.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   if (plan === undefined) {
     return <ClientShell onSignOut={onSignOut}><LoadingState label="Carregando seu treino" /></ClientShell>
@@ -48,10 +68,17 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
           </Stack>
         )}
         {!error && !plan && (
-          <EmptyState
-            title="Seu treino ainda não está disponível"
-            description="Quando um instrutor revisar e ativar sua proposta, seu plano aparecerá aqui."
-          />
+          <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
+            <EmptyState
+              title="Seu treino ainda não está disponível"
+              description="Gere um rascunho inicial com IA ou aguarde seu instrutor criar uma proposta. O treino só fica disponível após revisão, aprovação e ativação profissional."
+            />
+            {!drafts.some((draft) => draft.origin === 'ai') && (
+              <Button disabled={generating} onClick={() => void generateDraft()} variant="contained">
+                {generating ? 'Gerando rascunho…' : 'Gerar rascunho inicial com IA'}
+              </Button>
+            )}
+          </Stack>
         )}
         {!error && plan && (
           <Card component="section">
@@ -86,6 +113,28 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
             </CardContent>
           </Card>
         )}
+        {!error && drafts.map((draft) => (
+          <Card component="section" key={`${draft.plan_id}-${draft.version_number}`} variant="outlined">
+            <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+              <Stack spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
+                  <Typography color="warning.main" variant="overline">Rascunho — ainda não aprovado</Typography>
+                  <Chip color="warning" label="Aguardando instrutor" size="small" />
+                </Stack>
+                <Typography component="h2" variant="h3">{draft.name}</Typography>
+                <Typography color="text.secondary">{draft.objective}</Typography>
+                <StatusNotice severity="info">Este é apenas um rascunho. Seu instrutor precisa revisar, aprovar e ativar a ficha antes que ela se torne seu treino atual.</StatusNotice>
+                <Stack divider={<Divider flexItem />} spacing={0}>
+                  {draft.items.map((item) => <Box component="article" key={item.position} sx={{ minWidth: 0, py: 1.5 }}>
+                    <Typography component="h3" variant="h4">{item.position}. {item.exercise_name}</Typography>
+                    <Typography color="text.secondary" variant="body2">{item.sets} séries · {item.repetitions} repetições · {restLabel(item.rest_seconds)}</Typography>
+                    <Typography color="text.secondary" variant="body2">{item.load_guidance}</Typography>
+                  </Box>)}
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        ))}
       </Stack>
     </ClientShell>
   )

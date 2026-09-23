@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+from pydantic import ValidationError
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
@@ -24,6 +25,12 @@ from app.modules.training.models import (
     TrainingPlanItem,
     TrainingPlanVersion,
 )
+from app.modules.training.schema import TrainingPlanVersionInput
+from app.modules.training.service import (
+    ConcurrentTrainingUpdateError,
+    ImmutableTrainingVersionError,
+    TrainingLifecycleService,
+)
 
 
 class TrainingChatNotFoundError(Exception):
@@ -34,11 +41,19 @@ class TrainingChatUnavailableError(Exception):
     pass
 
 
+class TrainingChatDraftUpdateError(Exception):
+    """The provider proposed an invalid or stale change to the AI draft."""
+
+
 @dataclass(frozen=True)
 class TrainingChatMessage:
     role: str
     content: str
     created_at: datetime
+    client_request_id: UUID | None
+    reply_to_client_request_id: UUID | None
+    adaptation_suggested: bool
+    adaptation_reason: str | None
 
 
 @dataclass(frozen=True)
@@ -47,10 +62,11 @@ class TrainingChatState:
 
 
 class TrainingChatService:
-    """Persists only client-owned conversation state; it never writes a training plan."""
+    """Client-scoped chat; only its active AI proposal may be revised by the AI."""
 
     def __init__(self, provider: TrainingChatProvider | None = None) -> None:
         self._provider = provider or training_chat_provider_from_environment()
+        self._lifecycle = TrainingLifecycleService()
         self._recent_message_limit = int(os.environ.get("AI_RECENT_MESSAGE_LIMIT", "6"))
         self._summary_limit = int(os.environ.get("AI_TRAINING_CHAT_SUMMARY_LIMIT", "2000"))
 
@@ -93,17 +109,22 @@ class TrainingChatService:
             conversation.raw_expires_at = self._expiry()
             session.commit()
 
-        response = self._retry(
-            lambda: self._provider.training_chat(
-                self._context(session, client_id, conversation, message, user.id)
-            )
-        )
+        context = self._context(session, client_id, conversation, message, user.id)
+        response = self._retry(lambda: self._provider.training_chat(context))
+        editable_draft = self._editable_ai_draft(session, client_id)
+        if response.draft_update is not None and editable_draft is not None:
+            self._apply_draft_update(session, editable_draft, response.draft_update)
+        can_suggest_adaptation = context["current_training_plan"] is not None
         assistant = TrainingAiMessage(
             conversation_id=conversation.id,
             role="assistant",
             content=response.assistant_message,
             sequence=self._next(session, conversation.id),
             reply_to_client_request_id=client_request_id,
+            adaptation_suggested=response.adaptation_suggested and can_suggest_adaptation,
+            adaptation_reason=response.adaptation_reason
+            if response.adaptation_suggested and can_suggest_adaptation
+            else None,
         )
         session.add(assistant)
         conversation.raw_expires_at = self._expiry()
@@ -146,19 +167,77 @@ class TrainingChatService:
         history = self._messages(session, conversation.id, message_id)[
             -self._recent_message_limit :
         ]
+        current_plan = self._current_plan(session, client_id)
+        draft = self._editable_ai_draft(session, client_id)
         return {
             "current_user_message": message,
             "conversation_summary": conversation.summary,
             "recent_messages": [{"role": item.role, "content": item.content} for item in history],
-            "current_training_plan": self._current_plan(session, client_id),
+            "current_training_plan": current_plan,
+            "editable_training_draft": self._draft_context(session, draft) if draft else None,
             "relevant_onboarding": self._onboarding_context(session, client_id, message),
             "rules": {
                 "language": "pt-BR",
-                "read_only_training_chat": True,
                 "must_not_diagnose": True,
-                "must_not_mutate_training_plan": True,
+                "must_not_mutate_current_or_approved_training_plan": True,
+                "may_suggest_adaptation": current_plan is not None,
+                "may_update_ai_draft": draft is not None,
             },
         }
+
+    @staticmethod
+    def _editable_ai_draft(session: Session, client_id: UUID) -> TrainingPlanVersion | None:
+        drafts = session.scalars(
+            select(TrainingPlanVersion)
+            .join(TrainingPlan, TrainingPlanVersion.plan_id == TrainingPlan.id)
+            .where(
+                TrainingPlan.client_id == client_id,
+                TrainingPlanVersion.status == "proposal",
+                TrainingPlanVersion.origin == "ai",
+            )
+            .order_by(TrainingPlanVersion.created_at.desc())
+        ).all()
+        # Do not silently choose between legacy duplicate AI drafts.
+        return drafts[0] if len(drafts) == 1 else None
+
+    @staticmethod
+    def _draft_context(
+        session: Session, version: TrainingPlanVersion
+    ) -> dict[str, object]:
+        return {
+            "name": version.name,
+            "objective": version.objective,
+            "items": [
+                {
+                    "exercise_name": item.exercise_name,
+                    "sets": item.sets,
+                    "repetitions": item.repetitions,
+                    "load_guidance": item.load_guidance,
+                    "rest_seconds": item.rest_seconds,
+                }
+                for item in session.scalars(
+                    select(TrainingPlanItem)
+                    .where(TrainingPlanItem.version_id == version.id)
+                    .order_by(TrainingPlanItem.position)
+                )
+            ],
+        }
+
+    def _apply_draft_update(
+        self, session: Session, version: TrainingPlanVersion, update: dict[str, object]
+    ) -> None:
+        try:
+            data = TrainingPlanVersionInput.model_validate(update)
+            self._lifecycle.revise(
+                session,
+                plan_id=version.plan_id,
+                version_number=version.version_number,
+                data=data,
+                actor="ai",
+                expected_revision=version.revision,
+            )
+        except (ValidationError, ConcurrentTrainingUpdateError, ImmutableTrainingVersionError):
+            raise TrainingChatDraftUpdateError from None
 
     def _current_plan(self, session: Session, client_id: UUID) -> dict[str, object] | None:
         version = session.scalar(
@@ -276,6 +355,14 @@ class TrainingChatService:
         if exclude is not None:
             statement = statement.where(TrainingAiMessage.id != exclude)
         return [
-            TrainingChatMessage(message.role, message.content, message.created_at)
+            TrainingChatMessage(
+                role=message.role,
+                content=message.content,
+                created_at=message.created_at,
+                client_request_id=message.client_request_id,
+                reply_to_client_request_id=message.reply_to_client_request_id,
+                adaptation_suggested=message.adaptation_suggested,
+                adaptation_reason=message.adaptation_reason,
+            )
             for message in session.scalars(statement.order_by(TrainingAiMessage.sequence)).all()
         ]

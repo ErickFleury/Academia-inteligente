@@ -11,7 +11,15 @@ from app.database import get_database_session
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.training.adaptation_service import (
+    AdaptationNotFoundError,
+    AdaptationStateError,
+    AdaptationUnavailableError,
+    CurrentTrainingPlanRequiredError,
+    TrainingAdaptationService,
+)
 from app.modules.training.chat_service import (
+    TrainingChatDraftUpdateError,
     TrainingChatNotFoundError,
     TrainingChatService,
     TrainingChatState,
@@ -24,8 +32,17 @@ from app.modules.training.generation_service import (
     InvalidTrainingGenerationError,
     TrainingGenerationUnavailableError,
 )
-from app.modules.training.models import TrainingPlanItem, TrainingPlanVersion
+from app.modules.training.models import (
+    TrainingAdaptationOperation,
+    TrainingAdaptationProposal,
+    TrainingPlanItem,
+    TrainingPlanVersion,
+)
 from app.modules.training.schema import (
+    AdaptationClientDecision,
+    AdaptationGenerationInput,
+    AdaptationInstructorDecision,
+    AdaptationInstructorUpdate,
     ManualPlanCreate,
     ProposalUpdate,
     TrainingPlanVersionInput,
@@ -44,6 +61,7 @@ service = TrainingLifecycleService()
 generation_service = InitialTrainingGenerationService()
 current_service = CurrentTrainingPlanService()
 chat_service = TrainingChatService()
+adaptation_service = TrainingAdaptationService()
 Instructor = Annotated[
     AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "instructor"))
 ]
@@ -67,6 +85,10 @@ class TrainingChatMessageResponse(BaseModel):
     role: str
     content: str
     created_at: datetime
+    client_request_id: UUID | None = None
+    reply_to_client_request_id: UUID | None = None
+    adaptation_suggested: bool = False
+    adaptation_reason: str | None = None
 
 
 class TrainingChatResponse(BaseModel):
@@ -82,11 +104,84 @@ def training_chat_response(state: TrainingChatState) -> TrainingChatResponse:
     return TrainingChatResponse(
         messages=[
             TrainingChatMessageResponse(
-                role=message.role, content=message.content, created_at=message.created_at
+                role=message.role,
+                content=message.content,
+                created_at=message.created_at,
+                client_request_id=message.client_request_id,
+                reply_to_client_request_id=message.reply_to_client_request_id,
+                adaptation_suggested=message.adaptation_suggested,
+                adaptation_reason=message.adaptation_reason,
             )
             for message in state.messages
         ]
     )
+
+
+def adaptation_response(
+    session: Session, proposal: TrainingAdaptationProposal
+) -> dict[str, object]:
+    base_items = session.scalars(
+        select(TrainingPlanItem)
+        .where(TrainingPlanItem.version_id == proposal.base_version_id)
+        .order_by(TrainingPlanItem.position)
+    )
+    return {
+        "id": str(proposal.id),
+        "status": proposal.status,
+        "base_version_id": str(proposal.base_version_id),
+        "source_client_request_id": str(proposal.source_client_request_id),
+        "reason": proposal.reason,
+        "explanation": proposal.explanation,
+        "client_reviewed_at": (
+            proposal.client_reviewed_at.isoformat() if proposal.client_reviewed_at else None
+        ),
+        "instructor_reviewed_at": (
+            proposal.instructor_reviewed_at.isoformat() if proposal.instructor_reviewed_at else None
+        ),
+        "instructor_id": proposal.instructor_id,
+        "resulting_version_id": str(proposal.resulting_version_id)
+        if proposal.resulting_version_id
+        else None,
+        "base_items": [
+            {
+                "position": item.position,
+                "exercise_name": item.exercise_name,
+                "sets": item.sets,
+                "repetitions": item.repetitions,
+                "load_guidance": item.load_guidance,
+                "rest_seconds": item.rest_seconds,
+            }
+            for item in base_items
+        ],
+        "operations": [
+            {
+                "operation_type": item.operation_type,
+                "target_position": item.target_position,
+                "exercise_name": item.exercise_name,
+                "sets": item.sets,
+                "repetitions": item.repetitions,
+                "load_guidance": item.load_guidance,
+                "rest_seconds": item.rest_seconds,
+                "equipment_requirement": item.equipment_requirement,
+                "is_existing_exercise": item.is_existing_exercise,
+            }
+            for item in session.scalars(
+                select(TrainingAdaptationOperation)
+                .where(TrainingAdaptationOperation.proposal_id == proposal.id)
+                .order_by(TrainingAdaptationOperation.position)
+            )
+        ],
+    }
+
+
+def adaptation_error(error: Exception) -> HTTPException:
+    if isinstance(error, AdaptationNotFoundError):
+        return HTTPException(404, "Adaptation proposal not found")
+    if isinstance(error, AdaptationUnavailableError):
+        return HTTPException(503, "AI adaptation is temporarily unavailable")
+    if isinstance(error, CurrentTrainingPlanRequiredError):
+        return HTTPException(422, "A current training plan is required for an adaptation")
+    return HTTPException(409, "Adaptation proposal cannot be changed in its current state")
 
 
 def version_response(session: Session, version: TrainingPlanVersion) -> dict[str, object]:
@@ -142,6 +237,20 @@ def get_current_plan(
     return {"plan": version_response(session, version) if version else None}
 
 
+@router.get("/drafts")
+def get_own_training_drafts(
+    session: DatabaseSession,
+    client_user: Annotated[
+        AuthenticatedIdentity, Depends(require_roles(get_authenticated_identity, "client"))
+    ],
+) -> list[dict[str, object]]:
+    """Show only the caller's unapproved plan versions, never another client's drafts."""
+    return [
+        version_response(session, version)
+        for version in current_service.find_drafts_for_subject(session, client_user.subject)
+    ]
+
+
 @router.get("/chat", response_model=TrainingChatResponse)
 def get_training_chat(session: DatabaseSession, client_user: Client) -> TrainingChatResponse:
     """Return raw training chat only to the client who owns it."""
@@ -178,6 +287,105 @@ def send_training_chat_message(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "AI training chat is temporarily unavailable",
         ) from None
+    except TrainingChatDraftUpdateError:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "AI draft update could not be validated",
+        ) from None
+
+
+@router.get("/adaptations")
+def get_own_adaptations(session: DatabaseSession, client_user: Client) -> list[dict[str, object]]:
+    try:
+        return [
+            adaptation_response(session, item)
+            for item in adaptation_service.own_proposals(session, client_user.subject)
+        ]
+    except AdaptationNotFoundError as error:
+        raise adaptation_error(error) from None
+
+
+@router.get("/adaptations/review")
+def get_adaptations_for_instructor(
+    session: DatabaseSession, instructor: Instructor
+) -> list[dict[str, object]]:
+    """Expose only structured proposals to the authorized instructor role."""
+    del instructor
+    return [
+        adaptation_response(session, item)
+        for item in adaptation_service.pending_for_instructor(session)
+    ]
+
+
+@router.post("/adaptations", status_code=status.HTTP_201_CREATED)
+def generate_adaptation(
+    payload: AdaptationGenerationInput, session: DatabaseSession, client_user: Client
+) -> dict[str, object]:
+    try:
+        return adaptation_response(
+            session,
+            adaptation_service.generate(
+                session,
+                client_user.subject,
+                source_client_request_id=payload.source_client_request_id,
+                client_request_id=payload.client_request_id,
+                reason=payload.reason,
+            ),
+        )
+    except (AdaptationNotFoundError, AdaptationStateError, AdaptationUnavailableError) as error:
+        raise adaptation_error(error) from None
+
+
+@router.post("/adaptations/{proposal_id}/client-decision")
+def decide_adaptation_as_client(
+    proposal_id: UUID,
+    payload: AdaptationClientDecision,
+    session: DatabaseSession,
+    client_user: Client,
+) -> dict[str, object]:
+    try:
+        return adaptation_response(
+            session,
+            adaptation_service.client_decide(
+                session, client_user.subject, proposal_id, payload.accept
+            ),
+        )
+    except (AdaptationNotFoundError, AdaptationStateError) as error:
+        raise adaptation_error(error) from None
+
+
+@router.patch("/adaptations/{proposal_id}")
+def edit_adaptation_as_instructor(
+    proposal_id: UUID,
+    payload: AdaptationInstructorUpdate,
+    session: DatabaseSession,
+    instructor: Instructor,
+) -> dict[str, object]:
+    del instructor
+    try:
+        return adaptation_response(
+            session, adaptation_service.instructor_edit(session, proposal_id, payload)
+        )
+    except (AdaptationNotFoundError, AdaptationStateError) as error:
+        raise adaptation_error(error) from None
+
+
+@router.post("/adaptations/{proposal_id}/instructor-decision")
+def decide_adaptation_as_instructor(
+    proposal_id: UUID,
+    payload: AdaptationInstructorDecision,
+    session: DatabaseSession,
+    instructor: Instructor,
+) -> dict[str, object]:
+    try:
+        return adaptation_response(
+            session,
+            adaptation_service.instructor_decide(
+                session, proposal_id, instructor.subject, payload.approve
+            ),
+        )
+    except (AdaptationNotFoundError, AdaptationStateError) as error:
+        raise adaptation_error(error) from None
 
 
 @router.post("/initial-proposal", status_code=status.HTTP_201_CREATED)

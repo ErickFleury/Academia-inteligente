@@ -159,6 +159,22 @@ def test_generates_only_client_scoped_proposal_using_completed_onboarding(sessio
     assert ada.id != grace.id
 
 
+def test_reuses_the_single_active_ai_draft_without_calling_the_provider_again(
+    session: Session,
+) -> None:
+    create_client(session, "ada", "ada@example.test")
+    complete_onboarding(session, "ada")
+    provider = FakeProvider(proposal())
+    service = InitialTrainingGenerationService(provider=provider)
+
+    first = service.generate_for_subject(session, "ada")
+    second = service.generate_for_subject(session, "ada")
+
+    assert first.id == second.id
+    assert provider.calls == 1
+    assert len(session.scalars(select(TrainingPlanVersion)).all()) == 1
+
+
 def test_invalid_or_unavailable_provider_response_persists_nothing(session: Session) -> None:
     create_client(session, "ada", "ada@example.test")
     complete_onboarding(session, "ada")
