@@ -27,6 +27,8 @@ function ClientNavigation() {
     { href: '/treino', label: 'Meu treino' },
     { href: '/assistente', label: 'Assistente' },
     { href: '/progresso', label: 'Progresso' },
+    { href: '/equipamentos', label: 'Equipamentos' },
+    { href: '/ocupacao', label: 'Ocupação' },
   ]
   return (
     <Box component="nav" aria-label="Navegação da área do cliente" sx={{ borderTop: '1px solid', borderColor: 'divider' }}>

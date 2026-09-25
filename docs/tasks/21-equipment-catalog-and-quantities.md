@@ -16,13 +16,15 @@ by approved logical type/model, without implying live equipment availability.
 - RN-04: management is backend-authorized.
 - RN-33: deactivation preserves required history.
 - RNF01–RNF04: performant, understandable, responsive, modular catalog.
-- EXT-DEC-EQP-01 is **blocking** before migrations.
+- EXT-DEC-EQP-01 is resolved: `EquipmentModel` is the UUID-identified logical
+  grouping; every physical `EquipmentUnit` belongs to one model; active
+  quantity is derived from active units rather than stored as a mutable total.
 
 ## Prerequisites
 
 - Tasks 03, 06, and 08 complete; Task 19 is recommended before post-MVP work.
-- EXT-DEC-EQP-01 recorded with the unit/aggregate/grouping model. Stop rather
-  than infer real-time use or a grouping key.
+- The approved two-level model applies. Do not add real-time use/availability
+  semantics or a separate manually synchronized quantity field.
 
 ## Required reading
 
@@ -33,11 +35,14 @@ RN-33; RNF01–RNF04; DEC-17, DEC-19, EXT-DEC-EQP-01.
 
 ## Scope
 
-Implement authorized equipment create/read/update/deactivate behavior, optional
-image and approved descriptive information, active client/visitor catalog, and
-active total per approved type/model. Label counts as total active units. Keep
-administrative APIs protected and client/visitor responses free of internal
-administrative data.
+Implement authorized `EquipmentModel` and `EquipmentUnit`
+create/read/update/deactivate behavior, optional model image and approved
+descriptive information, active client/visitor catalog, and active total per
+model. A physical unit belongs to exactly one UUID-identified model; functional
+variants are distinct models. Derive the total from active units instead of
+storing an authoritative mutable quantity. Label counts as total active units.
+Keep administrative APIs protected and client/visitor responses free of
+internal administrative data.
 
 Reuse Task 08 shared components. Client/visitor catalog may use approved local imagery with clear name/type, concise metadata, total units, and detail hierarchy; absence of an image must not break use. Keep admin management denser than client browsing. Check phone, tablet, and desktop.
 
@@ -51,13 +56,19 @@ or a new storage/infrastructure technology.
 - CA-32.1–CA-33.5 and EXT-CA-EQP-01.1–EXT-CA-EQP-01.4 are verified.
 - A catalog item such as “Leg Press — Total units: 4” cannot be interpreted by
   API/UI wording as “4 currently free.”
+- Four equivalent Leg Press 45° units under one active model report four active
+  units; deactivating one preserves it historically and the next catalog query
+  reports three.
+- Leg Press 45° and Leg Press Horizontal are distinct UUID-identified models;
+  a model rename does not change its identity or historical relationships.
 - Unauthorized management and inactive-item public visibility are denied.
 
 ## Tests
 
-Add model/count, CRUD/deactivation/history, authorization, active catalog,
-image/optional-data, and responsive UI tests. Include count updates and explicit
-no-live-availability contract assertions.
+Add model/unit/count, CRUD/deactivation/history, authorization, active catalog,
+image/optional-data, and responsive UI tests. Include derived-count updates,
+model-versus-unit lifecycle behavior, and explicit no-live-availability contract
+assertions.
 
 ## Completion requirements
 
@@ -73,6 +84,6 @@ and extension IDs listed under Required reading. Inspect the repository before
 editing. Implement only RF-32, RF-33, and EXT-RF-EQP-01. Follow
 `docs/frontend-design.md` and reuse Task 08 shared layout/components; check phone,
 tablet, and desktop. Stop and ask if
-EXT-DEC-EQP-01 or another unresolved item requires a material human decision.
+another unresolved item requires a material human decision.
 Run relevant backend/frontend tests, review the Git diff, and provide the
 required completion report. Do not commit or push.

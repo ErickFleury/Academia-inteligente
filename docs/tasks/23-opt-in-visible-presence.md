@@ -14,19 +14,19 @@ are approved.
 
 - RN-04/RN-05: authenticated backend authorization and client isolation.
 - RN-10/RN-11/RN-23/RN-34: biometric, health, logs, and reports remain private.
-- RF-24X/RF-25X anonymous occupancy must remain independent.
-- DEC-10 and EXT-DEC-PRES-01 are both **blocking**.
+- RF-24/RF-25 anonymous occupancy must remain independent.
+- Task 22 and EXT-DEC-PRES-01 are both **blocking**.
 
 ## Prerequisites
 
 - Tasks 06, 08, and 22 complete.
-- DEC-10 and EXT-DEC-PRES-01 recorded. Stop before migrations, consent UI, or
-  presence queries if either remains unresolved.
+- EXT-DEC-PRES-01 recorded. Stop before migrations, consent UI, or presence
+  queries if it remains unresolved.
 
 ## Required reading
 
 Read `AGENTS.md`; `docs/frontend-design.md`; `docs/product-extensions.md` EXT-RF-PRES-01;
-`docs/requirements.md` sections 2, 3.1, 4.1, 7.1.1, 8.4, 9.2, and 11; RF-23–RF-25X;
+`docs/requirements.md` sections 2, 3.1, 4.1, 7.1.1, 8.4, 9.2, and 11; RF-23–RF-25;
 RN-04, RN-05, RN-10, RN-11, RN-23, RN-34, RN-37; DEC-10, DEC-18, DEC-19,
 EXT-DEC-PRES-01.
 

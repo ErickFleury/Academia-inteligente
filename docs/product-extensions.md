@@ -151,9 +151,19 @@ existing administrative authorization baseline.
 **Privacy/security:** equipment catalog data is non-client-specific; management
 operations remain administrative and backend-authorized.
 
-**Unresolved decisions:** `EXT-DEC-EQP-01` must define the canonical grouping
-and whether persistence represents individual units, aggregate inventory, or
-both. It must not introduce live occupancy/use semantics.
+**Decision status:** `EXT-DEC-EQP-01` is approved for Task 21. The canonical
+catalog grouping is `EquipmentModel`, identified by an internal UUID and
+representing one logical type/model/variant. Each physical machine is an
+`EquipmentUnit` belonging to exactly one model. Functional variants (for
+example, Leg Press 45° and Leg Press Horizontal) are separate models.
+
+The catalog's authoritative active quantity is derived as the count of active
+units for an active model; no mutable aggregate `quantity` is authoritative.
+Deactivation preserves models, units, and historical relationships. The
+catalog reports total active units only, never free/currently available units.
+Task 21 introduces no real-time occupancy or use semantics. Future Task 17 AI
+adaptation may use an active model with active units as catalog-existence
+context, not as evidence of real-time availability.
 
 ## EXT-RF-PRES-01 — Opt-in visible presence
 
@@ -162,7 +172,7 @@ persistence decisions.
 
 **Description:** A client may eventually opt in to having their current gym
 presence shown by name/profile to other authenticated clients. Named presence
-is separate from the anonymous occupancy count in RF-24X/RF-25X and from camera
+is separate from the anonymous occupancy count in RF-24/RF-25 and from camera
 data in RN-37.
 
 **Actors:** authenticated client controlling their preference; authenticated
@@ -185,10 +195,10 @@ operational permissions.
 - **EXT-CA-PRES-01.6:** administrative operational access does not automatically
   make a client's identity visible to other clients.
 
-**Dependencies:** RF-23, RF-24X/RF-25X, DEC-10, authenticated client identity,
+**Dependencies:** RF-23, RF-24/RF-25, Task 22, authenticated client identity,
 and an approved named-presence privacy/persistence model.
 
-**Related originals:** RF-04, RF-05, RF-23, RF-24X, RF-25X, RN-04, RN-05,
+**Related originals:** RF-04, RF-05, RF-23, RF-24, RF-25, RN-04, RN-05,
 RN-10, RN-11, RN-23, RN-34, RN-37.
 
 **Privacy/security:** opt-in consent and least-data presentation are mandatory.
@@ -197,9 +207,9 @@ inference.
 
 **Unresolved decisions:** `EXT-DEC-PRES-01` must define consent lifecycle,
 visible profile fields, source and freshness of “currently present,” revocation,
-staff access, and retention. DEC-10 remains separately unresolved for occupancy
-source-of-truth behavior. Implementation must stop until both relevant decisions
-are approved.
+staff access, and retention. DEC-10 resolves anonymous occupancy separately;
+it does not resolve named-presence consent or lifecycle behavior. Implementation
+must stop until `EXT-DEC-PRES-01` is approved.
 
 ## EXT-RF-LANG-01 — Portuguese user-facing application
 

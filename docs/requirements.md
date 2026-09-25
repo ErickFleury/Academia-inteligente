@@ -64,7 +64,7 @@ automatically place it in the next delivery.
 
 | Identifier | Meaning |
 | --- | --- |
-| RF-01 to RF-33 | Functional requirements; RF-24X and RF-25X retain their original suffix. |
+| RF-01 to RF-33 | Functional requirements. |
 | CA-XX.Y | Acceptance criterion associated with an original functional requirement. |
 | RNF01 to RNF06 | Non-functional requirements with their original numbering. |
 | CA-RNFXX.Y | Original non-functional acceptance criterion. |
@@ -503,7 +503,12 @@ Provide a REST endpoint for the external service to report a facial-identificati
 - [ ] **CA-20.3:** the integration does not require the application to implement the turnstile's operating algorithm.
 - [ ] **CA-20.4:** a duplicate event with the same identifier does not create duplicate records.
 
-**Consolidation note:** The facial result comes from an external service. The JSON contract, integration authentication, and relationship to the turnstile-release decision still need definition; see DEC-11.
+**Consolidation note:** DEC-11 separates the confirmed-passage occupancy
+contract from the facial-recognition/release integration. For the latter, a
+provider-neutral recognized result may issue one idempotent external release
+request; the application does not control turnstile mechanics or infer physical
+passage. No payment, enrollment, occupancy, or other authorization policy is
+silently added to this recognition decision.
 
 ### RF-21 Verify the user's identity and eligibility for access
 
@@ -518,7 +523,12 @@ Associate the identity reported by the facial service with the client and check 
 - [ ] **CA-21.3:** an explicitly deactivated client is not returned as enabled.
 - [ ] **CA-21.4:** the recognition response must have acceptable precision of at least 95% to be accepted.
 
-**Consolidation note:** The 95% minimum is preserved. “Precision” may refer to model quality or match confidence; the metric and its use need clarification under DEC-09. Identification does not replace entry authorization: apply RN-06, RN-35, and RN-36.
+**Consolidation note:** DEC-09 defines the 95% minimum as measured system
+precision (`TP / (TP + FP)`) on an appropriate representative validation set,
+not a universal per-match confidence of `0.95`. The selected provider/model
+uses a configurable calibrated threshold; below-threshold results are rejected.
+Identification does not replace entry authorization: apply RN-06, RN-35, and
+RN-36.
 
 ### RF-22 Enter initial biometric data for each client
 
@@ -532,7 +542,11 @@ An attendant may register a valid facial photo for the client; data from that ph
 - [ ] **CA-22.2:** if another photo is registered, it must replace the existing one, and the old photo is then discarded.
 - [ ] **CA-22.3:** only employees may change the biometric-photo data associated with each client.
 
-**Consolidation note:** Discarding the previous photo must coexist with traceability of critical changes required by RN-26 and RN-27. Define permissions, photo threshold, and retention policy under DEC-04, DEC-09, and DEC-18.
+**Consolidation note:** DEC-09 requires a safe replacement transition: enroll
+and confirm the replacement, activate it, then revoke the old reference. Raw
+captures are temporary and removed after successful enrollment when technically
+possible; audit metadata preserves traceability without retaining images or
+templates. Employee authorization remains governed by DEC-04 and RN-26/RN-27.
 
 ### RF-23 Record entry, exit, and attendance
 
@@ -547,7 +561,16 @@ Persist access events used as history/attendance.
 - [ ] **CA-23.3:** a repeated event is not counted twice.
 - [ ] **CA-23.4:** records include related date/time and client.
 
-### RF-24X Calculate current occupancy
+**Consolidation note:** Under DEC-11, a confirmed-passage event carries an
+opaque external `client_reference`, not the local Client UUID or identifying or
+biometric data. The backend resolves it to a valid local Client before
+persisting the private ledger relationship required by CA-23.4. Unknown,
+invalid, or non-client references are controlled integration failures and do
+not create a normal passage event or alter occupancy. The public occupancy API
+remains aggregate-only and never exposes the reference, Client relationship, or
+individual event records.
+
+### RF-24 Calculate current occupancy
 
 **Scope:** outside the stated MVP.
 
@@ -560,9 +583,11 @@ Derive the number of people currently present from entry and exit events.
 - [ ] **CA-24.3:** duplicate processing of the same event does not change the total again.
 - [ ] **CA-24.4:** the value is not displayed as negative.
 
-**Consolidation note:** The X suffix is retained because its meaning is not explained. RN-37 describes camera-based counting in gym spaces, whereas this RF calculates presence from entries and exits. Resolve DEC-02 and DEC-10 before choosing the behavior.
+**Consolidation note:** DEC-02 normalizes this identifier to RF-24. DEC-10
+selects the confirmed-passage ledger as the authoritative client-only count for
+one logical zone; RN-37 camera counting is deferred and auxiliary by design.
 
-### RF-25X Display current occupancy
+### RF-25 Display current occupancy
 
 **Scope:** outside the stated MVP.
 
@@ -574,7 +599,9 @@ Show the client the number of people training at the moment.
 - [ ] **CA-25.2:** after a new event is processed, a new query reflects the new total.
 - [ ] **CA-25.3:** the information is legible in a mobile viewport.
 
-**Consolidation note:** CA-25.1 references RF-24, while the corresponding requirement is labeled RF-24X. This reference is preserved and points to the previous item. See DEC-02 and DEC-10.
+**Consolidation note:** CA-25.1 references RF-24, the preceding normalized
+requirement. The public meaning is the client-only authoritative count from the
+confirmed-passage ledger; see DEC-10 and the occupancy portion of DEC-11.
 
 ### RF-26 Record and update billing status
 
@@ -661,11 +688,11 @@ Allow an administrative user to register, view, update, and deactivate equipment
 
 **Acceptance criteria**
 
-- [ ] **CA-32.1:** an authorized administrative user can register equipment with, at minimum, a name and status;
-- [ ] **CA-32.2:** the system allows an image to be associated with the equipment;
-- [ ] **CA-32.3:** registered equipment remains available on a subsequent query;
-- [ ] **CA-32.4:** an authorized user can change equipment information;
-- [ ] **CA-32.5:** deactivated equipment no longer appears as available to the client, without requiring deletion of its record.
+- [x] **CA-32.1:** an authorized administrative user can register equipment with, at minimum, a name and status;
+- [x] **CA-32.2:** the system allows an image to be associated with the equipment;
+- [x] **CA-32.3:** registered equipment remains available on a subsequent query;
+- [x] **CA-32.4:** an authorized user can change equipment information;
+- [x] **CA-32.5:** deactivated equipment no longer appears as available to the client, without requiring deletion of its record.
 
 ### RF-33 View available equipment
 
@@ -675,11 +702,11 @@ Allow visitors or clients to view equipment made available by the gym, together 
 
 **Acceptance criteria**
 
-- [ ] **CA-33.1:** the interface presents the list of registered active equipment;
-- [ ] **CA-33.2:** each equipment item shows at least its name and image, when an image has been registered;
-- [ ] **CA-33.3:** the user can view additional equipment information when registered;
-- [ ] **CA-33.4:** deactivated equipment does not appear as available;
-- [ ] **CA-33.5:** the list remains usable on mobile devices.
+- [x] **CA-33.1:** the interface presents the list of registered active equipment;
+- [x] **CA-33.2:** each equipment item shows at least its name and image, when an image has been registered;
+- [x] **CA-33.3:** the user can view additional equipment information when registered;
+- [x] **CA-33.4:** deactivated equipment does not appear as available;
+- [x] **CA-33.5:** the list remains usable on mobile devices.
 
 ### 3.1 Approved product-extension requirements
 
@@ -773,8 +800,8 @@ never represented as real-time free/available units.
 
 #### EXT-RF-PRES-01 — Opt-in visible presence
 
-**Scope:** approved post-MVP extension, blocked by `EXT-DEC-PRES-01` and DEC-10.
-**Related originals:** RF-23–RF-25X, RN-04, RN-05, RN-10, RN-11, RN-23, RN-34,
+**Scope:** approved post-MVP extension, blocked by `EXT-DEC-PRES-01` and Task 22.
+**Related originals:** RF-23–RF-25, RN-04, RN-05, RN-10, RN-11, RN-23, RN-34,
 RN-37.
 
 Named presence is a separate opt-in client feature, not anonymous occupancy and
@@ -954,10 +981,10 @@ Quality and security constraints also appear within business rules and functiona
 | --- | --- |
 | Authentication and authorization | RF-04, RF-05, and RN-02 through RN-05: control sessions, roles, and access in the API as well. |
 | Privacy and segregation | RF-12, RF-18, RN-10, RN-11, RN-23, RN-28, RN-29, and RN-34: limit access to and exposure of health data, biometrics, logs, exports, and AI context. |
-| Integrity and history | RF-17, RF-20, RF-23, RF-24X, RN-01, RN-18, RN-20, and RN-33: maintain identity, history, relationships, and duplicate handling. |
+| Integrity and history | RF-17, RF-20, RF-23, RF-24, RN-01, RN-18, RN-20, and RN-33: maintain identity, history, relationships, and duplicate handling. |
 | Audit and traceability | RN-03, RN-09, RN-21, RN-26, RN-27, RN-31, and RN-32: record responsible people, reasons, notices, and dates consistently. |
 | Continuity during external failures | RN-08, RN-19, RNF01, RNF05, and RNF06: provide alternatives for facial recognition, manual training-plan creation, and controlled failure handling. |
-| Biometric quality | CA-21.4, CA-22.1, and RN-07: observe the cited 95% minimum and the photo threshold, with metrics to be clarified under DEC-09. |
+| Biometric quality | CA-21.4, CA-22.1, and RN-07: apply DEC-09's >=95% measured configured-system precision and provider/model-calibrated threshold. |
 | Deployment | CA-06.4 and section 6: cover SMTP container isolation, Docker Compose, and the firewall indication. |
 
 ## 5 Business rules
@@ -1096,13 +1123,13 @@ cardinalities remain undecided.
 | TrainingPlan / TrainingPlanVersion / TrainingPlanItem | Client-owned plan aggregate, immutable/versioned current/history states, responsible professional, structured exercise items. At most one plan may be current and at most one version may be a `proposal` for a client; activating another preserves the prior plan as superseded. |
 | Exercise | Referenced prescription content; inactive exercises remain in history under RN-20. Full management flow awaits DEC-15. |
 | AI training conversation/message/proposal | Client-scoped RF-18/RF-19 context and proposed changes. A proposal is not a current approved plan; changes use the version lifecycle. |
-| Equipment / logical type-model | RF-32 administrative records and RF-33 catalog. EXT-RF-EQP-01 grouping/count model awaits EXT-DEC-EQP-01; count is not live availability. |
+| EquipmentModel / EquipmentUnit | RF-32 administrative records and RF-33 catalog use UUID-identified logical models and their physical units. Active quantity is derived from active units for an active model, never stored as an authoritative mutable aggregate; it is not live availability. |
 | ProgressUpdate | Client-author-owned social item with private/shared visibility. Audience, retention, and deletion details await EXT-DEC-SOC-01. No sensitive data is automatically derived into it. |
 | Plan/Enrollment/Subscription | Client contracting and validity concepts for RF-31/RN-22/RN-35/RN-36. Cardinality, modalities, and validity await DEC-12. |
 | Charge/Payment | Client financial records and external confirmation. Provider/model and financial meanings await DEC-12/DEC-13; access is restricted. |
-| Biometric data | Separately protected RF-22 data; not ordinary profile data. Quality, replacement, retention, and audit await DEC-09/DEC-18. |
-| AccessEvent / attendance | Idempotent client-associated entry/exit records with timestamps under RF-20/RF-23. Integration contract and exceptions await DEC-11. |
-| Occupancy records | Anonymous derived/event and possible auxiliary camera counts. Source-of-truth/display behavior awaits DEC-10. |
+| Biometric data | Separately protected RF-22 data; not ordinary profile data. DEC-09 defines measured quality, calibrated threshold, reference/minimization, replacement, retention, and audit; implementation remains future work. |
+| AccessEvent / attendance | Persisted, source-idempotent confirmed client-passage and auditable manual-correction ledger for RF-20/RF-23/Task 22. Passage events resolve an opaque external client reference server-side to their private local Client relationship; DEC-11 separately defines the provider-neutral recognition and idempotent release-request boundary. Occupancy stays governed by DEC-10. |
+| Occupancy records | Reconstructable effective client-only count for one logical zone, derived from the confirmed-passage/correction ledger. The authenticated access producer sends a checkpoint heartbeat every 60 seconds; its aggregate state is current through 120 seconds and stale afterwards, while retaining the last count. Future camera observations are auxiliary, zone-declared, 60-second-freshness evidence only; they never overwrite the authoritative count. |
 | Presence preference/view | EXT-RF-PRES-01 opt-in state and derived named presence. Persistence and consent lifecycle await EXT-DEC-PRES-01. |
 | Class/schedule | RF-30 class occurrences; recurrence, capacity, visibility, and reservations await DEC-14. |
 
@@ -1183,7 +1210,7 @@ This order is implementation guidance added in this consolidation; it does not c
 | 4 | Implement the first plan, viewing, and versioning, along with necessary professional flows. | RF-15, RF-16, RF-17, and RN-12 through RN-19. |
 | 5 | Implement chat and adaptation proposals while preserving approval and history. | RF-18, RF-19, RN-16 through RN-18, and RN-29 through RN-31. |
 | 6 | Verify the full MVP journey and applicable non-functional criteria. | Criteria of included RFs, RNF01 through RNF06, and relevant rules. |
-| 7 | Implement remaining modules in specific tasks according to project priorities. | Remaining RFs, including the decision on RF-24X/RF-25X and RN-37. |
+| 7 | Implement remaining modules in specific tasks according to project priorities. | Remaining RFs, including RF-24/RF-25 and RN-37. |
 
 ### 8.4 Scope classification
 
@@ -1196,10 +1223,10 @@ This order is implementation guidance added in this consolidation; it does not c
 | Training generation/version/current view/chat/adaptation | Original MVP; partially implemented | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
 | Employee management, recovery, onboarding self-review | Original post-MVP; not started | RF-06–RF-08, RF-14 |
 | Progress sharing | Approved post-MVP extension; planned | EXT-RF-SOC-01; EXT-DEC-SOC-01 |
-| Equipment management/catalog | Original post-MVP; planned | RF-32, RF-33 |
-| Equipment quantity | Approved post-MVP extension; planned | EXT-RF-EQP-01; EXT-DEC-EQP-01 |
-| Access/attendance/anonymous occupancy | Original post-MVP; occupancy blocked | RF-20–RF-25X; DEC-09–DEC-11 |
-| Named visible presence | Approved post-MVP extension; blocked | EXT-RF-PRES-01; DEC-10, EXT-DEC-PRES-01 |
+| Equipment management/catalog | Original post-MVP; implemented | RF-32, RF-33 |
+| Equipment quantity | Approved post-MVP extension; implemented | EXT-RF-EQP-01; EXT-DEC-EQP-01 |
+| Access/attendance/anonymous occupancy | Original post-MVP; Task 22 implemented | RF-23–RF-25; confirmed-passage/correction ledger and aggregate-only client view. RF-20–RF-22 biometric/access work remains separate |
+| Named visible presence | Approved post-MVP extension; blocked | EXT-RF-PRES-01; Task 22, EXT-DEC-PRES-01 |
 | Billing/plans/dashboard/classes | Original post-MVP; not started | RF-26–RF-31; DEC-12–DEC-14 |
 | CA-03.4 biometric readiness | Deferred, not satisfied | RF-03/CA-03.4, RF-22, DEC-05 |
 
@@ -1211,23 +1238,23 @@ retains the chronological decision history.
 | ID | Status | Canonical result or remaining question | Affected work |
 | --- | --- | --- | --- |
 | DEC-01 | Unresolved; non-blocking while original scope is used | Professor validation may later change scope. Preserve all original requirements and the explicit original MVP meanwhile. | Overall scope; no independent task is blocked. |
-| DEC-02 | Unresolved | Meaning of the `X` suffix in RF-24X/RF-25X. Do not infer cancellation. | Occupancy tasks. |
+| DEC-02 | **Resolved** | The historical `X` suffix has no separate meaning; canonical occupancy requirements are RF-24 and RF-25. | Occupancy tasks. |
 | DEC-03 | **Resolved** | Python/FastAPI modular monolith, PostgreSQL/SQLAlchemy/Alembic, React/TS/Vite/MUI, Keycloak/OIDC, SMTP/Mailpit, Docker Compose/Linux/UFW, provider-independent AI adapters, and approved pinned baseline. NestJS has no MVP role. | All architecture and external adapters. |
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
 | DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, 11, and 12 may proceed. |
 | DEC-07 | **Resolved for Tasks 13–17** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Task 17 applies this lifecycle to client-confirmed proposals and immutable history. | Tasks 13–17. |
 | DEC-08 | **Resolved for Tasks 11, 14, 16, and 17** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output where applicable, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. Task 17 uses validated structured proposal output only after explicit client confirmation. | Tasks 11, 14, 16, 17, and later AI tasks with their own scope-specific safety contracts. |
-| DEC-09 | Unresolved | Biometric confidence/accuracy semantics, measurement, thresholds, and below-threshold behavior. | RF-21/RF-22. |
-| DEC-10 | Unresolved; blocking occupancy implementation | Relationship/source of truth between access-event presence and auxiliary camera counts, spaces, freshness, and failure behavior. | RF-24X/RF-25X, RN-37, EXT-RF-PRES-01. |
-| DEC-11 | Unresolved | Access-integration payload/auth/idempotency, recognition versus authorization/release, alternatives and manual override. | RF-20–RF-23. |
+| DEC-09 | **Resolved for biometric recognition and enrollment** | Measured configured-system precision is at least 95%; the provider/model uses a calibrated configurable match threshold; below-threshold results are rejected; biometric references, replacement, retention, and non-sensitive auditing are separately protected. CompreFace is a non-binding personal-use self-hosted pilot recommendation, not a selected provider. | RF-21/RF-22. |
+| DEC-10 | **Resolved for Task 22 occupancy** | Confirmed client-passage ledger is authoritative for one logical zone; cameras are deferred auxiliary observations with declared coverage, 60-second freshness, and no overwrite/blending behavior. | RF-24/RF-25, RN-37, Task 22. |
+| DEC-11 | **Resolved for approved integration boundaries** | Confirmed-passage occupancy ingestion uses source-idempotent events with opaque client references resolved privately to local Clients; its public view is aggregate-only. Provider-neutral facial recognition uses server-side credentials, correlated recognition IDs, and idempotent release requests to an external turnstile. It neither controls physical passage nor changes DEC-10 occupancy semantics. | Task 22; later RF-20–RF-23 biometric/access implementation. |
 | DEC-12 | Unresolved | Plan/enrollment/payment model, validity/modalities/access allowance, confirmation, renewal, delinquency and purchasable plans. | RF-31, RN-22/RN-24/RN-35/RN-36. |
 | DEC-13 | Unresolved | Financial meanings and calculations, periods and filters; profit is not automatically revenue. | RF-26–RF-29. |
 | DEC-14 | Unresolved | Class recurrence, visibility, reservation/capacity and authorized exceptions. | RF-30/RN-25. |
 | DEC-15 | **Resolved for Tasks 13, 15, and 17** | Instructors may manually create and edit proposals; the minimum version/item model, responsibility metadata, one current plan per client, and Task 17 review of recognized exercise candidates are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Tasks 13, 15, and 17 may proceed; later affected tasks need their remaining gates. |
 | DEC-16 | **Resolved for personal-use MVP verification** | One normal active user, a three-request burst, approximately 50 synthetic clients, ten-run performance samples, approved adapter timeouts, three representative viewports, checklist-based intended-user testing, accessibility checks, an eight-hour local availability soak, five-minute restart recovery, failure isolation, and maintainability/integration evidence. No commercial-scale load, high availability, redundancy, or production uptime SLA is required. | Task 19 formal end-to-end RNF verification may proceed. |
 | DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
-| DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention remains unresolved. | Tasks 10 and 11 may proceed; biometrics remain gated. |
+| DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention is governed by DEC-09. | Tasks 10 and 11 may proceed. |
 
 DEC-19 is a later approved decision, not an original question: it records the
 client-facing direction and four of the extension requirements in section 3.1.
@@ -1238,7 +1265,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 | ID | Status | Required decision | Expected task |
 | --- | --- | --- | --- |
 | EXT-DEC-SOC-01 | **Resolved for Task 20** | Private by default; shared updates are visible to active authenticated clients; shared-only administrator hide/restore moderation with a reason; author-only edit/delete; contentless deletion tombstone and stated lifecycle. | Controlled progress sharing may proceed. |
-| EXT-DEC-EQP-01 | Unresolved; blocking persistence design | Canonical logical type/model and individual-unit versus aggregate inventory representation. | Equipment catalog and quantities. |
+| EXT-DEC-EQP-01 | **Resolved for Task 21** | UUID-identified `EquipmentModel` canonical grouping; each physical `EquipmentUnit` belongs to one model; active quantity is derived from active units, not a mutable aggregate; no live availability semantics. | Equipment catalog and quantities may proceed. |
 | EXT-DEC-PRES-01 | Unresolved; blocking | Consent lifecycle, visible fields, source/freshness, revocation, staff access, and retention for named presence. | Opt-in visible presence. |
 
 ### 9.2 Privacy and sensitive-data rules
@@ -1287,9 +1314,9 @@ unchecked boxes or planned files.
 | MVP frontend polish | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 18: shared visual, responsive, loading/empty/error, pt-BR copy, and accessibility consistency pass; Task 19 retains end-to-end verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |
-| RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Planned | EXT-DEC-EQP-01 | Task 21. |
-| RF-23–RF-25X | Original post-MVP | Planned/blocked | DEC-10/DEC-11 | Task 22 implements count/view only after decisions. |
-| EXT-RF-PRES-01 | Approved post-MVP extension | Blocked | DEC-10/EXT-DEC-PRES-01 | Task 23. |
+| RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Implemented | Resolved EXT-DEC-EQP-01 | Task 21: authorized two-level model/unit management and public active catalog with derived total. |
+| RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
+| EXT-RF-PRES-01 | Approved post-MVP extension | Blocked | Task 22/EXT-DEC-PRES-01 | Task 23. |
 | Remaining RF-06–RF-08, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Codex workflow
@@ -1358,7 +1385,8 @@ by inference.
 
 - **DEC-01:** professor-validated final scope; non-blocking while preserving the
   original catalog/MVP.
-- **DEC-02:** RF-24X/RF-25X suffix meaning; affects occupancy work.
+- **DEC-02:** resolved; historical RF-24X/RF-25X identifiers are normalized to
+  RF-24/RF-25 without changing behavior.
 - **DEC-06:** recovery-token policy remains unresolved. The invitation-token
   policy, structured schema, editable-draft behavior, and completion
   prerequisites are approved.
@@ -1366,10 +1394,13 @@ by inference.
   approved proposal/review lifecycle.
 - **DEC-08:** resolved for Tasks 11, 14, 16, and 17. Later AI work still
   requires its own applicable contracts and safety decisions.
-- **DEC-09:** biometric metrics and thresholds; blocks relevant RF-21/RF-22 work.
-- **DEC-10:** occupancy source/meaning/freshness; blocks Task 22 and contributes
-  to the Task 23 block.
-- **DEC-11:** physical-access integration and exceptions; blocks RF-20–RF-23.
+- **DEC-09:** resolved for biometric quality/handling; it governs future RF-21/RF-22 implementation.
+- **DEC-10:** resolved for Task 22: confirmed client-passage ledger is
+  authoritative; future camera observations are 60-second-fresh auxiliary
+  evidence and cannot overwrite/blend the count.
+- **DEC-11:** resolved for the approved confirmed-passage and
+  facial-recognition/release integration boundaries. Physical eligibility rules
+  remain governed by their applicable requirements and DEC-12.
 - **DEC-12:** plans, enrollment, payment, and entry eligibility details; blocks
   RF-31 and related physical-access work.
 - **DEC-13:** financial indicator meanings; blocks RF-28/RF-29 financial metrics.
@@ -1381,10 +1412,11 @@ by inference.
   accessibility, availability/recovery, failure-isolation, maintainability, and
   integration protocol in section 4.0.1.
 - **DEC-18:** health/onboarding and Task 11 AI-conversation storage, access,
-  logging, retention, and failure-safety policy are approved. Biometric behavior
-  remains pending.
+  logging, retention, and failure-safety policy are approved. Biometric
+  lifecycle is governed separately by DEC-09.
 - **EXT-DEC-SOC-01:** sharing audience and lifecycle; blocks Task 20.
-- **EXT-DEC-EQP-01:** equipment grouping/inventory model; blocks Task 21's
-  persistence design.
+- **EXT-DEC-EQP-01:** resolved for Task 21 with UUID-identified
+  `EquipmentModel` grouping, physical `EquipmentUnit` inventory, derived
+  active quantity, and no live-availability semantics.
 - **EXT-DEC-PRES-01:** named-presence consent/data/source/retention model; blocks
-  Task 23 together with DEC-10.
+  Task 23 together with Task 22.

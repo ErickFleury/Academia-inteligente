@@ -14,10 +14,14 @@ import { TrainingChatPage } from './training-chat-page'
 import { InstructorAdaptationsPage } from './instructor-adaptations-page'
 import { ProgressPage } from './progress-page'
 import { ProgressModerationPage } from './progress-moderation-page'
+import { EquipmentCatalogPage } from './equipment-catalog-page'
+import { EquipmentManagementPage } from './equipment-management-page'
+import { OccupancyPage } from './occupancy-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
 export function App() {
+  const isEquipmentCatalogRoute = window.location.pathname === '/equipamentos'
   const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
@@ -54,6 +58,7 @@ export function App() {
       session
       || completingLogin
       || authenticationError
+      || isEquipmentCatalogRoute
       || new URL(window.location.href).searchParams.has('code')
       || loginRedirectStarted.current
     ) return
@@ -115,9 +120,11 @@ export function App() {
   const isCurrentTrainingRoute = window.location.pathname === '/treino'
   const isTrainingChatRoute = window.location.pathname === '/assistente'
   const isProgressRoute = window.location.pathname === '/progresso'
+  const isEquipmentManagementRoute = window.location.pathname === '/admin/equipamentos'
+  const isOccupancyRoute = window.location.pathname === '/ocupacao'
   const isInstructorAdaptationsRoute = window.location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
   const isInstructor = session?.roles.includes('instructor') ?? false
 
@@ -137,6 +144,8 @@ export function App() {
   if (isOnboardingRoute && onboardingToken) {
     return <OnboardingAccessPage token={onboardingToken} />
   }
+
+  if (isEquipmentCatalogRoute) return <EquipmentCatalogPage />
 
   if (completingLogin) return <PublicShell><LoadingState label="Iniciando sessão" /></PublicShell>
 
@@ -202,7 +211,11 @@ export function App() {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><ProgressPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
-  if ((isAdministrativeRoute || isProgressModerationRoute) && !isAdministrator) {
+  if (isOccupancyRoute && session) {
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OccupancyPage onSignOut={endSession} /></ClientNavigationStateProvider>
+  }
+
+  if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute) && !isAdministrator) {
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
         <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
@@ -217,12 +230,16 @@ export function App() {
     return <ProgressModerationPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
+  if (isEquipmentManagementRoute && session) {
+    return <EquipmentManagementPage accessToken={session.accessToken} onSignOut={endSession} />
+  }
+
   if (isAdministrativeRoute && session) {
     return (
       <AdminShell onSignOut={endSession}>
         <Stack spacing={3}>
           <PageHeader
-            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button component="a" href="/admin/publicacoes" variant="outlined">Moderar publicações</Button><Button component="a" href="/admin" variant="outlined">Administração</Button></Stack>}
+            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button component="a" href="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</Button><Button component="a" href="/admin/publicacoes" variant="outlined">Moderar publicações</Button><Button component="a" href="/admin" variant="outlined">Administração</Button></Stack>}
             description="Cadastre, localize e acompanhe o estado de acesso dos clientes."
             eyebrow="Operação"
             title="Clientes"

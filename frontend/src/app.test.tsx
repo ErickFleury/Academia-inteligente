@@ -34,6 +34,17 @@ test('redirects an unauthenticated protected route directly to Keycloak login', 
   expect(startLogin).toHaveBeenCalledOnce()
 })
 
+test('shows the public equipment catalog without requiring a login', async () => {
+  const startLogin = vi.spyOn(OidcSessionClient.prototype, 'startLogin').mockResolvedValue()
+  window.history.replaceState({}, '', '/equipamentos')
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => [] }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Conheça nossos equipamentos' })).toBeInTheDocument()
+  expect(startLogin).not.toHaveBeenCalled()
+})
+
 test('stores a usable session after a valid OIDC callback', async () => {
   sessionStorage.setItem('academia.pkce.verifier', 'verifier')
   sessionStorage.setItem('academia.oidc.state', 'state')

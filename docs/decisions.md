@@ -575,9 +575,9 @@ permitted context from that client's onboarding, current plan, plan
 history/context, and already-implemented client-visible exercise/equipment data.
 
 The new extensions do not approve a general social network, real-time equipment
-availability, or disclosure of private data. `DEC-10` remains unresolved, and
-named presence cannot be implemented until its separate privacy/persistence
-decision (`EXT-DEC-PRES-01`) is approved.
+availability, or disclosure of private data. DEC-10 resolves only anonymous
+occupancy's authoritative source; named presence remains blocked until Task 22
+and its separate privacy/persistence decision (`EXT-DEC-PRES-01`) are approved.
 
 ## EXT-DEC-SOC-01 — Controlled progress-sharing audience and moderation
 
@@ -612,3 +612,235 @@ updates with an optional reason, leaving a contentless tombstone. They may also
 irreversibly erase a client: delete the Keycloak identity and all attached local
 records with no retained audit record, for anonymity. Erasure overrides normal
 history preservation only for this explicitly requested privacy workflow.
+
+## EXT-DEC-EQP-01 — Equipment catalog grouping and inventory representation
+
+**Status:** approved for Task 21 — 2026-09-25
+
+Task 21 uses a two-level equipment domain. `EquipmentModel` is the canonical
+logical equipment type/model/variant shown as one catalog entry, identified by
+an internal UUID rather than its display name. `EquipmentUnit` represents one
+physical machine and belongs to exactly one `EquipmentModel`. Renaming a model
+does not change its identity or historical relationships.
+
+Functionally distinct variants are separate models: for example, Leg Press
+45°, Leg Press Horizontal, and Leg Press Vertical are different
+`EquipmentModel` records. Multiple equivalent physical machines of one variant
+are separate `EquipmentUnit` records under that one model.
+
+The authoritative active quantity is derived, never independently stored:
+`COUNT(active EquipmentUnit rows for an active EquipmentModel)`. A model and a
+unit have their own active/inactive lifecycle states. Deactivation preserves
+the record and its historical relationships; it removes an inactive unit from
+the derived count and hides an inactive model from the active catalog. Task 21
+does not introduce serial-number, maintenance, telemetry, reservation, or
+real-time occupancy/use semantics.
+
+“Active” means present in the managed gym inventory/catalog. It never means
+free, immediately available, unoccupied, unused, or reservable. User-facing
+and API wording must say “active units”/“total active units”, never
+“available” or “free units”. A future Task 17 equipment-aware proposal may use
+an active model with one or more active units only as evidence that the gym has
+that equipment; it must not infer real-time availability.
+
+## DEC-02 — Occupancy requirement identifier normalization
+
+**Status:** resolved — 2026-09-25
+
+The historical `X` suffix on the anonymous-occupancy requirements has no
+separate meaning. The canonical identifiers are `RF-24` (calculate current
+occupancy) and `RF-25` (display current occupancy). The former labels
+`RF-24X`/`RF-25X` are retired and do not indicate conditional, cancelled, or
+different requirements.
+
+## DEC-10 — Anonymous occupancy source of truth
+
+**Status:** resolved for Task 22 occupancy architecture — 2026-09-25
+
+The authoritative anonymous occupancy source is the persisted ledger of
+confirmed physical-passage events for clients only. The current count covers one
+logical gym occupancy zone associated with the controlled entry/exit system; it
+does not mean every person in the building and excludes employees, attendants,
+instructors, administrators, and other staff.
+
+Recognition, authorization, gate/door release, and confirmed physical passage
+are distinct. Only a confirmed client passage changes occupancy: an entry adds
+one and an exit removes one. Recognition, authorization, or release without
+confirmed passage must not change the count.
+
+Camera-based counting is deferred and is not approved for Task 22. If approved
+later, it is an auxiliary observation source only: access/passage events remain
+authoritative, observations cannot overwrite or blend with the official count,
+and a discrepancy may be recorded/reported only to authorized staff. A future
+camera observation must declare its covered zone and may be compared only with
+compatible coverage. Partial areas cannot be summed into whole-gym occupancy
+without a later approved complete, non-overlapping coverage design.
+
+The future camera freshness threshold is 60 seconds. A failed or stale camera
+observation is unavailable/not current and never replaces the access-event
+count. If a future observation disagrees with the ledger, the ledger count
+remains official and the difference is an explicit discrepancy; no synthetic,
+averaged, or camera-corrected public value is permitted.
+
+## DEC-09 — Biometric quality and handling
+
+**Status:** resolved for biometric recognition and enrollment — 2026-09-25
+
+The required 95% precision is a measured quality metric of the configured
+facial-recognition system on an appropriate representative validation dataset:
+`TP / (TP + FP) >= 95%`. It is not a requirement that every individual provider
+match score be at least `0.95`. Each selected provider/model instead uses a
+configurable, calibrated match threshold that supports the required measured
+precision; it must not be hardcoded as universal domain logic.
+
+A result below that configured threshold is not recognized, must not cause a
+turnstile-release request, and must never be replaced by acceptance of the
+closest candidate. One additional capture/recognition attempt may be offered;
+after that failure, this biometric flow ends. External or manual alternatives
+remain outside this decision.
+
+Biometric information is logically separate from ordinary account/profile data
+and ordinary APIs must not expose biometric payloads. Where a provider manages
+templates, the application stores only the minimum needed reference: client,
+external biometric subject/reference, enrollment state, lifecycle timestamps,
+and non-sensitive audit metadata. It must not duplicate templates in the
+primary relational store unless an explicitly documented provider requirement
+makes that technically necessary.
+
+A raw enrollment photo is temporary material, removed after successful
+enrollment when technically possible. Persistent imagery required by a selected
+provider must be explicitly documented. Replacement is safe and ordered:
+successfully enroll the replacement, activate its reference, then revoke the
+previous reference. A failed replacement must leave the existing usable
+enrollment intact. Active material remains only while biometric access is
+enabled and required; replaced/revoked or disabled references must no longer be
+usable. Deletion, including applicable account deletion, removes provider
+biometric material according to the approved lifecycle and provider capability.
+
+Audit records may include the client, authorized actor, reference identifier,
+action, result, timestamps, and replacement/revocation relationship. They must
+never include raw facial images, templates, feature vectors, or sensitive
+recognition payloads. Provider selection remains open, but every selected
+provider must satisfy this policy and the DEC-11 integration boundary.
+
+**Personal-use implementation recommendation (not a provider decision):** begin
+with a locally self-hosted CompreFace pilot behind the DEC-11 adapter boundary.
+Its Docker-deployable REST service and service API keys make it suitable for a
+small local deployment without sending biometric material to a cloud provider.
+This is neither an approved production provider nor evidence that the required
+precision has been met. Before any automatic release is enabled, validate the
+configured camera, lighting, and threshold against representative local
+conditions and demonstrate the required measured precision. The pilot must also
+use the approved external/manual fallback rather than weakening a threshold. A
+managed provider with liveness detection may be evaluated later, but requires a
+separate assessment of biometric-data processing, retention, and deployment
+obligations.
+
+## DEC-11 — Physical-access integration boundaries
+
+**Status:** resolved for the approved occupancy and facial-recognition/release
+boundaries — 2026-09-25
+
+This decision does not approve biometric capture/recognition implementation or
+other physical-access behavior. It approves an external machine-to-machine
+confirmed-passage event contract for occupancy. Each event must carry a
+provider-unique `event_id`, `occurred_at`, `checkpoint_id`, `direction`
+(`entry` or `exit`), `event_type=passage_confirmed`, and an opaque
+`client_reference`, using equivalent repository naming where appropriate. It
+requires no biometric image, facial template, or raw recognition data.
+
+`client_reference` is a sufficiently unique opaque external access/biometric
+subject reference used only for server-side resolution to a local `Client`.
+It is not an e-mail, name, image, template, raw biometric data, or the
+application's internal Client UUID. The external producer never needs that UUID.
+Before accepting a normal confirmed client-passage event, the backend resolves
+the reference to a valid local Client and the private passage ledger persists
+that Client relationship as its authoritative domain association. The external
+reference may be retained as traceability metadata but is not a Client's primary
+domain identifier.
+
+An unknown or invalid reference is a controlled integration failure: do not
+create a normal client-passage record, alter occupancy, guess a client, or
+create a Client. Record only the non-sensitive operational metadata needed for
+diagnosis. Events for non-client identities likewise do not alter client
+occupancy. This satisfies RF-23 CA-23.4 without changing the public boundary:
+the public occupancy response never exposes the reference, Client UUID, names,
+e-mails, individual events, biometric identifiers, or recognition information.
+
+The external producer authenticates with a dedicated server-configured
+integration credential/API secret sent through an authorization mechanism or
+header. It is separate from end-user credentials, is never hardcoded or sent to
+the frontend, and OAuth2 client credentials/mTLS are not required at this
+stage.
+
+`event_id` is source-unique and idempotent. Retrying the same matching event
+cannot change occupancy again. A reused identifier with conflicting contents is
+an integration inconsistency/error, not a new passage. The persisted ledger
+must enforce this identity. A reuse with a different `client_reference`,
+direction, checkpoint, timestamp, or event semantics is conflicting rather than
+a new passage. Failed recognition, successful recognition without passage,
+denied/granted authorization without passage, and gate release without passage
+do not affect occupancy.
+
+Effective occupancy never becomes negative. An exit at zero is retained as an
+auditable event/inconsistency while the effective public count remains zero.
+Manual correction is limited to administrators and attendants. It appends an
+auditable correction event with actor, timestamp, signed adjustment, and reason;
+it never overwrites the passage ledger. The authoritative count is
+reconstructable from persisted confirmed-passage and correction events. A cache
+or snapshot may optimize reads but cannot be the sole authoritative state.
+
+The anonymous public response exposes only aggregate occupancy, freshness/status,
+and update time—never identities, passage history, biometric/recognition data,
+camera images, or raw events. If the authoritative access source is stale or
+unavailable, preserve its last known count but label it stale/unavailable rather
+than current; do not substitute camera-derived occupancy.
+
+The confirmed-passage producer sends an authenticated `source_heartbeat` with
+`checkpoint_id` and timestamp every 60 seconds. The aggregate occupancy view is
+`current` while the latest authoritative heartbeat is no more than 120 seconds
+old and is `stale` after that; no absence of passage events alone is treated as
+a source failure. The last reconstructed count remains visible when stale.
+
+For the separate facial-recognition flow, a dedicated camera captures/scans a
+client at a designated turnstile; a provider-neutral recognition integration
+evaluates the result under DEC-09, maps a successful biometric reference to its
+client, and sends one release request to the external turnstile system. The
+application owns recognition integration, result evaluation, client mapping,
+release-request submission, and non-sensitive audit metadata. The external
+turnstile system owns electrical/mechanical actuation, physical movement, and
+physical passage. A release request never proves passage.
+
+The normalized recognition boundary carries only necessary metadata: a
+recognition/event identifier, timestamp, checkpoint/camera identifier where
+applicable, biometric subject/reference, recognized/not-recognized result, and
+provider score only when required for threshold evaluation. It must not carry
+raw facial imagery through ordinary application events. Provider credentials
+use provider-appropriate server-side authentication and are never hardcoded or
+exposed to the frontend. Asynchronous provider events require a source-unique
+event ID; duplicate delivery cannot create more recognition attempts or release
+requests. Synchronous calls likewise use an application-assigned unique logical
+recognition-request ID so retries can be correlated safely.
+
+Recognition failure or a below-threshold result sends no release request. A
+successful recognition may create one logical release request with a unique
+release-request ID; retries retain that identifier so an external controller
+does not interpret them as distinct access attempts. Release integration uses a
+dedicated server-side machine credential/API secret; OAuth2 client credentials
+and mutual TLS are not currently required. No manual biometric override or
+manual turnstile-release bypass is part of this application flow.
+
+If recognition-provider integration fails, recognition is not assumed and no
+release is requested. If release integration fails after recognition, record a
+controlled integration failure without claiming passage. Logs and ordinary
+client/admin APIs must never expose images, templates, feature data, or raw
+provider payloads; non-sensitive IDs, checkpoint, timestamp, result,
+release-request ID, and integration outcome are permitted operational metadata.
+
+This facial-recognition/release policy does not change DEC-10: recognition,
+successful recognition, release request, and turnstile release are not
+occupancy changes. Only DEC-10's confirmed physical-passage events govern the
+anonymous occupancy ledger. A later confirmed passage may carry the opaque
+access/biometric subject reference, which the backend resolves to the private
+Client-linked ledger event without placing biometric material in the passage
+payload.

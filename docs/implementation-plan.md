@@ -86,24 +86,24 @@ RF-26–RF-31 require their own tasks when prioritized.
 | Decision | Status and affected tasks |
 | --- | --- |
 | DEC-01 | Unresolved/non-blocking while the original catalog and MVP are preserved. |
-| DEC-02 | Unresolved; relevant to Task 22 naming/traceability. |
+| DEC-02 | Resolved: the historical X suffix is removed; use RF-24/RF-25. |
 | DEC-03 | Resolved; inherited architecture baseline for every task. |
 | DEC-04 | Resolved for current roles/provisioning; inherited by authorization, health, training, and future employee work. |
 | DEC-05 | Resolved; CA-03.4 remains deferred to RF-22 and is not satisfied. |
 | DEC-06 | Invitation-token policy is resolved for Tasks 07 and 09; schema, validation, and editable-draft behavior are resolved for Task 10. Recovery-token policy remains unresolved for later affected work. |
 | DEC-07 | Resolved for Tasks 13–17: instructor-only approval/activation and no automatic health-risk generation block; Task 17 applies the lifecycle to client-confirmed proposals. |
 | DEC-08 | Resolved for Tasks 11, 14, 16, and 17: OpenAI Responses API behind a provider-neutral adapter, bounded context, timeout/retry, and structured output where applicable; Ollama is also available as a local development/test adapter. Task 16 uses plain conversational output only and has no plan-mutation authority; Task 17 uses structured output only after explicit client confirmation. |
-| DEC-09 | Blocking future biometric work and relevant Task 22 physical-access inputs. |
-| DEC-10 | Blocking Task 22 and Task 23: occupancy sources/meaning/freshness. Do not infer a source of truth. |
-| DEC-11 | Blocking Task 22 where external/access events are its inputs. |
+| DEC-09 | Resolved for biometric recognition/enrollment: measured >=95% configured-system precision, calibrated provider threshold, minimized references, safe replacement, retention, and non-sensitive audit. Task 22 still does not consume biometric data. |
+| DEC-10 | Resolved for Task 22: client confirmed-passage ledger is authoritative; cameras are deferred, auxiliary, coverage-declared 60-second-fresh observations only. |
+| DEC-11 | Resolved for approved boundaries: confirmed-passage events use opaque client references resolved privately to local Clients, alongside the occupancy contract, provider-neutral facial recognition, and idempotent external release request. Turnstile actuation and physical passage remain external; DEC-10 alone governs occupancy. |
 | DEC-12–DEC-14 | Blocking future plan/payment/financial/class tasks respectively. |
 | DEC-15 | Resolved for Task 17's recognized-exercise candidate and instructor-review scope. Task 21 remains the catalog boundary. |
 | DEC-16 | Resolved for personal-use MVP verification: bounded single-user load, representative viewport/usability/accessibility checks, eight-hour local soak, restart recovery, failure isolation, and maintainability/integration evidence. Task 19 formal RNF sign-off may proceed. |
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
-| DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric behavior still gates affected work. |
+| DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric lifecycle is governed separately by DEC-09. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
 | EXT-DEC-SOC-01 | Blocking Task 20 audience/moderation/deletion/retention model. |
-| EXT-DEC-EQP-01 | Blocking Task 21 persistence/grouping model. |
+| EXT-DEC-EQP-01 | Resolved for Task 21: UUID-identified logical models, physical units, and derived active quantity without availability semantics. |
 | EXT-DEC-PRES-01 | Blocking Task 23 consent/source/fields/revocation/retention model. |
 
 ## Task index
@@ -130,9 +130,9 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | Completed | Shared consistency, responsive, accessibility, loading/empty/error, and pt-BR copy pass; Task 19 retains end-to-end verification. |
 | 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |
 | 20 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06, 08; EXT-DEC-SOC-01 | Post-MVP extension | Author-owned private/shared updates |
-| 21 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06, 08; EXT-DEC-EQP-01 | Original post-MVP + extension | Admin catalog and active total by type/model |
-| 22 | Anonymous gym occupancy | RF-23–RF-25X; RN-37 boundary | 03, 06, 08 plus access inputs; DEC-10/11 | Original post-MVP, blocked | Privacy-safe current count/mobile display |
-| 23 | Opt-in visible presence | EXT-RF-PRES-01 | 06, 08, 22; DEC-10/EXT-DEC-PRES-01 | Post-MVP extension, blocked | Consent-based minimal named presence |
+| 21 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06, 08; EXT-DEC-EQP-01 | Implemented | Admin model/unit lifecycle, public active catalog, and derived total by type/model |
+| 22 | Anonymous gym occupancy | RF-23–RF-25; RN-37 boundary | 03, 06, 08; resolved Task 22 DEC-10/11 boundary | Implemented | Private confirmed-passage/correction ledger, source-health status, and privacy-safe current client count/mobile display |
+| 23 | Opt-in visible presence | EXT-RF-PRES-01 | 06, 08, 22; EXT-DEC-PRES-01 | Post-MVP extension, blocked | Consent-based minimal named presence |
 
 ## Completed-task history and later impact
 
@@ -163,7 +163,7 @@ provisioning or its explicit reconciliation completed.
 - EXT-RF-AI-01 is owned by Task 11 and integration-verified in Task 19.
 - EXT-RF-SOC-01, EXT-RF-EQP-01, and EXT-RF-PRES-01 have explicit future owners.
 - RF-32/RF-33 remain original requirements; only quantity is an extension.
-- RF-24X/RF-25X anonymous count is separate from EXT-RF-PRES-01 named presence.
+- RF-24/RF-25 anonymous count is separate from EXT-RF-PRES-01 named presence.
 - Every authenticated client task depends directly or transitively on Task 06
   and requires server-side identity resolution.
 - Every future UI task uses `docs/frontend-design.md` and Task 08 shared
