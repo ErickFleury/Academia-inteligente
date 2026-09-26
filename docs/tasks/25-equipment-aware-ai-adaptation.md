@@ -1,5 +1,7 @@
 # Task 25 — Equipment-Aware AI Training Adaptation
 
+**Status:** Implemented — 2026-09-25
+
 ## Objective
 
 Connect the implemented Task 21 active equipment catalog to RF-19 AI adaptation

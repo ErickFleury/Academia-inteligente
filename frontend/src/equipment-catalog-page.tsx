@@ -1,11 +1,16 @@
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 
-import { PublicShell } from './components/application-shell'
+import { ClientShell, PublicShell } from './components/application-shell'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { getEquipmentCatalog, type EquipmentCatalogItem } from './equipment'
 
-export function EquipmentCatalogPage() {
+type EquipmentCatalogPageProps = {
+  onSignOut?: () => void
+  showClientNavigation?: boolean
+}
+
+export function EquipmentCatalogPage({ onSignOut, showClientNavigation = false }: EquipmentCatalogPageProps) {
   const [items, setItems] = useState<EquipmentCatalogItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -18,8 +23,7 @@ export function EquipmentCatalogPage() {
       })
   }, [])
 
-  return (
-    <PublicShell>
+  const content = (
       <Stack spacing={3} sx={{ minWidth: 0 }}>
         <PageHeader
           eyebrow="Equipamentos"
@@ -48,6 +52,9 @@ export function EquipmentCatalogPage() {
           </Stack>
         )}
       </Stack>
-    </PublicShell>
   )
+
+  if (showClientNavigation) return <ClientShell onSignOut={onSignOut} showClientNavigation>{content}</ClientShell>
+
+  return <PublicShell>{content}</PublicShell>
 }

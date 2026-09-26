@@ -1,6 +1,7 @@
 import { AppBar, Box, Button, Container, Stack, Toolbar, Typography } from '@mui/material'
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
+import { RouterButtonLink } from './router-button-link'
 type ShellProps = { children: ReactNode; onSignOut?: () => void }
 
 const OnboardingNavigationContext = createContext<boolean | null>(null)
@@ -37,7 +38,7 @@ function ClientNavigation() {
         <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', rowGap: 0.5 }} useFlexGap>
           {links.map((link) => {
             const active = currentPath === link.href || (link.href === '/' && currentPath === '/dashboard')
-            return <Button aria-current={active ? 'page' : undefined} color={active ? 'primary' : 'inherit'} component="a" href={link.href} key={link.href} size="small" variant={active ? 'contained' : 'text'}>{link.label}</Button>
+            return <RouterButtonLink aria-current={active ? 'page' : undefined} color={active ? 'primary' : 'inherit'} key={link.href} size="small" to={link.href} variant={active ? 'contained' : 'text'}>{link.label}</RouterButtonLink>
           })}
         </Stack>
       </Container>
@@ -46,6 +47,14 @@ function ClientNavigation() {
 }
 
 function BaseShell({ children, onSignOut, area, navigation }: ShellProps & { area: string; navigation?: ReactNode }) {
+  const [signingOut, setSigningOut] = useState(false)
+
+  function signOut() {
+    if (!onSignOut || signingOut) return
+    setSigningOut(true)
+    onSignOut()
+  }
+
   return (
     <Box sx={{ minHeight: '100vh', background: 'linear-gradient(160deg, #10181B 0%, #162427 52%, #10181B 100%)' }}>
       <AppBar color="transparent" elevation={0} position="sticky" sx={{ backdropFilter: 'blur(14px)', borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -53,7 +62,7 @@ function BaseShell({ children, onSignOut, area, navigation }: ShellProps & { are
           <Brand />
           <Typography color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, fontSize: '0.875rem', ml: 1 }}>{area}</Typography>
           <Box sx={{ flexGrow: 1 }} />
-          {onSignOut && <Button color="inherit" onClick={onSignOut}>Sair</Button>}
+          {onSignOut && <Button color="inherit" disabled={signingOut} onClick={signOut}>{signingOut ? 'Saindo…' : 'Sair'}</Button>}
         </Toolbar>
         {navigation}
       </AppBar>

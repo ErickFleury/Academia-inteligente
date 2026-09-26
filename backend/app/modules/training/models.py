@@ -206,4 +206,7 @@ class TrainingAdaptationOperation(Base):
     load_guidance: Mapped[str | None] = mapped_column(String(500))
     rest_seconds: Mapped[int | None] = mapped_column(Integer)
     equipment_requirement: Mapped[str | None] = mapped_column(String(200))
+    equipment_model_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("equipment_model.id")
+    )
     is_existing_exercise: Mapped[bool | None] = mapped_column(Boolean)

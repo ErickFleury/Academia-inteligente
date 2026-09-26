@@ -15,6 +15,8 @@ from app.integrations.ai import (
     training_adaptation_provider_from_environment,
 )
 from app.modules.clients.models import Account, Client
+from app.modules.equipment.models import EquipmentModel
+from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.models import Onboarding
 from app.modules.training.models import (
     TrainingAdaptationOperation,
@@ -53,11 +55,16 @@ class CurrentTrainingPlanRequiredError(AdaptationStateError):
     pass
 
 
+class InvalidEquipmentReferenceError(AdaptationStateError):
+    pass
+
+
 class TrainingAdaptationService:
     """Keeps proposed changes separate from plans until instructor approval."""
 
     def __init__(self, provider: TrainingAdaptationProvider | None = None) -> None:
         self._provider = provider or training_adaptation_provider_from_environment()
+        self._equipment = EquipmentService()
 
     def generate(
         self,
@@ -131,7 +138,20 @@ class TrainingAdaptationService:
         base = session.get(TrainingPlanVersion, proposal.base_version_id)
         if base is None:
             raise AdaptationNotFoundError
-        self._validate_operations(session, base, update.operations)
+        preserved_equipment_model_ids = set(
+            session.scalars(
+                select(TrainingAdaptationOperation.equipment_model_id).where(
+                    TrainingAdaptationOperation.proposal_id == proposal.id,
+                    TrainingAdaptationOperation.equipment_model_id.is_not(None),
+                )
+            )
+        )
+        self._validate_operations(
+            session,
+            base,
+            update.operations,
+            preserved_equipment_model_ids=preserved_equipment_model_ids,
+        )
         proposal.explanation = update.explanation.strip()
         self._replace_operations(session, proposal, update.operations)
         session.commit()
@@ -296,6 +316,7 @@ class TrainingAdaptationService:
             .where(TrainingPlanItem.version_id == base.id)
             .order_by(TrainingPlanItem.position)
         )
+        active_equipment_models = self._equipment.active_models_with_units(session)
         return {
             "reason": reason,
             "source_client_message": source.content,
@@ -321,15 +342,19 @@ class TrainingAdaptationService:
             "relevant_onboarding": {
                 key: value for key, value in health.items() if value is not None
             },
-            # Task 21 will replace this extension point with active catalog data.
-            "equipment_catalog_available": False,
+            "active_equipment_models": [
+                {"id": str(model.id), "name": model.name}
+                for model in active_equipment_models
+            ],
         }
 
-    @staticmethod
     def _validate_operations(
+        self,
         session: Session,
         base: TrainingPlanVersion,
         operations: list[AdaptationOperationInput],
+        *,
+        preserved_equipment_model_ids: set[UUID] | None = None,
     ) -> None:
         positions = set(
             session.scalars(
@@ -344,6 +369,33 @@ class TrainingAdaptationService:
                 raise AdaptationStateError
             elif operation.operation_type in {"replace", "adjust"} and operation.item is None:
                 raise AdaptationStateError
+        self._validate_equipment_references(
+            session, operations, preserved_equipment_model_ids or set()
+        )
+
+    def _validate_equipment_references(
+        self,
+        session: Session,
+        operations: list[AdaptationOperationInput],
+        preserved_equipment_model_ids: set[UUID],
+    ) -> None:
+        active_model_ids = {
+            model.id for model in self._equipment.active_models_with_units(session)
+        }
+        allowed_model_ids = active_model_ids | preserved_equipment_model_ids
+        for operation in operations:
+            item = operation.item
+            if item is None:
+                continue
+            requirement = (item.equipment_requirement or "").strip()
+            if not requirement:
+                if item.equipment_model_id is not None:
+                    raise InvalidEquipmentReferenceError
+                continue
+            if item.equipment_model_id is None or item.equipment_model_id not in allowed_model_ids:
+                raise InvalidEquipmentReferenceError
+            if session.get(EquipmentModel, item.equipment_model_id) is None:
+                raise InvalidEquipmentReferenceError
 
     @staticmethod
     def _replace_operations(
@@ -373,6 +425,7 @@ class TrainingAdaptationService:
                     load_guidance=item.load_guidance if item else None,
                     rest_seconds=item.rest_seconds if item else None,
                     equipment_requirement=item.equipment_requirement if item else None,
+                    equipment_model_id=item.equipment_model_id if item else None,
                     is_existing_exercise=item.is_existing_exercise if item else None,
                 )
             )

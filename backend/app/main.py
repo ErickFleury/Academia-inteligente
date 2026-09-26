@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.health.router import router as health_router
 from app.modules.clients.router import router as clients_router
+from app.modules.dashboard.router import router as dashboard_router
 from app.modules.equipment.router import router as equipment_router
 from app.modules.identity.router import router as identity_router
 from app.modules.occupancy.router import router as occupancy_router
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(identity_router)
     app.include_router(clients_router)
+    app.include_router(dashboard_router)
     app.include_router(equipment_router)
     app.include_router(onboarding_router)
     app.include_router(occupancy_router)

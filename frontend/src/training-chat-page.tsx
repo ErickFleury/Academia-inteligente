@@ -2,10 +2,12 @@ import { Box, Button, Card, CardContent, Stack, TextField, Typography } from '@m
 import { useEffect, useState } from 'react'
 
 import { ClientShell } from './components/application-shell'
+import { RouterButtonLink } from './components/router-button-link'
 import { ChatMessage, EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { getOwnTrainingChat, sendTrainingChatMessage, type TrainingChat } from './training-chat'
 import { createAdaptation, decideAdaptation, getOwnAdaptations, type TrainingAdaptation } from './training-adaptation'
 import { getCurrentTrainingPlan } from './training-plan'
+import { useChatAutoScroll } from './use-chat-auto-scroll'
 
 type TrainingChatPageProps = { accessToken: string; onSignOut: () => void }
 
@@ -20,6 +22,7 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
   const [adaptations, setAdaptations] = useState<TrainingAdaptation[]>([])
   const [hasCurrentPlan, setHasCurrentPlan] = useState<boolean | null>(null)
   const [creatingProposal, setCreatingProposal] = useState(false)
+  const chatEndRef = useChatAutoScroll(chat?.messages.length ?? 0, pending !== null)
 
   useEffect(() => {
     let active = true
@@ -66,7 +69,7 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
     <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={3} sx={{ maxWidth: 880, minWidth: 0 }}>
         <PageHeader
-          action={<Button component="a" href="/treino" variant="outlined">Ver meu treino</Button>}
+          action={<RouterButtonLink to="/treino" variant="outlined">Ver meu treino</RouterButtonLink>}
           description="Tire dúvidas sobre o seu plano atual e seus exercícios. Mudanças no treino precisam de revisão profissional."
           eyebrow="Assistente de treino"
           title="Como posso ajudar hoje?"
@@ -77,10 +80,11 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
             ? <EmptyState description="Pergunte sobre os exercícios, séries, repetições ou orientações do seu treino atual." title="Seu espaço para tirar dúvidas" />
             : chat.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role}>{item.content}</ChatMessage>)}
         </Stack>
+        <Box aria-hidden="true" ref={chatEndRef} sx={{ height: 1, scrollMarginBottom: { xs: 184, sm: 132 } }} />
         <Card aria-busy={pending !== null} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} placeholder="Ex.: Como devo fazer este exercício?" value={message} />
+              <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key !== 'Enter') return; event.preventDefault(); void submit(message) }} placeholder="Ex.: Como devo fazer este exercício?" value={message} />
               <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained">{pending ? 'Enviando…' : 'Enviar'}</Button>
             </Stack>
           </CardContent>

@@ -151,7 +151,9 @@ def test_ollama_uses_configured_url_model_and_shared_contract(
         OllamaConfig("http://ollama:11434", "qwen3:4b", 30)
     ).interview_turn({"current_user_message": "Olá"})
     assert result.assistant_message == "Qual é sua altura?"
-    assert json.loads(captured[0][0].data)["model"] == "qwen3:4b"
+    request_body = json.loads(captured[0][0].data)
+    assert request_body["model"] == "qwen3:4b"
+    assert request_body["think"] is False
 
 
 def test_adapter_failures_are_controlled(monkeypatch: pytest.MonkeyPatch) -> None:

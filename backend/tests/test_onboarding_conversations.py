@@ -14,6 +14,7 @@ from app.integrations.ai import (
     AiProviderError,
 )
 from app.modules.clients.models import Account, Client
+from app.modules.equipment import models as equipment_models  # noqa: F401
 from app.modules.onboarding.conversation_service import OnboardingConversationService
 from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import OnboardingAiConversation, OnboardingAiMessage

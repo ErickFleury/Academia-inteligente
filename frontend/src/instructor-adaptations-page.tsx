@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { ClientShell } from './components/application-shell'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
+import { getEquipmentCatalog, type EquipmentCatalogItem } from './equipment'
 import {
   decideInstructorAdaptation,
   getInstructorAdaptations,
@@ -31,6 +32,7 @@ function editable(proposal: TrainingAdaptation): EditableProposal {
         load_guidance: operation.load_guidance ?? '',
         rest_seconds: operation.rest_seconds ?? 0,
         equipment_requirement: operation.equipment_requirement ?? null,
+        equipment_model_id: operation.equipment_model_id ?? null,
         is_existing_exercise: operation.is_existing_exercise ?? false,
       },
     })),
@@ -40,6 +42,7 @@ function editable(proposal: TrainingAdaptation): EditableProposal {
 export function InstructorAdaptationsPage({ accessToken, onSignOut }: Props) {
   const [proposals, setProposals] = useState<TrainingAdaptation[] | null>(null)
   const [drafts, setDrafts] = useState<Record<string, EditableProposal>>({})
+  const [equipmentModels, setEquipmentModels] = useState<EquipmentCatalogItem[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,6 +56,14 @@ export function InstructorAdaptationsPage({ accessToken, onSignOut }: Props) {
       .catch((reason: unknown) => active && setError(reason instanceof Error ? reason.message : 'Não foi possível carregar as propostas.'))
     return () => { active = false }
   }, [accessToken])
+
+  useEffect(() => {
+    let active = true
+    void getEquipmentCatalog()
+      .then((items) => active && setEquipmentModels(items.filter((item) => item.active_quantity > 0)))
+      .catch(() => active && setEquipmentModels([]))
+    return () => { active = false }
+  }, [])
 
   function updateDraft(id: string, change: (draft: EditableProposal) => EditableProposal) {
     setDrafts((items) => ({ ...items, [id]: change(items[id]) }))
@@ -89,14 +100,14 @@ export function InstructorAdaptationsPage({ accessToken, onSignOut }: Props) {
           <Typography>{proposal.base_items.map((item) => `${item.position}. ${item.exercise_name} — ${item.sets}×${item.repetitions}`).join(' · ')}</Typography>
           <TextField fullWidth label="Explicação para o cliente" multiline value={draft.explanation} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, explanation: event.target.value }))} />
           {draft.operations.map((operation, index) => <Card key={index} variant="outlined"><CardContent><Stack spacing={1.25}>
-            <TextField select label="Operação" value={operation.operation_type} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index ? { ...item, operation_type: event.target.value as AdaptationOperationInput['operation_type'], item: event.target.value === 'remove' ? null : item.item ?? { exercise_name: '', sets: 1, repetitions: '', load_guidance: '', rest_seconds: 0, equipment_requirement: null, is_existing_exercise: false } } : item) }))}>
+            <TextField select label="Operação" value={operation.operation_type} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index ? { ...item, operation_type: event.target.value as AdaptationOperationInput['operation_type'], item: event.target.value === 'remove' ? null : item.item ?? { exercise_name: '', sets: 1, repetitions: '', load_guidance: '', rest_seconds: 0, equipment_requirement: null, equipment_model_id: null, is_existing_exercise: false } } : item) }))}>
               <MenuItem value="add">Adicionar exercício</MenuItem><MenuItem value="remove">Remover exercício</MenuItem><MenuItem value="replace">Substituir exercício</MenuItem><MenuItem value="adjust">Ajustar prescrição</MenuItem>
             </TextField>
             {operation.operation_type !== 'add' && <TextField label="Posição afetada" type="number" value={operation.target_position ?? ''} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index ? { ...item, target_position: Number(event.target.value) || null } : item) }))} />}
-            {operation.item && <><TextField label="Exercício" value={operation.item.exercise_name} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, exercise_name: event.target.value } } : item) }))} /><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><TextField fullWidth label="Séries" type="number" value={operation.item.sets} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, sets: Number(event.target.value) } } : item) }))} /><TextField fullWidth label="Repetições" value={operation.item.repetitions} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, repetitions: event.target.value } } : item) }))} /></Stack><TextField label="Orientação de carga" value={operation.item.load_guidance} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, load_guidance: event.target.value } } : item) }))} /></>}
+            {operation.item && <><TextField label="Exercício" value={operation.item.exercise_name} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, exercise_name: event.target.value } } : item) }))} /><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><TextField fullWidth label="Séries" type="number" value={operation.item.sets} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, sets: Number(event.target.value) } } : item) }))} /><TextField fullWidth label="Repetições" value={operation.item.repetitions} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, repetitions: event.target.value } } : item) }))} /></Stack><TextField label="Orientação de carga" value={operation.item.load_guidance} onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => position === index && item.item ? { ...item, item: { ...item.item, load_guidance: event.target.value } } : item) }))} /><TextField select label="Equipamento do catálogo (opcional)" value={operation.item.equipment_model_id ?? ''} helperText="Unidades ativas indicam inventário do catálogo, não uso imediato." onChange={(event) => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.map((item, position) => { if (position !== index || !item.item) return item; const model = equipmentModels.find((candidate) => candidate.id === event.target.value); return { ...item, item: { ...item.item, equipment_model_id: model?.id ?? null, equipment_requirement: model?.name ?? null } } }) }))}><MenuItem value="">Sem equipamento do catálogo</MenuItem>{operation.item.equipment_model_id && !equipmentModels.some((model) => model.id === operation.item?.equipment_model_id) && <MenuItem disabled value={operation.item.equipment_model_id}>{operation.item.equipment_requirement ?? 'Modelo inativo preservado no histórico'}</MenuItem>}{equipmentModels.map((model) => <MenuItem key={model.id} value={model.id}>{model.name} — {model.active_quantity} unidades ativas</MenuItem>)}</TextField></>}
             <Box><Button color="error" onClick={() => updateDraft(proposal.id, (value) => ({ ...value, operations: value.operations.filter((_, position) => position !== index) }))}>Excluir operação</Button></Box>
           </Stack></CardContent></Card>)}
-          <Button onClick={() => updateDraft(proposal.id, (value) => ({ ...value, operations: [...value.operations, { operation_type: 'add', target_position: null, item: { exercise_name: '', sets: 1, repetitions: '', load_guidance: '', rest_seconds: 0, equipment_requirement: null, is_existing_exercise: false } }] }))} variant="outlined">Adicionar operação</Button>
+          <Button onClick={() => updateDraft(proposal.id, (value) => ({ ...value, operations: [...value.operations, { operation_type: 'add', target_position: null, item: { exercise_name: '', sets: 1, repetitions: '', load_guidance: '', rest_seconds: 0, equipment_requirement: null, equipment_model_id: null, is_existing_exercise: false } }] }))} variant="outlined">Adicionar operação</Button>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button onClick={() => void save(proposal)} variant="outlined">Salvar revisão</Button><Button onClick={() => void decide(proposal, true)} variant="contained">Aprovar e ativar</Button><Button color="error" onClick={() => void decide(proposal, false)}>Recusar proposta</Button></Stack>
         </Stack></CardContent></Card>
       })}

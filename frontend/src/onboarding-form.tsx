@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { ClientShell } from './components/application-shell'
+import { RouterButtonLink } from './components/router-button-link'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OnboardingCompletion } from './onboarding-completion'
 import {
@@ -27,7 +28,7 @@ import {
   type TrainingExperience,
 } from './onboarding-draft'
 
-type OnboardingFormProps = { accessToken: string; onSignOut: () => void }
+type OnboardingFormProps = { accessToken: string; onCompleted?: () => void; onSignOut: () => void }
 
 type FormValues = Omit<OnboardingDraft, 'status' | 'completed_at'>
 
@@ -130,7 +131,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) {
+export function OnboardingForm({ accessToken, onCompleted, onSignOut }: OnboardingFormProps) {
   const [values, setValues] = useState<FormValues>(emptyValues)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -196,6 +197,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
       setDraft(completed)
       setValues(valuesFromDraft(completed))
       setSuccess('Seu onboarding foi concluído com sucesso.')
+      onCompleted?.()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível concluir seu onboarding.')
     } finally {
@@ -209,7 +211,7 @@ export function OnboardingForm({ accessToken, onSignOut }: OnboardingFormProps) 
     <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={3} sx={{ maxWidth: 840 }}>
         <PageHeader
-          action={<Button component="a" href="/onboarding/conversa" variant="outlined">Responder por conversa</Button>}
+          action={<RouterButtonLink to="/assistente" variant="outlined">Responder por conversa</RouterButtonLink>}
           description="Salve seu progresso quando quiser. Os campos marcados como necessários serão validados na conclusão do onboarding."
           eyebrow="Seu perfil de treino"
           title="Conte um pouco sobre você"

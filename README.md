@@ -61,7 +61,7 @@ instead):
 AI_PROVIDER=ollama
 OLLAMA_BASE_URL=http://ollama:11434
 OLLAMA_MODEL=qwen3:8b
-OLLAMA_TIMEOUT_SECONDS=30
+OLLAMA_TIMEOUT_SECONDS=120
 ```
 
 Start it when needed:
@@ -82,10 +82,11 @@ publish port 11434. To use an Ollama process installed directly on the Linux
 host instead, set `OLLAMA_BASE_URL=http://host.docker.internal:11434`; the
 Compose backend includes the required Linux host-gateway mapping.
 
-The optional Compose service requests every available NVIDIA GPU. The host must
-have a compatible NVIDIA driver and NVIDIA Container Toolkit configured for
-Docker; otherwise Ollama uses CPU or cannot start with GPU access. This project
-does not configure a host GPU driver or expose GPU services publicly.
+The optional Compose service is pinned to NVIDIA GPU `0` and its CUDA 12 runner;
+it does not silently use a CPU runner. The host must have a compatible NVIDIA
+driver and NVIDIA Container Toolkit configured for Docker; otherwise the Ollama
+service cannot perform inference until GPU access is restored. This project does
+not configure a host GPU driver or expose GPU services publicly.
 
 For a fresh local realm, `docker-compose up --build` imports the provisioning
 service account and Mailpit SMTP configuration. Existing Keycloak realms are

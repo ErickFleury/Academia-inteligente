@@ -150,10 +150,10 @@ export class OidcSessionClient {
     window.location.assign(authorizationUrl)
   }
 
-  async completeLogin(): Promise<void> {
+  async completeLogin(): Promise<string> {
     const currentUrl = new URL(window.location.href)
     const code = currentUrl.searchParams.get('code')
-    if (!code) return
+    if (!code) return currentUrl.pathname
 
     const expectedState = sessionStorage.getItem(stateKey)
     const verifier = sessionStorage.getItem(verifierKey)
@@ -189,7 +189,7 @@ export class OidcSessionClient {
     })
     sessionStorage.removeItem(verifierKey)
     sessionStorage.removeItem(stateKey)
-    window.history.replaceState({}, '', currentUrl.pathname)
+    return currentUrl.pathname
   }
 
   clearSession(): void {

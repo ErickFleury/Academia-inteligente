@@ -1,10 +1,13 @@
 import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
+import { BrowserRouter, Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { AdminShell, ClientNavigationStateProvider, ClientShell, PublicShell } from './components/application-shell'
+import { RouterButtonLink } from './components/router-button-link'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
 import { ClientManagement } from './client-management'
+import { AdminDashboard } from './admin-dashboard-page'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
 import { OnboardingForm } from './onboarding-form'
@@ -22,13 +25,20 @@ import { ProfilePresencePage } from './profile-presence-page'
 const oidcSessionClient = new OidcSessionClient()
 
 export function App() {
-  const isEquipmentCatalogRoute = window.location.pathname === '/equipamentos'
+  return <BrowserRouter><Application /></BrowserRouter>
+}
+
+function Application() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isEquipmentCatalogRoute = location.pathname === '/equipamentos'
   const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
   const loginCompletionStarted = useRef(false)
   const loginRedirectStarted = useRef(false)
+  const logoutStarted = useRef(false)
 
   useEffect(() => {
     if (!new URL(window.location.href).searchParams.has('code') || loginCompletionStarted.current) return
@@ -36,10 +46,13 @@ export function App() {
     setCompletingLogin(true)
     void oidcSessionClient
       .completeLogin()
-      .then(() => setSession(oidcSessionClient.getSession()))
+      .then((returnPath) => {
+        setSession(oidcSessionClient.getSession())
+        navigate(returnPath, { replace: true })
+      })
       .catch(() => setAuthenticationError('Não foi possível iniciar a sessão. Tente novamente.'))
       .finally(() => setCompletingLogin(false))
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     if (!session?.roles.includes('client')) {
@@ -90,8 +103,7 @@ export function App() {
     const recordActivity = () => {
       if (Date.now() - lastRecordedActivity < 1_000) return
       lastRecordedActivity = Date.now()
-      const current = oidcSessionClient.recordActivity()
-      if (current) setSession(current)
+      oidcSessionClient.recordActivity()
       void refreshIfNeeded()
     }
     const activityEvents = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const
@@ -114,20 +126,21 @@ export function App() {
     }
   }, [])
 
-  const isAdministrativeRoute = window.location.pathname === '/admin'
-  const isProgressModerationRoute = window.location.pathname === '/admin/publicacoes'
-  const isOnboardingRoute = window.location.pathname === '/onboarding'
-  const isOnboardingConversationRoute = window.location.pathname === '/onboarding/conversa'
-  const isCurrentTrainingRoute = window.location.pathname === '/treino'
-  const isTrainingChatRoute = window.location.pathname === '/assistente'
-  const isProgressRoute = window.location.pathname === '/progresso'
-  const isEquipmentManagementRoute = window.location.pathname === '/admin/equipamentos'
-  const isOccupancyRoute = window.location.pathname === '/ocupacao'
-  const isProfileRoute = window.location.pathname === '/perfil'
-  const isInstructorAdaptationsRoute = window.location.pathname === '/instrutor/adaptacoes'
+  const isAdministrator = session?.roles.includes('admin') ?? false
+  const isAdministrativeRoute = location.pathname === '/admin'
+    || (isAdministrator && (location.pathname === '/' || location.pathname === '/dashboard'))
+  const isProgressModerationRoute = location.pathname === '/admin/publicacoes'
+  const isOnboardingRoute = location.pathname === '/onboarding'
+  const isOnboardingConversationRoute = location.pathname === '/onboarding/conversa'
+  const isCurrentTrainingRoute = location.pathname === '/treino'
+  const isTrainingChatRoute = location.pathname === '/assistente'
+  const isProgressRoute = location.pathname === '/progresso'
+  const isEquipmentManagementRoute = location.pathname === '/admin/equipamentos'
+  const isOccupancyRoute = location.pathname === '/ocupacao'
+  const isProfileRoute = location.pathname === '/perfil'
+  const isInstructorAdaptationsRoute = location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
   const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute || isProfileRoute
-  const isAdministrator = session?.roles.includes('admin') ?? false
   const isInstructor = session?.roles.includes('instructor') ?? false
 
   function clearSession() {
@@ -136,18 +149,25 @@ export function App() {
   }
 
   function endSession() {
+    if (logoutStarted.current) return
+    logoutStarted.current = true
     const logoutUrl = oidcSessionClient.endSession()
     setSession(null)
     window.location.assign(logoutUrl)
   }
 
-  const onboardingToken = new URL(window.location.href).searchParams.get('token')
+  const onboardingToken = new URLSearchParams(location.search).get('token')
 
   if (isOnboardingRoute && onboardingToken) {
     return <OnboardingAccessPage token={onboardingToken} />
   }
 
-  if (isEquipmentCatalogRoute) return <EquipmentCatalogPage />
+  if (isEquipmentCatalogRoute) {
+    if (session?.roles.includes('client')) {
+      return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><EquipmentCatalogPage onSignOut={endSession} showClientNavigation /></ClientNavigationStateProvider>
+    }
+    return <EquipmentCatalogPage />
+  }
 
   if (completingLogin) return <PublicShell><LoadingState label="Iniciando sessão" /></PublicShell>
 
@@ -194,11 +214,11 @@ export function App() {
   }
 
   if (isOnboardingConversationRoute && session) {
-    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OnboardingConversationPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
+    return <Navigate replace to="/assistente" />
   }
 
   if (isOnboardingRoute && session) {
-    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OnboardingForm accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OnboardingForm accessToken={session.accessToken} onCompleted={() => setOnboardingComplete(true)} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isCurrentTrainingRoute && session) {
@@ -206,7 +226,15 @@ export function App() {
   }
 
   if (isTrainingChatRoute && session) {
-    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
+    return (
+      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
+        {onboardingComplete === null
+          ? <ClientShell onSignOut={endSession} showClientNavigation><LoadingState label="Preparando seu assistente" /></ClientShell>
+          : onboardingComplete
+            ? <TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} />
+            : <OnboardingConversationPage accessToken={session.accessToken} onSignOut={endSession} />}
+      </ClientNavigationStateProvider>
+    )
   }
 
   if (isProgressRoute && session) {
@@ -245,11 +273,12 @@ export function App() {
       <AdminShell onSignOut={endSession}>
         <Stack spacing={3}>
           <PageHeader
-            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button component="a" href="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</Button><Button component="a" href="/admin/publicacoes" variant="outlined">Moderar publicações</Button><Button component="a" href="/admin" variant="outlined">Administração</Button></Stack>}
-            description="Cadastre, localize e acompanhe o estado de acesso dos clientes."
+            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><RouterButtonLink to="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</RouterButtonLink><RouterButtonLink to="/admin/publicacoes" variant="outlined">Moderar publicações</RouterButtonLink></Stack>}
+            description="Acompanhe indicadores agregados e gerencie os clientes da academia."
             eyebrow="Operação"
-            title="Clientes"
+            title="Painel administrativo"
           />
+          <AdminDashboard accessToken={session.accessToken} onUnauthenticated={clearSession} />
           <ClientManagement accessToken={session.accessToken} onUnauthenticated={clearSession} />
         </Stack>
       </AdminShell>
@@ -270,12 +299,12 @@ export function App() {
                 <Typography color="text.secondary">Novos recursos pessoais aparecerão aqui conforme forem disponibilizados.</Typography>
                 {!isAdministrator && (
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}>
-                    {onboardingComplete === false && <Button component="a" href="/onboarding" variant="contained">Preencher onboarding</Button>}
-                    <Button component="a" href="/treino" variant="outlined">Ver meu treino</Button>
-                    <Button component="a" href="/assistente" variant="outlined">Assistente de treino</Button>
+                    {onboardingComplete === false && <RouterButtonLink to="/onboarding" variant="contained">Preencher onboarding</RouterButtonLink>}
+                    <RouterButtonLink to="/treino" variant="outlined">Ver meu treino</RouterButtonLink>
+                    <RouterButtonLink to="/assistente" variant="outlined">Assistente de treino</RouterButtonLink>
                   </Stack>
                 )}
-                {isAdministrator && <Box><Button component="a" href="/admin" variant="contained">Administração</Button></Box>}
+                {isAdministrator && <Box><RouterButtonLink to="/admin" variant="contained">Administração</RouterButtonLink></Box>}
               </Stack>
             </CardContent>
           </Card>

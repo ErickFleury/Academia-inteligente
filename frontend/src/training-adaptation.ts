@@ -16,6 +16,8 @@ export type TrainingAdaptation = {
     load_guidance?: string | null
     rest_seconds?: number | null
     equipment_requirement?: string | null
+    equipment_model_id?: string | null
+    equipment_model_name?: string | null
     is_existing_exercise?: boolean | null
   }>
 }
@@ -30,6 +32,7 @@ export type AdaptationOperationInput = {
     load_guidance: string
     rest_seconds: number
     equipment_requirement: string | null
+    equipment_model_id: string | null
     is_existing_exercise: boolean
   }
 }

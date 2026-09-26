@@ -1,5 +1,7 @@
 # Task 24 — Nonfinancial Administrative Dashboard
 
+**Status:** implemented — 2026-09-25
+
 ## Objective
 
 Implement the decision-complete, nonfinancial portion of the administrative

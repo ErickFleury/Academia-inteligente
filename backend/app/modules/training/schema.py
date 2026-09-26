@@ -40,6 +40,7 @@ AdaptationOperationType = Literal["add", "remove", "replace", "adjust"]
 
 class AdaptationExerciseCandidate(TrainingPlanItemInput):
     equipment_requirement: str | None = Field(default=None, max_length=200)
+    equipment_model_id: UUID | None = None
     is_existing_exercise: bool
 
 

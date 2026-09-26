@@ -735,6 +735,17 @@ Acceptance: `EXT-CA-AI-01.1` own-client start/resume;
 `EXT-CA-AI-01.6` cross-client isolation; `EXT-CA-AI-01.7` no diagnosis and
 controlled provider failure; `EXT-CA-AI-01.8` coexistence with link/form.
 
+**Unified assistant presentation:** `/assistente` is the sole client-facing AI
+conversation destination. Before the authoritative onboarding is completed, it
+shows the progressive onboarding conversation and continues to use the approved
+onboarding validation/completion flow. Once completed, the same destination
+shows the RF-18 training assistant. The form's “Responder por conversa” action
+also targets `/assistente`; the historical onboarding-conversation route
+redirects there. This is one user-facing assistant journey, not two client chat
+destinations. The onboarding and training conversation records remain distinct
+server-side to preserve their approved context, health-data handling, and
+retention boundaries; they are not merged or exposed as one message history.
+
 #### EXT-RF-SOC-01 — Controlled progress sharing
 
 **Scope:** approved post-MVP extension. **Related originals:** RF-04, RF-05,
@@ -783,6 +794,66 @@ and history, conversations, adaptations, progress updates/tombstones, account
 linkage, and pending identity reconciliation. No audit record is retained, so
 the account cannot be reidentified. This irreversible privacy erasure is
 distinct from reversible account deactivation.
+
+#### EXT-RF-SOC-02 — Social client profile and post interactions
+
+**Scope:** approved post-MVP extension; Task 26 is planned. **Related:**
+EXT-RF-SOC-01, EXT-RF-PRES-01, RF-03–RF-05, RN-04, RN-05, RN-11, RN-23,
+RN-28, RN-33.
+
+An active authenticated client has an individual social profile visible by
+default to other active authenticated clients. The owner always sees their own
+profile and is the only actor who sees or changes its visibility switch. The
+profile shows the existing client name, an optional owner-editable non-unique
+nickname, an optional biography, an owner-managed profile picture,
+follower/following information, and the posts permitted for the viewer. Opening
+a permitted post shows its like count and comments.
+
+Acceptance: `EXT-CA-SOC-02.1` owner fields and default-on visibility control;
+`EXT-CA-SOC-02.2` validated client-owned image lifecycle;
+`EXT-CA-SOC-02.3` authenticated cross-client visibility and minimized social
+projection; `EXT-CA-SOC-02.4` follow graph and lists;
+`EXT-CA-SOC-02.5` newest-first viewer-appropriate post history;
+`EXT-CA-SOC-02.6` unique likes and author-owned comments;
+`EXT-CA-SOC-02.7` approved administrator moderation;
+`EXT-CA-SOC-02.8` complete account-erasure coverage and sensitive-data
+exclusion; `EXT-CA-SOC-02.9` independent profile-presence consent;
+`EXT-CA-SOC-02.10` future-feed boundary without current feed implementation.
+
+**Approved implementation policy (EXT-DEC-SOC-02):** names and nicknames are
+presentation only; the Client UUID remains canonical. Nicknames are optional,
+non-unique, plain text, owner-editable, and limited to 40 characters. Biography
+is optional plain text up to 160 characters. Profile images are JPEG, PNG, or
+WebP up to 5 MiB, validated by content, normalized with metadata removed, and
+stored as bytes in a dedicated client-owned PostgreSQL record.
+Replacement/removal deletes prior bytes.
+
+Visibility defaults on but never grants anonymous access. When off, another
+client cannot read the profile, its profile post collection, or follower lists;
+follow edges are retained. Per-post private/shared visibility remains governed
+by EXT-DEC-SOC-01, so switching the profile off does not silently rewrite or
+unshare posts. The owner sees their private/shared posts and moderation state;
+an allowed other-client profile view shows only shared, non-hidden posts.
+Profile post order is newest-first and deleted posts are omitted.
+
+Following is unilateral, allows no self-follow or duplicate edge, and has no
+request/approval flow. Likes are limited to one per active client per accessible
+shared, non-hidden post. Permitted clients may add plain-text comments up to the
+existing 2,000-character post-content ceiling to such posts; only the comment
+author may delete it through the client API, and the post author gains no extra
+deletion authority. Administrators may hide/restore
+shared comments and biography/profile-image content with a required reason and
+may delete them with an optional reason; administrators never edit client
+content or change profile visibility.
+
+Existing post moderation/tombstones remain authoritative. Post deletion removes
+its likes/comments. Full account erasure removes the profile, image bytes,
+follow edges in both directions, likes, comments, posts/tombstones, and related
+audit data. Other-client projections exclude e-mail, internal IDs, health,
+training, attendance history, biometric, payment, credential, and administrative
+data. EXT-DEC-PRES-01 independently controls whether the derived current-presence
+tag appears. Task 26 creates no feed, recommendations, messaging, notifications,
+rankings, leaderboards, blocks, private follow requests, or public profiles.
 
 #### EXT-RF-EQP-01 — Equipment quantity by logical type/model
 
@@ -842,8 +913,10 @@ are in Portuguese, without changing the approved authentication architecture;
 `EXT-CA-LANG-01.5` representative phone, tablet, and desktop flows have no
 unintended English application copy. Familiar gym/technical terms are allowed.
 
-No extension approves followers, friends, messages, comments, likes, rankings,
-leaderboards, or live equipment-use tracking.
+EXT-RF-SOC-02 approves only its bounded followers, likes, comments, and social
+profile. No extension approves a social feed, friend/private-follow requests,
+blocks, recommendations, messages, notifications, rankings, leaderboards,
+public guest profiles, or live equipment-use tracking.
 
 ### 3.2 Client-facing training and assistant interpretation (DEC-19)
 
@@ -1125,7 +1198,10 @@ cardinalities remain undecided.
 | Exercise | Referenced prescription content; inactive exercises remain in history under RN-20. Full management flow awaits DEC-15. |
 | AI training conversation/message/proposal | Client-scoped RF-18/RF-19 context and proposed changes. A proposal is not a current approved plan; changes use the version lifecycle. |
 | EquipmentModel / EquipmentUnit | RF-32 administrative records and RF-33 catalog use UUID-identified logical models and their physical units. Active quantity is derived from active units for an active model, never stored as an authoritative mutable aggregate; it is not live availability. |
-| ProgressUpdate | Client-author-owned social item with private/shared visibility. Audience, retention, and deletion details await EXT-DEC-SOC-01. No sensitive data is automatically derived into it. |
+| ProgressUpdate | Client-author-owned post with private/shared visibility, moderation, and deletion lifecycle governed by EXT-DEC-SOC-01. Task 26 adds likes/comments only for accessible shared, non-hidden posts. No sensitive data is automatically derived into it. |
+| SocialProfile / ProfileImage | Client-owned default-on authenticated social projection with optional non-unique nickname, 160-character biography, visibility preference, and a separately stored normalized image. The Client UUID remains canonical; old image bytes are deleted on replacement/removal. |
+| ClientFollow | Directed client-to-client relationship with a unique follower/followed pair; no self-follow, request, approval, friendship, or recommendation semantics. |
+| PostLike / PostComment | Authenticated interactions attached to a permitted ProgressUpdate. A like is unique per client/post; a comment is plain-text, author-owned, and independently moderatable. Both follow post/account deletion. |
 | Plan/Enrollment/Subscription | Client contracting and validity concepts for RF-31/RN-22/RN-35/RN-36. Cardinality, modalities, and validity await DEC-12. |
 | Charge/Payment | Client financial records and external confirmation. Provider/model and financial meanings await DEC-12/DEC-13; access is restricted. |
 | Biometric data | Separately protected RF-22 data; not ordinary profile data. DEC-09 defines measured quality, calibrated threshold, reference/minimization, replacement, retention, and audit; implementation remains future work. |
@@ -1154,7 +1230,8 @@ above remains historical modeling context, not an active alternative.
 - A `client_id` in a path, query, body, local storage, or frontend state is never
   proof that the caller owns that client.
 - A client accesses only their protected data unless an explicit requirement
-  defines shared visibility, such as EXT-RF-SOC-01 or EXT-RF-PRES-01.
+  defines shared visibility, such as EXT-RF-SOC-01, EXT-RF-SOC-02, or
+  EXT-RF-PRES-01.
 - Administrative and professional APIs enforce role and functional-need policy
   independently of frontend routes, menus, or hidden controls.
 - Direct API calls receive the same denial as the UI; obscuring controls is not
@@ -1223,11 +1300,12 @@ This order is implementation guidance added in this consolidation; it does not c
 | Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
 | Training generation/version/current view/chat/adaptation | Original MVP; partially implemented | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
 | Employee management, recovery, onboarding self-review | Original post-MVP; not started | RF-06–RF-08, RF-14 |
-| Progress sharing | Approved post-MVP extension; planned | EXT-RF-SOC-01; EXT-DEC-SOC-01 |
+| Progress sharing | Approved post-MVP extension; implemented | EXT-RF-SOC-01; EXT-DEC-SOC-01; Task 20 |
+| Social client profiles/interactions | Approved post-MVP extension; planned | EXT-RF-SOC-02; EXT-DEC-SOC-02; Task 26 |
 | Equipment management/catalog | Original post-MVP; implemented | RF-32, RF-33 |
 | Equipment quantity | Approved post-MVP extension; implemented | EXT-RF-EQP-01; EXT-DEC-EQP-01 |
 | Access/attendance/anonymous occupancy | Original post-MVP; Task 22 implemented | RF-23–RF-25; confirmed-passage/correction ledger and aggregate-only client view. RF-20–RF-22 biometric/access work remains separate |
-| Named visible presence | Approved post-MVP extension; blocked | EXT-RF-PRES-01; Task 22, EXT-DEC-PRES-01 |
+| Named visible presence | Approved post-MVP extension; implemented | EXT-RF-PRES-01; Task 23, EXT-DEC-PRES-01 |
 | Billing/plans/dashboard/classes | Original post-MVP; not started | RF-26–RF-31; DEC-12–DEC-14 |
 | CA-03.4 biometric readiness | Deferred, not satisfied | RF-03/CA-03.4, RF-22, DEC-05 |
 
@@ -1266,6 +1344,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 | ID | Status | Required decision | Expected task |
 | --- | --- | --- | --- |
 | EXT-DEC-SOC-01 | **Resolved for Task 20** | Private by default; shared updates are visible to active authenticated clients; shared-only administrator hide/restore moderation with a reason; author-only edit/delete; contentless deletion tombstone and stated lifecycle. | Controlled progress sharing may proceed. |
+| EXT-DEC-SOC-02 | **Resolved for Task 26** | Default-on authenticated social profiles; optional nickname/bio and client-owned image lifecycle; unilateral following; bounded likes/comments; moderation, erasure, presence separation, and future-feed boundary. | Social profile redesign may proceed. |
 | EXT-DEC-EQP-01 | **Resolved for Task 21** | UUID-identified `EquipmentModel` canonical grouping; each physical `EquipmentUnit` belongs to one model; active quantity is derived from active units, not a mutable aggregate; no live availability semantics. | Equipment catalog and quantities may proceed. |
 | EXT-DEC-PRES-01 | **Resolved for Task 23** | Default-off client-owned profile tag only; derived from fresh confirmed passages with a 12-hour limit; immediate opt-out; no directory, staff override, or occupancy impact. | Opt-in profile presence may proceed. |
 
@@ -1273,7 +1352,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 
 | Data category | Access and handling boundary |
 | --- | --- |
-| Account/profile | Owner and explicitly authorized administrative operations; normalized e-mail is account-owned. Client lists remain administrative. |
+| Account/profile | Owner and explicitly authorized administrative operations; normalized e-mail is account-owned. Client lists remain administrative. EXT-RF-SOC-02 exposes only its minimized authenticated social projection when enabled. |
 | Health/onboarding | Client and only staff with functional need; attendants and admin status alone do not grant medical access. Apply RN-11/RN-23 and DEC-18. |
 | Biometrics | Separate from ordinary profile data; authorized biometric staff only; never common reports or social/presence views. Apply RN-10/RN-34. |
 | Authentication | Keycloak owns credentials. Tokens/secrets are not stored as domain data or logged. Subject is an external reference only. |
@@ -1311,13 +1390,14 @@ unchecked boxes or planned files.
 | RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14 plus follow-up: completed-onboarding-scoped AI generation and reuse of the sole client draft; instructor review remains mandatory. |
 | RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
 | RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16 plus follow-up: client-only persisted training chat, bounded own-context, idempotency, controlled failures, and validated editing of the sole client draft regardless of creator. |
-| RF-19 | Original MVP | Implemented | DEC-07/08/15 | Task 17: client-confirmed structured adaptation proposals, instructor review, immutable current-version transition, and preserved history. |
+| RF-19 | Original MVP | Implemented | DEC-07/08/15; EXT-DEC-EQP-01 | Tasks 17 and 25: client-confirmed structured adaptation proposals, instructor review, immutable current-version transition, preserved history, and server-validated active EquipmentModel UUID references for machine-dependent candidates. Active units express catalog inventory only, never live availability. |
 | MVP frontend polish | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 18: shared visual, responsive, loading/empty/error, pt-BR copy, and accessibility consistency pass; Task 19 retains end-to-end verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
-| EXT-RF-SOC-01 | Approved post-MVP extension | Planned | EXT-DEC-SOC-01 | Task 20. |
+| EXT-RF-SOC-01 | Approved post-MVP extension | Implemented | EXT-DEC-SOC-01 | Task 20. |
+| EXT-RF-SOC-02 | Approved post-MVP extension | Planned | EXT-DEC-SOC-02 | Task 26. |
 | RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Implemented | Resolved EXT-DEC-EQP-01 | Task 21: authorized two-level model/unit management and public active catalog with derived total. |
 | RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
-| EXT-RF-PRES-01 | Approved post-MVP extension | Blocked | Task 22/EXT-DEC-PRES-01 | Task 23. |
+| EXT-RF-PRES-01 | Approved post-MVP extension | Implemented | Task 22/EXT-DEC-PRES-01 | Task 23. |
 | Remaining RF-06–RF-08, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Codex workflow
@@ -1415,7 +1495,9 @@ by inference.
 - **DEC-18:** health/onboarding and Task 11 AI-conversation storage, access,
   logging, retention, and failure-safety policy are approved. Biometric
   lifecycle is governed separately by DEC-09.
-- **EXT-DEC-SOC-01:** sharing audience and lifecycle; blocks Task 20.
+- **EXT-DEC-SOC-01:** resolved sharing audience and lifecycle for Task 20.
+- **EXT-DEC-SOC-02:** resolved social-profile, image, follow, like, comment,
+  moderation, erasure, and future-feed boundaries for Task 26.
 - **EXT-DEC-EQP-01:** resolved for Task 21 with UUID-identified
   `EquipmentModel` grouping, physical `EquipmentUnit` inventory, derived
   active quantity, and no live-availability semantics.

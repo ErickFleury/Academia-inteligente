@@ -412,8 +412,11 @@ provider failures subject to the single retry policy recorded under DEC-18.
 implementation of the same provider-neutral onboarding interface for local,
 zero-API-cost development and testing. It uses configurable
 `OLLAMA_BASE_URL`, `OLLAMA_MODEL` (default `qwen3:8b`), and
-`OLLAMA_TIMEOUT_SECONDS` (default 30), with JSON-Schema-constrained local HTTP
-output mapped and validated through the same application response contract.
+`OLLAMA_TIMEOUT_SECONDS` (default 120), with JSON-Schema-constrained local HTTP
+output mapped and validated through the same application response contract. The
+local request disables optional model thinking and the onboarding/training
+assistant prompts require concise, necessary-only responses; this keeps local
+interactive use bounded without changing the structured validation boundary.
 This does not replace OpenAI or change its ten-second production timeout.
 For reproducible local use, Ollama may run as an optional internal Docker
 Compose profile with a persistent model volume; it is not exposed on a host
@@ -612,6 +615,87 @@ updates with an optional reason, leaving a contentless tombstone. They may also
 irreversibly erase a client: delete the Keycloak identity and all attached local
 records with no retained audit record, for anonymity. Erasure overrides normal
 history preservation only for this explicitly requested privacy workflow.
+
+## EXT-DEC-SOC-02 — Social client profiles and post interactions
+
+**Status:** approved for Task 26 — 2026-09-25
+
+Task 26 expands the individual client profile into a bounded social profile and
+supersedes only the follower, like, and comment exclusions previously stated by
+EXT-DEC-SOC-01. Existing progress-update ownership, private/shared visibility,
+post moderation, sensitive-data exclusions, and account-erasure rules remain in
+force.
+
+A social profile is visible to active authenticated clients by default. The
+owner always has access to their own profile and is the only person who can see
+or change the profile-visibility switch. Disabling visibility immediately
+hides the cross-client profile, its follower/following lists, and its profile
+post collection from other clients. It does not change individual post
+visibility: an explicitly shared post remains eligible for the existing shared
+progress feed, while a private post remains author-only. Existing follow
+relationships are retained while a profile is hidden and become visible again
+if the owner re-enables the profile. Anonymous/guest profile access is not
+approved.
+
+The canonical client identity remains its internal UUID; neither a name nor a
+nickname is an identifier. The profile shows the client's existing display
+name and may additionally show an optional, owner-editable, non-unique nickname.
+The nickname is presentation-only, is plain text, limited to 40 characters,
+and does not alter login, authorization, account linkage, post ownership, or
+historical relationships.
+An optional plain-text biography is owner-editable and limited to 160
+characters.
+
+The owner may upload, replace, or remove their profile picture by activating
+the picture control. Task 26 accepts JPEG, PNG, or WebP up to 5 MiB, validates
+the actual media, normalizes it to a bounded image while removing metadata, and
+stores the resulting bytes in a dedicated client-owned PostgreSQL record. The
+frontend never sends a filesystem path as profile identity. Replacement or
+owner removal permanently deletes the previous bytes; account erasure deletes
+all profile-image data. Other clients and administrators cannot edit the image.
+
+Following is a unilateral relationship between two active clients. Self-follow
+and duplicate relationships are forbidden. A client may follow or unfollow an
+otherwise visible profile; no approval request is required. A visible profile
+may expose its follower and following counts and lists to authenticated clients.
+Private follow requests, blocks, recommendations, notifications, and friend
+semantics are future work and are not introduced by Task 26.
+
+The profile lists the owner's retained posts newest-first. The owner can see
+their private and shared posts and any moderation state; another authenticated
+viewer sees only shared, non-hidden posts on a visible profile. Deleted posts
+are not presented. Opening a permitted post displays its current like count and
+comments. Any active authenticated client with access to a shared, non-hidden
+post may like/unlike it, including its author, with at most one like per client,
+and may add a plain-text comment up to the existing 2,000-character post-content
+ceiling. Comment authors may delete their own comments. Post authors do not
+gain authority to delete another client's comment merely
+because it appears on their post. Private or hidden posts accept no cross-client
+interaction. Post deletion removes attached likes and comments while retaining
+only the already-approved contentless post tombstone.
+
+Administrators may moderate shared comments and the social biography/profile
+picture, but cannot edit client content or enable/disable profile visibility.
+Hide and restore actions require a reason; deletion accepts an optional reason.
+Moderation audit data contains only the minimum actor, target, action, timestamp,
+and reason and never duplicates image bytes or user-authored content. Owner and
+administrator deletions remove content from client views. Full account erasure
+removes the social profile, image bytes, follow edges, likes, comments, posts,
+tombstones, and related audit data so the erased client cannot be reidentified.
+
+Other-client profile responses expose only approved social fields: display
+name, optional nickname, optional biography, permitted profile image, follower
+and following information, permitted posts, and the existing current-presence
+boolean only when EXT-DEC-PRES-01 independently allows it. E-mail, internal IDs,
+health, training, attendance history, biometrics, payment, credentials, and
+administrative data are excluded. The profile presence preference remains a
+separate default-off consent and is not implied by the default-on social
+profile.
+
+Task 26 may introduce stable service/API boundaries that a later feed can
+consume, but it does not implement a feed, recommendations, direct messages,
+notifications, rankings, leaderboards, public profiles, or another social
+framework. A future feed must receive its own requirement and task.
 
 ## EXT-DEC-PRES-01 — Profile presence visibility
 

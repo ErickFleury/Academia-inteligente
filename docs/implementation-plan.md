@@ -11,8 +11,8 @@ stops the affected task until a human resolves it.
 
 The original MVP remains RF-01–RF-05, RF-09–RF-13, and RF-15–RF-19. DEC-19
 adds EXT-RF-AI-01 conversational onboarding to the planned MVP experience; it
-does not rewrite the historical MVP. EXT-RF-SOC-01, EXT-RF-EQP-01, and
-EXT-RF-PRES-01 are approved post-MVP extensions.
+does not rewrite the historical MVP. EXT-RF-SOC-01, EXT-RF-SOC-02,
+EXT-RF-EQP-01, and EXT-RF-PRES-01 are approved post-MVP extensions.
 EXT-RF-LANG-01 is an approved cross-cutting `pt-BR` user-interface requirement
 for existing, MVP, and later screens; implementation docs and prompts remain
 English. All future UI tasks inherit it through `AGENTS.md` and
@@ -46,6 +46,7 @@ foundation
   → anonymous occupancy → opt-in named presence
   → nonfinancial administrative dashboard
   → equipment-aware AI adaptation
+  → social client profile and post interactions
 ```
 
 The secure-link/form path and conversational path share one authoritative
@@ -79,9 +80,13 @@ browser-provided client ID as proof of ownership.
    sharing and equipment management/catalog/quantity.
 9. **Occupancy and privacy-gated presence (Tasks 22–23, implemented):**
    anonymous count first; named presence separately and only with opt-in.
-10. **Validated gap remediation (Tasks 24–25, future):** nonfinancial
-    administrative indicators followed by the Task 21 equipment-catalog
-    constraint on Task 17 AI adaptation.
+10. **Validated gap remediation (Tasks 24–25 implemented):**
+    nonfinancial administrative indicators followed by the Task 21
+    equipment-catalog constraint on Task 17 AI adaptation.
+11. **Social profile expansion (Task 26 planned):** redesign the individual
+    profile over Tasks 20 and 23 with default-on authenticated visibility,
+    owner-managed picture/nickname/biography, following, bounded likes/comments,
+    moderation, and a stable boundary for a separately approved future feed.
 
 Post-MVP order is an implementation dependency/order, not a change to original
 MVP membership. RF-14 is now revalidated as already available through the
@@ -111,6 +116,7 @@ explicit exclusion before implementation.
 | DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric lifecycle is governed separately by DEC-09. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
 | EXT-DEC-SOC-01 | Resolved and implemented by Task 20: private-by-default author ownership, explicit shared visibility, and approved administrator moderation/deletion. |
+| EXT-DEC-SOC-02 | Resolved for Task 26: default-on authenticated social profiles, optional nickname/biography and managed image, unilateral following, likes/comments, moderation/erasure, and no current feed. |
 | EXT-DEC-EQP-01 | Resolved for Task 21: UUID-identified logical models, physical units, and derived active quantity without availability semantics. |
 | EXT-DEC-PRES-01 | Resolved for Task 23: client-owned default-off profile tag, fresh confirmed-passage derivation, immediate opt-out, and no directory. |
 
@@ -141,8 +147,9 @@ explicit exclusion before implementation.
 | 21 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06, 08; EXT-DEC-EQP-01 | Implemented | Admin model/unit lifecycle, public active catalog, and derived total by type/model |
 | 22 | Anonymous gym occupancy | RF-23–RF-25; RN-37 boundary | 03, 06, 08; resolved Task 22 DEC-10/11 boundary | Implemented | Private confirmed-passage/correction ledger, source-health status, and privacy-safe current client count/mobile display |
 | 23 | Opt-in profile presence | EXT-RF-PRES-01 | 06, 08, 22; resolved EXT-DEC-PRES-01 | Implemented | Consent-based individual profile status tag; no directory |
-| 24 | Nonfinancial administrative dashboard | RF-28 CA-28.1/CA-28.3; RF-29 CA-29.1 | 03, 04, 06, 08, 22 | Planned | Admin-only active-client, confirmed-entry history, and current occupancy aggregates; no financial scope |
-| 25 | Equipment-aware AI training adaptation | RF-19 integration with RF-32/RF-33 and EXT-RF-EQP-01 | 17, 21; DEC-07/08/15; EXT-DEC-EQP-01 | Planned | Canonical active EquipmentModel references constrain machine-dependent AI candidates without live-availability semantics |
+| 24 | Nonfinancial administrative dashboard | RF-28 CA-28.1/CA-28.3; RF-29 CA-29.1 | 03, 04, 06, 08, 22 | Implemented (nonfinancial partial) | Admin-only active-client, confirmed-entry history, and current occupancy aggregates; no financial scope |
+| 25 | Equipment-aware AI training adaptation | RF-19 integration with RF-32/RF-33 and EXT-RF-EQP-01 | 17, 21; DEC-07/08/15; EXT-DEC-EQP-01 | Implemented | Canonical active EquipmentModel references constrain machine-dependent AI candidates without live-availability semantics |
+| 26 | Social client profile and post interactions | EXT-RF-SOC-02; integration with EXT-RF-SOC-01/EXT-RF-PRES-01 | 06, 08, 20, 23; EXT-DEC-SOC-01/02; EXT-DEC-PRES-01 | Planned | Default-on authenticated social profile, managed picture/nickname/bio, follow graph, post detail likes/comments, moderation, erasure, and future-feed boundary |
 
 ## Completed-task history and later impact
 
@@ -172,7 +179,8 @@ provisioning or its explicit reconciliation completed.
   RF-13 (12), RF-17 (13), RF-15 (14), RF-16 (15), RF-18 (16), RF-19 (17).
 - EXT-RF-AI-01 is owned by Task 11 and integration-verified in Task 19.
 - EXT-RF-SOC-01, EXT-RF-EQP-01, and EXT-RF-PRES-01 are implemented by Tasks
-  20, 21, and 23 respectively.
+  20, 21, and 23 respectively. EXT-RF-SOC-02 is planned by Task 26 and does not
+  retroactively expand Task 20.
 - RF-32/RF-33 remain original requirements; only quantity is an extension.
 - RF-24/RF-25 anonymous count is separate from EXT-RF-PRES-01 named presence.
 - Every authenticated client task depends directly or transitively on Task 06
@@ -195,8 +203,10 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 24, the decision-complete nonfinancial administrative dashboard, is the
-next generated implementation prompt. Task 25 may follow independently and
-connects the implemented Task 21 catalog to Task 17 adaptation. Outstanding
-Task 19 RNF evidence remains manual/external verification rather than missing
-product implementation.
+Task 26, social client profile and post interactions, is next in dependency
+order. Task 25 now connects the implemented Task 21 catalog to Task 17
+adaptation through canonical model UUIDs and inventory-only active-unit
+semantics. Outstanding Task 19 RNF evidence remains manual/external
+verification rather than missing product implementation. The social feed
+requested as the subsequent change remains a separate future requirement/task
+and is not part of Task 26.

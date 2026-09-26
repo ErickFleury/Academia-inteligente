@@ -119,6 +119,77 @@ retained so it can be restored. Active updates remain until author deletion or a
 future approved account-deletion/anonymization policy. This approval adds no
 reporting workflow or other social-network feature.
 
+## EXT-RF-SOC-02 — Social client profile and post interactions
+
+**Status:** approved post-MVP product extension; implementation planned by Task
+26 under `EXT-DEC-SOC-02`.
+
+**Description:** Replace the minimal own-profile presentation with a responsive
+social profile. The profile displays the client's existing name, optional
+editable nickname, optional biography, owner-managed profile picture,
+follower/following information, and the client's permitted post history. A
+permitted post detail displays its like count and comments. Profile visibility
+is owner-controlled and defaults on for active authenticated-client viewers.
+
+**Actors:** authenticated client profile owner; active authenticated client
+viewer; authorized administrator only for the approved moderation actions.
+
+**Acceptance criteria**
+
+- **EXT-CA-SOC-02.1:** the owner can view and edit their optional non-unique
+  nickname and biography, and only the owner can see/change the default-on
+  social-profile visibility control.
+- **EXT-CA-SOC-02.2:** the owner can upload, replace, and remove an approved
+  profile picture; media validation, normalization, metadata removal,
+  client-owned persistence, replacement cleanup, and account erasure are
+  enforced.
+- **EXT-CA-SOC-02.3:** only active authenticated clients can view an enabled
+  other-client profile, and its response exposes only approved social fields;
+  disabling visibility immediately prevents cross-client profile reads without
+  changing per-post private/shared visibility.
+- **EXT-CA-SOC-02.4:** unilateral follow/unfollow, unique directed follow edges,
+  self-follow denial, and follower/following counts and lists follow the
+  approved visibility and account-lifecycle rules.
+- **EXT-CA-SOC-02.5:** profile posts are newest-first; owners receive their
+  private/shared posts and moderation state, while other clients receive only
+  shared, non-hidden posts and never deleted content.
+- **EXT-CA-SOC-02.6:** a permitted shared post detail provides an accurate
+  unique-client like count and permitted comments; like/unlike and comment
+  creation/deletion enforce authenticated identity, post visibility, and
+  ownership at the backend.
+- **EXT-CA-SOC-02.7:** administrator hide/restore/delete moderation for shared
+  comments and biography/profile-image content follows the approved reason,
+  audit-minimization, no-edit, and client-visibility policy.
+- **EXT-CA-SOC-02.8:** account erasure removes every social-profile record,
+  image byte, follow edge, like, comment, post/tombstone, and related audit
+  record; sensitive domain data is never projected into social responses.
+- **EXT-CA-SOC-02.9:** EXT-DEC-PRES-01 remains independent: the presence tag is
+  exposed only when its separate consent and derivation rules allow it.
+- **EXT-CA-SOC-02.10:** Task 26 leaves a stable query boundary for a later feed
+  but introduces no feed, recommendation, messaging, notification, ranking,
+  leaderboard, block, or private-follow-request feature.
+
+**Dependencies:** Tasks 06, 08, 20, and 23; backend-resolved client identity;
+the existing account-erasure service; `EXT-DEC-SOC-01`, `EXT-DEC-SOC-02`, and
+`EXT-DEC-PRES-01`.
+
+**Privacy/security:** names and user-authored social content are visible only
+through an approved social projection. E-mail, internal IDs, health, biometric,
+training, payment, credential, administrative, and attendance-history data are
+never included. Profile images are served through authorized application APIs,
+not arbitrary user-controlled filesystem paths. See `EXT-DEC-SOC-02`.
+
+**Approved policy:** social profile visibility defaults on but is visible only
+to active authenticated clients. The optional nickname is non-unique, limited
+to 40 characters, and never canonical identity. Biography is plain text and
+limited to 160 characters.
+Profile pictures are validated JPEG/PNG/WebP files up to 5 MiB, normalized and
+stored in a dedicated PostgreSQL record. Following is unilateral; likes are
+unique per client/post; comments are plain text, author-owned, and use the
+existing 2,000-character post-content ceiling. Existing post
+visibility/moderation, presence consent, and irreversible account erasure remain
+authoritative. A future feed is explicitly deferred.
+
 ## EXT-RF-EQP-01 — Equipment quantities by logical type/model
 
 **Status:** approved post-MVP product extension.
@@ -257,6 +328,9 @@ alone is insufficient.
 
 ## Explicit exclusions
 
-No extension in this file approves direct messaging, followers, friend
-requests, comments, likes, rankings, leaderboards, live equipment-use tracking,
-or publication of sensitive data. Those require separate product approval.
+EXT-RF-SOC-02 approves only the bounded follower, like, comment, and social
+profile behavior stated above. No extension approves a social feed, direct
+messaging, friend/private-follow requests, blocks, recommendations,
+notifications, rankings, leaderboards, public guest profiles, live
+equipment-use tracking, or publication of sensitive data. Those require
+separate product approval.

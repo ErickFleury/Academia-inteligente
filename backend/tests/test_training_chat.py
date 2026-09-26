@@ -13,6 +13,7 @@ from sqlalchemy.pool import StaticPool
 from app.database import Base, get_database_session
 from app.integrations.ai import AiProviderError, AiTrainingChatResponse
 from app.modules.clients.models import Account, Client
+from app.modules.equipment import models as equipment_models  # noqa: F401
 from app.modules.identity import router as identity_router
 from app.modules.identity.service import AuthenticatedIdentity
 from app.modules.onboarding.draft_service import OnboardingDraftService

@@ -68,7 +68,7 @@ test('reuses the same client request id when a conversation submission is retrie
 
   await screen.findByText('Comece quando estiver pronto')
   fireEvent.change(screen.getByLabelText('Escreva sua resposta'), { target: { value: 'Meu objetivo é força' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+  fireEvent.keyDown(screen.getByLabelText('Escreva sua resposta'), { key: 'Enter' })
   expect(await screen.findByText('A conversa está indisponível no momento. Tente novamente.')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
 
@@ -96,5 +96,6 @@ test('ends the interview composer once the structured onboarding is ready', asyn
 
   expect(await screen.findByText('Já reuni todas as informações necessárias.')).toBeInTheDocument()
   expect(screen.queryByLabelText('Escreva sua resposta')).not.toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Concluir onboarding' })).toBeEnabled()
+  expect(screen.getByRole('link', { name: 'Revisar e confirmar informações' })).toHaveAttribute('href', '/onboarding')
+  expect(screen.queryByText('Revisar e concluir')).not.toBeInTheDocument()
 })

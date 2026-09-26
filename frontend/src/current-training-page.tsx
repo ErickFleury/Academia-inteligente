@@ -2,6 +2,7 @@ import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from
 import { useEffect, useState } from 'react'
 
 import { ClientShell } from './components/application-shell'
+import { RouterButtonLink } from './components/router-button-link'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { createInitialTrainingProposal, getCurrentTrainingPlan, getOwnTrainingDrafts, type CurrentTrainingPlan, type TrainingPlanDraft } from './training-plan'
 
@@ -56,7 +57,7 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
     <ClientShell onSignOut={onSignOut} showClientNavigation>
       <Stack spacing={{ xs: 2.5, sm: 3 }} sx={{ maxWidth: 860, minWidth: 0 }}>
         <PageHeader
-          action={<Button component="a" href="/assistente" variant="outlined">Assistente de treino</Button>}
+          action={<RouterButtonLink to="/assistente" variant="outlined">Assistente de treino</RouterButtonLink>}
           eyebrow="Treino atual"
           title="Meu treino"
           description="Use esta ficha durante o treino. Siga as orientações e ajuste a carga somente com acompanhamento profissional."

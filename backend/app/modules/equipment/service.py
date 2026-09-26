@@ -29,6 +29,14 @@ class EquipmentService:
     def catalog(self, session: Session) -> list[ModelSummary]:
         return self._models_with_counts(session, active_only=True)
 
+    def active_models_with_units(self, session: Session) -> list[ModelSummary]:
+        """Return catalog models that exist in active managed inventory.
+
+        This intentionally describes inventory existence only. It does not
+        imply that a physical unit is currently free or in use.
+        """
+        return [model for model in self.catalog(session) if model.active_quantity > 0]
+
     def models(self, session: Session) -> list[ModelSummary]:
         return self._models_with_counts(session, active_only=False)
 

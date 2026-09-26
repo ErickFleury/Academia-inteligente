@@ -23,7 +23,7 @@ test('sends a Portuguese client training-chat message with a frontend UUID', asy
   render(<TrainingChatPage accessToken="access-token" onSignOut={vi.fn()} />)
   expect(await screen.findByText('Seu espaço para tirar dúvidas')).toBeInTheDocument()
   fireEvent.change(screen.getByLabelText('Escreva sua pergunta'), { target: { value: 'Como faço o agachamento?' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+  fireEvent.keyDown(screen.getByLabelText('Escreva sua pergunta'), { key: 'Enter' })
   expect(await screen.findByText('Faça com controle.')).toBeInTheDocument()
   expect(fetchMock.mock.calls[3][0]).toBe('http://localhost:8000/training/chat/messages')
   expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({

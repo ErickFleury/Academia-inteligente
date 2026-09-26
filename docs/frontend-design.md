@@ -89,7 +89,9 @@ palette, or page composition.
 - **ClientShell:** Reusable authenticated navigation, page header, main action,
   content width, responsive sections, and feedback. On phone, prioritize the
   current client action and touch navigation instead of shrinking desktop
-  columns. Planned destinations include home, onboarding, training, AI,
+  columns. The `Assistente` destination is the single client-facing AI entry:
+  it presents guided onboarding while onboarding is incomplete and training
+  assistance afterward, without a second chat destination. Planned destinations include home, onboarding, training, AI,
   progress, equipment, occupancy/presence, and profile when implemented.
 - **AdminShell:** Same type family, accent, controls, and feedback, with denser
   client search/list/detail/edit and status views. Make account state and
@@ -115,6 +117,18 @@ palette, or page composition.
   imagery, name/type, concise metadata, detail, and total active units.
   Occupancy presents a prominent anonymous count; opt-in named presence is a
   separate view with its own consent state.
+- **Social profile:** Task 26 turns “Meu perfil” into an individual social
+  profile while retaining ClientShell navigation. Use a responsive profile
+  header with a keyboard-accessible picture upload/change control, existing
+  name and optional nickname, concise biography, follower/following counts,
+  and an owner-only visibility switch. Posts use the established progress-card
+  language and open into an accessible detail presentation for like count and
+  comments. Clearly distinguish owner-only editing/moderation states from what
+  another authenticated client may see. The existing green presence tag remains
+  visually and semantically separate from social-profile visibility. On phone,
+  keep the picture, identity, visibility, follow action, and post navigation
+  usable without dense desktop columns. Task 26 must not add a global feed or
+  imitate another social network's visual identity.
 
 ## Imagery, responsiveness, and accessibility
 

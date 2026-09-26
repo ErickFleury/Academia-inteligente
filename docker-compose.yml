@@ -37,7 +37,7 @@ services:
       AI_TRAINING_CHAT_SUMMARY_LIMIT: ${AI_TRAINING_CHAT_SUMMARY_LIMIT:-2000}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
-      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-30}
+      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-120}
       KEYCLOAK_ADMIN_URL: http://keycloak:8080
       KEYCLOAK_REALM: academia
       KEYCLOAK_PROVISIONING_CLIENT_ID: academia-provisioner
@@ -106,15 +106,18 @@ services:
   ollama:
     image: ollama/ollama:${OLLAMA_DOCKER_TAG:-0.34.1}
     profiles: ["ollama"]
+    runtime: nvidia
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              device_ids: ["0"]
               capabilities: [gpu]
     environment:
       OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_LLM_LIBRARY: cuda_v12
+      CUDA_VISIBLE_DEVICES: "0"
     expose:
       - "11434"
     volumes:

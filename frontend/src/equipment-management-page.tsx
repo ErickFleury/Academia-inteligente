@@ -2,6 +2,7 @@ import { Button, Card, CardContent, Divider, Stack, TextField, Typography } from
 import { useEffect, useState } from 'react'
 
 import { AdminShell } from './components/application-shell'
+import { RouterButtonLink } from './components/router-button-link'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import {
   createEquipmentModel,
@@ -73,7 +74,7 @@ export function EquipmentManagementPage({ accessToken, onSignOut }: Props) {
   }
 
   return <AdminShell onSignOut={onSignOut}><Stack spacing={3} sx={{ minWidth: 0 }}>
-    <PageHeader eyebrow="Catálogo" title="Gerenciar equipamentos" description="Cadastre modelos e suas unidades físicas. “Ativa” indica presença no catálogo, não disponibilidade imediata." />
+    <PageHeader action={<RouterButtonLink to="/admin" variant="outlined">Voltar ao painel</RouterButtonLink>} eyebrow="Catálogo" title="Gerenciar equipamentos" description="Cadastre modelos e suas unidades físicas. “Ativa” indica presença no catálogo, não disponibilidade imediata." />
     {error && <StatusNotice severity="error">{error}</StatusNotice>}{success && <StatusNotice severity="success">{success}</StatusNotice>}
     <Card component="form" onSubmit={(event) => { event.preventDefault(); void saveModel() }}><CardContent><Stack spacing={2}>
       <Typography component="h2" variant="h4">{editingId ? 'Editar modelo' : 'Novo modelo de equipamento'}</Typography>

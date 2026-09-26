@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_database_session
+from app.modules.equipment.models import EquipmentModel
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
@@ -126,6 +127,27 @@ def adaptation_response(
         .where(TrainingPlanItem.version_id == proposal.base_version_id)
         .order_by(TrainingPlanItem.position)
     )
+    operations = list(
+        session.scalars(
+            select(TrainingAdaptationOperation)
+            .where(TrainingAdaptationOperation.proposal_id == proposal.id)
+            .order_by(TrainingAdaptationOperation.position)
+        )
+    )
+    equipment_model_names = {
+        model.id: model.name
+        for model in session.scalars(
+            select(EquipmentModel).where(
+                EquipmentModel.id.in_(
+                    [
+                        operation.equipment_model_id
+                        for operation in operations
+                        if operation.equipment_model_id
+                    ]
+                )
+            )
+        )
+    }
     return {
         "id": str(proposal.id),
         "status": proposal.status,
@@ -164,13 +186,13 @@ def adaptation_response(
                 "load_guidance": item.load_guidance,
                 "rest_seconds": item.rest_seconds,
                 "equipment_requirement": item.equipment_requirement,
+                "equipment_model_id": str(item.equipment_model_id)
+                if item.equipment_model_id
+                else None,
+                "equipment_model_name": equipment_model_names.get(item.equipment_model_id),
                 "is_existing_exercise": item.is_existing_exercise,
             }
-            for item in session.scalars(
-                select(TrainingAdaptationOperation)
-                .where(TrainingAdaptationOperation.proposal_id == proposal.id)
-                .order_by(TrainingAdaptationOperation.position)
-            )
+            for item in operations
         ],
     }
 

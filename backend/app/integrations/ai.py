@@ -33,7 +33,7 @@ class AiProviderError(Exception):
 
 class AiInterviewTurnResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    assistant_message: str = Field(min_length=1, max_length=4000)
+    assistant_message: str = Field(min_length=1, max_length=400)
     interview_status: Literal["in_progress", "ready"]
 
 
@@ -53,9 +53,9 @@ class AiTrainingChatResponse(BaseModel):
     """Client-facing reply with an optional, non-binding adaptation suggestion."""
 
     model_config = ConfigDict(extra="forbid")
-    assistant_message: str = Field(min_length=1, max_length=4000)
+    assistant_message: str = Field(min_length=1, max_length=600)
     adaptation_suggested: bool = False
-    adaptation_reason: str | None = Field(default=None, max_length=2000)
+    adaptation_reason: str | None = Field(default=None, max_length=300)
     draft_update: dict[str, Any] | None = None
 
 
@@ -90,7 +90,8 @@ _FIELDS: dict[str, object] = {
 _INTERVIEW = (
     "Você entrevista onboarding de academia em português. Pergunte de forma natural, use o "
     "contexto, não invente, diagnostique ou exponha termos técnicos. Retorne ready apenas "
-    "quando tudo foi explicitamente informado."
+    "quando tudo foi explicitamente informado. Faça somente a próxima pergunta necessária, "
+    "em uma frase curta. Não repita respostas, não faça introdução e não liste outras perguntas."
 )
 _EXTRACTION = (
     "Extraia somente fatos explicitamente informados para o esquema. "
@@ -116,14 +117,20 @@ _TRAINING_CHAT = (
     "Se o cliente pedir uma alteração nesse rascunho, faça a alteração solicitada e retorne em "
     "draft_update o plano completo atualizado. Não diga que fará a alteração sem enviar "
     "draft_update. Use draft_update=null somente quando o cliente não pedir uma mudança no "
-    "rascunho ou quando não houver rascunho editável."
+    "rascunho ou quando não houver rascunho editável. Responda somente ao que foi perguntado, "
+    "com no máximo três frases curtas ou três itens breves. Não faça introdução, resumo ou "
+    "repetição desnecessária."
 )
 _TRAINING_ADAPTATION = (
     "Gere uma proposta estruturada de adaptação de treino em português, usando somente o "
     "contexto fornecido do próprio cliente. Não diagnostique, invente fatos ou prescreva "
     "medicação. A proposta não está aprovada nem ativa. Preserve itens não afetados. Você "
     "pode sugerir apenas exercícios reais e reconhecidos; candidatas novas exigem revisão do "
-    "instrutor e podem informar equipamento como texto descritivo."
+    "instrutor. Quando uma candidata depender de uma máquina, use somente um "
+    "modelo do catálogo ativo fornecido no contexto: informe o UUID exato em "
+    "equipment_model_id e uma descrição humana em equipment_requirement. Não "
+    "invente, altere ou omita esse UUID. Para exercício sem equipamento, use "
+    "equipment_requirement e equipment_model_id como null."
 )
 
 
@@ -140,7 +147,7 @@ def _turn_schema() -> dict[str, object]:
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 4000},
+            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 400},
             "interview_status": {"type": "string", "enum": ["in_progress", "ready"]},
         },
         "required": ["assistant_message", "interview_status"],
@@ -201,9 +208,9 @@ def _training_chat_schema() -> dict[str, object]:
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 4000},
+            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 600},
             "adaptation_suggested": {"type": "boolean"},
-            "adaptation_reason": {"type": ["string", "null"], "maxLength": 2000},
+            "adaptation_reason": {"type": ["string", "null"], "maxLength": 300},
             "draft_update": {"anyOf": [draft, {"type": "null"}]},
         },
         "required": [
@@ -226,6 +233,7 @@ def _adaptation_schema() -> dict[str, object]:
             "load_guidance": {"type": "string", "minLength": 1, "maxLength": 500},
             "rest_seconds": {"type": "integer", "minimum": 0, "maximum": 3600},
             "equipment_requirement": {"type": ["string", "null"], "maxLength": 200},
+            "equipment_model_id": {"type": ["string", "null"], "format": "uuid"},
             "is_existing_exercise": {"type": "boolean"},
         },
         "required": [
@@ -235,6 +243,7 @@ def _adaptation_schema() -> dict[str, object]:
             "load_guidance",
             "rest_seconds",
             "equipment_requirement",
+            "equipment_model_id",
             "is_existing_exercise",
         ],
     }
@@ -285,7 +294,7 @@ class OllamaConfig:
         return cls(
             os.environ.get("OLLAMA_BASE_URL", "http://host.docker.internal:11434"),
             os.environ.get("OLLAMA_MODEL", "qwen3:8b"),
-            int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "30")),
+            int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "120")),
         )
 
 
@@ -395,6 +404,7 @@ class OllamaOnboardingProvider(_Provider):
             ],
             "stream": False,
             "format": schema,
+            "think": False,
         }
         return Request(
             f"{self._config.base_url.rstrip('/')}/api/chat",

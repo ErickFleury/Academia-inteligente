@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import { App } from './app'
@@ -43,6 +43,24 @@ test('shows the public equipment catalog without requiring a login', async () =>
 
   expect(await screen.findByRole('heading', { name: 'Conheça nossos equipamentos' })).toBeInTheDocument()
   expect(startLogin).not.toHaveBeenCalled()
+})
+
+test('shows client navigation when an authenticated client opens the equipment catalog', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/equipamentos')
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Conheça nossos equipamentos' })).toBeInTheDocument()
+  expect(screen.getByRole('navigation', { name: 'Navegação da área do cliente' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Equipamentos' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('stores a usable session after a valid OIDC callback', async () => {
@@ -107,6 +125,63 @@ test('opens the own onboarding form only for an authenticated client', async () 
   render(<App />)
 
   expect(await screen.findByRole('heading', { name: 'Conte um pouco sobre você' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Responder por conversa' })).toHaveAttribute('href', '/assistente')
+})
+
+test('uses the Assistente route for guided onboarding until completion', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/assistente')
+  const fetchMock = vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'draft', completed_at: null }) })
+    if (url.endsWith('/onboarding/conversation')) return Promise.resolve({ ok: true, json: async () => ({ messages: [], missing_required_fields: ['training_goal'], completion_ready: false }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Vamos montar seu perfil de treino' })).toBeInTheDocument()
+  expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/training/chat'))).toBe(false)
+})
+
+test('uses the Assistente route for training chat after onboarding completion', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/assistente')
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    if (url.endsWith('/training/chat')) return Promise.resolve({ ok: true, json: async () => ({ messages: [] }) })
+    if (url.endsWith('/training/adaptations')) return Promise.resolve({ ok: true, json: async () => [] })
+    if (url.endsWith('/training/current')) return Promise.resolve({ ok: true, json: async () => ({ plan: null }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Como posso ajudar hoje?' })).toBeInTheDocument()
+})
+
+test('redirects the former onboarding conversation route to Assistente', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/onboarding/conversa')
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'draft', completed_at: null }) })
+    if (url.endsWith('/onboarding/conversation')) return Promise.resolve({ ok: true, json: async () => ({ messages: [], missing_required_fields: ['training_goal'], completion_ready: false }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Vamos montar seu perfil de treino' })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/assistente')
 })
 
 test('opens the current training page only for an authenticated client', async () => {
@@ -174,21 +249,80 @@ test('shows onboarding form navigation for a client with a draft', async () => {
   expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
 })
 
-test('shows administrative navigation and page to an administrator', () => {
+test('does not reload client navigation data for ordinary activity', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'draft' }) })
+  vi.stubGlobal('fetch', fetchMock)
+
+  render(<App />)
+
+  await screen.findByRole('link', { name: 'Onboarding' })
+  fireEvent.pointerDown(document.body)
+  await new Promise((resolve) => window.setTimeout(resolve, 0))
+
+  expect(fetchMock).toHaveBeenCalledOnce()
+  expect(screen.getByRole('link', { name: 'Onboarding' })).toBeInTheDocument()
+})
+
+test('navigates between client views without leaving the application', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    if (url.endsWith('/training/current')) return Promise.resolve({ ok: true, json: async () => ({ plan: null }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  fireEvent.click(await screen.findByRole('link', { name: 'Ver meu treino' }))
+
+  expect(await screen.findByRole('heading', { name: 'Meu treino' })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/treino')
+})
+
+test('shows administrative dashboard and client management to an administrator', async () => {
   sessionStorage.setItem(
     'academia.session',
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['admin'] }),
   )
   window.history.replaceState({}, '', '/admin')
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
-  )
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/admin/dashboard/active-clients')) return Promise.resolve({ ok: true, json: async () => ({ active_clients: 0 }) })
+    if (url.endsWith('/admin/dashboard/attendance')) return Promise.resolve({ ok: true, json: async () => ({ weeks: [] }) })
+    if (url.endsWith('/admin/dashboard/occupancy')) return Promise.resolve({ ok: true, json: async () => ({ occupancy: 0, status: 'stale', updated_at: null }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
 
   render(<App />)
 
-  expect(screen.getByRole('link', { name: 'Administração' })).toHaveAttribute('href', '/admin')
-  expect(screen.getByRole('heading', { name: 'Clientes' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Gerenciar equipamentos' })).toHaveAttribute('href', '/admin/equipamentos')
+  expect(screen.getByRole('link', { name: 'Moderar publicações' })).toHaveAttribute('href', '/admin/publicacoes')
+  expect(await screen.findByRole('heading', { name: 'Painel administrativo' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Indicadores da academia' })).toBeInTheDocument()
+})
+
+test('opens the administrative panel directly after an administrator signs in', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['admin'] }),
+  )
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/admin/dashboard/active-clients')) return Promise.resolve({ ok: true, json: async () => ({ active_clients: 0 }) })
+    if (url.endsWith('/admin/dashboard/attendance')) return Promise.resolve({ ok: true, json: async () => ({ weeks: [] }) })
+    if (url.endsWith('/admin/dashboard/occupancy')) return Promise.resolve({ ok: true, json: async () => ({ occupancy: 0, status: 'stale', updated_at: null }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Painel administrativo' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Bem-vindo à Academia Inteligente' })).not.toBeInTheDocument()
 })
 
 test('returns to the sign-in state when the client API rejects a stale session', async () => {
