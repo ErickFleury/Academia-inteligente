@@ -44,6 +44,8 @@ foundation
   → MVP visual polish → MVP end-to-end verification
   → post-MVP progress sharing / equipment catalog
   → anonymous occupancy → opt-in named presence
+  → nonfinancial administrative dashboard
+  → equipment-aware AI adaptation
 ```
 
 The secure-link/form path and conversational path share one authoritative
@@ -70,16 +72,22 @@ browser-provided client ID as proof of ownership.
    generation, mobile personal plan, client-facing chat, approved adaptation.
 6. **MVP visual polish (Task 18, completed):** consistency, responsiveness,
    loading/empty/error states, copy, and accessibility after major MVP UI.
-7. **MVP verification (Task 19, future):** original MVP plus EXT-RF-AI-01,
-   including client identity and cross-client isolation.
-8. **Post-MVP client modules (Tasks 20–21, future):** controlled progress
+7. **MVP verification (Task 19, functional report present; manual/external RNF
+   evidence pending):** original MVP plus EXT-RF-AI-01, including client
+   identity and cross-client isolation.
+8. **Post-MVP client modules (Tasks 20–21, implemented):** controlled progress
    sharing and equipment management/catalog/quantity.
-9. **Occupancy and privacy-gated presence (Tasks 22–23, future):** anonymous
-   count first; named presence separately and only with opt-in decisions.
+9. **Occupancy and privacy-gated presence (Tasks 22–23, implemented):**
+   anonymous count first; named presence separately and only with opt-in.
+10. **Validated gap remediation (Tasks 24–25, future):** nonfinancial
+    administrative indicators followed by the Task 21 equipment-catalog
+    constraint on Task 17 AI adaptation.
 
 Post-MVP order is an implementation dependency/order, not a change to original
-MVP membership. Independent future RF-06–RF-08, RF-14, RF-20–RF-22, and
-RF-26–RF-31 require their own tasks when prioritized.
+MVP membership. RF-14 is now revalidated as already available through the
+authenticated own-onboarding read path and completed read-only form. Remaining
+RF-06–RF-08, RF-20–RF-22, and RF-26–RF-31 require an approved prompt or an
+explicit exclusion before implementation.
 
 ## Decision gates
 
@@ -102,7 +110,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-17 | Resolved for Account↔Client identity; later domain slices must resolve their own unsettled models before migrations. |
 | DEC-18 | Health/onboarding policy is resolved for Task 10; Task 11 has five-day onboarding-chat retention and Task 16 has separate client-only training-chat/summary retention of 30 days. Biometric lifecycle is governed separately by DEC-09. |
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
-| EXT-DEC-SOC-01 | Blocking Task 20 audience/moderation/deletion/retention model. |
+| EXT-DEC-SOC-01 | Resolved and implemented by Task 20: private-by-default author ownership, explicit shared visibility, and approved administrator moderation/deletion. |
 | EXT-DEC-EQP-01 | Resolved for Task 21: UUID-identified logical models, physical units, and derived active quantity without availability semantics. |
 | EXT-DEC-PRES-01 | Resolved for Task 23: client-owned default-off profile tag, fresh confirmed-passage derivation, immediate opt-out, and no directory. |
 
@@ -128,11 +136,13 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 16 | AI assistant chat | RF-18 | 06, 08, 14, 15; DEC-08/18 | Completed + follow-up | Client-only 30-day persisted assistant; may refine only the sole client draft, regardless of creator, through validated structured output |
 | 17 | Dynamic training adaptation | RF-19; RF-17 integration | 08, 13, 16; DEC-07/08/15 | Completed | AI-detected, client-confirmed structured proposals, instructor review, immutable current version, history preserved |
 | 18 | MVP frontend visual polish | Visual enabler; no new RF ownership | 08–17 | Completed | Shared consistency, responsive, accessibility, loading/empty/error, and pt-BR copy pass; Task 19 retains end-to-end verification. |
-| 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | MVP verification | Traceable critical journey/security/RNF evidence |
-| 20 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06, 08; EXT-DEC-SOC-01 | Post-MVP extension | Author-owned private/shared updates |
+| 19 | MVP end-to-end verification | All original MVP + EXT-RF-AI-01 verification | 02–18; DEC-16 for formal RNF | Functional report present; manual/external RNF evidence pending | Traceable critical journey/security evidence plus remaining DEC-16 checks |
+| 20 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06, 08; EXT-DEC-SOC-01 | Implemented | Author-owned private/shared updates with approved moderation and erasure behavior |
 | 21 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06, 08; EXT-DEC-EQP-01 | Implemented | Admin model/unit lifecycle, public active catalog, and derived total by type/model |
 | 22 | Anonymous gym occupancy | RF-23–RF-25; RN-37 boundary | 03, 06, 08; resolved Task 22 DEC-10/11 boundary | Implemented | Private confirmed-passage/correction ledger, source-health status, and privacy-safe current client count/mobile display |
 | 23 | Opt-in profile presence | EXT-RF-PRES-01 | 06, 08, 22; resolved EXT-DEC-PRES-01 | Implemented | Consent-based individual profile status tag; no directory |
+| 24 | Nonfinancial administrative dashboard | RF-28 CA-28.1/CA-28.3; RF-29 CA-29.1 | 03, 04, 06, 08, 22 | Planned | Admin-only active-client, confirmed-entry history, and current occupancy aggregates; no financial scope |
+| 25 | Equipment-aware AI training adaptation | RF-19 integration with RF-32/RF-33 and EXT-RF-EQP-01 | 17, 21; DEC-07/08/15; EXT-DEC-EQP-01 | Planned | Canonical active EquipmentModel references constrain machine-dependent AI candidates without live-availability semantics |
 
 ## Completed-task history and later impact
 
@@ -161,7 +171,8 @@ provisioning or its explicit reconciliation completed.
   (04), RF-03 reduced scope (05), RF-09 (07), RF-10 (09), RF-11/RF-12 (10),
   RF-13 (12), RF-17 (13), RF-15 (14), RF-16 (15), RF-18 (16), RF-19 (17).
 - EXT-RF-AI-01 is owned by Task 11 and integration-verified in Task 19.
-- EXT-RF-SOC-01, EXT-RF-EQP-01, and EXT-RF-PRES-01 have explicit future owners.
+- EXT-RF-SOC-01, EXT-RF-EQP-01, and EXT-RF-PRES-01 are implemented by Tasks
+  20, 21, and 23 respectively.
 - RF-32/RF-33 remain original requirements; only quantity is an extension.
 - RF-24/RF-25 anonymous count is separate from EXT-RF-PRES-01 named presence.
 - Every authenticated client task depends directly or transitively on Task 06
@@ -184,6 +195,8 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 19, MVP end-to-end verification, is next in dependency order. It verifies
-the integrated MVP after the Task 18 visual polish without changing established
-business behavior.
+Task 24, the decision-complete nonfinancial administrative dashboard, is the
+next generated implementation prompt. Task 25 may follow independently and
+connects the implemented Task 21 catalog to Task 17 adaptation. Outstanding
+Task 19 RNF evidence remains manual/external verification rather than missing
+product implementation.
