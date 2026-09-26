@@ -190,6 +190,73 @@ existing 2,000-character post-content ceiling. Existing post
 visibility/moderation, presence consent, and irreversible account erasure remain
 authoritative. A future feed is explicitly deferred.
 
+## EXT-RF-SOC-03 — Authenticated chronological social feed
+
+**Status:** approved post-MVP product extension; implementation planned by Task
+27 under `EXT-DEC-SOC-03`.
+
+**Description:** Redesign the authenticated “Progresso” destination as a
+newest-first feed of shared ProgressUpdate posts. A client composes a
+private-by-default or explicitly shared text/media post, sees always-visible
+like/comment counts, and opens a post to like it or participate in its
+newest-first comments. Infinite loading uses a stable opaque cursor and no
+ranking algorithm.
+
+**Actors:** active authenticated client author/viewer/commenter; authorized
+administrator only for approved whole-post/whole-comment moderation.
+
+**Acceptance criteria**
+
+- **EXT-CA-SOC-03.1:** the feed returns only permitted shared, non-deleted,
+  moderation-visible posts ordered by `(created_at DESC, id DESC)` with bounded
+  opaque-cursor pagination and no ranking or follow filter.
+- **EXT-CA-SOC-03.2:** the top composer creates an authenticated-client-owned
+  post and becomes reachable through one accessible compact side action after
+  scrolling away, without duplicating drafts or controls; the same post appears
+  in the author's permitted profile history.
+- **EXT-CA-SOC-03.3:** posts accept up to four normalized images and comments
+  one, with validated JPEG/PNG/WebP content, 5 MiB per input, bounded dimensions,
+  metadata removal, authorized delivery, replacement cleanup, and erasure.
+- **EXT-CA-SOC-03.4:** every feed card exposes author, time, permitted content,
+  like count, and visible-comment count without hover; author name/avatar links
+  use only the opaque social-profile identity.
+- **EXT-CA-SOC-03.5:** post detail exposes newest-first visible comments with
+  commenter username/avatar, timestamp, optional text/media, and an accessible
+  composer; image-only posts and comments are valid and replies are absent.
+- **EXT-CA-SOC-03.6:** only an author may edit their post/comment text and
+  attachments; superseded bytes are removed and changed content displays
+  “editado” based on `edited_at`.
+- **EXT-CA-SOC-03.7:** a private profile may retain shared feed posts and its
+  private-profile shell exposes only presentation username and permitted
+  profile picture; a shared post with retained comments cannot become private,
+  while likes alone do not prevent the transition.
+- **EXT-CA-SOC-03.8:** administrator hide/restore/delete applies to the whole
+  shared post/comment aggregate, audit data is minimized, cascades are complete,
+  and account erasure leaves no identifying social media or media bytes.
+- **EXT-CA-SOC-03.9:** phone, tablet, desktop, keyboard, screen-reader, loading,
+  retry, end-of-feed, media-fallback, and focus-preservation states are verified.
+- **EXT-CA-SOC-03.10:** the task introduces no ranking, recommendations,
+  discovery/search, replies, messaging, notifications, blocks, public guest
+  access, sensitive publication, camera behavior, or payment functionality.
+
+**Dependencies:** Tasks 08, 20, 23, and 26; backend-resolved client identity;
+ProgressUpdate; the social-profile policy/query boundary; irreversible account
+erasure; `EXT-DEC-SOC-01` through `EXT-DEC-SOC-03`; and `EXT-DEC-PRES-01`.
+
+**Privacy/security:** shared remains active-authenticated-client-only. Profile
+privacy does not rewrite shared post visibility, but a private profile reveals
+only its username presentation and permitted picture/fallback. Media follows
+the parent resource's authorization. No sensitive domain data or internal
+Account/Client identifier enters feed projections, media URLs, logs, or audit.
+
+**Approved policy:** `EXT-DEC-SOC-03` resolves private-by-default publishing,
+newest-first opaque cursor order, text/media validity, four/one image limits,
+author text/attachment editing, “editado,” private-profile shared posts, the
+comment-based private-transition guard, retained likes, newest-first comments,
+whole-aggregate moderation, complete erasure, and explicit no-algorithm and
+no-replies boundaries. Task 27 supersedes only the earlier feed deferral and
+chronological comment presentation; it does not rewrite Tasks 20 or 26.
+
 ## EXT-RF-EQP-01 — Equipment quantities by logical type/model
 
 **Status:** approved post-MVP product extension.
@@ -328,9 +395,10 @@ alone is insufficient.
 
 ## Explicit exclusions
 
-EXT-RF-SOC-02 approves only the bounded follower, like, comment, and social
-profile behavior stated above. No extension approves a social feed, direct
-messaging, friend/private-follow requests, blocks, recommendations,
-notifications, rankings, leaderboards, public guest profiles, live
-equipment-use tracking, or publication of sensitive data. Those require
-separate product approval.
+EXT-RF-SOC-02 approves the bounded follower, like, comment, and social-profile
+behavior stated above; EXT-RF-SOC-03 later adds only the authenticated
+chronological feed and bounded post/comment media lifecycle. No extension
+approves replies, direct messaging, friend/private-follow requests, blocks,
+recommendations, notifications, algorithmic rankings, leaderboards, public
+guest profiles, live equipment-use tracking, or publication of sensitive data.
+Those require separate product approval.

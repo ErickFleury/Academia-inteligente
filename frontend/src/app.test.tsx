@@ -344,7 +344,7 @@ test('returns to the sign-in state when the client API rejects a stale session',
   expect(sessionStorage.getItem('academia.session')).toBeNull()
 })
 
-test('ends the provider session and clears the local session when signing out', () => {
+test('ends the provider session and clears the local session when signing out', async () => {
   sessionStorage.setItem(
     'academia.session',
     JSON.stringify({
@@ -356,9 +356,11 @@ test('ends the provider session and clears the local session when signing out', 
       roles: ['admin'],
     }),
   )
-  const logoutUrl = new OidcSessionClient().endSession()
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }))
+  const logoutUrl = await new OidcSessionClient().endSession()
 
   expect(sessionStorage.getItem('academia.session')).toBeNull()
+  expect(sessionStorage.getItem('academia.logged-out')).toBe('true')
   expect(logoutUrl.href).toBe(
     'http://localhost:8080/realms/academia/protocol/openid-connect/logout?client_id=academia-web&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&id_token_hint=id-token',
   )

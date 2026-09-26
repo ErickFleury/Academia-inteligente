@@ -12,6 +12,11 @@ visibility and Task 23 presence-consent rules.
 This task prepares stable social-profile and post-interaction query boundaries
 for a separately approved future feed. It does not implement that feed.
 
+**Later amendment — 2026-09-26:** Task 27 and EXT-RF-SOC-03 subsequently
+approve the authenticated chronological feed and supersede only this task's
+feed deferral and chronological comment presentation. This note does not alter
+Task 26's original definition of completion.
+
 ## Requirements covered
 
 - EXT-RF-SOC-02: EXT-CA-SOC-02.1–EXT-CA-SOC-02.10.

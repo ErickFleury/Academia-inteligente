@@ -26,6 +26,16 @@ from app.modules.onboarding.models import (
 )
 from app.modules.presence.models import ProfilePresenceConsentAudit, ProfilePresencePreference
 from app.modules.progress.models import ProgressUpdate
+from app.modules.social.models import (
+    ClientFollow,
+    CommentImage,
+    PostComment,
+    PostImage,
+    PostLike,
+    ProfileImage,
+    SocialModerationAudit,
+    SocialProfile,
+)
 from app.modules.training.models import (
     TrainingAdaptationOperation,
     TrainingAdaptationProposal,
@@ -294,6 +304,36 @@ class ClientService:
             delete(TrainingPlanVersion).where(TrainingPlanVersion.client_id == client.id)
         )
         session.execute(delete(TrainingPlan).where(TrainingPlan.client_id == client.id))
+        erased_post_ids = select(ProgressUpdate.id).where(ProgressUpdate.client_id == client.id)
+        erased_comment_ids = select(PostComment.id).where(
+            (PostComment.client_id == client.id) | (PostComment.progress_update_id.in_(erased_post_ids))
+        )
+        session.execute(delete(SocialModerationAudit).where(SocialModerationAudit.target_id.in_(erased_comment_ids)))
+        session.execute(delete(PostLike).where(PostLike.client_id == client.id))
+        session.execute(delete(PostLike).where(PostLike.progress_update_id.in_(erased_post_ids)))
+        session.execute(delete(CommentImage).where(CommentImage.comment_id.in_(erased_comment_ids)))
+        session.execute(delete(PostImage).where(PostImage.progress_update_id.in_(erased_post_ids)))
+        session.execute(delete(PostComment).where(PostComment.client_id == client.id))
+        session.execute(
+            delete(PostComment).where(PostComment.progress_update_id.in_(erased_post_ids))
+        )
+        session.execute(
+            delete(SocialModerationAudit).where(SocialModerationAudit.target_id == client.id)
+        )
+        session.execute(
+            delete(SocialModerationAudit).where(
+                SocialModerationAudit.target_id.in_(erased_post_ids)
+            )
+        )
+        session.execute(delete(SocialModerationAudit).where(SocialModerationAudit.target_id.in_(erased_comment_ids)))
+        session.execute(
+            delete(ClientFollow).where(
+                (ClientFollow.follower_client_id == client.id)
+                | (ClientFollow.followed_client_id == client.id)
+            )
+        )
+        session.execute(delete(ProfileImage).where(ProfileImage.client_id == client.id))
+        session.execute(delete(SocialProfile).where(SocialProfile.client_id == client.id))
         session.execute(delete(ProgressUpdate).where(ProgressUpdate.client_id == client.id))
         session.execute(
             delete(ProfilePresenceConsentAudit).where(

@@ -20,7 +20,8 @@ import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
 import { EquipmentManagementPage } from './equipment-management-page'
 import { OccupancyPage } from './occupancy-page'
-import { ProfilePresencePage } from './profile-presence-page'
+import { SocialProfilePage } from './social-profile-page'
+import { PostDetailPage } from './post-detail-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -35,6 +36,7 @@ function Application() {
   const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
+  const [loggedOut, setLoggedOut] = useState(() => oidcSessionClient.hasLoggedOut())
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
   const loginCompletionStarted = useRef(false)
   const loginRedirectStarted = useRef(false)
@@ -74,6 +76,7 @@ function Application() {
       || authenticationError
       || isEquipmentCatalogRoute
       || new URL(window.location.href).searchParams.has('code')
+      || loggedOut
       || loginRedirectStarted.current
     ) return
     loginRedirectStarted.current = true
@@ -81,7 +84,7 @@ function Application() {
       loginRedirectStarted.current = false
       setAuthenticationError('Não foi possível abrir o login. Tente novamente.')
     })
-  }, [authenticationError, completingLogin, session])
+  }, [authenticationError, completingLogin, loggedOut, session])
 
   useEffect(() => {
     let refreshing = false
@@ -134,13 +137,15 @@ function Application() {
   const isOnboardingConversationRoute = location.pathname === '/onboarding/conversa'
   const isCurrentTrainingRoute = location.pathname === '/treino'
   const isTrainingChatRoute = location.pathname === '/assistente'
-  const isProgressRoute = location.pathname === '/progresso'
+  const isProgressRoute = location.pathname === '/feed'
   const isEquipmentManagementRoute = location.pathname === '/admin/equipamentos'
   const isOccupancyRoute = location.pathname === '/ocupacao'
   const isProfileRoute = location.pathname === '/perfil'
+  const viewedProfileId = location.pathname.match(/^\/perfis\/([^/]+)$/)?.[1]
+  const viewedPostId = location.pathname.match(/^\/publicacoes\/([^/]+)$/)?.[1]
   const isInstructorAdaptationsRoute = location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute || isProfileRoute
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
   const isInstructor = session?.roles.includes('instructor') ?? false
 
   function clearSession() {
@@ -148,11 +153,12 @@ function Application() {
     setSession(null)
   }
 
-  function endSession() {
+  async function endSession() {
     if (logoutStarted.current) return
     logoutStarted.current = true
-    const logoutUrl = oidcSessionClient.endSession()
+    const logoutUrl = await oidcSessionClient.endSession()
     setSession(null)
+    setLoggedOut(true)
     window.location.assign(logoutUrl)
   }
 
@@ -184,6 +190,17 @@ function Application() {
   }
 
   if (!session) {
+    if (loggedOut) {
+      return (
+        <PublicShell>
+          <Stack spacing={3} sx={{ maxWidth: 520, py: { xs: 2, sm: 5 } }}>
+            <Typography component="h1" variant="h2">Sessão encerrada</Typography>
+            <Typography color="text.secondary">Você saiu da sua conta com segurança.</Typography>
+            <Box><Button onClick={() => { oidcSessionClient.beginLoginAfterLogout(); setLoggedOut(false); loginRedirectStarted.current = false }} variant="contained">Entrar novamente</Button></Box>
+          </Stack>
+        </PublicShell>
+      )
+    }
     return <PublicShell><LoadingState label="Redirecionando para o login" /></PublicShell>
   }
 
@@ -246,7 +263,15 @@ function Application() {
   }
 
   if (isProfileRoute && session) {
-    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><ProfilePresencePage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><SocialProfilePage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
+  }
+
+  if (viewedProfileId && session) {
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><SocialProfilePage accessToken={session.accessToken} onSignOut={endSession} profileId={viewedProfileId} /></ClientNavigationStateProvider>
+  }
+
+  if (viewedPostId && session) {
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><PostDetailPage accessToken={session.accessToken} onSignOut={endSession} postId={viewedPostId} /></ClientNavigationStateProvider>
   }
 
   if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute) && !isAdministrator) {

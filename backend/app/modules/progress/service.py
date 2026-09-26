@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Account, Client
 from app.modules.progress.models import ProgressUpdate
+from app.modules.social.models import PostComment, PostImage
+from app.modules.social.service import SocialService
 
 
 class ProgressNotFoundError(Exception):
@@ -43,19 +45,26 @@ class ProgressService:
                         & (ProgressUpdate.moderation_status == "visible"),
                     ),
                 )
-                .order_by(ProgressUpdate.created_at.desc())
+                .order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc())
             ).all()
         )
 
     def create(
-        self, session: Session, subject: str, content: str, visibility: str
+        self, session: Session, subject: str, content: str | None, visibility: str, images: list[bytes] | None = None
     ) -> ProgressUpdate:
+        text, images = (content or "").strip() or None, images or []
+        if not text and not images or len(images) > 4:
+            raise ProgressStateError
         update = ProgressUpdate(
             client_id=self.client_for_subject(session, subject).id,
-            content=content,
+            content=text,
             visibility=visibility,
         )
         session.add(update)
+        session.flush()
+        for position, raw in enumerate(images):
+            media, media_type, width, height = SocialService().normalize_image(raw)
+            session.add(PostImage(progress_update_id=update.id, position=position, content=media, media_type=media_type, width=width, height=height))
         session.commit()
         session.refresh(update)
         return update
@@ -78,12 +87,18 @@ class ProgressService:
         if update.deleted_at is not None:
             raise ProgressStateError
         if delete:
-            update.content = None
-            update.deleted_at = datetime.now(timezone.utc)
+            SocialService().delete_post_aggregate(session, update)
         else:
             if content is not None:
-                update.content = content
+                text = content.strip() or None
+                if not text and not session.scalar(select(PostImage.id).where(PostImage.progress_update_id == update.id)):
+                    raise ProgressStateError
+                if update.content != text:
+                    update.content = text
+                    update.edited_at = datetime.now(timezone.utc)
             if visibility is not None:
+                if visibility == "private" and update.visibility == "shared" and session.scalar(select(PostComment.id).where(PostComment.progress_update_id == update.id, PostComment.deleted_at.is_(None))):
+                    raise ProgressStateError("Retained comments prevent private visibility")
                 update.visibility = visibility
         session.commit()
         session.refresh(update)
@@ -95,7 +110,7 @@ class ProgressService:
                 select(ProgressUpdate, Client)
                 .join(Client)
                 .where(ProgressUpdate.visibility == "shared", ProgressUpdate.deleted_at.is_(None))
-                .order_by(ProgressUpdate.created_at.desc())
+                .order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc())
             ).all()
         )
 
@@ -107,9 +122,10 @@ class ProgressService:
             raise ProgressNotFoundError
         if update.visibility != "shared" or update.deleted_at is not None:
             raise ProgressStateError
+        if action in {"hide", "restore"} and not reason:
+            raise ProgressStateError("Moderation reason is required")
         if action == "delete":
-            update.content = None
-            update.deleted_at = datetime.now(timezone.utc)
+            SocialService().delete_post_aggregate(session, update)
         else:
             update.moderation_status = "hidden" if action == "hide" else "visible"
         update.moderation_reason = reason

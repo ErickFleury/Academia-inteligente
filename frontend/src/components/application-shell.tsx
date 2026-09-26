@@ -27,7 +27,7 @@ function ClientNavigation() {
     ...(onboardingComplete === false ? [{ href: '/onboarding', label: 'Onboarding' }] : []),
     { href: '/treino', label: 'Meu treino' },
     { href: '/assistente', label: 'Assistente' },
-    { href: '/progresso', label: 'Progresso' },
+    { href: '/feed', label: 'Feed' },
     { href: '/equipamentos', label: 'Equipamentos' },
     { href: '/ocupacao', label: 'Ocupação' },
     { href: '/perfil', label: 'Meu perfil' },

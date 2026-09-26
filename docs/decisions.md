@@ -697,6 +697,82 @@ consume, but it does not implement a feed, recommendations, direct messages,
 notifications, rankings, leaderboards, public profiles, or another social
 framework. A future feed must receive its own requirement and task.
 
+## EXT-DEC-SOC-03 — Authenticated chronological feed and social media
+
+**Status:** approved for Task 27 — 2026-09-26
+
+Task 27 is the later requirement and task anticipated by EXT-DEC-SOC-02. It
+supersedes only that decision's feed deferral and Task 26's chronological
+comment presentation. ProgressUpdate remains the sole post aggregate;
+EXT-DEC-SOC-01 private/shared ownership and tombstones, EXT-DEC-SOC-02 profile,
+like/comment, moderation, privacy, and erasure foundations, and
+EXT-DEC-PRES-01 presence consent remain authoritative unless amended below.
+
+“Public post” means the existing `shared` state and is visible only to active
+authenticated clients. It never means anonymous or guest access. New posts
+remain private by default and require explicit sharing. The `/progresso` feed
+contains shared, non-deleted, moderation-visible posts ordered newest-first by
+`created_at` and UUID as a deterministic tie-breaker. The API uses an opaque
+cursor and bounded pages. There is no ranking, recommendation, trending,
+follow-based selection, discovery/search, advertisement, or other algorithm.
+
+The composer creates a post owned by the authenticated client; browser-supplied
+author IDs are ignored. It is the same ProgressUpdate shown in the author's
+permitted profile history, not a feed-only copy. Post/comment text is trimmed
+plain text up to 2,000 characters. A post or comment is valid when it contains
+text, media, or both, so image-only posts and image-only comments are allowed.
+Posts accept at most four ordered images and comments at most one. Each input
+image is JPEG, PNG, or WebP up to 5 MiB, decoded by content, required to be
+static and valid,
+orientation-normalized, stripped of metadata, bounded within 1024×1024 while
+preserving aspect ratio, safely re-encoded, and stored as bytes in a dedicated
+PostgreSQL record. Media is served by authorized APIs; it is never base64 JSON,
+an external URL, or a host filesystem path.
+
+Post and comment authors may edit their own text and replace or remove their
+attachments. Superseded bytes are deleted in the same transaction. A content
+or attachment change records `edited_at`, and client views display “editado”
+without exposing an edit-history body. The same ownership rule applies to
+direct API calls. A shared post with any retained, non-deleted comment cannot
+be made private. Likes do not prevent the transition: they remain persisted
+but unavailable to other clients while the post is private, interactions are
+disabled, and the relationships become visible again if the author reshares
+the post.
+
+Profile visibility and post visibility remain independent. A shared post from
+a private social profile remains in the feed. Clicking its author opens a
+private-profile shell containing only the presentation username—nickname when
+present, otherwise the existing client name—and the permitted profile picture
+or fallback avatar. Biography, follow graph, presence, and profile post history
+remain unavailable. Feed and comment author projections use only opaque social
+profile IDs and approved name/avatar presentation; they expose no Account or
+Client UUID, e-mail, subject, health, training, attendance, biometric, payment,
+credential, or administrative data.
+
+Feed cards always expose the accurate like and visible-comment counts without
+hover. Post detail shows visible comments newest-first and has one accessible
+composer for optional text and at most one image. There are no replies or reply
+relationships. Administrators may hide/restore an entire shared post or shared
+comment with a required reason and may delete the whole aggregate with an
+optional reason, including all of its media. They cannot edit user content.
+Post deletion removes its image bytes, likes, comments, and comment images and
+retains only the approved contentless post tombstone and minimum audit
+metadata. Comment deletion removes its text and image from client views.
+Moderation/audit records never copy content or image bytes.
+
+Full account erasure deletes authored posts/tombstones and media, authored
+comments/media, likes given or received through erased posts, comments/likes
+attached to erased posts, related social audit records, and the previously
+approved social/account aggregates. Cursor pagination and UI caching cannot
+retain erased or newly hidden content after a subsequent authorized read.
+
+The initial full composer appears at the top of “Progresso.” When it leaves the
+viewport, one compact fixed action appears without duplicating focusable
+composer controls; activating it returns to and focuses the composer. This is
+presentation behavior, not a second draft or publication surface. Task 27 adds
+no replies, notifications, messages, blocks, public guest profiles, sensitive
+automatic publication, camera behavior, or payment functionality.
+
 ## EXT-DEC-PRES-01 — Profile presence visibility
 
 **Status:** resolved for Task 23 — 2026-09-25

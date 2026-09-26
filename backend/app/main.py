@@ -12,6 +12,7 @@ from app.modules.occupancy.router import router as occupancy_router
 from app.modules.onboarding.router import router as onboarding_router
 from app.modules.presence.router import router as presence_router
 from app.modules.progress.router import router as progress_router
+from app.modules.social.router import router as social_router
 from app.modules.training.router import router as training_router
 
 
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(occupancy_router)
     app.include_router(presence_router)
     app.include_router(progress_router)
+    app.include_router(social_router)
     app.include_router(training_router)
     return app
 

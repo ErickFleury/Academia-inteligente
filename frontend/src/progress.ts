@@ -1,14 +1,11 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
-
-export type ProgressUpdate = { id: string; author_name: string; content: string; visibility: 'private' | 'shared'; moderation_status: 'visible' | 'hidden'; moderation_reason: string | null; is_own: boolean; created_at: string; updated_at: string }
-
-async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...init?.headers } })
-  if (!response.ok) throw new Error('Não foi possível concluir esta ação. Tente novamente.')
-  return response.status === 204 ? undefined as T : response.json() as Promise<T>
-}
-export const getProgressFeed = (token: string) => request<ProgressUpdate[]>('/progress', token)
-export const createProgressUpdate = (token: string, content: string, visibility: 'private' | 'shared') => request<ProgressUpdate>('/progress', token, { method: 'POST', body: JSON.stringify({ content, visibility }) })
+export type ProgressUpdate = { id: string; author_name: string; content: string; visibility: 'private' | 'shared'; moderation_status: 'visible' | 'hidden'; moderation_reason: string | null; is_own: boolean; author_profile_id: string | null; created_at: string; updated_at: string; edited_at: string | null; like_count: number; comment_count: number; image_count: number }
+export type FeedPage = { items: ProgressUpdate[]; next_cursor: string | null; end_reached: boolean }
+async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> { const response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, ...init?.headers } }); if (!response.ok) throw new Error('Não foi possível concluir esta ação. Tente novamente.'); return response.status === 204 ? undefined as T : response.json() as Promise<T> }
+export const getProgressFeed = (token: string, cursor?: string) => request<FeedPage>(`/progress?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`, token)
+export const createProgressUpdate = (token: string, content: string, visibility: 'private' | 'shared') => request<ProgressUpdate>('/progress', token, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, visibility }) })
+export const createImageOnlyProgressUpdate = (token: string, image: File, visibility: 'private' | 'shared') => request<ProgressUpdate>(`/progress/image-only?visibility=${visibility}`, token, { method: 'POST', headers: { 'Content-Type': image.type }, body: image })
+export const replaceProgressImage = (token: string, postId: string, position: number, image: File) => request<void>(`/progress/${postId}/images/${position}`, token, { method: 'PUT', headers: { 'Content-Type': image.type }, body: image })
 export const deleteProgressUpdate = (token: string, id: string) => request<void>(`/progress/${id}`, token, { method: 'DELETE' })
 export const getModerationUpdates = (token: string) => request<ProgressUpdate[]>('/progress/moderation/updates', token)
-export const moderateProgressUpdate = (token: string, id: string, action: 'hide' | 'restore' | 'delete', reason?: string) => request<ProgressUpdate>(`/progress/moderation/updates/${id}`, token, { method: 'POST', body: JSON.stringify({ action, reason }) })
+export const moderateProgressUpdate = (token: string, id: string, action: 'hide' | 'restore' | 'delete', reason?: string) => request<ProgressUpdate>(`/progress/moderation/updates/${id}`, token, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, reason }) })

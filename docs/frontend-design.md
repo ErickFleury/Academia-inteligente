@@ -112,9 +112,9 @@ palette, or page composition.
   structured message content when required. Context cues should help without
   crowding the conversation. Reuse chat primitives across onboarding and
   training chat; adaptation adds states to them.
-- **Later modules:** Progress sharing uses a restrained fitness-feed layout
-  with author, time, content, and own-post visibility. Equipment can use local
-  imagery, name/type, concise metadata, detail, and total active units.
+- **Later modules:** Progress sharing evolves in Task 27 into the authenticated
+  chronological social feed specified below. Equipment can use local imagery,
+  name/type, concise metadata, detail, and total active units.
   Occupancy presents a prominent anonymous count; opt-in named presence is a
   separate view with its own consent state.
 - **Social profile:** Task 26 turns “Meu perfil” into an individual social
@@ -129,6 +129,51 @@ palette, or page composition.
   keep the picture, identity, visibility, follow action, and post navigation
   usable without dense desktop columns. Task 26 must not add a global feed or
   imitate another social network's visual identity.
+- **Social feed:** Task 27 redesigns `/progresso` as one restrained,
+  single-column, newest-first stream inside ClientShell. Keep the reading
+  measure comfortable (approximately 680–760 px on larger screens), let it fill the
+  phone content width, and do not add desktop sidebars merely to resemble a
+  commercial network. Each semantic article has a compact author row with
+  keyboard-operable avatar/username profile link, localized timestamp, text,
+  optional media, a small “editado” label when applicable, and persistent like
+  and comment counts/actions below the content. Counts never depend on hover.
+  Private-profile author links open a deliberate unavailable state showing only
+  the permitted username and picture/fallback, with Portuguese copy explaining
+  that the profile is private.
+- **Feed composer:** Place the full composer before the feed heading. It accepts
+  optional text, up to four image previews with individually named remove and
+  replace actions, an explicit private/shared control retaining private as the
+  default, validation, upload progress, and a clear publish action. Text or at
+  least one image is required. Observe the composer's viewport intersection;
+  once it has scrolled away, expose one compact fixed “Criar publicação” action
+  near the safe right/bottom edge. It must not cover navigation, cards, or the
+  comment action on phone. Activating it scrolls to the original composer and
+  focuses its text field; do not mount a second composer or maintain a second
+  draft. Hide the compact action whenever the original composer is visible.
+- **Feed media:** Reserve each image's persisted aspect ratio before loading to
+  prevent layout movement. One image uses the available card width; two use a
+  balanced two-column layout; three or four use a compact responsive grid that
+  collapses safely on narrow phones. Preserve aspect ratio, constrain media to
+  the card, use consistent rounded clipping only for thumbnails, lazy-load
+  below-fold media, show skeleton/failure states, and provide an accessible
+  name such as “Imagem da publicação de {nome}” when no authored description
+  exists. Image activation may open a keyboard-dismissible viewing dialog but
+  must not add cropping, filtering, camera capture, or external media URLs.
+- **Post detail and comments:** Reuse the feed-card identity/media language at
+  the top. Place the comment composer after the post actions and before the
+  newest-first comment list. It accepts optional text and at most one image,
+  including image-only comments, and has a clearly named “Enviar comentário”
+  action. Each semantic comment exposes commenter avatar/username link,
+  localized time, content/media, author-only edit/delete affordances, and the
+  small “editado” label. Do not indent comments or imply reply threads.
+- **Infinite loading:** Use the opaque cursor without replacing already read
+  articles or moving focus. An IntersectionObserver sentinel may request the
+  next bounded page before the reader reaches the end. Represent loading with
+  `aria-busy`, an announced non-blocking loading state, retry on failure, and a
+  clear end-of-feed state. Also provide a keyboard/screen-reader-operable
+  “Carregar mais publicações” fallback so access does not depend on scrolling
+  or observer support. Prevent duplicate requests and de-duplicate posts by
+  opaque post ID when pages overlap during concurrent publication.
 
 ## Imagery, responsiveness, and accessibility
 
@@ -145,6 +190,26 @@ palette, or page composition.
   focus, screen-reader-compatible controls, validation text, readable sizes,
   disabled states, and adequate text/control contrast. Recheck RNF02/RNF03
   whenever layouts change.
+
+### Social-feed research basis
+
+- Follow the W3C feed semantics as progressive enhancement: a named feed of
+  semantic articles, stable focus, and `aria-busy` while dynamically appending
+  content. The W3C example is illustrative rather than a production template,
+  so test real keyboard and assistive-technology behavior and prefer native
+  HTML where it is clearer:
+  <https://www.w3.org/WAI/ARIA/apg/patterns/feed/examples/feed/>.
+- Use IntersectionObserver for composer visibility and the page sentinel
+  because it observes viewport intersection asynchronously and is intended for
+  lazy loading/infinite scrolling without continuous main-thread geometry
+  polling: <https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API>.
+- Constrain responsive images, preserve aspect ratio, supply stored width and
+  height to reserve space, and lazy-load below-fold media following:
+  <https://web.dev/learn/design/responsive-images>.
+- Keep visible focus and generous touch targets. WCAG 2.2 requires at least a
+  24×24 CSS-pixel target or sufficient spacing at Level AA; this design system
+  should continue targeting approximately 44–48 px for primary icon/FAB actions:
+  <https://www.w3.org/TR/wcag/#target-size-minimum>.
 
 ## Reuse and verification
 

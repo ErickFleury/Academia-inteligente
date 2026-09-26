@@ -10,6 +10,7 @@ export type Session = {
 const sessionKey = 'academia.session'
 const verifierKey = 'academia.pkce.verifier'
 const stateKey = 'academia.oidc.state'
+const loggedOutKey = 'academia.logged-out'
 export const sessionIdleTimeoutMs = 5 * 60 * 1000
 
 function oidcConfig() {
@@ -198,10 +199,27 @@ export class OidcSessionClient {
     sessionStorage.removeItem(stateKey)
   }
 
-  endSession(): URL {
+  async endSession(): Promise<URL> {
     const { issuer, clientId, redirectUri } = oidcConfig()
     const session = this.getSession()
     this.clearSession()
+    sessionStorage.setItem(loggedOutKey, 'true')
+
+    if (session?.refreshToken) {
+      try {
+        await fetch(`${issuer}/protocol/openid-connect/revoke`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: clientId,
+            token: session.refreshToken,
+            token_type_hint: 'refresh_token',
+          }),
+        })
+      } catch {
+        // Navigation to the provider logout endpoint remains the authoritative SSO cleanup.
+      }
+    }
 
     const logoutParameters = new URLSearchParams({
       client_id: clientId,
@@ -212,6 +230,14 @@ export class OidcSessionClient {
     const logoutUrl = new URL(`${issuer}/protocol/openid-connect/logout`)
     logoutUrl.search = logoutParameters.toString()
     return logoutUrl
+  }
+
+  hasLoggedOut(): boolean {
+    return sessionStorage.getItem(loggedOutKey) === 'true'
+  }
+
+  beginLoginAfterLogout(): void {
+    sessionStorage.removeItem(loggedOutKey)
   }
 
   private storeSession(session: Session): void {

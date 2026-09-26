@@ -855,6 +855,80 @@ data. EXT-DEC-PRES-01 independently controls whether the derived current-presenc
 tag appears. Task 26 creates no feed, recommendations, messaging, notifications,
 rankings, leaderboards, blocks, private follow requests, or public profiles.
 
+#### EXT-RF-SOC-03 — Authenticated chronological social feed
+
+**Scope:** approved post-MVP extension; Task 27 is planned. **Related:**
+EXT-RF-SOC-01, EXT-RF-SOC-02, EXT-RF-LANG-01, RF-03–RF-05, RN-04, RN-05,
+RN-11, RN-23, RN-28, RN-33, RNF02–RNF04.
+
+The authenticated client “Progresso” destination is a chronological social
+feed of shared ProgressUpdate posts. Clients compose their own
+private-by-default or explicitly shared posts, optionally with images, and open
+a post to like it and read or create comments. The feature remains limited to active
+authenticated clients and does not create a public guest surface.
+
+Acceptance: `EXT-CA-SOC-03.1` stable newest-first cursor feed of permitted
+shared posts; `EXT-CA-SOC-03.2` accessible top composer and scroll-triggered
+compact return action, with the resulting owner-attached ProgressUpdate also
+appearing in the permitted profile history; `EXT-CA-SOC-03.3` validated
+lifecycle for up to four post images and one comment image;
+`EXT-CA-SOC-03.4` always-visible like and comment counts plus authorized
+author-profile navigation;
+`EXT-CA-SOC-03.5` newest-first comments with author summary and image-only
+comment support; `EXT-CA-SOC-03.6` author-only text/attachment editing with an
+“editado” indication; `EXT-CA-SOC-03.7` private-profile/shared-post and
+shared-to-private transition policy; `EXT-CA-SOC-03.8` aggregate moderation,
+deletion, audit minimization, and account erasure; `EXT-CA-SOC-03.9` responsive,
+accessible, resilient infinite loading; `EXT-CA-SOC-03.10` no ranking,
+recommendations, replies, messaging, notifications, blocks, or guest access.
+
+**Approved implementation policy (EXT-DEC-SOC-03):** “public” in this feature
+means the existing `shared` visibility: available to active authenticated
+clients only. New posts remain private by default and require an explicit
+choice to become shared. The feed contains shared, non-deleted,
+moderation-visible posts ordered by `(created_at DESC, id DESC)` through an
+opaque cursor. It has no algorithmic ordering, ranking, recommendation, or
+follow-based filtering.
+
+ProgressUpdate remains the only post aggregate. Post and comment text is
+trimmed plain text up to 2,000 characters. A post or comment must contain text
+or at least one image, so image-only posts and image-only comments are allowed.
+A post accepts at most four images and a comment at most one. Each image accepts
+JPEG, PNG, or WebP input up to 5 MiB, is decoded and validated by content,
+rejects animated/malformed/unsupported input, has orientation normalized,
+metadata removed, dimensions bounded within 1024×1024 while preserving aspect
+ratio, and is safely re-encoded into a dedicated PostgreSQL media record. Media
+bytes are never base64 JSON, an external URL, or a host filesystem path and are
+served only through authorized endpoints.
+
+Authors may edit their own post/comment text and replace or remove attachments.
+Replacement/removal deletes superseded bytes in the same transaction. A
+client-facing content or attachment change sets `edited_at`; the UI shows
+“editado” without exposing edit history. A shared post with any retained,
+non-deleted comment cannot become private. Likes do not block that transition:
+if a liked post becomes private, likes remain persisted but inaccessible for
+cross-client reads or interaction and become visible again if the post is
+reshared. Private and hidden posts reject new likes/comments.
+
+Profile visibility and post visibility remain independent. A shared post from
+a hidden/private social profile remains eligible for the feed. Its author link
+opens a private-profile state exposing only the presentation username
+(nickname when present, otherwise existing client name) and the permitted
+profile picture or fallback avatar; biography, graph, presence, and profile
+post history remain hidden. This is not anonymous/public profile access.
+
+Feed cards always show author, time, permitted text/media, like count, and
+comment count without hover. Post detail orders visible comments newest-first,
+superseding Task 26's chronological comment presentation only for the current
+product behavior. There are no replies or reply relationships. Administrators
+may hide/restore with a required reason or delete with an optional reason only
+the whole shared post or whole shared comment, including its attachments; they
+never edit user content. Post deletion removes attached images, likes, and
+comments/images and leaves only the already-approved contentless tombstone and
+minimum audit metadata. Comment deletion removes its text/image from client
+views. Full account erasure removes all authored/received social relationships,
+media bytes, posts/tombstones, comments, likes, and related audit metadata.
+
 #### EXT-RF-EQP-01 — Equipment quantity by logical type/model
 
 **Scope:** approved post-MVP extension. **Related originals:** RF-32, RF-33,
@@ -913,10 +987,11 @@ are in Portuguese, without changing the approved authentication architecture;
 `EXT-CA-LANG-01.5` representative phone, tablet, and desktop flows have no
 unintended English application copy. Familiar gym/technical terms are allowed.
 
-EXT-RF-SOC-02 approves only its bounded followers, likes, comments, and social
-profile. No extension approves a social feed, friend/private-follow requests,
-blocks, recommendations, messages, notifications, rankings, leaderboards,
-public guest profiles, or live equipment-use tracking.
+EXT-RF-SOC-03 additionally approves only its authenticated chronological feed
+and bounded post/comment media lifecycle. No extension approves
+friend/private-follow requests, replies, blocks, recommendations, messages,
+notifications, algorithmic rankings, leaderboards, public guest profiles, or
+live equipment-use tracking.
 
 ### 3.2 Client-facing training and assistant interpretation (DEC-19)
 
@@ -1198,10 +1273,11 @@ cardinalities remain undecided.
 | Exercise | Referenced prescription content; inactive exercises remain in history under RN-20. Full management flow awaits DEC-15. |
 | AI training conversation/message/proposal | Client-scoped RF-18/RF-19 context and proposed changes. A proposal is not a current approved plan; changes use the version lifecycle. |
 | EquipmentModel / EquipmentUnit | RF-32 administrative records and RF-33 catalog use UUID-identified logical models and their physical units. Active quantity is derived from active units for an active model, never stored as an authoritative mutable aggregate; it is not live availability. |
-| ProgressUpdate | Client-author-owned post with private/shared visibility, moderation, and deletion lifecycle governed by EXT-DEC-SOC-01. Task 26 adds likes/comments only for accessible shared, non-hidden posts. No sensitive data is automatically derived into it. |
+| ProgressUpdate | Client-author-owned post with private/shared visibility, moderation, and deletion lifecycle governed by EXT-DEC-SOC-01. Task 26 adds likes/comments for accessible shared, non-hidden posts; Task 27 adds bounded post media, author content/attachment editing, and the shared chronological feed without creating a second post aggregate. No sensitive data is automatically derived into it. |
 | SocialProfile / ProfileImage | Client-owned default-on authenticated social projection with optional non-unique nickname, 160-character biography, visibility preference, and a separately stored normalized image. The Client UUID remains canonical; old image bytes are deleted on replacement/removal. |
 | ClientFollow | Directed client-to-client relationship with a unique follower/followed pair; no self-follow, request, approval, friendship, or recommendation semantics. |
-| PostLike / PostComment | Authenticated interactions attached to a permitted ProgressUpdate. A like is unique per client/post; a comment is plain-text, author-owned, and independently moderatable. Both follow post/account deletion. |
+| PostLike / PostComment | Authenticated interactions attached to a permitted ProgressUpdate. A like is unique per client/post; a comment is author-owned, supports optional text and one normalized image, and is independently moderatable as one aggregate. Both follow post/account deletion. |
+| PostImage / CommentImage | Ordered, dedicated normalized media records owned through one ProgressUpdate or PostComment. Posts allow at most four and comments at most one; authorization follows the parent aggregate and replacement/removal/erasure deletes bytes. |
 | Plan/Enrollment/Subscription | Client contracting and validity concepts for RF-31/RN-22/RN-35/RN-36. Cardinality, modalities, and validity await DEC-12. |
 | Charge/Payment | Client financial records and external confirmation. Provider/model and financial meanings await DEC-12/DEC-13; access is restricted. |
 | Biometric data | Separately protected RF-22 data; not ordinary profile data. DEC-09 defines measured quality, calibrated threshold, reference/minimization, replacement, retention, and audit; implementation remains future work. |
@@ -1230,8 +1306,8 @@ above remains historical modeling context, not an active alternative.
 - A `client_id` in a path, query, body, local storage, or frontend state is never
   proof that the caller owns that client.
 - A client accesses only their protected data unless an explicit requirement
-  defines shared visibility, such as EXT-RF-SOC-01, EXT-RF-SOC-02, or
-  EXT-RF-PRES-01.
+  defines shared visibility, such as EXT-RF-SOC-01, EXT-RF-SOC-02,
+  EXT-RF-SOC-03, or EXT-RF-PRES-01.
 - Administrative and professional APIs enforce role and functional-need policy
   independently of frontend routes, menus, or hidden controls.
 - Direct API calls receive the same denial as the UI; obscuring controls is not
@@ -1302,6 +1378,7 @@ This order is implementation guidance added in this consolidation; it does not c
 | Employee management, recovery, onboarding self-review | Original post-MVP; not started | RF-06–RF-08, RF-14 |
 | Progress sharing | Approved post-MVP extension; implemented | EXT-RF-SOC-01; EXT-DEC-SOC-01; Task 20 |
 | Social client profiles/interactions | Approved post-MVP extension; planned | EXT-RF-SOC-02; EXT-DEC-SOC-02; Task 26 |
+| Authenticated chronological social feed | Approved post-MVP extension; planned | EXT-RF-SOC-03; EXT-DEC-SOC-03; Task 27 |
 | Equipment management/catalog | Original post-MVP; implemented | RF-32, RF-33 |
 | Equipment quantity | Approved post-MVP extension; implemented | EXT-RF-EQP-01; EXT-DEC-EQP-01 |
 | Access/attendance/anonymous occupancy | Original post-MVP; Task 22 implemented | RF-23–RF-25; confirmed-passage/correction ledger and aggregate-only client view. RF-20–RF-22 biometric/access work remains separate |
@@ -1345,6 +1422,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 | --- | --- | --- | --- |
 | EXT-DEC-SOC-01 | **Resolved for Task 20** | Private by default; shared updates are visible to active authenticated clients; shared-only administrator hide/restore moderation with a reason; author-only edit/delete; contentless deletion tombstone and stated lifecycle. | Controlled progress sharing may proceed. |
 | EXT-DEC-SOC-02 | **Resolved for Task 26** | Default-on authenticated social profiles; optional nickname/bio and client-owned image lifecycle; unilateral following; bounded likes/comments; moderation, erasure, presence separation, and future-feed boundary. | Social profile redesign may proceed. |
+| EXT-DEC-SOC-03 | **Resolved for Task 27** | Authenticated newest-first shared-post feed; private-by-default publishing; bounded post/comment media; author edits; private-profile shell; cursor pagination; aggregate moderation/erasure; no ranking or replies. | Task 27 feed redesign may proceed. |
 | EXT-DEC-EQP-01 | **Resolved for Task 21** | UUID-identified `EquipmentModel` canonical grouping; each physical `EquipmentUnit` belongs to one model; active quantity is derived from active units, not a mutable aggregate; no live availability semantics. | Equipment catalog and quantities may proceed. |
 | EXT-DEC-PRES-01 | **Resolved for Task 23** | Default-off client-owned profile tag only; derived from fresh confirmed passages with a 12-hour limit; immediate opt-out; no directory, staff override, or occupancy impact. | Opt-in profile presence may proceed. |
 
@@ -1395,6 +1473,7 @@ unchecked boxes or planned files.
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Implemented | EXT-DEC-SOC-01 | Task 20. |
 | EXT-RF-SOC-02 | Approved post-MVP extension | Planned | EXT-DEC-SOC-02 | Task 26. |
+| EXT-RF-SOC-03 | Approved post-MVP extension | Planned | EXT-DEC-SOC-03 | Task 27. |
 | RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Implemented | Resolved EXT-DEC-EQP-01 | Task 21: authorized two-level model/unit management and public active catalog with derived total. |
 | RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
 | EXT-RF-PRES-01 | Approved post-MVP extension | Implemented | Task 22/EXT-DEC-PRES-01 | Task 23. |
@@ -1498,6 +1577,9 @@ by inference.
 - **EXT-DEC-SOC-01:** resolved sharing audience and lifecycle for Task 20.
 - **EXT-DEC-SOC-02:** resolved social-profile, image, follow, like, comment,
   moderation, erasure, and future-feed boundaries for Task 26.
+- **EXT-DEC-SOC-03:** resolved the authenticated chronological feed, bounded
+  post/comment media, author edits, private-profile shell, cursor pagination,
+  moderation/erasure, and no-ranking/no-replies boundaries for Task 27.
 - **EXT-DEC-EQP-01:** resolved for Task 21 with UUID-identified
   `EquipmentModel` grouping, physical `EquipmentUnit` inventory, derived
   active quantity, and no live-availability semantics.
