@@ -576,8 +576,8 @@ history/context, and already-implemented client-visible exercise/equipment data.
 
 The new extensions do not approve a general social network, real-time equipment
 availability, or disclosure of private data. DEC-10 resolves only anonymous
-occupancy's authoritative source; named presence remains blocked until Task 22
-and its separate privacy/persistence decision (`EXT-DEC-PRES-01`) are approved.
+occupancy's authoritative source. Profile-presence visibility is governed
+separately by `EXT-DEC-PRES-01` and does not change DEC-10.
 
 ## EXT-DEC-SOC-01 — Controlled progress-sharing audience and moderation
 
@@ -612,6 +612,51 @@ updates with an optional reason, leaving a contentless tombstone. They may also
 irreversibly erase a client: delete the Keycloak identity and all attached local
 records with no retained audit record, for anonymity. Erasure overrides normal
 history preservation only for this explicitly requested privacy workflow.
+
+## EXT-DEC-PRES-01 — Profile presence visibility
+
+**Status:** resolved for Task 23 — 2026-09-25
+
+This is an optional, default-off client preference (`share_current_presence =
+false`) controlling only whether the client's individual profile may show a
+current-presence tag. It is not a named-presence directory, feed, list, or
+occupancy-screen feature. Consent is explicit and cannot be inferred from an
+account, terms, biometric enrollment, gym entry, anonymous occupancy, or use of
+other features. Staff cannot enable it for a client.
+
+The preference never changes confirmed-passage recording, private access-event
+history/auditing, corrections, source freshness, occupancy reconstruction, or
+the client-only aggregate required by DEC-10. All applicable clients remain in
+anonymous occupancy regardless of their preference. The occupancy tab stays
+aggregate-only: no names, avatars, profile links, or other identifying presence
+data are permitted.
+
+When viewing an individual client profile, show a green Portuguese current-status
+tag such as “Na academia” only when the client enabled the preference, the
+latest confirmed client passage is an entry with no later exit, the entry is no
+more than 12 hours old, and the authoritative access source is current under
+DEC-11. A confirmed exit or stale/unavailable source immediately suppresses the
+tag for subsequent reads. Recognition, camera data, release commands,
+authorization, anonymous totals, AI inference, login, or profile activity can
+never establish it. Re-enabling resumes the same derived rule without rewriting
+history or requiring a new entry.
+
+The persisted client-owned preference records enabled/disabled state, consent
+and last-updated timestamps, and an optional consent/policy version. It is
+separate from the passage ledger and follows the client/account lifecycle.
+Minimal consent-change audit metadata may retain client, prior/new value,
+timestamp, and consent version; it must not retain raw passage history or any
+biometric, health, payment, training, or credential data. No separate
+profile-presence visibility history is stored.
+
+Opt-out takes effect immediately for subsequent reads, hides the tag for every
+viewer including staff, and never erases or changes operational passage data.
+No role receives a profile-presence override and no privileged or client-facing
+directory of currently present people is approved. The feature exposes only the
+boolean current status through the individual profile tag; it adds no profile
+fields, entry time, duration, visit history, checkpoint, internal ID, or other
+private detail. This decision is an identity-visibility layer only and does not
+modify or reinterpret DEC-10.
 
 ## EXT-DEC-EQP-01 — Equipment catalog grouping and inventory representation
 

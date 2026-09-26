@@ -800,13 +800,14 @@ never represented as real-time free/available units.
 
 #### EXT-RF-PRES-01 — Opt-in visible presence
 
-**Scope:** approved post-MVP extension, blocked by `EXT-DEC-PRES-01` and Task 22.
+**Scope:** approved post-MVP extension; Task 22 and `EXT-DEC-PRES-01` are complete.
 **Related originals:** RF-23–RF-25, RN-04, RN-05, RN-10, RN-11, RN-23, RN-34,
 RN-37.
 
-Named presence is a separate opt-in client feature, not anonymous occupancy and
-not inferred from camera/biometric data. A non-opted-in client never appears by
-name to another client, and the view exposes only minimal approved profile data.
+Profile presence is a separate opt-in client feature, not anonymous occupancy
+and not inferred from camera/biometric data. It is a current-status tag only on
+an individual profile, never a directory or list. A non-opted-in client has no
+presence tag, and the view exposes no additional profile data.
 
 Acceptance: `EXT-CA-PRES-01.1` default-off opt-in;
 `EXT-CA-PRES-01.2` non-consenting clients excluded; `EXT-CA-PRES-01.3` preference
@@ -1266,7 +1267,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 | --- | --- | --- | --- |
 | EXT-DEC-SOC-01 | **Resolved for Task 20** | Private by default; shared updates are visible to active authenticated clients; shared-only administrator hide/restore moderation with a reason; author-only edit/delete; contentless deletion tombstone and stated lifecycle. | Controlled progress sharing may proceed. |
 | EXT-DEC-EQP-01 | **Resolved for Task 21** | UUID-identified `EquipmentModel` canonical grouping; each physical `EquipmentUnit` belongs to one model; active quantity is derived from active units, not a mutable aggregate; no live availability semantics. | Equipment catalog and quantities may proceed. |
-| EXT-DEC-PRES-01 | Unresolved; blocking | Consent lifecycle, visible fields, source/freshness, revocation, staff access, and retention for named presence. | Opt-in visible presence. |
+| EXT-DEC-PRES-01 | **Resolved for Task 23** | Default-off client-owned profile tag only; derived from fresh confirmed passages with a 12-hour limit; immediate opt-out; no directory, staff override, or occupancy impact. | Opt-in profile presence may proceed. |
 
 ### 9.2 Privacy and sensitive-data rules
 

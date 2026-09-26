@@ -1,10 +1,12 @@
 # Task 23 — Opt-in Visible Presence
 
+**Status:** implemented — 2026-09-25
+
 ## Objective
 
-Implement a privacy-preserving named current-presence view for authenticated
-clients only after explicit consent, persistence, source, and retention rules
-are approved.
+Implement a privacy-preserving current-presence tag on an individual client
+profile after explicit consent, persistence, source, and retention rules are
+approved.
 
 ## Requirements covered
 
@@ -15,13 +17,12 @@ are approved.
 - RN-04/RN-05: authenticated backend authorization and client isolation.
 - RN-10/RN-11/RN-23/RN-34: biometric, health, logs, and reports remain private.
 - RF-24/RF-25 anonymous occupancy must remain independent.
-- Task 22 and EXT-DEC-PRES-01 are both **blocking**.
+- Task 22 and EXT-DEC-PRES-01 are complete; preserve their boundaries.
 
 ## Prerequisites
 
 - Tasks 06, 08, and 22 complete.
-- EXT-DEC-PRES-01 recorded. Stop before migrations, consent UI, or presence
-  queries if it remains unresolved.
+- EXT-DEC-PRES-01 recorded: use only default-off, profile-only derived presence.
 
 ## Required reading
 
@@ -32,12 +33,16 @@ EXT-DEC-PRES-01.
 
 ## Scope
 
-Implement the approved default-off preference lifecycle, minimal opted-in
-profile projection, presence query, revocation/freshness behavior, and responsive
+Implement the approved default-off preference lifecycle, profile-only current
+status tag, derived passage/freshness behavior, revocation, and responsive
 authenticated-client UI. Resolve the viewer and subject identities through local
-account/client links. Preserve anonymous count independently.
+account/client links. Preserve anonymous count independently; do not create a
+directory or list of present clients.
 
-Reuse Task 08 ClientShell and Task 22 count display. Visually separate anonymous total occupancy from voluntarily visible people; show the viewer's opt-in state and revocation control clearly without suggesting that everyone present is listed. Check phone, tablet, and desktop.
+Reuse Task 08 ClientShell and Task 22 count display. Keep the occupancy view
+anonymous; show the opt-in state and revocation control clearly on the client's
+own profile, without suggesting everyone present is visible. Check phone,
+tablet, and desktop.
 
 ## Out of scope
 
@@ -48,8 +53,8 @@ features, or changing the occupancy implementation approved for Task 22.
 ## Acceptance criteria
 
 - EXT-CA-PRES-01.1–EXT-CA-PRES-01.6 are verified.
-- Direct API tests prove non-opted-in and revoked clients do not appear.
-- Named-view failures do not remove the anonymous occupancy count.
+- Direct API tests prove non-opted-in and revoked clients have no tag.
+- Profile-presence failures do not remove the anonymous occupancy count.
 
 ## Tests
 
@@ -67,8 +72,8 @@ tests/results, decisions, and unresolved issues. Do not commit or push.
 Use Terra with Medium reasoning. Read `AGENTS.md`, then
 `docs/tasks/23-opt-in-visible-presence.md`, then only the requirements and
 extension IDs listed under Required reading. Inspect the repository before
-editing. Implement only opt-in named presence while keeping anonymous occupancy
-independent. Stop and ask if DEC-10, EXT-DEC-PRES-01, or another unresolved item
+editing. Implement only opt-in profile presence while keeping anonymous occupancy
+independent. Stop and ask if another unresolved item
 requires a material human decision. Run relevant backend/frontend tests, review
 the Git diff, and provide the required completion report. Follow
 `docs/frontend-design.md` and reuse Task 08 shared layout/components; check phone,

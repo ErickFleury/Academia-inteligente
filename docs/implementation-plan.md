@@ -104,7 +104,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | DEC-19 | Resolved: client-facing direction and four approved extension IDs. |
 | EXT-DEC-SOC-01 | Blocking Task 20 audience/moderation/deletion/retention model. |
 | EXT-DEC-EQP-01 | Resolved for Task 21: UUID-identified logical models, physical units, and derived active quantity without availability semantics. |
-| EXT-DEC-PRES-01 | Blocking Task 23 consent/source/fields/revocation/retention model. |
+| EXT-DEC-PRES-01 | Resolved for Task 23: client-owned default-off profile tag, fresh confirmed-passage derivation, immediate opt-out, and no directory. |
 
 ## Task index
 
@@ -132,7 +132,7 @@ RF-26–RF-31 require their own tasks when prioritized.
 | 20 | Controlled progress sharing | EXT-RF-SOC-01 | 03, 06, 08; EXT-DEC-SOC-01 | Post-MVP extension | Author-owned private/shared updates |
 | 21 | Equipment catalog and quantities | RF-32, RF-33, EXT-RF-EQP-01 | 03, 06, 08; EXT-DEC-EQP-01 | Implemented | Admin model/unit lifecycle, public active catalog, and derived total by type/model |
 | 22 | Anonymous gym occupancy | RF-23–RF-25; RN-37 boundary | 03, 06, 08; resolved Task 22 DEC-10/11 boundary | Implemented | Private confirmed-passage/correction ledger, source-health status, and privacy-safe current client count/mobile display |
-| 23 | Opt-in visible presence | EXT-RF-PRES-01 | 06, 08, 22; EXT-DEC-PRES-01 | Post-MVP extension, blocked | Consent-based minimal named presence |
+| 23 | Opt-in profile presence | EXT-RF-PRES-01 | 06, 08, 22; resolved EXT-DEC-PRES-01 | Implemented | Consent-based individual profile status tag; no directory |
 
 ## Completed-task history and later impact
 

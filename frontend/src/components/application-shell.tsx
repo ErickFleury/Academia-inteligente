@@ -29,6 +29,7 @@ function ClientNavigation() {
     { href: '/progresso', label: 'Progresso' },
     { href: '/equipamentos', label: 'Equipamentos' },
     { href: '/ocupacao', label: 'Ocupação' },
+    { href: '/perfil', label: 'Meu perfil' },
   ]
   return (
     <Box component="nav" aria-label="Navegação da área do cliente" sx={{ borderTop: '1px solid', borderColor: 'divider' }}>

@@ -167,36 +167,36 @@ context, not as evidence of real-time availability.
 
 ## EXT-RF-PRES-01 — Opt-in visible presence
 
-**Status:** approved post-MVP product extension; blocked pending privacy and
-persistence decisions.
+**Status:** approved post-MVP product extension; privacy/persistence policy
+resolved by `EXT-DEC-PRES-01`.
 
-**Description:** A client may eventually opt in to having their current gym
-presence shown by name/profile to other authenticated clients. Named presence
-is separate from the anonymous occupancy count in RF-24/RF-25 and from camera
-data in RN-37.
+**Description:** A client may explicitly opt in to showing their current gym
+presence only as a tag on their individual profile. It is not a named-presence
+directory/list and is separate from anonymous occupancy in RF-24/RF-25 and
+camera data in RN-37.
 
-**Actors:** authenticated client controlling their preference; authenticated
-client viewing opted-in people; administrators only under separately approved
-operational permissions.
+**Actors:** authenticated client controlling their preference; authorized viewer
+of the individual client profile. No staff override or current-presence
+directory is approved.
 
 **Acceptance criteria**
 
 - **EXT-CA-PRES-01.1:** presence visibility to other clients is off until the
   client explicitly opts in.
-- **EXT-CA-PRES-01.2:** a client who has not opted in never appears by name or
-  profile in another client's presence view.
+- **EXT-CA-PRES-01.2:** a client who has not opted in never displays a presence
+  tag through their profile.
 - **EXT-CA-PRES-01.3:** changing the preference affects subsequent authorized
   presence queries according to the approved timing/lifecycle rules.
-- **EXT-CA-PRES-01.4:** the named list includes only the minimal approved profile
-  information and never health, biometric, payment, credential, administrative,
-  or other private data.
+- **EXT-CA-PRES-01.4:** the profile status exposes only the approved current
+  presence boolean, never health, biometric, payment, credential,
+  administrative, or other private data.
 - **EXT-CA-PRES-01.5:** anonymous occupancy remains available independently and
   does not reveal non-opted-in identities.
 - **EXT-CA-PRES-01.6:** administrative operational access does not automatically
   make a client's identity visible to other clients.
 
 **Dependencies:** RF-23, RF-24/RF-25, Task 22, authenticated client identity,
-and an approved named-presence privacy/persistence model.
+and `EXT-DEC-PRES-01`.
 
 **Related originals:** RF-04, RF-05, RF-23, RF-24, RF-25, RN-04, RN-05,
 RN-10, RN-11, RN-23, RN-34, RN-37.
@@ -205,11 +205,12 @@ RN-10, RN-11, RN-23, RN-34, RN-37.
 Camera/biometric inputs must never become a client-visible identity list by
 inference.
 
-**Unresolved decisions:** `EXT-DEC-PRES-01` must define consent lifecycle,
-visible profile fields, source and freshness of “currently present,” revocation,
-staff access, and retention. DEC-10 resolves anonymous occupancy separately;
-it does not resolve named-presence consent or lifecycle behavior. Implementation
-must stop until `EXT-DEC-PRES-01` is approved.
+**Approved policy:** presence sharing is default-off, profile-only, derived from
+private confirmed client passages (latest entry/no later exit), limited to 12
+hours, and suppressed when the authoritative source is stale. Revocation is
+immediate for subsequent reads. Consent never changes aggregate occupancy;
+camera/biometric data cannot establish profile presence; and there is no
+presence directory or staff visibility override. See `EXT-DEC-PRES-01`.
 
 ## EXT-RF-LANG-01 — Portuguese user-facing application
 

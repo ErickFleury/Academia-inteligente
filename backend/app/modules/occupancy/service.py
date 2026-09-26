@@ -127,7 +127,7 @@ class OccupancyService:
         heartbeat = session.get(AccessSourceHeartbeat, checkpoint_id)
         if heartbeat is None:
             session.add(AccessSourceHeartbeat(checkpoint_id=checkpoint_id, occurred_at=occurred_at))
-        elif occurred_at > heartbeat.occurred_at:
+        elif self._utc(occurred_at) > self._utc(heartbeat.occurred_at):
             heartbeat.occurred_at = occurred_at
         session.commit()
 

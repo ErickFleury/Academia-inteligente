@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 from app.database import Base
 from app.modules.clients.models import Account, Client, ClientIdentityReconciliation
 from app.modules.clients.service import ClientService
+from app.modules.occupancy.models import AccessPassageEvent, ClientAccessReference
 from app.modules.onboarding.models import (
     Onboarding,
     OnboardingAiConversation,
@@ -17,6 +18,7 @@ from app.modules.onboarding.models import (
     OnboardingAuditEvent,
     OnboardingInvitation,
 )
+from app.modules.presence.models import ProfilePresenceConsentAudit, ProfilePresencePreference
 from app.modules.progress.models import ProgressUpdate
 from app.modules.training.models import (
     TrainingAdaptationOperation,
@@ -123,12 +125,31 @@ def test_erasure_removes_every_client_owned_record(session: Session) -> None:
             ),
             proposal,
             ProgressUpdate(client_id=client.id, content=None, visibility="shared", deleted_at=now),
+            ClientAccessReference(client_id=client.id, reference_digest="b" * 64, active=True),
+            ProfilePresencePreference(client_id=client.id, enabled=True, consented_at=now),
+            ProfilePresenceConsentAudit(
+                client_id=client.id,
+                previous_enabled=False,
+                new_enabled=True,
+                occurred_at=now,
+            ),
             ClientIdentityReconciliation(
                 operation="link_existing", email=account.email, account_id=account.id
             ),
         ]
     )
     session.flush()
+    session.add(
+        AccessPassageEvent(
+            event_id="erase-passage",
+            client_id=client.id,
+            client_reference_digest="b" * 64,
+            occurred_at=now,
+            checkpoint_id="main",
+            direction="entry",
+            event_type="passage_confirmed",
+        )
+    )
     session.add(
         TrainingAdaptationOperation(
             proposal_id=proposal.id, position=1, operation_type="remove", target_position=1
@@ -156,5 +177,9 @@ def test_erasure_removes_every_client_owned_record(session: Session) -> None:
         TrainingAdaptationProposal,
         TrainingAdaptationOperation,
         ProgressUpdate,
+        ClientAccessReference,
+        AccessPassageEvent,
+        ProfilePresencePreference,
+        ProfilePresenceConsentAudit,
     ):
         assert session.scalars(select(model)).all() == []

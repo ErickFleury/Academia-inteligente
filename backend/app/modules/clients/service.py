@@ -16,6 +16,7 @@ from app.modules.identity.keycloak_admin import (
     KeycloakIdentityConflictError,
     KeycloakProvisioningError,
 )
+from app.modules.occupancy.models import AccessPassageEvent, ClientAccessReference
 from app.modules.onboarding.models import (
     Onboarding,
     OnboardingAiConversation,
@@ -23,6 +24,7 @@ from app.modules.onboarding.models import (
     OnboardingAuditEvent,
     OnboardingInvitation,
 )
+from app.modules.presence.models import ProfilePresenceConsentAudit, ProfilePresencePreference
 from app.modules.progress.models import ProgressUpdate
 from app.modules.training.models import (
     TrainingAdaptationOperation,
@@ -293,6 +295,20 @@ class ClientService:
         )
         session.execute(delete(TrainingPlan).where(TrainingPlan.client_id == client.id))
         session.execute(delete(ProgressUpdate).where(ProgressUpdate.client_id == client.id))
+        session.execute(
+            delete(ProfilePresenceConsentAudit).where(
+                ProfilePresenceConsentAudit.client_id == client.id
+            )
+        )
+        session.execute(
+            delete(ProfilePresencePreference).where(
+                ProfilePresencePreference.client_id == client.id
+            )
+        )
+        session.execute(delete(AccessPassageEvent).where(AccessPassageEvent.client_id == client.id))
+        session.execute(
+            delete(ClientAccessReference).where(ClientAccessReference.client_id == client.id)
+        )
         session.execute(
             delete(ClientIdentityReconciliation).where(
                 ClientIdentityReconciliation.account_id == client.account.id

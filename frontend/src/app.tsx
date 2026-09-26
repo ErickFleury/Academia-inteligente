@@ -17,6 +17,7 @@ import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
 import { EquipmentManagementPage } from './equipment-management-page'
 import { OccupancyPage } from './occupancy-page'
+import { ProfilePresencePage } from './profile-presence-page'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -122,9 +123,10 @@ export function App() {
   const isProgressRoute = window.location.pathname === '/progresso'
   const isEquipmentManagementRoute = window.location.pathname === '/admin/equipamentos'
   const isOccupancyRoute = window.location.pathname === '/ocupacao'
+  const isProfileRoute = window.location.pathname === '/perfil'
   const isInstructorAdaptationsRoute = window.location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute || isProfileRoute
   const isAdministrator = session?.roles.includes('admin') ?? false
   const isInstructor = session?.roles.includes('instructor') ?? false
 
@@ -213,6 +215,10 @@ export function App() {
 
   if (isOccupancyRoute && session) {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OccupancyPage onSignOut={endSession} /></ClientNavigationStateProvider>
+  }
+
+  if (isProfileRoute && session) {
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><ProfilePresencePage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute) && !isAdministrator) {
