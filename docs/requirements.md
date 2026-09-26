@@ -929,6 +929,17 @@ minimum audit metadata. Comment deletion removes its text/image from client
 views. Full account erasure removes all authored/received social relationships,
 media bytes, posts/tombstones, comments, likes, and related audit metadata.
 
+**Account-privacy amendment — 2026-09-26:** This supersedes the per-post
+private/shared composer choice and independent-profile-visibility behavior for
+the authenticated social feature. A public account's active posts are shared to
+active authenticated clients; a private account's active posts are visible only
+to its owner and accepted followers. Changing account privacy updates every
+active authored post immediately. The composer has no visibility selector. A
+non-follower may submit one pending follow request to a private account; only
+its owner can list, accept, or reject requests. Accepted followers may read the
+private account, its active non-hidden posts, and authorized media and use
+existing permitted interactions. Anonymous/guest access remains forbidden.
+
 #### EXT-RF-EQP-01 — Equipment quantity by logical type/model
 
 **Scope:** approved post-MVP extension. **Related originals:** RF-32, RF-33,

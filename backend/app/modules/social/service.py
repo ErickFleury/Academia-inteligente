@@ -18,6 +18,7 @@ from app.modules.presence.service import ProfilePresenceService
 from app.modules.progress.models import ProgressUpdate
 from app.modules.social.models import (
     ClientFollow,
+    ClientFollowRequest,
     PostComment,
     CommentImage,
     PostImage,
@@ -52,6 +53,8 @@ class ProfileView:
     follower_count: int
     following_count: int
     is_following: bool
+    follow_requested: bool
+    pending_follow_request_count: int
     currently_present: bool
 
 
@@ -100,7 +103,8 @@ class SocialService:
         target = session.get(Client, profile.client_id)
         if target is None:
             raise SocialNotFoundError
-        if target.id != viewer.id and not profile.visible_to_clients:
+        follows = session.get(ClientFollow, (viewer.id, target.id)) is not None
+        if target.id != viewer.id and not profile.visible_to_clients and not follows:
             raise SocialForbiddenError
         return self._view(session, profile, target, viewer)
 
@@ -110,8 +114,10 @@ class SocialService:
         profile = session.get(SocialProfile, profile_id)
         target = session.get(Client, profile.client_id) if profile else None
         if profile is None or target is None: raise SocialNotFoundError
-        if target.id != viewer.id and not profile.visible_to_clients:
-            return ProfileView(profile, target, False, 0, 0, False, False), True
+        follows = session.get(ClientFollow, (viewer.id, target.id)) is not None
+        if target.id != viewer.id and not profile.visible_to_clients and not follows:
+            requested = session.get(ClientFollowRequest, (viewer.id, target.id)) is not None
+            return ProfileView(profile, target, False, 0, 0, False, requested, 0, False), True
         return self._view(session, profile, target, viewer), False
 
     def update_own(
@@ -133,6 +139,10 @@ class SocialService:
             profile.biography_moderation_reason = None
         if visible is not None:
             profile.visible_to_clients = visible
+            session.query(ProgressUpdate).filter(
+                ProgressUpdate.client_id == client.id,
+                ProgressUpdate.deleted_at.is_(None),
+            ).update({"visibility": "shared" if visible else "private"}, synchronize_session=False)
         session.commit()
         session.refresh(profile)
         return self._view(session, profile, client, client)
@@ -230,12 +240,15 @@ class SocialService:
         return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
 
     def feed_page(self, session: Session, subject: str, cursor: str | None, limit: int) -> CursorPage:
-        self.client_for_subject(session, subject)
+        viewer = self.client_for_subject(session, subject)
         marker = self._cursor(cursor)
-        statement = select(ProgressUpdate).where(
-            ProgressUpdate.visibility == "shared",
-            ProgressUpdate.moderation_status == "visible",
+        statement = select(ProgressUpdate).join(SocialProfile, SocialProfile.client_id == ProgressUpdate.client_id).outerjoin(
+            ClientFollow,
+            and_(ClientFollow.followed_client_id == ProgressUpdate.client_id, ClientFollow.follower_client_id == viewer.id),
+        ).where(
             ProgressUpdate.deleted_at.is_(None),
+            or_(ProgressUpdate.client_id == viewer.id, ProgressUpdate.moderation_status == "visible"),
+            or_(ProgressUpdate.client_id == viewer.id, SocialProfile.visible_to_clients, ClientFollow.follower_client_id.is_not(None)),
         )
         if marker:
             timestamp, identifier = marker
@@ -286,24 +299,60 @@ class SocialService:
         self, session: Session, subject: str, profile_id: UUID, following: bool
     ) -> ProfileView:
         viewer = self.client_for_subject(session, subject)
-        view = self.viewer_profile(session, subject, profile_id)
-        if view.is_owner:
+        profile = session.get(SocialProfile, profile_id)
+        target = session.get(Client, profile.client_id) if profile else None
+        if profile is None or target is None:
+            raise SocialNotFoundError
+        if target.id == viewer.id:
             raise SocialStateError
         if following:
-            if session.get(ClientFollow, (viewer.id, view.client.id)) is None:
+            if not profile.visible_to_clients:
+                if session.get(ClientFollow, (viewer.id, target.id)) is None and session.get(ClientFollowRequest, (viewer.id, target.id)) is None:
+                    session.add(ClientFollowRequest(requester_client_id=viewer.id, requested_client_id=target.id))
+                    session.commit()
+            elif session.get(ClientFollow, (viewer.id, target.id)) is None:
                 session.add(
-                    ClientFollow(follower_client_id=viewer.id, followed_client_id=view.client.id)
+                    ClientFollow(follower_client_id=viewer.id, followed_client_id=target.id)
                 )
                 try:
                     session.commit()
                 except IntegrityError:
                     session.rollback()
         else:
-            edge = session.get(ClientFollow, (viewer.id, view.client.id))
+            edge = session.get(ClientFollow, (viewer.id, target.id))
             if edge is not None:
                 session.delete(edge)
                 session.commit()
-        return self.viewer_profile(session, subject, profile_id)
+            request = session.get(ClientFollowRequest, (viewer.id, target.id))
+            if request is not None:
+                session.delete(request)
+                session.commit()
+        return self.profile_shell(session, subject, profile_id)[0]
+
+    def follow_requests(self, session: Session, subject: str) -> list[ProfileView]:
+        owner = self.client_for_subject(session, subject)
+        return [
+            self._view(session, self.profile_for_client(session, requester.id), requester, owner)
+            for requester in session.scalars(
+                select(Client).join(Account).join(ClientFollowRequest, ClientFollowRequest.requester_client_id == Client.id)
+                .where(ClientFollowRequest.requested_client_id == owner.id, Account.account_active)
+                .order_by(ClientFollowRequest.created_at.desc())
+            ).all()
+        ]
+
+    def decide_follow_request(self, session: Session, subject: str, requester_profile_id: UUID, accept: bool) -> ProfileView:
+        owner = self.client_for_subject(session, subject)
+        requester_profile = session.get(SocialProfile, requester_profile_id)
+        if requester_profile is None:
+            raise SocialNotFoundError
+        request = session.get(ClientFollowRequest, (requester_profile.client_id, owner.id))
+        if request is None:
+            raise SocialNotFoundError
+        session.delete(request)
+        if accept and session.get(ClientFollow, (requester_profile.client_id, owner.id)) is None:
+            session.add(ClientFollow(follower_client_id=requester_profile.client_id, followed_client_id=owner.id))
+        session.commit()
+        return self._view(session, requester_profile, session.get(Client, requester_profile.client_id), owner)
 
     def profiles(
         self,
@@ -345,7 +394,7 @@ class SocialService:
         )
         if not view.is_owner:
             statement = statement.where(
-                ProgressUpdate.visibility == "shared", ProgressUpdate.moderation_status == "visible"
+                ProgressUpdate.moderation_status == "visible"
             )
         return list(
             session.scalars(
@@ -367,8 +416,8 @@ class SocialService:
         if author is None:
             raise SocialNotFoundError
         allowed = update.client_id == viewer.id or (
-            update.visibility == "shared"
-            and update.moderation_status == "visible"
+            update.moderation_status == "visible"
+            and (profile.visible_to_clients or session.get(ClientFollow, (viewer.id, author.id)) is not None)
         )
         if not allowed:
             raise SocialForbiddenError
@@ -379,7 +428,7 @@ class SocialService:
     ) -> tuple[ProgressUpdate, ProfileView]:
         update, view = self.post_detail(session, subject, update_id)
         viewer = self.client_for_subject(session, subject)
-        if not (update.visibility == "shared" and update.moderation_status == "visible"):
+        if update.moderation_status != "visible":
             raise SocialForbiddenError
         edge = session.get(PostLike, (viewer.id, update.id))
         if liked and edge is None:
@@ -564,5 +613,7 @@ class SocialService:
             follower_count,
             following_count,
             session.get(ClientFollow, (viewer.id, client.id)) is not None,
+            session.get(ClientFollowRequest, (viewer.id, client.id)) is not None,
+            session.scalar(select(func.count()).select_from(ClientFollowRequest).where(ClientFollowRequest.requested_client_id == client.id)) or 0,
             present,
         )

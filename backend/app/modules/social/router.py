@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.responses import Response as BinaryResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_database_session
@@ -50,6 +50,9 @@ class ProfileResponse(BaseModel):
     follower_count: int
     following_count: int
     is_following: bool
+    follow_requested: bool = False
+    pending_follow_request_count: int = 0
+    is_owner: bool
     currently_present: bool
     private_shell: bool = False
 
@@ -71,6 +74,9 @@ class PostResponse(BaseModel):
     created_at: str
     edited_at: str | None = None
     images: list["MediaSummary"] = []
+    like_count: int = 0
+    comment_count: int = 0
+    liked_by_viewer: bool = False
 
 
 class MediaSummary(BaseModel):
@@ -126,6 +132,9 @@ def profile_response(session: Session, view, private_shell: bool = False) -> Pro
         follower_count=view.follower_count,
         following_count=view.following_count,
         is_following=view.is_following,
+        follow_requested=view.follow_requested,
+        pending_follow_request_count=view.pending_follow_request_count if own else 0,
+        is_owner=own,
         currently_present=False if private_shell else view.currently_present,
         private_shell=private_shell,
     )
@@ -141,7 +150,7 @@ def summary(session: Session, view) -> ProfileSummary:
     )
 
 
-def post_response(session: Session, update) -> PostResponse:
+def post_response(session: Session, update, viewer_client_id: UUID | None = None) -> PostResponse:
     return PostResponse(
         id=update.id,
         author_name="",
@@ -152,6 +161,9 @@ def post_response(session: Session, update) -> PostResponse:
         created_at=update.created_at.isoformat(),
         edited_at=update.edited_at.isoformat() if update.edited_at else None,
         images=[MediaSummary(id=image.id, width=image.width, height=image.height) for image in service.post_images(session, update.id)],
+        like_count=service.like_count(session, update.id),
+        comment_count=(session.scalar(select(func.count()).select_from(PostComment).where(PostComment.progress_update_id == update.id, PostComment.deleted_at.is_(None), PostComment.moderation_status == "visible")) or 0),
+        liked_by_viewer=service.is_liked(session, viewer_client_id, update.id) if viewer_client_id else False,
     )
 
 
@@ -204,6 +216,27 @@ def upload_image(
 @router.delete("/me/image", status_code=status.HTTP_204_NO_CONTENT)
 def remove_image(session: DatabaseSession, client: ClientUser):
     service.remove_image(session, client.subject)
+
+
+@router.get("/me/follow-requests", response_model=list[ProfileSummary])
+def pending_follow_requests(session: DatabaseSession, client: ClientUser):
+    return [summary(session, view) for view in service.follow_requests(session, client.subject)]
+
+
+@router.put("/me/follow-requests/{requester_profile_id}", status_code=status.HTTP_204_NO_CONTENT)
+def accept_follow_request(requester_profile_id: UUID, session: DatabaseSession, client: ClientUser):
+    try:
+        service.decide_follow_request(session, client.subject, requester_profile_id, True)
+    except (SocialNotFoundError, SocialForbiddenError) as exc:
+        raise error(exc) from None
+
+
+@router.delete("/me/follow-requests/{requester_profile_id}", status_code=status.HTTP_204_NO_CONTENT)
+def reject_follow_request(requester_profile_id: UUID, session: DatabaseSession, client: ClientUser):
+    try:
+        service.decide_follow_request(session, client.subject, requester_profile_id, False)
+    except (SocialNotFoundError, SocialForbiddenError) as exc:
+        raise error(exc) from None
 
 
 @router.get("/profiles/{profile_id}", response_model=ProfileResponse)
@@ -266,8 +299,9 @@ def posts(
 ):
     try:
         view = service.viewer_profile(session, client.subject, profile_id)
+        viewer = service.client_for_subject(session, client.subject)
         return [
-            post_response(session, update).model_copy(update={"author_name": view.client.name})
+            post_response(session, update, viewer.id).model_copy(update={"author_name": view.client.name})
             for update in service.profile_posts(session, client.subject, profile_id, offset, limit)
         ]
     except (SocialNotFoundError, SocialForbiddenError) as exc:
@@ -301,7 +335,7 @@ def detail(
             for item, owner in service.comments(session, client.subject, update_id, offset, limit)
         ]
         return PostDetailResponse(
-            post=post_response(session, update).model_copy(update={"author_name": author.client.name}),
+            post=post_response(session, update, viewer.id).model_copy(update={"author_name": author.client.name}),
             author=summary(session, author),
             like_count=service.like_count(session, update.id),
             liked_by_viewer=service.is_liked(session, viewer.id, update.id),

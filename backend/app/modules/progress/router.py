@@ -62,8 +62,16 @@ class UpdateResponse(BaseModel):
     updated_at: datetime
     edited_at: datetime | None = None
     like_count: int = 0
+    liked_by_viewer: bool = False
     comment_count: int = 0
     image_count: int = 0
+    images: list["MediaResponse"] = []
+
+
+class MediaResponse(BaseModel):
+    id: UUID
+    width: int
+    height: int
 
 
 class FeedResponse(BaseModel):
@@ -76,7 +84,7 @@ def response(
     update: ProgressUpdate,
     client: Client,
     is_own: bool = False,
-    author_profile_id: UUID | None = None, session: Session | None = None,
+    author_profile_id: UUID | None = None, session: Session | None = None, viewer_client_id: UUID | None = None,
 ) -> UpdateResponse:
     return UpdateResponse(
         id=update.id,
@@ -91,13 +99,15 @@ def response(
         updated_at=update.updated_at,
         edited_at=update.edited_at,
         like_count=SocialService().like_count(session, update.id) if session else 0,
+        liked_by_viewer=SocialService().is_liked(session, viewer_client_id, update.id) if session and viewer_client_id else False,
         comment_count=(session.scalar(select(func.count()).select_from(PostComment).where(PostComment.progress_update_id == update.id, PostComment.deleted_at.is_(None), PostComment.moderation_status == "visible")) or 0) if session else 0,
-        image_count=len(SocialService().post_images(session, update.id)) if session else 0,
+        image_count=len(images := SocialService().post_images(session, update.id)) if session else 0,
+        images=[MediaResponse(id=image.id, width=image.width, height=image.height) for image in images] if session else [],
     )
 
 
 def own_response(session: Session, update: ProgressUpdate) -> UpdateResponse:
-    return response(update, session.get(Client, update.client_id), True, session=session)
+    return response(update, session.get(Client, update.client_id), True, session=session, viewer_client_id=update.client_id)
 
 
 def error(error: Exception) -> HTTPException:
@@ -116,12 +126,13 @@ def error(error: Exception) -> HTTPException:
 def list_feed(session: DatabaseSession, client: ClientUser, cursor: str | None = None, limit: int = 20) -> FeedResponse:
     try:
         page = SocialService().feed_page(session, client.subject, cursor, limit)
+        viewer = SocialService().client_for_subject(session, client.subject)
         return FeedResponse(items=[
             response(
                 update,
                 session.get(Client, update.client_id),
                 False,
-                profile.id if profile else None, session,
+                profile.id if profile else None, session, viewer.id,
             )
             for update in page.items
             for profile in [
@@ -177,8 +188,8 @@ def patch_update(
         raise error(exc) from None
 
 
-@router.put("/{update_id}/images/{position}", status_code=status.HTTP_204_NO_CONTENT)
-def replace_image(update_id: UUID, position: int, raw: bytes = Body(...), session: DatabaseSession = None, client: ClientUser = None) -> None:
+@router.put("/{update_id}/images/{position}", response_model=UpdateResponse)
+def replace_image(update_id: UUID, position: int, raw: bytes = Body(...), session: DatabaseSession = None, client: ClientUser = None) -> UpdateResponse:
     """Replace the ordered media set by addressing its position; bytes never enter JSON."""
     if position < 0 or position > 3:
         raise HTTPException(422, "Invalid image position")
@@ -187,7 +198,8 @@ def replace_image(update_id: UUID, position: int, raw: bytes = Body(...), sessio
         values = [item.content for item in current]
         while len(values) <= position: values.append(b"")
         values[position] = raw
-        SocialService().replace_post_images(session, client.subject, update_id, [value for value in values if value])
+        updated = SocialService().replace_post_images(session, client.subject, update_id, [value for value in values if value])
+        return own_response(session, updated)
     except (ProgressNotFoundError, SocialForbiddenError, SocialNotFoundError, SocialValidationError) as exc:
         raise error(exc) from None
 

@@ -773,6 +773,23 @@ presentation behavior, not a second draft or publication surface. Task 27 adds
 no replies, notifications, messages, blocks, public guest profiles, sensitive
 automatic publication, camera behavior, or payment functionality.
 
+## EXT-DEC-SOC-04 — Account privacy and approved follow requests
+
+**Status:** approved implementation decision — 2026-09-26
+
+This amends EXT-DEC-SOC-01 through EXT-DEC-SOC-03 only for account privacy.
+Post audience is derived from the account rather than chosen per post. Public
+accounts publish to active authenticated clients; private accounts expose active
+non-hidden posts only to their owner and accepted followers. Toggling account
+privacy atomically reclassifies every active authored post. A private account
+may receive one pending request per non-follower; the owner alone can view and
+accept/reject it. The requester receives no notification, graph, or private
+content before acceptance. The owner may see a compact pending-request indicator
+beside follower information. Follow requests are deleted on decision, unfollow,
+post deletion where applicable, and complete account erasure. This does not
+approve public/guest profiles, recommendations, messaging, blocks, or any
+presence-consent change.
+
 ## EXT-DEC-PRES-01 — Profile presence visibility
 
 **Status:** resolved for Task 23 — 2026-09-25

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Account, Client
 from app.modules.progress.models import ProgressUpdate
-from app.modules.social.models import PostComment, PostImage
+from app.modules.social.models import ClientFollow, PostComment, PostImage, SocialProfile
 from app.modules.social.service import SocialService
 
 
@@ -32,22 +32,10 @@ class ProgressService:
         return client
 
     def feed(self, session: Session, subject: str) -> list[tuple[ProgressUpdate, Client]]:
-        client = self.client_for_subject(session, subject)
-        return list(
-            session.execute(
-                select(ProgressUpdate, Client)
-                .join(Client)
-                .where(
-                    ProgressUpdate.deleted_at.is_(None),
-                    or_(
-                        ProgressUpdate.client_id == client.id,
-                        (ProgressUpdate.visibility == "shared")
-                        & (ProgressUpdate.moderation_status == "visible"),
-                    ),
-                )
-                .order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc())
-            ).all()
-        )
+        return [
+            (update, session.get(Client, update.client_id))
+            for update in SocialService().feed_page(session, subject, None, 50).items
+        ]
 
     def create(
         self, session: Session, subject: str, content: str | None, visibility: str, images: list[bytes] | None = None
@@ -55,10 +43,12 @@ class ProgressService:
         text, images = (content or "").strip() or None, images or []
         if not text and not images or len(images) > 4:
             raise ProgressStateError
+        client = self.client_for_subject(session, subject)
+        profile = SocialService().profile_for_client(session, client.id)
         update = ProgressUpdate(
-            client_id=self.client_for_subject(session, subject).id,
+            client_id=client.id,
             content=text,
-            visibility=visibility,
+            visibility="shared" if profile.visible_to_clients else "private",
         )
         session.add(update)
         session.flush()
@@ -97,9 +87,8 @@ class ProgressService:
                     update.content = text
                     update.edited_at = datetime.now(timezone.utc)
             if visibility is not None:
-                if visibility == "private" and update.visibility == "shared" and session.scalar(select(PostComment.id).where(PostComment.progress_update_id == update.id, PostComment.deleted_at.is_(None))):
-                    raise ProgressStateError("Retained comments prevent private visibility")
-                update.visibility = visibility
+                profile = SocialService().profile_for_client(session, client.id)
+                update.visibility = "shared" if profile.visible_to_clients else "private"
         session.commit()
         session.refresh(update)
         return update
@@ -108,8 +97,8 @@ class ProgressService:
         return list(
             session.execute(
                 select(ProgressUpdate, Client)
-                .join(Client)
-                .where(ProgressUpdate.visibility == "shared", ProgressUpdate.deleted_at.is_(None))
+                .join(Client).join(SocialProfile, SocialProfile.client_id == Client.id)
+                .where(SocialProfile.visible_to_clients, ProgressUpdate.deleted_at.is_(None))
                 .order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc())
             ).all()
         )

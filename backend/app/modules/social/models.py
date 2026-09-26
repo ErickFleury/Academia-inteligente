@@ -82,6 +82,23 @@ class ClientFollow(Base):
     )
 
 
+class ClientFollowRequest(Base):
+    __tablename__ = "client_follow_request"
+    __table_args__ = (
+        CheckConstraint("requester_client_id <> requested_client_id", name="ck_client_follow_request_not_self"),
+    )
+
+    requester_client_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("client.id"), primary_key=True
+    )
+    requested_client_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("client.id"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class PostLike(Base):
     __tablename__ = "post_like"
 

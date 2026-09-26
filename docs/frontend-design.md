@@ -87,9 +87,12 @@ palette, or page composition.
   tablet, and desktop; decorative backgrounds may not obscure forms or cause
   horizontal scrolling.
 - **ClientShell:** Reusable authenticated navigation, page header, main action,
-  content width, responsive sections, and feedback. On phone, prioritize the
-  current client action and touch navigation instead of shrinking desktop
-  columns. The `Assistente` destination is the single client-facing AI entry:
+  content width, responsive sections, and feedback. On medium and larger
+  screens, client navigation is a persistent left sidebar so the active page
+  has a stable reading area; the brand sits above the destinations and sign-out
+  sits at the sidebar's lower edge. On phone, use the compact top header and
+  touch navigation instead of shrinking the sidebar into the content. The
+  `Assistente` destination is the single client-facing AI entry:
   it presents guided onboarding while onboarding is incomplete and training
   assistance afterward, without a second chat destination. Planned destinations include home, onboarding, training, AI,
   progress, equipment, occupancy/presence, and profile when implemented.
@@ -131,19 +134,21 @@ palette, or page composition.
   imitate another social network's visual identity.
 - **Social feed:** Task 27 redesigns `/progresso` as one restrained,
   single-column, newest-first stream inside ClientShell. Keep the reading
-  measure comfortable (approximately 680–760 px on larger screens), let it fill the
-  phone content width, and do not add desktop sidebars merely to resemble a
-  commercial network. Each semantic article has a compact author row with
+  measure comfortable (approximately 680–760 px on larger screens), let it fill
+  the phone content width, and place it beside—not inside—the shared client
+  navigation sidebar. Each semantic article has a compact author row with
   keyboard-operable avatar/username profile link, localized timestamp, text,
   optional media, a small “editado” label when applicable, and persistent like
   and comment counts/actions below the content. Counts never depend on hover.
   Private-profile author links open a deliberate unavailable state showing only
   the permitted username and picture/fallback, with Portuguese copy explaining
   that the profile is private.
-- **Feed composer:** Place the full composer before the feed heading. It accepts
+- **Feed composer:** Place the full composer before the feed heading, in the
+  same reading column as the stream. It accepts
   optional text, up to four image previews with individually named remove and
-  replace actions, an explicit private/shared control retaining private as the
-  default, validation, upload progress, and a clear publish action. Text or at
+  replace actions, validation, upload progress, and a clear publish action.
+  Account privacy determines the audience; the composer has no per-post
+  visibility selector. Text or at
   least one image is required. Observe the composer's viewport intersection;
   once it has scrolled away, expose one compact fixed “Criar publicação” action
   near the safe right/bottom edge. It must not cover navigation, cards, or the

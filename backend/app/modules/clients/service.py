@@ -28,6 +28,7 @@ from app.modules.presence.models import ProfilePresenceConsentAudit, ProfilePres
 from app.modules.progress.models import ProgressUpdate
 from app.modules.social.models import (
     ClientFollow,
+    ClientFollowRequest,
     CommentImage,
     PostComment,
     PostImage,
@@ -330,6 +331,12 @@ class ClientService:
             delete(ClientFollow).where(
                 (ClientFollow.follower_client_id == client.id)
                 | (ClientFollow.followed_client_id == client.id)
+            )
+        )
+        session.execute(
+            delete(ClientFollowRequest).where(
+                (ClientFollowRequest.requester_client_id == client.id)
+                | (ClientFollowRequest.requested_client_id == client.id)
             )
         )
         session.execute(delete(ProfileImage).where(ProfileImage.client_id == client.id))

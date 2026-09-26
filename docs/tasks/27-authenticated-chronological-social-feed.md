@@ -14,6 +14,12 @@ newest-first cursor feed, always-visible interaction counts, post detail with
 newest-first comments and comment media, author editing, whole-aggregate
 moderation, and complete erasure coverage.
 
+**2026-09-26 amendment:** account privacy now determines the post audience.
+Public accounts publish to active authenticated clients; private accounts expose
+their posts only to accepted followers. The composer has no per-post visibility
+control. Private follow requests and the owner-only pending-request indicator
+are in scope for this amendment.
+
 This task implements a chronological authenticated feed, not a recommendation
 system or a public social network. It preserves EXT-DEC-SOC-01 post visibility,
 EXT-DEC-SOC-02 profile/privacy foundations, and EXT-DEC-PRES-01 presence

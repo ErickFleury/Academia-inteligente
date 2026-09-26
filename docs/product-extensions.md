@@ -395,6 +395,12 @@ alone is insufficient.
 
 ## Explicit exclusions
 
+**2026-09-26 account-privacy amendment:** private follow requests are approved
+only for a private account and are owner-accepted or rejected; they are not a
+notification system. Account privacy controls all active post audiences, so a
+public account's posts are authenticated-public and a private account's posts
+are follower-only. The composer no longer exposes per-post visibility.
+
 EXT-RF-SOC-02 approves the bounded follower, like, comment, and social-profile
 behavior stated above; EXT-RF-SOC-03 later adds only the authenticated
 chronological feed and bounded post/comment media lifecycle. No extension
