@@ -18,6 +18,7 @@ from app.integrations.ai import (
     OnboardingAiProvider,
     onboarding_ai_provider_from_environment,
 )
+from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
 from app.modules.onboarding.answer_evidence import grounded_answers
 from app.modules.onboarding.direct_answers import direct_extraction, measurement_suggestion
 from app.modules.onboarding.draft_service import (
@@ -131,6 +132,7 @@ class OnboardingConversationService:
             self._fallback_field(memory, missing),
         )
 
+    @observe_turn("onboarding")
     def submit(
         self,
         session: Session,
@@ -154,6 +156,7 @@ class OnboardingConversationService:
             )
         )
         if reply:
+            record_turn(outcome="cached", path="cached")
             state = self._state(session, conversation, memory)
             return ConversationTurn(
                 state.missing_required_fields,
@@ -201,12 +204,15 @@ class OnboardingConversationService:
         answer = normalized(message).strip(" .!")
         confirmation = memory.confirmation.copy()
         direct = direct_extraction(message, user.sequence, question)
+        record_turn(path="direct" if direct is not None else "model")
         try:
             if confirmation and answer in {"sim", "confirmo", "isso", "correto"}:
                 candidate = OnboardingDraftUpdate(**(memory.answers.model_dump() | confirmation))
                 accepted.update(confirmation)
+                record_turn(path="confirmation")
             elif confirmation and answer in {"nao", "incorreto"}:
                 candidate = memory.answers
+                record_turn(path="confirmation", reason="confirmation_declined")
             else:
                 extracted = (
                     direct
@@ -220,7 +226,9 @@ class OnboardingConversationService:
                     latest_sequence=user.sequence,
                     accepted_fields=accepted,
                 )
-        except (AiConversationUnavailableError, ValidationError):
+        except (AiConversationUnavailableError, ValidationError) as error:
+            if isinstance(error, ValidationError):
+                record_turn(reason="invalid_extraction")
             conversation.raw_expires_at = self._expiry()
             session.commit()
             raise AiConversationUnavailableError from None
@@ -294,6 +302,29 @@ class OnboardingConversationService:
         conversation.summary = memory.dump()
         conversation.raw_expires_at = self._expiry()
         session.commit()
+        rejection = expected is not None and expected not in accepted
+        reason = "none"
+        if memory.needs_target:
+            reason = "correction_target_unknown"
+        elif memory.pending or rejection:
+            if re.search(r"nao sei|nao lembro|talvez|acho que|pode ser|cerca de", answer):
+                reason = "uncertain_answer"
+            elif accepted.intersection(memory.pending):
+                reason = "conflicting_answer"
+            elif len(re.findall(r"\d+(?:[.,]\d+)?", message)) > 1:
+                reason = "multiple_measurements"
+            elif expected in {"height_cm", "weight_kg"}:
+                reason = "invalid_measurement"
+            else:
+                reason = "unsupported_answer"
+        if confirmation and answer == "nao":
+            reason = "confirmation_declined"
+        record_turn(
+            outcome="ready" if ready else "clarification" if reason != "none" else "answered",
+            reason=reason,
+            accepted_count=len(accepted - set(memory.pending)),
+            fallback=self._fallback_field(memory, missing) is not None,
+        )
         return ConversationTurn(
             missing,
             ready,
@@ -332,6 +363,7 @@ class OnboardingConversationService:
             try:
                 return operation()
             except AiProviderError as error:
+                record_retry(error.category, not attempt and error.retryable)
                 if attempt or not error.retryable:
                     raise AiConversationUnavailableError from None
         raise AiConversationUnavailableError

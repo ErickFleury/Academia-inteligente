@@ -12,6 +12,8 @@ from urllib.request import Request, urlopen
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from app.integrations.ai_diagnostics import observe_provider_call
+
 
 class TrainingGenerationProvider(Protocol):
     def generate_training(self, context: dict[str, object]) -> "AiTrainingGenerationResponse": ...
@@ -373,6 +375,7 @@ class OllamaConfig:
 
 
 class _Provider:
+    @observe_provider_call
     def _call(
         self,
         context: dict[str, object],

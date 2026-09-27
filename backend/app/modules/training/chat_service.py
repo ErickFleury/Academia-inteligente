@@ -19,6 +19,7 @@ from app.integrations.ai import (
     TrainingChatProvider,
     training_chat_provider_from_environment,
 )
+from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.models import Onboarding
@@ -81,6 +82,7 @@ class TrainingChatService:
         conversation = self._conversation(session, client_id)
         return TrainingChatState(self._messages(session, conversation.id))
 
+    @observe_turn("training_chat")
     def submit_for_subject(
         self, session: Session, subject: str, *, message: str, client_request_id: UUID
     ) -> TrainingChatState:
@@ -95,6 +97,7 @@ class TrainingChatService:
             )
         )
         if reply is not None:
+            record_turn(outcome="cached", path="cached")
             return TrainingChatState(self._messages(session, conversation.id))
 
         user = session.scalar(
@@ -130,6 +133,7 @@ class TrainingChatService:
         context = self._context(session, client_id, conversation, message, user.id)
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
+        record_turn(path="model")
         try:
             response = self._retry(lambda: self._provider.training_chat(context))
         except TrainingChatUnavailableError:
@@ -141,6 +145,7 @@ class TrainingChatService:
                 self._apply_draft_update(
                     session, editable_draft, response.draft_update, draft_revision
                 )
+                record_turn(outcome="draft_saved")
                 content = (
                     "Atualizei o rascunho conforme solicitado. "
                     "Confira as alterações em Meu treino; "
@@ -148,6 +153,10 @@ class TrainingChatService:
                     "Seu plano atual não foi alterado."
                 )
             else:
+                record_turn(
+                    outcome="draft_blocked",
+                    reason="request_not_authorized" if editable_draft else "no_editable_draft",
+                )
                 content = (
                     "Não alterei nenhum plano. Diga qual mudança deseja fazer no rascunho."
                     if editable_draft
@@ -156,6 +165,7 @@ class TrainingChatService:
                     "Seu plano atual só pode mudar após revisão profissional."
                 )
         elif self._claims_saved_change(content):
+            record_turn(outcome="draft_blocked", reason="unsupported_save_claim")
             content = (
                 "Nenhuma alteração foi salva no treino nesta mensagem. "
                 "Diga qual mudança deseja fazer no rascunho para eu ajudar."
@@ -495,6 +505,7 @@ class TrainingChatService:
             try:
                 return operation()
             except AiProviderError as error:
+                record_retry(error.category, not attempt and error.retryable)
                 if attempt or not error.retryable:
                     raise TrainingChatUnavailableError from None
         raise TrainingChatUnavailableError
