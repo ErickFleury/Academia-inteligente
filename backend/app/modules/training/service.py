@@ -66,6 +66,7 @@ class TrainingLifecycleService:
         data: TrainingPlanVersionInput,
         created_by: str,
         origin: PlanOrigin,
+        created_employee_id: UUID | None = None,
     ) -> TrainingPlanVersion:
         self._lock_client(session, client_id)
         if self.find_proposal(session, client_id=client_id) is not None:
@@ -74,7 +75,16 @@ class TrainingLifecycleService:
             plan = TrainingPlan(client_id=client_id)
             session.add(plan)
             session.flush()
-            return self._new_version(session, plan.id, client_id, 1, data, created_by, origin)
+            return self._new_version(
+                session,
+                plan.id,
+                client_id,
+                1,
+                data,
+                created_by,
+                origin,
+                created_employee_id=created_employee_id,
+            )
         except IntegrityError:
             session.rollback()
             if self.find_proposal(session, client_id=client_id) is not None:
@@ -255,6 +265,7 @@ class TrainingLifecycleService:
         commit: bool = True,
         preserved: TrainingPlanVersion | None = None,
         retained_equipment: set[UUID] | None = None,
+        created_employee_id: UUID | None = None,
     ) -> TrainingPlanVersion:
         self.validate_equipment(session, data, preserved, retained_equipment)
         version = TrainingPlanVersion(
@@ -266,6 +277,7 @@ class TrainingLifecycleService:
             objective=data.objective.strip(),
             origin=origin,
             created_by=actor,
+            created_employee_id=created_employee_id,
         )
         session.add(version)
         session.flush()

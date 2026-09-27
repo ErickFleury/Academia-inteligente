@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_database_session
+from app.modules.clients.instructor_service import create_first_draft
 from app.modules.equipment.models import EquipmentModel
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
@@ -445,13 +446,7 @@ def create_manual_proposal(
     payload: ManualPlanCreate, session: DatabaseSession, instructor: Instructor
 ) -> dict[str, object]:
     try:
-        version = service.create_proposal(
-            session,
-            client_id=UUID(payload.client_id),
-            data=payload,
-            created_by=instructor.subject,
-            origin="instructor",
-        )
+        version = create_first_draft(session, UUID(payload.client_id), instructor.subject, payload)
         return version_response(session, version)
     except ValueError:
         raise HTTPException(422, "Invalid client identifier") from None
@@ -459,6 +454,7 @@ def create_manual_proposal(
         InvalidTrainingContentError,
         ActiveTrainingProposalExistsError,
         TrainingVersionNotFoundError,
+        ConcurrentTrainingUpdateError,
     ) as error:
         raise lifecycle_error(error) from None
 

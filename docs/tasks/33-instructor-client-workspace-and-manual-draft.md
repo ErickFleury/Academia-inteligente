@@ -2,7 +2,20 @@
 
 ## Status
 
-Planned. Depends on Tasks 31 and 32.
+Implemented (2026-09-27). Depends on Tasks 31 and 32.
+
+Verification: nine focused backend tests, PostgreSQL accent-search and concurrent
+first-draft creation coverage (plus three collection race regressions), eleven
+workspace/shared-editor/collection UI tests, and the frontend build pass. Ruff
+and Git whitespace checks pass. Synthetic Firefox checks verified the workspace
+and manual form at 360×800, 768×1024, and 1366×768 without horizontal overflow.
+Migration 20260927_23 applied successfully.
+
+Name normalization uses PostgreSQL built-ins, without an extension or dependency.
+Search projections remain set-based and cursor-bounded. Both manual API entry
+points use the same locked eligibility check and retain creator Employee linkage;
+approval remains a separate action. The manual form shares the existing draft
+fields. Onboarding actions remain explicitly reserved for Task 34.
 
 ## Objective
 

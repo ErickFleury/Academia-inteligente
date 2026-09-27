@@ -1,6 +1,6 @@
 import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiRequestError } from './clients'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
@@ -12,6 +12,8 @@ const message = (error: unknown) => error instanceof Error ? error.message : 'NÃ
 
 export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = false }: { accessToken: string; onSignOut: () => void; mine?: boolean }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const requestedPlan = searchParams.get('plano')
   const [filters, setFilters] = useState<PlanFilters>({ ...emptyFilters })
   const [applied, setApplied] = useState<PlanFilters>({ ...emptyFilters })
   const [plans, setPlans] = useState<ApprovedPlan[]>([])
@@ -50,6 +52,7 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
     } catch (reason) { setError(message(reason)) }
   }
   useEffect(() => { void load(emptyFilters); void loadOptions(); return () => { generation.current++ } }, [accessToken, mine])
+  useEffect(() => { if (requestedPlan) void open(requestedPlan) }, [accessToken, requestedPlan])
   async function open(id: string, historical = false) {
     if (working.current) return
     working.current = true; setBusy(true); setError(null)
