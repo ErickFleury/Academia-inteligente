@@ -216,7 +216,7 @@ be performed during this feature.
 | 41 | FACE-IMPL-04 | Recognition, entry/exit policy and simulated release | Complete |
 | 42 | FACE-IMPL-05 | Confirmed passages, state corrections and occupancy | Complete |
 | 43 | FACE-IMPL-06 | Acesso facial admin workspace and integrated UI | Complete |
-| 44 | FACE-IMPL-07 | Authorized reset and owner-only integrated verification | Planned |
+| 44 | FACE-IMPL-07 | Authorized reset and owner-only integrated verification | In progress — reset complete; owner webcam checks pending |
 
 Complete/test/review/commit each task before proceeding. Stop for unforeseen
 functional decisions; never claim owner webcam validation or population precision

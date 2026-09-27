@@ -1,6 +1,6 @@
 # Facial Access Pilot — Implementation Specification
 
-**Status:** FACE-IMPL-01–06 complete; authorized reset and owner verification remain.
+**Status:** FACE-IMPL-01–06 complete; authorized reset complete; owner verification pending.
 See [Task 38 evidence](tasks/38-facial-provider-foundation.md) and
 [Task 39 evidence](tasks/39-facial-enrollment-and-cleanup.md) and
 [Task 40 evidence](tasks/40-mandatory-facial-registration.md) and
@@ -617,8 +617,10 @@ specific reviewed procedure; schema downgrades are tested on disposable data.
 
 The product questions for this controlled, owner-only pilot are resolved above.
 The original documentation checkpoint performed no installation or reset.
-Implementation now proceeds through the checkpoints below; the foundation is
-installed, but no owner facial capture or account reset has been performed.
+Implementation checkpoints FACE-IMPL-01–06 are complete. The authorized reset
+removed the disposable local test identities; bootstrap administration and service
+access were verified afterward. No owner facial capture has been performed.
+FACE-IMPL-07 remains open for the [owner checklist](tasks/44-facial-pilot-verification.md).
 
 Before affected code: canonical amendments are mandatory. Before provider use:
 pin/verify the exact free-use model and service artifacts and calibration settings.

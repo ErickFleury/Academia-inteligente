@@ -50,6 +50,16 @@ link expires after 24 hours. A newer invitation invalidates unused prior links.
 The link is validated/redeemed by the later secure-onboarding flow; opening it
 must not consume it by itself.
 
+### Local facial-access pilot
+
+The owner-only facial-access pilot runs through the local Docker `biometrics`
+profile. New client/staff registrations now require successful webcam enrollment
+or verified reuse of the same person's face. Administrators operate
+`/admin/acesso-facial`; release is simulated and occupancy changes only after
+explicit passage confirmation or a reasoned correction. See the
+[pilot startup, recovery and owner checklist](docs/tasks/44-facial-pilot-verification.md).
+Real webcam verification is still pending; no liveness or hardware readiness is claimed.
+
 ### Local conversational AI with Ollama
 
 OpenAI remains the initial configured provider. For local development without
