@@ -5,7 +5,8 @@ import { BrowserRouter, Navigate, useLocation, useNavigate } from 'react-router-
 import { AdminShell, ClientNavigationStateProvider, ClientShell, PublicShell } from './components/application-shell'
 import { RouterButtonLink } from './components/router-button-link'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
-import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
+import { OidcSessionClient, type Session } from './auth'
+import { replaceLocation } from './browser-navigation'
 import { AdminWorkspace } from './admin-workspace'
 import { FacialAccessPage } from './facial-access-page'
 import { OnboardingAccessPage } from './onboarding-access-page'
@@ -40,22 +41,34 @@ function Application({ session, setSession }: { session: Session | null; setSess
   const location = useLocation()
   const navigate = useNavigate()
   const isEquipmentCatalogRoute = location.pathname === '/equipamentos'
-  const [completingLogin, setCompletingLogin] = useState(false)
+  const onboardingToken = new URLSearchParams(location.search).get('token')
+  const isInvitationRoute = location.pathname === '/onboarding' && Boolean(onboardingToken)
+  const [completingLogin, setCompletingLogin] = useState(() => {
+    const query = new URLSearchParams(window.location.search)
+    return query.has('code') || query.has('error')
+  })
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
   const [loggedOut, setLoggedOut] = useState(() => oidcSessionClient.hasLoggedOut())
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
+  const [onboardingError, setOnboardingError] = useState(false)
+  const [onboardingRetry, setOnboardingRetry] = useState(0)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState(false)
+  const logoutDestination = useRef<URL | null>(null)
   const loginCompletionStarted = useRef(false)
   const loginRedirectStarted = useRef(false)
   const logoutStarted = useRef(false)
 
   useEffect(() => {
-    if (!new URL(window.location.href).searchParams.has('code') || loginCompletionStarted.current) return
+    const query = new URL(window.location.href).searchParams
+    if ((!query.has('code') && !query.has('error')) || loginCompletionStarted.current) return
     loginCompletionStarted.current = true
     setCompletingLogin(true)
     void oidcSessionClient
       .completeLogin()
       .then((returnPath) => {
         setSession(oidcSessionClient.getSession())
+        setLoggedOut(false)
         navigate(returnPath, { replace: true })
       })
       .catch(() => setAuthenticationError('Não foi possível iniciar a sessão. Tente novamente.'))
@@ -63,17 +76,18 @@ function Application({ session, setSession }: { session: Session | null; setSess
   }, [navigate])
 
   useEffect(() => {
-    if (!session?.roles.includes('client')) {
+    if (completingLogin || !session?.roles.includes('client') || session.expiresAt <= Date.now()) {
       setOnboardingComplete(null)
       return
     }
     let active = true
     setOnboardingComplete(null)
+    setOnboardingError(false)
     void getOwnOnboardingDraft(session.accessToken)
       .then((draft) => active && setOnboardingComplete(draft.status === 'completed'))
-      .catch(() => active && setOnboardingComplete(null))
+      .catch(() => active && setOnboardingError(true))
     return () => { active = false }
-  }, [session])
+  }, [session, onboardingRetry, completingLogin])
 
   useEffect(() => {
     if (
@@ -82,7 +96,9 @@ function Application({ session, setSession }: { session: Session | null; setSess
       || loginCompletionStarted.current
       || authenticationError
       || isEquipmentCatalogRoute
+      || isInvitationRoute
       || new URL(window.location.href).searchParams.has('code')
+      || new URL(window.location.href).searchParams.has('error')
       || loggedOut
       || loginRedirectStarted.current
     ) return
@@ -91,7 +107,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
       loginRedirectStarted.current = false
       setAuthenticationError('Não foi possível abrir o login. Tente novamente.')
     })
-  }, [authenticationError, completingLogin, loggedOut, session])
+  }, [authenticationError, completingLogin, loggedOut, session, isEquipmentCatalogRoute, isInvitationRoute])
 
   useEffect(() => {
     let refreshing = false
@@ -100,6 +116,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
       const current = oidcSessionClient.getSession()
       if (!current) {
         setSession(null)
+        if (oidcSessionClient.hasLoggedOut()) setLoggedOut(true)
         return
       }
       if (current.expiresAt - Date.now() > 60_000 || refreshing) return
@@ -107,6 +124,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
       try {
         await oidcSessionClient.refreshSession()
         setSession(oidcSessionClient.getSession())
+        if (oidcSessionClient.hasLoggedOut()) setLoggedOut(true)
       } finally {
         refreshing = false
       }
@@ -119,21 +137,14 @@ function Application({ session, setSession }: { session: Session | null; setSess
     }
     const activityEvents = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const
     activityEvents.forEach((event) => window.addEventListener(event, recordActivity, { passive: true }))
-    const timer = window.setInterval(() => {
-      const current = oidcSessionClient.getSession()
-      if (!current) {
-        setSession(null)
-        return
-      }
-      if (Date.now() - current.lastActivityAt >= sessionIdleTimeoutMs) {
-        clearSession()
-        return
-      }
-      void refreshIfNeeded()
-    }, 1_000)
+    void refreshIfNeeded()
+    const timer = window.setInterval(() => { void refreshIfNeeded() }, 1_000)
+    // A restored history page must recheck storage before displaying protected data.
+    window.addEventListener('pageshow', refreshIfNeeded)
     return () => {
       activityEvents.forEach((event) => window.removeEventListener(event, recordActivity))
       window.clearInterval(timer)
+      window.removeEventListener('pageshow', refreshIfNeeded)
     }
   }, [])
 
@@ -161,18 +172,31 @@ function Application({ session, setSession }: { session: Session | null; setSess
   function clearSession() {
     oidcSessionClient.clearSession()
     setSession(null)
+    setLoggedOut(true)
   }
 
   async function endSession() {
     if (logoutStarted.current) return
     logoutStarted.current = true
-    const logoutUrl = await oidcSessionClient.endSession()
+    setLoggingOut(true)
+    setLogoutError(false)
+    // endSession clears storage synchronously, before optional revocation waits.
+    const destination = logoutDestination.current ? Promise.resolve(logoutDestination.current) : oidcSessionClient.endSession()
     setSession(null)
     setLoggedOut(true)
-    window.location.assign(logoutUrl)
+    try {
+      logoutDestination.current = await destination
+      replaceLocation(logoutDestination.current)
+    } catch {
+      setLogoutError(true)
+      setLoggingOut(false)
+      logoutStarted.current = false
+    }
   }
 
-  const onboardingToken = new URLSearchParams(location.search).get('token')
+  if (loggingOut) return <PublicShell><LoadingState label="Encerrando sessão" /></PublicShell>
+  if (logoutError) return <PublicShell><Stack spacing={2}><PageHeader title="Saída pendente" /><StatusNotice severity="error">O acesso neste navegador foi encerrado, mas não foi possível concluir a saída no serviço de login.</StatusNotice><Button variant="contained" onClick={() => void endSession()}>Tentar concluir saída</Button></Stack></PublicShell>
+  if (completingLogin || (session && session.expiresAt <= Date.now())) return <PublicShell><LoadingState label="Iniciando sessão" /></PublicShell>
 
   if (isOnboardingRoute && onboardingToken) {
     return <OnboardingAccessPage token={onboardingToken} />
@@ -185,15 +209,13 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return <EquipmentCatalogPage />
   }
 
-  if (completingLogin) return <PublicShell><LoadingState label="Iniciando sessão" /></PublicShell>
-
   if (authenticationError) {
     return (
       <PublicShell>
         <Stack spacing={3} sx={{ maxWidth: 650, py: { xs: 2, sm: 5 } }}>
           <Typography component="h1" variant="h2">Não foi possível entrar</Typography>
           <Alert severity="error" variant="outlined">{authenticationError}</Alert>
-          <Box><Button onClick={() => { loginCompletionStarted.current = false; loginRedirectStarted.current = false; setAuthenticationError(null) }} variant="contained">Tentar novamente</Button></Box>
+          <Box><Button onClick={() => { oidcSessionClient.beginLoginAfterLogout(); setLoggedOut(false); loginCompletionStarted.current = false; loginRedirectStarted.current = false; setAuthenticationError(null) }} variant="contained">Tentar novamente</Button></Box>
         </Stack>
       </PublicShell>
     )
@@ -205,8 +227,8 @@ function Application({ session, setSession }: { session: Session | null; setSess
         <PublicShell>
           <Stack spacing={3} sx={{ maxWidth: 520, py: { xs: 2, sm: 5 } }}>
             <Typography component="h1" variant="h2">Sessão encerrada</Typography>
-            <Typography color="text.secondary">Você saiu da sua conta com segurança.</Typography>
-            <Box><Button onClick={() => { oidcSessionClient.beginLoginAfterLogout(); setLoggedOut(false); loginRedirectStarted.current = false }} variant="contained">Entrar novamente</Button></Box>
+            <Typography color="text.secondary">Sua sessão foi encerrada. Entre novamente para continuar.</Typography>
+            <Box><Button onClick={() => { oidcSessionClient.beginLoginAfterLogout(); setLoggedOut(false); loginCompletionStarted.current = false; loginRedirectStarted.current = false }} variant="contained">Entrar novamente</Button></Box>
           </Stack>
         </PublicShell>
       )
@@ -214,7 +236,12 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return <PublicShell><LoadingState label="Redirecionando para o login" /></PublicShell>
   }
 
+  if (isAdministrator && (location.pathname === '/' || location.pathname === '/dashboard')) return <Navigate replace to="/admin" />
   if (isInstructor && (location.pathname === '/' || location.pathname === '/dashboard' || location.pathname === '/instrutor')) return <Navigate replace to="/instrutor/feed" />
+
+  const onboardingStatus = onboardingError
+    ? <Stack spacing={2}><StatusNotice severity="error">Não foi possível preparar sua área. Tente novamente.</StatusNotice><Button onClick={() => setOnboardingRetry((value) => value + 1)} variant="outlined">Tentar novamente</Button></Stack>
+    : <LoadingState label="Preparando sua área" />
 
   if (isInstructorRoute && !isInstructor) {
     return <ClientShell onSignOut={endSession}><StatusNotice severity="error">Você não tem permissão para acessar esta área.</StatusNotice></ClientShell>
@@ -239,7 +266,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
         {onboardingComplete === null
-          ? <ClientShell onSignOut={endSession} showClientNavigation><LoadingState label="Preparando sua área" /></ClientShell>
+          ? <ClientShell onSignOut={endSession} showClientNavigation>{onboardingStatus}</ClientShell>
           : <Navigate replace to={onboardingComplete ? '/feed' : '/onboarding'} />}
       </ClientNavigationStateProvider>
     )
@@ -276,7 +303,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
         {onboardingComplete === null
-          ? <ClientShell onSignOut={endSession} showClientNavigation><LoadingState label="Preparando seu assistente" /></ClientShell>
+          ? <ClientShell onSignOut={endSession} showClientNavigation>{onboardingStatus}</ClientShell>
           : onboardingComplete
             ? <TrainingChatPage accessToken={session.accessToken} onSignOut={endSession} />
             : <OnboardingConversationPage accessToken={session.accessToken} onSignOut={endSession} />}

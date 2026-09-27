@@ -388,7 +388,9 @@ test('returns to the sign-in state when the client API rejects a stale session',
 
   render(<App />)
 
-  expect(await screen.findByText('Redirecionando para o login')).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Sessão encerrada' })).toBeInTheDocument()
+  expect(startLogin).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar novamente' }))
   expect(startLogin).toHaveBeenCalledOnce()
   expect(sessionStorage.getItem('academia.session')).toBeNull()
 })
