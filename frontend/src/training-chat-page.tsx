@@ -62,6 +62,8 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível revisar a proposta.') }
   }
 
+  if ((!chat || hasCurrentPlan === null) && error) return <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md"><StatusNotice severity="error">{error}</StatusNotice></ClientShell>
+
   if (!chat || hasCurrentPlan === null) return <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md"><LoadingState label="Carregando assistente de treino" /></ClientShell>
 
   const suggestions = chat.messages.filter((item) => item.role === 'assistant' && item.adaptation_suggested && item.reply_to_client_request_id && item.adaptation_reason)
@@ -85,7 +87,7 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
         <Card aria-busy={pending !== null} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky', zIndex: 1, borderColor: 'rgba(255,133,100,0.35)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key !== 'Enter') return; event.preventDefault(); void submit(message) }} placeholder="Ex.: Como devo fazer este exercício?" value={message} />
+              <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return; event.preventDefault(); void submit(message) }} disabled={pending !== null} helperText="Enter para enviar · Shift + Enter para uma nova linha" placeholder="Conte o que precisa; você pode reunir dúvidas e corrigir informações." value={message} />
               <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained" startIcon={<WorkspaceIcon name="send" />}>{pending ? 'Enviando…' : 'Enviar'}</Button>
             </Stack>
           </CardContent>
@@ -105,7 +107,7 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
           <Typography color="text.secondary" variant="body2">Status: {proposal.status === 'proposed' ? 'Aguardando sua revisão' : proposal.status === 'pending_instructor_review' ? 'Aguardando revisão do instrutor' : proposal.status === 'client_rejected' ? 'Você recusou esta proposta' : proposal.status}</Typography>
           {proposal.status === 'proposed' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button onClick={() => void reviewProposal(proposal.id, true)} variant="contained">Aceitar para revisão profissional</Button><Button onClick={() => void reviewProposal(proposal.id, false)} variant="outlined">Recusar</Button></Stack>}
         </Stack></CardContent></Card>)}
-        <Box><StatusNotice severity="info">O assistente explica seu treino e pode atualizar apenas o rascunho de IA em edição. Seu plano atual só muda após revisão profissional.</StatusNotice></Box>
+        <Box><StatusNotice severity="info">O assistente pode atualizar o rascunho em edição quando você pedir. Você pode reunir informações e corrigir apenas um dado, sem recomeçar a conversa. Seu plano atual só muda após revisão profissional. A conversa é mantida por 30 dias.</StatusNotice></Box>
       </Stack>
     </ClientShell>
   )

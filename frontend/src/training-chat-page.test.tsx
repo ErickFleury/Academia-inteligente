@@ -86,3 +86,26 @@ test('offers an AI-detected change for client confirmation before creating a pro
     source_client_request_id: '00000000-0000-4000-8000-000000000018',
   })
 })
+
+test('keeps multiline messages editable without sending Shift+Enter', async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ messages: [] }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => [] })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ plan: null }) })
+  vi.stubGlobal('fetch', fetchMock)
+  render(<TrainingChatPage accessToken="access-token" onSignOut={vi.fn()} />)
+  await screen.findByText('Seu espaço para tirar dúvidas')
+  const input = screen.getByLabelText('Escreva sua pergunta')
+  fireEvent.change(input, { target: { value: 'Treino dois dias\nPrefiro manhã' } })
+  fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
+  expect(fetchMock).toHaveBeenCalledTimes(3)
+  expect(input).toHaveValue('Treino dois dias\nPrefiro manhã')
+  expect(screen.getByText(/corrigir apenas um dado/)).toBeInTheDocument()
+})
+
+test('shows initial conversation failures instead of a permanent spinner', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Falha de conexão')))
+  render(<TrainingChatPage accessToken="access-token" onSignOut={vi.fn()} />)
+  expect(await screen.findByText('Falha de conexão')).toBeInTheDocument()
+  expect(screen.queryByText('Carregando assistente de treino')).not.toBeInTheDocument()
+})

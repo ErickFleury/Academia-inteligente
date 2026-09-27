@@ -470,3 +470,215 @@ def test_raw_training_chat_endpoint_requires_the_client_role(
     )
     assert request_chat(app, "Bearer token") == 403
     app.dependency_overrides.clear()
+
+
+def test_memory_keeps_complete_client_corrections_and_excludes_assistant_claims(session):
+    import json
+
+    create_client(session, "ada", "ada@example.test")
+    provider = FakeProvider(
+        AiTrainingChatResponse(assistant_message="Afirmação inventada pelo assistente")
+    )
+    service = TrainingChatService(provider)
+    for message in [
+        "Treino três dias e prefiro manhã.",
+        "Correção: treino dois dias, a manhã continua.",
+        "Obrigado",
+        "Entendi",
+        "Certo",
+        "Qual frequência eu disse?",
+    ]:
+        service.submit_for_subject(session, "ada", message=message, client_request_id=uuid4())
+    summary = provider.contexts[-1]["conversation_summary"]
+    assert "Afirmação inventada" not in summary
+    entries = json.loads(summary)
+    assert entries[0]["client_statement"] == "Treino três dias e prefiro manhã."
+    assert entries[1]["client_statement"] == "Correção: treino dois dias, a manhã continua."
+    assert len(summary) <= service._summary_limit
+
+
+def test_active_chat_drops_expired_sources_and_summary(session):
+    create_client(session, "ada", "ada@example.test")
+    provider = FakeProvider(AiTrainingChatResponse(assistant_message="Certo."))
+    service = TrainingChatService(provider)
+    service.submit_for_subject(
+        session, "ada", message="Relato antigo sensível", client_request_id=uuid4()
+    )
+    conversation = session.scalar(select(TrainingAiConversation))
+    conversation.summary = "Relato antigo sensível"
+    for item in session.scalars(select(TrainingAiMessage)):
+        item.created_at = datetime.now(UTC) - timedelta(days=31)
+    session.commit()
+    service.submit_for_subject(session, "ada", message="Olá novamente", client_request_id=uuid4())
+    assert "Relato antigo sensível" not in str(provider.contexts[-1])
+    assert conversation.summary is None
+
+
+def test_followup_uses_relevant_user_context_without_mutating_completed_onboarding(session):
+    from app.modules.onboarding.models import Onboarding
+
+    create_client(session, "ada", "ada@example.test")
+    complete_onboarding(session, "ada")
+    provider = FakeProvider(AiTrainingChatResponse(assistant_message="Converse com seu instrutor."))
+    service = TrainingChatService(provider)
+    for message in [
+        "Tenho dor no joelho e só treino dois dias.",
+        "Na verdade, é no ombro, não no joelho.",
+        "E como faço nesse caso?",
+    ]:
+        service.submit_for_subject(session, "ada", message=message, client_request_id=uuid4())
+    context = provider.contexts[-1]
+    assert context["relevant_onboarding"]["limitations_or_complaints"] == "Joelho sensível"
+    assert any("ombro" in item["content"] for item in context["recent_messages"])
+    assert session.scalar(select(Onboarding)).limitations_or_complaints == "Joelho sensível"
+
+
+def test_failed_retry_uses_original_message_and_stale_retry_is_rejected(session):
+    from app.modules.training.service import ConcurrentTrainingUpdateError
+
+    create_client(session, "ada", "ada@example.test")
+    provider = FakeProvider(AiProviderError("unavailable", retryable=False))
+    service = TrainingChatService(provider)
+    request_id = uuid4()
+    with pytest.raises(TrainingChatUnavailableError):
+        service.submit_for_subject(
+            session, "ada", message="Prefiro manhã", client_request_id=request_id
+        )
+    provider.result = AiTrainingChatResponse(assistant_message="Entendido.")
+    service.submit_for_subject(session, "ada", message="Outro texto", client_request_id=request_id)
+    assert provider.contexts[-1]["current_user_message"] == "Prefiro manhã"
+    provider.result = AiProviderError("unavailable", retryable=False)
+    stale = uuid4()
+    with pytest.raises(TrainingChatUnavailableError):
+        service.submit_for_subject(session, "ada", message="Três dias", client_request_id=stale)
+    provider.result = AiTrainingChatResponse(assistant_message="Entendido.")
+    service.submit_for_subject(
+        session, "ada", message="Na verdade, dois dias", client_request_id=uuid4()
+    )
+    with pytest.raises(ConcurrentTrainingUpdateError):
+        service.submit_for_subject(session, "ada", message="Três dias", client_request_id=stale)
+
+
+def test_hallucinated_save_without_patch_is_not_presented_as_success(session):
+    create_client(session, "ada", "ada@example.test")
+    service = TrainingChatService(
+        FakeProvider(AiTrainingChatResponse(assistant_message="Atualizei seu treino."))
+    )
+    state = service.submit_for_subject(
+        session, "ada", message="Como funciona?", client_request_id=uuid4()
+    )
+    assert "Nenhuma alteração foi salva" in state.messages[-1].content
+
+
+def test_unrequested_draft_update_is_blocked_and_success_is_confirmed_from_persistence(session):
+    from test_training_lifecycle import data
+
+    ada = create_client(session, "ada", "ada@example.test")
+    lifecycle = TrainingLifecycleService()
+    draft = lifecycle.create_proposal(
+        session, client_id=ada.id, data=data(), created_by="ai", origin="ai"
+    )
+    provider = FakeProvider(
+        AiTrainingChatResponse(
+            assistant_message="Atualizei e aprovei!",
+            draft_update=data("Novo rascunho").model_dump(mode="json"),
+        )
+    )
+    service = TrainingChatService(provider)
+    result = service.submit_for_subject(
+        session, "ada", message="Tenho dor e prefiro manhã.", client_request_id=uuid4()
+    )
+    assert draft.revision == 1 and draft.status == "proposal"
+    assert "Não alterei nenhum plano" in result.messages[-1].content
+    assert provider.contexts[-1]["rules"]["may_update_ai_draft"] is False
+    result = service.submit_for_subject(
+        session, "ada", message="Atualize o rascunho para duas séries.", client_request_id=uuid4()
+    )
+    assert draft.revision == 2 and draft.status == "proposal"
+    assert "ainda dependem da aprovação" in result.messages[-1].content
+    assert "aprovei" not in result.messages[-1].content
+
+
+def test_draft_revision_rolls_back_if_reply_cannot_be_written(session, monkeypatch):
+    from test_training_lifecycle import data
+
+    ada = create_client(session, "ada", "ada@example.test")
+    draft = TrainingLifecycleService().create_proposal(
+        session, client_id=ada.id, data=data(), created_by="ai", origin="ai"
+    )
+    service = TrainingChatService(
+        FakeProvider(
+            AiTrainingChatResponse(
+                assistant_message="Atualizei.", draft_update=data("Novo").model_dump(mode="json")
+            )
+        )
+    )
+    original_add = session.add
+
+    def fail_reply(instance, *args, **kwargs):
+        if isinstance(instance, TrainingAiMessage) and instance.role == "assistant":
+            raise RuntimeError("Simulated write failure")
+        return original_add(instance, *args, **kwargs)
+
+    monkeypatch.setattr(session, "add", fail_reply)
+    with pytest.raises(RuntimeError):
+        service.submit_for_subject(
+            session, "ada", message="Atualize o rascunho", client_request_id=uuid4()
+        )
+    session.rollback()
+    session.refresh(draft)
+    assert draft.revision == 1 and draft.name != "Novo"
+
+
+@pytest.mark.parametrize(
+    "message,allowed",
+    [
+        ("Quero aumentar massa", False),
+        ("Como trocar as séries?", False),
+        ("Explique por que devo alterar meu treino", False),
+        ("Meu instrutor pediu para alterar o treino", False),
+        ("Gostaria de saber se preciso trocar o exercício", False),
+        ("Não quero alterar o treino", False),
+        ("Atualize meu peso para 82 kg", False),
+        ("Pode trocar o leg press por outro exercício?", True),
+        ("Troque o leg press", True),
+        ("Reduza a carga", True),
+    ],
+)
+def test_only_explicit_training_changes_authorize_draft_writes(message, allowed):
+    assert TrainingChatService._requests_draft_change(message, [], ["Leg press"]) is allowed
+
+
+def test_explicit_confirmation_can_accept_the_previous_draft_question():
+    from app.modules.training.chat_service import TrainingChatMessage
+
+    previous = TrainingChatMessage(
+        "assistant",
+        "Posso trocar o leg press no rascunho?",
+        datetime.now(UTC),
+        None,
+        uuid4(),
+        False,
+        None,
+    )
+    assert TrainingChatService._requests_draft_change("Sim", [previous], ["Leg press"])
+    assert not TrainingChatService._requests_draft_change("Sim", [], ["Leg press"])
+
+
+def test_summary_does_not_truncate_a_long_correction_or_reintroduce_older_facts(session):
+    create_client(session, "ada", "ada@example.test")
+    service = TrainingChatService(FakeProvider(AiTrainingChatResponse(assistant_message="Certo")))
+    service._summary_limit = 100
+    for message in [
+        "Três dias",
+        "Correção: " + "detalhe " * 30 + "somente dois dias",
+        "Um",
+        "Dois",
+        "Três",
+    ]:
+        service.submit_for_subject(session, "ada", message=message, client_request_id=uuid4())
+    # The older correction cannot fit as a complete attributed statement. Dropping
+    # it must not revive the superseded three-day claim.
+    assert (
+        service._bounded_summary(session, session.scalar(select(TrainingAiConversation.id))) is None
+    )

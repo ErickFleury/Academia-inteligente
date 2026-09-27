@@ -36,3 +36,52 @@ answers stay unfilled or require clarification rather than being guessed.
 
 Final onboarding targeted run: 72 passed. The local Ollama synthetic multi-fact
 and negated-old-weight correction checks both passed after normalization.
+
+## Training assistant checkpoint
+
+Older context now contains bounded, whole client statements with timestamps,
+rebuilt from retained messages. It never treats assistant suggestions as reported
+client facts or recursively summarizes generated summaries. Recent corrections
+take precedence in the prompt; ambiguous or missing context asks for clarification.
+Long statements are omitted whole when they cannot fit, so truncation cannot
+remove a negation or revive a superseded older claim. Health-related follow-ups
+can use recent client context while completed onboarding remains immutable.
+Expired statements also invalidate cached summaries in active conversations.
+
+A conservative Portuguese request check permits draft writes only for explicit
+training-change requests or a direct confirmation of a preceding draft question.
+Advice questions, personal-data corrections and problem reports alone do not
+permit edits. Unrecognized requests may require clearer wording; this is not a
+semantic proof of intent. Equipment/content validation, single-proposal selection,
+revision checks and instructor approval remain in force. Successful draft changes
+and their controlled Portuguese confirmation commit in one transaction. Common
+unsupported model claims of saved changes are replaced with accurate feedback;
+arbitrary generated prose is still model-dependent.
+
+Chat requests are serialized per client. Retries retain their original message;
+older failed requests cannot be replayed over newer turns. Frontend changes keep
+multiline composition, expose initial-load errors and explain the draft boundary.
+
+Validation: full backend run passed 471 tests including PostgreSQL integration;
+after tightening advice/request distinction, 61 relevant tests passed (including
+three additional request cases). Training-chat UI: five tests and production build
+passed. Synthetic local Ollama preserved a morning preference while correcting
+three training days to two, and returned no draft mutation. No live client data,
+model version, dependencies, database schema or Keycloak configuration changed.
+
+Final onboarding review additionally covered “acho que”/“pode ser” uncertainty
+about existing values: readiness is blocked without erasing other answers, and
+“I don't remember” keeps an already focused clarification on the same field.
+The 48-test onboarding/evidence run passed; this follow-up is checkpoint c964d97.
+
+Final frontend regression run: all 206 tests across 33 files passed with isolated
+localhost API/OIDC settings. The build had already passed after the final frontend
+changes. Existing Vite bundle-size warning remains; no unrelated bundle work was
+included. No unresolved implementation blockers. Conversational interpretation
+and response wording remain model-dependent, bounded by the validation described
+above; these checks do not establish perfect natural-language understanding.
+
+Changed areas: backend onboarding evidence/state/orchestration, draft and response
+contracts; AI adapter prompts; training chat context/orchestration and transactional
+revision support; both frontend conversation pages and onboarding API types;
+regression/concurrency tests; canonical/supporting requirements and this report.

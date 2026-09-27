@@ -104,6 +104,7 @@ class TrainingLifecycleService:
         data: TrainingPlanVersionInput,
         actor: str,
         expected_revision: int,
+        commit: bool = True,
     ) -> TrainingPlanVersion:
         version = self._version(session, plan_id, version_number, lock=True)
         if version.status != "proposal":
@@ -115,7 +116,10 @@ class TrainingLifecycleService:
             self._replace_content(session, version, data)
             version.revision += 1
             version.updated_at = datetime.now(UTC)
-            session.commit()
+            if commit:
+                session.commit()
+            else:
+                session.flush()
         except Exception:
             session.rollback()
             raise
