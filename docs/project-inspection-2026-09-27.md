@@ -7,7 +7,7 @@ was checkpointed as `3d28fbf`; owner webcam verification remains pending.
 ## Requirements and review scope
 
 RF-04/05 authorization, RF-09/10 secure invitation access, EXT-RF-SOC-01/02/03
-media/moderation/privacy, EXT-RF-FACE-01 and RF-20/23/24 occupancy integrity;
+media/moderation/privacy, EXT-RF-INST-03 collection cursors, EXT-RF-FACE-01 and RF-20/23/24 occupancy integrity;
 RN-02/03/04/05/10/23/27/28/29/32/34; RNF01/04/05/06. No new product feature or
 role is introduced. Existing functional boundaries and the canonical technology
 baseline remain authoritative.
@@ -29,6 +29,13 @@ container configuration, tests and lint/build scripts.
 | Invitation tokens included in API query strings | Tokens could enter API request logs and referrers | Use a bounded request header; browser referrers suppressed. E-mail links and intentional redemption remain unchanged. |
 | Malformed identity-provider responses | Unexpected JSON types could produce errors or misinterpret roles | Bounded reads and strict payload validation fail closed. |
 | Frontend lint checked an empty root project | The lint command could pass without checking application files | Run TypeScript project references; document language corrected to pt-BR. |
+| Social moderation omitted `target_id` from its request schema and required a local administrator Account | Valid requests failed instead of moderating | Restore required target UUID; accept the authenticated OIDC-only bootstrap administrator and record its subject. |
+| Moderation did not verify shared/public eligibility, and the older post route omitted audits | A known private target could be changed; audit records were inconsistent | Consolidate both routes behind one policy and audit transaction; private targets are rejected. |
+| Biography moderation assigned non-mapped attributes | Hiding a biography did not persist or affect visibility | Write the actual biography moderation columns. |
+| Full erasure missed profile-target and actor audit records | Residual personal metadata or a foreign-key failure could prevent complete erasure | Delete relevant audits, preserving unrelated content and shared-employee history. |
+| Legacy occupancy writers remained callable in pilot mode | Count/freshness could diverge from the pilot's person-state ledger | Reject legacy external passages, external heartbeats and aggregate corrections while pilot mode is active; retain their disabled-mode contract. |
+| Invalid cursor types and empty text-only posts could raise uncaught errors | Invalid requests became server errors | Bound and type-check social/training cursors; return controlled post-validation errors. |
+| Legacy SQLAlchemy Query mutation API | Maintenance debt in privacy/media mutations | Use SQLAlchemy 2 update/delete statements with synchronized session state. |
 | Keycloak pinned at 26.6.3 | Upstream security fixes exist after this release | Separate canonical-version decision; proposal below. |
 
 The social decoder input allocation limit is 4096×4096 pixels in total; accepted
@@ -86,3 +93,41 @@ capture, live hardware release or additional test-account reset is performed.
   passed. Production frontend build and full Ruff passed. Existing large-bundle
   warning remains; no new dependency was introduced. Callback codes are removed
   from the browser URL even when authentication fails.
+
+- Moderation/occupancy/input checkpoint: **377 full backend tests passed**,
+  including PostgreSQL migration preservation, refusal of a lossy downgrade,
+  audit erasure, bootstrap-administrator moderation, private-target rejection,
+  biography hiding, malformed cursors and pilot writer isolation. Full Ruff,
+  TypeScript project lint and Git whitespace review passed. Frontend totals are
+  **147 tests** after the additional callback retry test (146 full-suite passes,
+  followed by all 28 application tests).
+- Applied additive migration `20260927_29` locally and restarted the backend.
+  Health returned HTTP 200; live OpenAPI confirms the invitation header and
+  required moderation target, and the database reports the expected revision.
+
+## Changed-file map and operational notes
+
+- Backend dependency/HTTP/image changes: `backend/requirements.txt`,
+  `backend/app/http_security.py`, `backend/app/main.py`,
+  `backend/app/modules/biometrics/images.py`, and social media/service/router files.
+- Authentication/invitation changes: backend identity service and onboarding
+  router; frontend `auth.ts`, `app.tsx`, `onboarding-access.ts`, `index.html`,
+  and `package.json` lint script.
+- Moderation/privacy changes: social models/service/router, progress
+  service/router, client erasure service, and migration
+  `backend/alembic/versions/20260927_29_social_moderation_actor.py`.
+- Occupancy and malformed-input changes: occupancy router and training
+  collection cursor parser. Related existing tests were extended; new suites
+  cover HTTP/media security, identity responses and moderation/security migration.
+- Existing moderation audit rows remain valid. New rows record the verified
+  OIDC subject, with a local Account reference when available. Downgrading the
+  new schema deliberately refuses when subject-only audits exist, instead of
+  deleting history or inventing administrator Accounts.
+- API invitation validation/redemption now require `X-Onboarding-Token` (at most
+  512 characters). GET remains non-consuming; POST remains explicit redemption.
+  E-mail entry URLs are unchanged. The SPA suppresses referrers.
+- No production deployment, identity reset, new package/provider, biometric
+  model change or real turnstile call was performed. The owner webcam checklist
+  remains pending. The pinned Keycloak upgrade is the remaining security
+  decision; full third-party container OS/native scans and real-camera manual
+  acceptance remain outside the evidence collected here.

@@ -18,6 +18,11 @@ from app.modules.occupancy.models import AccessPassageEvent
 from app.modules.occupancy.service import OccupancyService
 
 
+@pytest.fixture(autouse=True)
+def external_mode(monkeypatch):
+    monkeypatch.setenv("FACIAL_ACCESS_MODE", "disabled")
+
+
 class FakeIdentityProvider:
     def __init__(self, roles: tuple[str, ...]):
         self.roles = roles
@@ -246,3 +251,37 @@ def test_only_admin_or_attendant_can_correct(
     )
     assert denied == 403 and accepted == 201 and body["adjustment"] == -2
     app.dependency_overrides.clear()
+
+
+@pytest.mark.parametrize("roles", [("admin",), ("attendant",)])
+def test_pilot_rejects_legacy_writers_without_changing_count(session, monkeypatch, roles):
+    monkeypatch.setenv("FACIAL_ACCESS_MODE", "pilot")
+    monkeypatch.setenv("ACCESS_EVENT_INTEGRATION_SECRET", "integration-secret")
+    monkeypatch.setattr(identity_router, "identity_provider", FakeIdentityProvider(roles))
+    app = create_app()
+    app.dependency_overrides[get_database_session] = lambda: session
+    headers = [
+        (b"content-type", b"application/json"),
+        (b"authorization", b"Bearer token"),
+        (b"x-access-integration-secret", b"integration-secret"),
+    ]
+    payloads = {
+        "/occupancy/admin/corrections": {"adjustment": 5, "reason": "Bypass"},
+        "/occupancy/source-heartbeats": {
+            "checkpoint_id": "main",
+            "occurred_at": "2026-09-27T00:00:00Z",
+        },
+        "/occupancy/passage-events": {
+            "event_id": "external",
+            "checkpoint_id": "main",
+            "occurred_at": "2026-09-27T00:00:00Z",
+            "direction": "entry",
+            "event_type": "passage_confirmed",
+            "client_reference": "external",
+        },
+    }
+    for path, payload in payloads.items():
+        assert request(app, "POST", path, payload, headers)[0] == 409
+    snapshot = OccupancyService().snapshot(session)
+    assert snapshot.occupancy == 0 and snapshot.status == "stale"
+    assert session.scalars(select(AccessPassageEvent)).all() == []

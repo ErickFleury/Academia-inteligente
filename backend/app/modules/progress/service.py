@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 from app.modules.clients.models import Account, Client
 from app.modules.progress.models import ProgressUpdate
 from app.modules.social.models import PostImage, SocialProfile
-from app.modules.social.service import SocialService
+from app.modules.social.service import (
+    SocialForbiddenError,
+    SocialNotFoundError,
+    SocialService,
+    SocialValidationError,
+)
 
 
 class ProgressNotFoundError(Exception):
@@ -127,20 +132,18 @@ class ProgressService:
         )
 
     def moderate(
-        self, session: Session, update_id: UUID, action: str, reason: str | None
+        self,
+        session: Session,
+        update_id: UUID,
+        action: str,
+        reason: str | None,
+        *,
+        actor_subject: str,
     ) -> ProgressUpdate:
-        update = session.get(ProgressUpdate, update_id)
-        if update is None:
-            raise ProgressNotFoundError
-        if update.visibility != "shared" or update.deleted_at is not None:
-            raise ProgressStateError
-        if action in {"hide", "restore"} and not reason:
-            raise ProgressStateError("Moderation reason is required")
-        if action == "delete":
-            SocialService().delete_post_aggregate(session, update)
-        else:
-            update.moderation_status = "hidden" if action == "hide" else "visible"
-        update.moderation_reason = reason
-        session.commit()
-        session.refresh(update)
-        return update
+        try:
+            SocialService().moderate(session, actor_subject, "post", update_id, action, reason)
+        except SocialNotFoundError:
+            raise ProgressNotFoundError from None
+        except (SocialForbiddenError, SocialValidationError):
+            raise ProgressStateError from None
+        return session.get(ProgressUpdate, update_id)

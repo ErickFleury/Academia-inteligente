@@ -9,7 +9,8 @@ from io import BytesIO
 from uuid import UUID
 
 from PIL import Image, ImageOps, UnidentifiedImageError
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, delete, func, or_, select
+from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -170,10 +171,14 @@ class SocialService:
             profile.biography_moderation_reason = None
         if visible is not None:
             profile.visible_to_clients = visible
-            session.query(ProgressUpdate).filter(
-                ProgressUpdate.client_id == client.id,
-                ProgressUpdate.deleted_at.is_(None),
-            ).update({"visibility": "shared" if visible else "private"}, synchronize_session=False)
+            session.execute(
+                sql_update(ProgressUpdate)
+                .where(
+                    ProgressUpdate.client_id == client.id,
+                    ProgressUpdate.deleted_at.is_(None),
+                )
+                .values(visibility="shared" if visible else "private")
+            )
         session.commit()
         session.refresh(profile)
         return self._view(session, profile, client, client)
@@ -264,8 +269,12 @@ class SocialService:
         if not value:
             return None
         try:
+            if len(value) > 512:
+                raise ValueError
             decoded = base64.urlsafe_b64decode(value.encode() + b"=" * (-len(value) % 4))
             data = json.loads(decoded)
+            if not isinstance(data, dict) or not isinstance(data.get("i"), str):
+                raise ValueError
             timestamp = datetime.fromisoformat(data["t"])
             if timestamp.tzinfo is None:
                 raise ValueError
@@ -444,7 +453,7 @@ class SocialService:
         normalized = [self.normalize_image(raw) for raw in raw_images]
         if not (update.content or normalized):
             raise SocialValidationError("Post requires content or image")
-        session.query(PostImage).filter(PostImage.progress_update_id == update.id).delete()
+        session.execute(delete(PostImage).where(PostImage.progress_update_id == update.id))
         for position, (content, media_type, width, height) in enumerate(normalized):
             session.add(
                 PostImage(
@@ -781,12 +790,22 @@ class SocialService:
     def moderate(
         self,
         session: Session,
-        actor_account_id: UUID,
+        actor_subject: str,
         target_type: str,
         target_id: UUID,
         action: str,
         reason: str | None,
     ) -> None:
+        reason = reason.strip() if reason else None
+        if action not in {"hide", "restore", "delete"} or target_type not in {
+            "comment",
+            "biography",
+            "post",
+            "image",
+        }:
+            raise SocialValidationError("Invalid moderation action")
+        if not actor_subject:
+            raise SocialValidationError("Actor is required")
         if action in {"hide", "restore"} and not reason:
             raise SocialValidationError("Reason is required")
         target = (
@@ -804,6 +823,27 @@ class SocialService:
         )
         if target is None:
             raise SocialNotFoundError
+        post = (
+            session.get(ProgressUpdate, target.progress_update_id)
+            if target_type == "comment"
+            else target
+            if target_type == "post"
+            else None
+        )
+        if target_type in {"post", "comment"}:
+            if post is None or post.deleted_at is not None or target.deleted_at is not None:
+                raise SocialNotFoundError
+            profile = self.profile_for_client(session, post.client_id)
+            if post.visibility != "shared" or not profile.visible_to_clients:
+                raise SocialForbiddenError
+        else:
+            profile = (
+                target
+                if target_type == "biography"
+                else self.profile_for_client(session, target.client_id)
+            )
+            if not profile.visible_to_clients:
+                raise SocialForbiddenError
         if action == "delete":
             if target_type == "biography":
                 target.biography = None
@@ -818,12 +858,18 @@ class SocialService:
                 if image is not None:
                     session.delete(image)
                 target.deleted_at = datetime.now(UTC)
+        elif target_type == "biography":
+            target.biography_moderation_status = "hidden" if action == "hide" else "visible"
+            target.biography_moderation_reason = reason
         else:
             target.moderation_status = "hidden" if action == "hide" else "visible"
             target.moderation_reason = reason
         session.add(
             SocialModerationAudit(
-                actor_account_id=actor_account_id,
+                actor_account_id=session.scalar(
+                    select(Account.id).where(Account.keycloak_subject == actor_subject)
+                ),
+                actor_subject=actor_subject,
                 target_id=target_id,
                 target_type=target_type,
                 action=action,
@@ -835,18 +881,10 @@ class SocialService:
     def delete_post_aggregate(self, session: Session, update: ProgressUpdate) -> None:
         """Remove child content while retaining only the approved post tombstone."""
         comment_ids = select(PostComment.id).where(PostComment.progress_update_id == update.id)
-        session.query(CommentImage).filter(CommentImage.comment_id.in_(comment_ids)).delete(
-            synchronize_session=False
-        )
-        session.query(PostComment).filter(PostComment.progress_update_id == update.id).delete(
-            synchronize_session=False
-        )
-        session.query(PostImage).filter(PostImage.progress_update_id == update.id).delete(
-            synchronize_session=False
-        )
-        session.query(PostLike).filter(PostLike.progress_update_id == update.id).delete(
-            synchronize_session=False
-        )
+        session.execute(delete(CommentImage).where(CommentImage.comment_id.in_(comment_ids)))
+        session.execute(delete(PostComment).where(PostComment.progress_update_id == update.id))
+        session.execute(delete(PostImage).where(PostImage.progress_update_id == update.id))
+        session.execute(delete(PostLike).where(PostLike.progress_update_id == update.id))
         update.content = None
         update.deleted_at = datetime.now(UTC)
 

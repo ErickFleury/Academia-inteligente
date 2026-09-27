@@ -177,11 +177,18 @@ class CommentImage(Base):
 
 class SocialModerationAudit(Base):
     __tablename__ = "social_moderation_audit"
+    __table_args__ = (
+        CheckConstraint(
+            "actor_account_id IS NOT NULL OR actor_subject IS NOT NULL",
+            name="ck_social_moderation_actor",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    actor_account_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("account.id"), nullable=False
+    actor_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("account.id"), nullable=True
     )
+    actor_subject: Mapped[str | None] = mapped_column(String(255))
     target_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     target_type: Mapped[str] = mapped_column(String(32), nullable=False)
     action: Mapped[str] = mapped_column(String(16), nullable=False)

@@ -30,7 +30,11 @@ def _marker(cursor: str | None) -> tuple[datetime, UUID] | None:
     if cursor is None:
         return None
     try:
+        if len(cursor) > 512:
+            raise ValueError
         timestamp, identifier = json.loads(base64.urlsafe_b64decode(cursor))
+        if not isinstance(timestamp, str) or not isinstance(identifier, str):
+            raise ValueError
         value = datetime.fromisoformat(timestamp)
         if value.tzinfo is None:
             value = value.replace(tzinfo=UTC)

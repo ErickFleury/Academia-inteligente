@@ -199,7 +199,7 @@ def create_update(
             session,
             service.create(session, client.subject, payload.content, payload.visibility),
         )
-    except ProgressNotFoundError as exc:
+    except (ProgressNotFoundError, ProgressStateError, SocialValidationError) as exc:
         raise error(exc) from None
 
 
@@ -327,7 +327,6 @@ def moderated_updates(session: DatabaseSession, admin: Administrator) -> list[Up
 def moderate_update(
     update_id: UUID, payload: ModerationInput, session: DatabaseSession, admin: Administrator
 ) -> UpdateResponse:
-    del admin
     try:
         return own_response(
             session,
@@ -336,6 +335,7 @@ def moderate_update(
                 update_id,
                 payload.action,
                 payload.reason.strip() if payload.reason else None,
+                actor_subject=admin.subject,
             ),
         )
     except (ProgressNotFoundError, ProgressStateError) as exc:

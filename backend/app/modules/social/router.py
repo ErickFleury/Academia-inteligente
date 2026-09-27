@@ -8,7 +8,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_database_session
-from app.modules.clients.models import Account
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
@@ -110,6 +109,7 @@ class PostDetailResponse(BaseModel):
 
 
 class ModerationInput(BaseModel):
+    target_id: UUID
     target_type: Literal["post", "comment", "biography", "image"]
     action: Literal["hide", "restore", "delete"]
     reason: str | None = Field(default=None, max_length=500)
@@ -459,17 +459,14 @@ def get_comment_image(comment_id: UUID, session: DatabaseSession, client: Client
 
 @router.post("/moderation", status_code=204)
 def moderate(payload: ModerationInput, session: DatabaseSession, admin: Administrator):
-    account_id = session.scalar(select(Account.id).where(Account.keycloak_subject == admin.subject))
-    if account_id is None:
-        raise HTTPException(401, "Authenticated administrator not found")
     try:
         service.moderate(
             session,
-            account_id,
+            admin.subject,
             payload.target_type,
             payload.target_id,
             payload.action,
             payload.reason.strip() if payload.reason else None,
         )
-    except (SocialNotFoundError, SocialValidationError) as exc:
+    except (SocialNotFoundError, SocialForbiddenError, SocialValidationError) as exc:
         raise error(exc) from None

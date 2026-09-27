@@ -540,6 +540,13 @@ class ClientService:
             )
         )
         session.execute(delete(ProfileImage).where(ProfileImage.client_id == client.id))
+        session.execute(
+            delete(SocialModerationAudit).where(
+                SocialModerationAudit.target_id.in_(
+                    select(SocialProfile.id).where(SocialProfile.client_id == client.id)
+                )
+            )
+        )
         session.execute(delete(SocialProfile).where(SocialProfile.client_id == client.id))
         session.execute(delete(ProgressUpdate).where(ProgressUpdate.client_id == client.id))
         session.execute(
@@ -572,6 +579,12 @@ class ClientService:
             )
         session.delete(client)
         if not shared:
+            session.execute(
+                delete(SocialModerationAudit).where(
+                    (SocialModerationAudit.actor_account_id == account.id)
+                    | ((SocialModerationAudit.actor_subject == subject) if subject else False)
+                )
+            )
             session.delete(account)
         session.commit()
         if shared:

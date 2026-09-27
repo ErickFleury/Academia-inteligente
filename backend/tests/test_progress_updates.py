@@ -58,7 +58,7 @@ def test_private_shared_and_author_moderation_policies(session: Session) -> None
     }
     with pytest.raises(ProgressForbiddenError):
         service.own_change(session, "grace", shared.id, "alterado", None)
-    service.moderate(session, shared.id, "hide", "Conteúdo inadequado")
+    service.moderate(session, shared.id, "hide", "Conteúdo inadequado", actor_subject="admin")
     assert [update.content for update, _ in service.feed(session, "grace")] == ["Registro privado"]
     own_feed = service.feed(session, "ada")
     assert {update.id for update, _ in own_feed} == {private.id, shared.id}
@@ -158,7 +158,7 @@ def test_instructor_feed_excludes_private_profiles_hidden_and_deleted_posts(
     assert [item.id for item in page.items] == [public_post.id]
     assert private_post.id not in {item.id for item in page.items}
     hidden = progress.create(session, "public", "Oculto", "shared")
-    progress.moderate(session, hidden.id, "hide", "moderado")
+    progress.moderate(session, hidden.id, "hide", "moderado", actor_subject="admin")
     deleted = progress.create(session, "public", "Excluído", "shared")
     progress.own_change(session, "public", deleted.id, None, None, delete=True)
 

@@ -65,12 +65,20 @@ def integration_authorized(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthenticated")
 
 
+def require_external_mode() -> None:
+    if os.environ.get("FACIAL_ACCESS_MODE", "disabled") == "pilot":
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "Use the facial pilot passage and correction workflow"
+        )
+
+
 @router.post(
     "/passage-events",
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(integration_authorized)],
 )
 def ingest_passage(payload: PassageInput, session: DatabaseSession) -> dict[str, bool]:
+    require_external_mode()
     try:
         _, created = service.record_passage(
             session,
@@ -96,6 +104,7 @@ def ingest_passage(payload: PassageInput, session: DatabaseSession) -> dict[str,
     dependencies=[Depends(integration_authorized)],
 )
 def ingest_heartbeat(payload: HeartbeatInput, session: DatabaseSession) -> None:
+    require_external_mode()
     service.record_heartbeat(session, payload.checkpoint_id.strip(), payload.occurred_at)
 
 
@@ -103,6 +112,7 @@ def ingest_heartbeat(payload: HeartbeatInput, session: DatabaseSession) -> None:
 def create_correction(
     payload: CorrectionInput, session: DatabaseSession, operator: Operator
 ) -> dict[str, object]:
+    require_external_mode()
     try:
         correction = service.correct(
             session,
