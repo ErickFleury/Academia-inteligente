@@ -236,6 +236,12 @@ single-use/expiry validation in Keycloak, enforce backend ownership/admin
 permissions, and prevent repeat sends with a shared account cooldown. This
 resolves the previously open recovery policy without upgrading Keycloak.
 
+**Login recovery follow-up — 2026-09-27:** the user additionally authorized
+email entry from the login screen. Enable native Keycloak forgot-password with
+the same 900-second lifetime and generic account-existence-safe feedback. The
+repository theme provides the visible action; existing realms are updated using
+`keycloak/enable-password-recovery.sh`, preserving unrelated realm settings.
+
 This approval resolves only the onboarding invitation-token portion needed by
 RF-09 and Tasks 07 and 09. The onboarding schema, required fields, editability, and
 other DEC-06 matters remain unresolved.

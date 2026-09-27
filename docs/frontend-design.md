@@ -86,6 +86,10 @@ palette, or page composition.
   clean deployment without an admin-console change. Verify it on phone,
   tablet, and desktop; decorative backgrounds may not obscure forms or cause
   horizontal scrolling.
+- **Login recovery:** expose Keycloak's native "Esqueceu sua senha?" link as an
+  outlined secondary action using the existing theme. Its email-entry page
+  explains the 15-minute lifetime and uses generic confirmation for all account
+  lookups. Password entry stays on Keycloak-hosted forms.
 - **ClientShell:** Reusable authenticated navigation, page header, main action,
   content width, responsive sections, and feedback. On medium and larger
   screens, client navigation is a persistent left sidebar so the active page

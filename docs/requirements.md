@@ -325,6 +325,18 @@ Provider failures return a controlled error without an automatic resend or false
 success. A success means Keycloak accepted the email send, not that the password
 has already changed. Local development continues to use isolated Mailpit SMTP.
 
+**Login-screen recovery amendment — 2026-09-27:** the user also requested an
+unauthenticated email-entry action on the login screen. Enable Keycloak's native
+"Esqueceu sua senha?" flow in the existing `academia` theme. Its reset-credentials
+action links expire after 900 seconds, configured specifically for that action
+type. The screen confirms requests generically for known and unknown email
+addresses and never exposes a public application endpoint accepting target
+account IDs. Password entry, token validation and delivery remain in Keycloak.
+The application cooldown above applies to the authenticated admin/profile
+actions; the public flow uses Keycloak and deployment authentication protections.
+Existing realms receive a targeted configuration update without reimporting
+users, changing credentials, or upgrading Keycloak.
+
 ### RF-07 Register employee
 
 **Scope:** outside the stated MVP.

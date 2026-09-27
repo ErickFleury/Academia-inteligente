@@ -50,6 +50,8 @@ def test_preparation_keeps_secrets_private_and_does_not_force_mfa(tmp_path):
     realm = json.loads((state / "secrets/academia-realm.json").read_text())
     assert realm["bruteForceProtected"] and not realm["permanentLockout"]
     assert realm["ssoSessionIdleTimeout"] == 300
+    assert realm["resetPasswordAllowed"] is True
+    assert realm["attributes"]["actionTokenGeneratedByUserLifespan.reset-credentials"] == "900"
     assert not any(action.get("defaultAction") for action in realm["requiredActions"])
     otp = next(action for action in realm["requiredActions"] if action["alias"] == "CONFIGURE_TOTP")
     assert otp["enabled"]

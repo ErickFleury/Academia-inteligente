@@ -3,6 +3,10 @@
   "displayName": "Academia Inteligente",
   "enabled": true,
   "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "attributes": {
+    "actionTokenGeneratedByUserLifespan.reset-credentials": "900"
+  },
   "loginTheme": "academia",
   "internationalizationEnabled": true,
   "supportedLocales": ["pt-BR"],
