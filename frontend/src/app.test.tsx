@@ -190,9 +190,11 @@ test('opens the current training page only for an authenticated client', async (
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
   window.history.replaceState({}, '', '/treino')
-  vi.stubGlobal('fetch', vi.fn()
-    .mockResolvedValueOnce({ ok: true, json: async () => ({ plan: null }) })
-    .mockResolvedValueOnce({ ok: true, json: async () => [] }))
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    if (url.endsWith('/training/current')) return Promise.resolve({ ok: true, json: async () => ({ plan: null }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
 
   render(<App />)
 
@@ -200,17 +202,40 @@ test('opens the current training page only for an authenticated client', async (
   expect(screen.getByText('Seu treino ainda não está disponível')).toBeInTheDocument()
 })
 
-test('does not show onboarding form navigation after the client completes onboarding', async () => {
+test('defaults a completed client to Feed without an Início destination', async () => {
   sessionStorage.setItem(
     'academia.session',
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'completed' }) }))
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    if (url.includes('/progress?limit=20')) return Promise.resolve({ ok: true, json: async () => ({ items: [], next_cursor: null, end_reached: true }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
 
   render(<App />)
 
   await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Onboarding' })).not.toBeInTheDocument())
-  expect(screen.queryByRole('link', { name: 'Preencher onboarding' })).not.toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Publicações' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Início' })).not.toBeInTheDocument()
+})
+
+test('redirects the former occupancy destination to Feed', async () => {
+  sessionStorage.setItem(
+    'academia.session',
+    JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
+  )
+  window.history.replaceState({}, '', '/ocupacao')
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
+    if (url.includes('/progress?limit=20')) return Promise.resolve({ ok: true, json: async () => ({ items: [], next_cursor: null, end_reached: true }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Publicações' })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/feed')
 })
 
 test('keeps onboarding navigation hidden on client routes after onboarding completion', async () => {
@@ -235,18 +260,26 @@ test('keeps onboarding navigation hidden on client routes after onboarding compl
   await vi.waitFor(() => expect(screen.queryByRole('link', { name: 'Onboarding' })).not.toBeInTheDocument())
 })
 
-test('shows onboarding form navigation for a client with a draft', async () => {
+test('defaults a client with an incomplete onboarding to the onboarding form', async () => {
   sessionStorage.setItem(
     'academia.session',
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'draft' }) }))
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({
+      status: 'draft', training_goal: null, training_experience: null, height_cm: null,
+      weight_kg: null, has_limitations_or_complaints: null, limitations_or_complaints: null,
+      uses_medications: null, medications: null, has_health_conditions: null, health_conditions: null,
+    }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
 
   render(<App />)
 
-  expect(await screen.findByRole('link', { name: 'Preencher onboarding' })).toHaveAttribute('href', '/onboarding')
+  expect(await screen.findByRole('heading', { name: 'Conte um pouco sobre você' })).toBeInTheDocument()
   expect(screen.getByRole('navigation', { name: 'Navegação da área do cliente' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
+  expect(screen.getByRole('link', { name: 'Onboarding' })).toHaveAttribute('aria-current', 'page')
+  expect(screen.queryByRole('link', { name: 'Início' })).not.toBeInTheDocument()
 })
 
 test('does not reload client navigation data for ordinary activity', async () => {
@@ -254,36 +287,42 @@ test('does not reload client navigation data for ordinary activity', async () =>
     'academia.session',
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
-  const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'draft' }) })
+  const fetchMock = vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({
+      status: 'draft', training_goal: null, training_experience: null, height_cm: null,
+      weight_kg: null, has_limitations_or_complaints: null, limitations_or_complaints: null,
+      uses_medications: null, medications: null, has_health_conditions: null, health_conditions: null,
+    }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  })
   vi.stubGlobal('fetch', fetchMock)
 
   render(<App />)
 
-  await screen.findByRole('link', { name: 'Onboarding' })
+  await screen.findByRole('heading', { name: 'Conte um pouco sobre você' })
+  const callsBeforeActivity = fetchMock.mock.calls.length
   fireEvent.pointerDown(document.body)
   await new Promise((resolve) => window.setTimeout(resolve, 0))
 
-  expect(fetchMock).toHaveBeenCalledOnce()
+  expect(fetchMock).toHaveBeenCalledTimes(callsBeforeActivity)
   expect(screen.getByRole('link', { name: 'Onboarding' })).toBeInTheDocument()
 })
 
-test('navigates between client views without leaving the application', async () => {
+test('shows the remaining client destinations from the default Feed', async () => {
   sessionStorage.setItem(
     'academia.session',
     JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client'] }),
   )
   vi.stubGlobal('fetch', vi.fn((url: string) => {
     if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({ status: 'completed' }) })
-    if (url.endsWith('/training/current')) return Promise.resolve({ ok: true, json: async () => ({ plan: null }) })
+    if (url.includes('/progress?limit=20')) return Promise.resolve({ ok: true, json: async () => ({ items: [], next_cursor: null, end_reached: true }) })
     return Promise.resolve({ ok: true, json: async () => [] })
   }))
 
   render(<App />)
 
-  fireEvent.click(await screen.findByRole('link', { name: 'Ver meu treino' }))
-
-  expect(await screen.findByRole('heading', { name: 'Meu treino' })).toBeInTheDocument()
-  expect(window.location.pathname).toBe('/treino')
+  await screen.findByRole('heading', { name: 'Publicações' })
+  expect(screen.getByRole('link', { name: 'Meu treino' })).toHaveAttribute('href', '/treino')
 })
 
 test('shows administrative dashboard and client management to an administrator', async () => {

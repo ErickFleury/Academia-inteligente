@@ -8,7 +8,8 @@ from sqlalchemy.pool import StaticPool
 from app.database import Base
 from app.modules.clients.models import Account, Client
 from app.modules.progress.service import ProgressForbiddenError, ProgressService
-from app.modules.social.service import SocialForbiddenError, SocialService
+from app.modules.social.models import PostImage
+from app.modules.social.service import SocialForbiddenError, SocialService, SocialValidationError
 
 
 @pytest.fixture
@@ -77,3 +78,45 @@ def test_private_account_requires_accepted_follow_request(session: Session) -> N
     social.decide_follow_request(session, "ada", social.own_profile(session, "grace").profile.id, True)
     assert social.viewer_profile(session, "grace", owner.profile.id).is_following is True
     assert private_post.id in {item.id for item in social.feed_page(session, "grace", None, 20).items}
+
+
+def test_only_author_can_remove_post_image_and_post_keeps_content_or_media(session: Session) -> None:
+    client(session, "ada")
+    client(session, "grace")
+    progress = ProgressService()
+    social = SocialService()
+    update = progress.create(session, "ada", "Com imagem", "private")
+    image = PostImage(
+        progress_update_id=update.id,
+        position=0,
+        content=b"placeholder",
+        media_type="image/webp",
+        width=1,
+        height=1,
+    )
+    session.add(image)
+    session.commit()
+
+    with pytest.raises(SocialForbiddenError):
+        social.remove_post_image(session, "grace", update.id, image.id)
+
+    removed = social.remove_post_image(session, "ada", update.id, image.id)
+    assert social.post_images(session, update.id) == []
+    assert removed.edited_at is not None
+
+    image_only = progress.create(session, "ada", "Mantém o texto", "private")
+    image = PostImage(
+        progress_update_id=image_only.id,
+        position=0,
+        content=b"placeholder",
+        media_type="image/webp",
+        width=1,
+        height=1,
+    )
+    session.add(image)
+    session.commit()
+    image_only.content = None
+    session.commit()
+
+    with pytest.raises(SocialValidationError):
+        social.remove_post_image(session, "ada", image_only.id, image.id)

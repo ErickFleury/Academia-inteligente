@@ -90,12 +90,16 @@ palette, or page composition.
   content width, responsive sections, and feedback. On medium and larger
   screens, client navigation is a persistent left sidebar so the active page
   has a stable reading area; the brand sits above the destinations and sign-out
-  sits at the sidebar's lower edge. On phone, use the compact top header and
-  touch navigation instead of shrinking the sidebar into the content. The
+  sits at the sidebar's lower edge, immediately below the compact own-profile
+  picture and username link. The obsolete client home destination is omitted:
+  an incomplete onboarding opens at onboarding and a completed one at Feed. On phone, use the compact top header and a
+  keyboard-accessible collapsible side panel for touch navigation instead of
+  shrinking the sidebar into the content. The
   `Assistente` destination is the single client-facing AI entry:
   it presents guided onboarding while onboarding is incomplete and training
-  assistance afterward, without a second chat destination. Planned destinations include home, onboarding, training, AI,
-  progress, equipment, occupancy/presence, and profile when implemented.
+  assistance afterward, without a second chat destination. Planned destinations include onboarding, training, AI,
+  progress, equipment, and profile when implemented. Show the anonymous occupancy count as a compact person-and-number
+  indicator in the client navigation, never as a named presence directory or a separate client destination.
 - **AdminShell:** Same type family, accent, controls, and feedback, with denser
   client search/list/detail/edit and status views. Make account state and
   provisioning/invitation outcomes legible; retain clear action hierarchy.

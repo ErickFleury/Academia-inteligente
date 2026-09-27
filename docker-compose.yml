@@ -9,7 +9,7 @@ services:
       VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID}
       VITE_OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-http://localhost:5173/}
     ports:
-      - "127.0.0.1:5173:5173"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:5173:5173"
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
@@ -45,7 +45,7 @@ services:
       KEYCLOAK_FIRST_ACCESS_CLIENT_ID: academia-web
       KEYCLOAK_FIRST_ACCESS_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-http://localhost:5173/}
     ports:
-      - "127.0.0.1:8000:8000"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:8000:8000"
     volumes:
       - ./backend:/app
     extra_hosts:
@@ -90,7 +90,7 @@ services:
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD}
       KEYCLOAK_PROVISIONING_CLIENT_SECRET: ${KEYCLOAK_PROVISIONING_CLIENT_SECRET}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:8080:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./backend/app/modules/identity/keycloak/realm-academia.json:/opt/keycloak/data/import/realm-academia.json:ro

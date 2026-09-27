@@ -1,0 +1,13 @@
+services:
+  frontend:
+    environment:
+      VITE_DEV_HTTPS: "true"
+    volumes:
+      - ${DEV_CERT_DIR:-/tmp/academia-inteligente-certificates}:/certs:ro
+
+  keycloak:
+    command: start-dev --import-realm --https-certificate-file=/certs/academia-local.pem --https-certificate-key-file=/certs/academia-local-key.pem
+    ports:
+      - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:8443:8443"
+    volumes:
+      - ${DEV_CERT_DIR:-/tmp/academia-inteligente-certificates}:/certs:ro

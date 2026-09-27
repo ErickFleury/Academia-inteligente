@@ -40,7 +40,7 @@ class UpdateInput(BaseModel):
 
 
 class UpdatePatch(BaseModel):
-    content: str | None = Field(default=None, min_length=1, max_length=2000)
+    content: str | None = Field(default=None, max_length=2000)
     visibility: Literal["private", "shared"] | None = None
 
 
@@ -131,7 +131,7 @@ def list_feed(session: DatabaseSession, client: ClientUser, cursor: str | None =
             response(
                 update,
                 session.get(Client, update.client_id),
-                False,
+                update.client_id == viewer.id,
                 profile.id if profile else None, session, viewer.id,
             )
             for update in page.items
@@ -201,6 +201,22 @@ def replace_image(update_id: UUID, position: int, raw: bytes = Body(...), sessio
         updated = SocialService().replace_post_images(session, client.subject, update_id, [value for value in values if value])
         return own_response(session, updated)
     except (ProgressNotFoundError, SocialForbiddenError, SocialNotFoundError, SocialValidationError) as exc:
+        raise error(exc) from None
+
+
+@router.delete("/{update_id}/images/{image_id}", response_model=UpdateResponse)
+def delete_image(
+    update_id: UUID,
+    image_id: UUID,
+    session: DatabaseSession,
+    client: ClientUser,
+) -> UpdateResponse:
+    try:
+        return own_response(
+            session,
+            SocialService().remove_post_image(session, client.subject, update_id, image_id),
+        )
+    except (SocialForbiddenError, SocialNotFoundError, SocialValidationError) as exc:
         raise error(exc) from None
 
 

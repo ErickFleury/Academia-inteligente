@@ -4,7 +4,12 @@ import {
   Button,
   Card,
   CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  InputAdornment,
   Stack,
   TextField,
   Typography,
@@ -20,12 +25,14 @@ import {
 } from "./components/ui";
 import {
   createImageOnlyProgressUpdate,
+  deleteProgressImage,
   createProgressUpdate,
   deleteProgressUpdate,
   fetchProgressImage,
   getProgressFeed,
   replaceProgressImage,
   type ProgressUpdate,
+  updateProgressUpdate,
 } from "./progress";
 import { setPostLike } from "./social";
 
@@ -40,9 +47,11 @@ const openPost = (postId: string) => {
 };
 function PostMedia({
   accessToken,
+  onRemove,
   post,
 }: {
   accessToken: string;
+  onRemove?: (imageId: string) => void;
   post: ProgressUpdate;
 }) {
   const [urls, setUrls] = useState<string[]>([]);
@@ -89,9 +98,23 @@ function PostMedia({
             aspectRatio: `${post.images[index].width} / ${post.images[index].height}`,
             bgcolor: "action.hover",
             borderRadius: 1,
+            position: "relative",
             overflow: "hidden",
           }}
         >
+          {onRemove && (
+            <IconButton
+              aria-label={`Remover imagem ${index + 1}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove(post.images[index].id);
+              }}
+              size="small"
+              sx={{ bgcolor: "background.paper", position: "absolute", right: 6, top: 6, zIndex: 1 }}
+            >
+              <span aria-hidden="true">×</span>
+            </IconButton>
+          )}
           <Box
             alt={`Imagem ${index + 1} da publicação de ${post.author_name}`}
             component="img"
@@ -123,7 +146,10 @@ export function ProgressPage({
     [files, setFiles] = useState<File[]>([]),
     [error, setError] = useState<string | null>(null),
     [away, setAway] = useState(false),
-    [more, setMore] = useState(false);
+    [more, setMore] = useState(false),
+    [editing, setEditing] = useState<ProgressUpdate | null>(null),
+    [editContent, setEditContent] = useState(""),
+    [savingEdit, setSavingEdit] = useState(false);
   const composer = useRef<HTMLDivElement>(null),
     field = useRef<HTMLInputElement>(null),
     sentinel = useRef<HTMLDivElement>(null);
@@ -212,6 +238,94 @@ export function ProgressPage({
       setError("Não foi possível atualizar a curtida.");
     }
   }
+  function applyPostChange(updated: ProgressUpdate) {
+    setItems(
+      (current) =>
+        current?.map((item) =>
+          item.id === updated.id
+            ? { ...item, ...updated, author_profile_id: item.author_profile_id }
+            : item,
+        ) ?? [],
+    );
+    setEditing((current) =>
+      current?.id === updated.id
+        ? { ...current, ...updated, author_profile_id: current.author_profile_id }
+        : current,
+    );
+  }
+  function openEditor(item: ProgressUpdate) {
+    setEditing(item);
+    setEditContent(item.content);
+  }
+  async function saveEdit() {
+    if (!editing || (!editContent.trim() && !editing.images.length)) return;
+    setSavingEdit(true);
+    try {
+      applyPostChange(
+        await updateProgressUpdate(
+          accessToken,
+          editing.id,
+          editContent.trim() || null,
+        ),
+      );
+      setEditing(null);
+    } catch {
+      setError("Não foi possível salvar a publicação.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+  async function removeEditImage(imageId: string) {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      applyPostChange(
+        await deleteProgressImage(accessToken, editing.id, imageId),
+      );
+    } catch {
+      setError("A publicação precisa manter texto ou ao menos uma imagem.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+  async function addEditImages(selected: FileList | null) {
+    if (!editing || !selected) return;
+    const candidates = Array.from(selected).slice(
+      0,
+      4 - editing.images.length,
+    );
+    if (!candidates.length) return;
+    setSavingEdit(true);
+    try {
+      let updated = editing;
+      for (const file of candidates) {
+        updated = await replaceProgressImage(
+          accessToken,
+          updated.id,
+          updated.images.length,
+          file,
+        );
+      }
+      applyPostChange(updated);
+    } catch {
+      setError("Não foi possível adicionar a imagem à publicação.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+  async function deletePostFromEditor() {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      await deleteProgressUpdate(accessToken, editing.id);
+      setItems((current) => current?.filter((item) => item.id !== editing.id) ?? []);
+      setEditing(null);
+    } catch {
+      setError("Não foi possível deletar a publicação.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
   if (!items)
     return (
       <ClientShell onSignOut={onSignOut} showClientNavigation>
@@ -249,24 +363,40 @@ export function ProgressPage({
                     minRows={2}
                     onChange={(event) => setContent(event.target.value)}
                     value={content}
-                    slotProps={{ htmlInput: { maxLength: 2000 } }}
+                    slotProps={{
+                      htmlInput: { maxLength: 2000 },
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label={`Adicionar imagens (${files.length}/4)`}
+                              component="label"
+                              edge="end"
+                            >
+                              <span aria-hidden="true">+</span>
+                              <input
+                                accept="image/jpeg,image/png,image/webp"
+                                hidden
+                                multiple
+                                type="file"
+                                onChange={(event) =>
+                                  setFiles(
+                                    Array.from(event.target.files ?? []).slice(0, 4),
+                                  )
+                                }
+                              />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
                   />
                   <IconButton
-                    aria-label={`Adicionar imagens (${files.length}/4)`}
-                    component="label"
+                    aria-label="Publicar atualização"
+                    disabled={!content.trim() && !files.length}
+                    type="submit"
                   >
-                    <span aria-hidden="true">+</span>
-                    <input
-                      accept="image/jpeg,image/png,image/webp"
-                      hidden
-                      multiple
-                      type="file"
-                      onChange={(event) =>
-                        setFiles(
-                          Array.from(event.target.files ?? []).slice(0, 4),
-                        )
-                      }
-                    />
+                    <span aria-hidden="true">➤</span>
                   </IconButton>
                 </Stack>
                 {files.map((file) => (
@@ -282,15 +412,6 @@ export function ProgressPage({
                     Remover {file.name}
                   </Button>
                 ))}
-                <Button
-                  disabled={!content.trim() && !files.length}
-                  size="small"
-                  sx={{ alignSelf: "flex-end" }}
-                  type="submit"
-                  variant="contained"
-                >
-                  Publicar atualização
-                </Button>
               </Stack>
             </CardContent>
           </Card>
@@ -387,27 +508,18 @@ export function ProgressPage({
                       >
                         💬 {item.comment_count}
                       </Button>
+                      {item.is_own && (
+                        <IconButton
+                          aria-label="Editar publicação"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openEditor(item);
+                          }}
+                        >
+                          <span aria-hidden="true">✎</span>
+                        </IconButton>
+                      )}
                     </Stack>
-                    {item.is_own && (
-                      <Button
-                        color="error"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void deleteProgressUpdate(accessToken, item.id).then(
-                            () =>
-                              setItems(
-                                (current) =>
-                                  current?.filter(
-                                    (value) => value.id !== item.id,
-                                  ) ?? [],
-                              ),
-                          );
-                        }}
-                        size="small"
-                      >
-                        Excluir minha publicação
-                      </Button>
-                    )}
                   </Stack>
                 </CardContent>
               </Card>
@@ -442,6 +554,81 @@ export function ProgressPage({
           Criar publicação
         </Button>
       )}
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        onClose={() => !savingEdit && setEditing(null)}
+        open={editing !== null}
+      >
+        <DialogTitle>Editar publicação</DialogTitle>
+        <DialogContent>
+          {editing && (
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <TextField
+                autoFocus
+                fullWidth
+                label="Sua publicação"
+                multiline
+                minRows={3}
+                onChange={(event) => setEditContent(event.target.value)}
+                slotProps={{ htmlInput: { maxLength: 2000 } }}
+                value={editContent}
+              />
+              <PostMedia
+                accessToken={accessToken}
+                onRemove={(imageId) => void removeEditImage(imageId)}
+                post={editing}
+              />
+              {editing.images.length < 4 && (
+                <IconButton
+                  aria-label={`Adicionar imagens (${editing.images.length}/4)`}
+                  component="label"
+                  disabled={savingEdit}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  <span aria-hidden="true">+</span>
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    hidden
+                    multiple
+                    type="file"
+                    onChange={(event) => {
+                      void addEditImages(event.target.files);
+                      event.target.value = "";
+                    }}
+                  />
+                </IconButton>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+          <Button
+            color="error"
+            disabled={savingEdit}
+            onClick={() => void deletePostFromEditor()}
+            sx={{ "&:hover": { bgcolor: "error.main", color: "error.contrastText" } }}
+          >
+            Deletar post
+          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button disabled={savingEdit} onClick={() => setEditing(null)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={
+                savingEdit ||
+                !editing ||
+                (!editContent.trim() && !editing.images.length)
+              }
+              onClick={() => void saveEdit()}
+              variant="contained"
+            >
+              Salvar
+            </Button>
+          </Stack>
+        </DialogActions>
+      </Dialog>
     </ClientShell>
   );
 }

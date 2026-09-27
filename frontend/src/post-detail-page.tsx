@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Button,
   Card,
@@ -15,10 +16,88 @@ import { fetchProgressImage } from "./progress";
 import {
   addPostComment,
   deletePostComment,
+  fetchProfileImage,
   getPostDetail,
   setPostLike,
+  type ProfileSummary,
   type PostDetail,
 } from "./social";
+import { RouterButtonLink } from "./components/router-button-link";
+
+const date = (value: string) =>
+  new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+
+function ProfileAvatar({
+  accessToken,
+  profile,
+  size = 40,
+}: {
+  accessToken: string;
+  profile: ProfileSummary;
+  size?: number;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const name = profile.nickname || profile.name;
+
+  useEffect(() => {
+    if (!profile.has_image) {
+      setImageUrl(null);
+      return;
+    }
+    let active = true;
+    let objectUrl: string | null = null;
+    void fetchProfileImage(accessToken, profile.id)
+      .then((url) => {
+        objectUrl = url;
+        if (active) setImageUrl(url);
+        else URL.revokeObjectURL(url);
+      })
+      .catch(() => active && setImageUrl(null));
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [accessToken, profile.has_image, profile.id]);
+
+  return (
+    <Avatar alt={`Foto de ${name}`} src={imageUrl ?? undefined} sx={{ height: size, width: size }}>
+      {name.slice(0, 1)}
+    </Avatar>
+  );
+}
+
+function AuthorIdentity({
+  accessToken,
+  profile,
+  timestamp,
+}: {
+  accessToken: string;
+  profile: ProfileSummary;
+  timestamp: string;
+}) {
+  const name = profile.nickname || profile.name;
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
+      <RouterButtonLink
+        aria-label={`Abrir perfil de ${name}`}
+        sx={{ justifyContent: "flex-start", minWidth: 0, p: 0.25 }}
+        to={`/perfis/${profile.id}`}
+        variant="text"
+      >
+        <ProfileAvatar accessToken={accessToken} profile={profile} />
+        <Typography component="span" noWrap sx={{ fontWeight: 700, maxWidth: 220 }}>
+          {name}
+        </Typography>
+      </RouterButtonLink>
+      <Typography color="text.secondary" noWrap variant="body2">
+        {date(timestamp)}
+      </Typography>
+    </Stack>
+  );
+}
 
 function PostImages({
   accessToken,
@@ -140,7 +219,7 @@ export function PostDetailPage({
   }
   return (
     <ClientShell onSignOut={onSignOut} showClientNavigation>
-      <Stack spacing={3} sx={{ maxWidth: 1080, mx: "auto" }}>
+      <Stack spacing={3} sx={{ maxWidth: 760, mx: "auto" }}>
         <PageHeader
           action={
             <Button
@@ -162,9 +241,11 @@ export function PostDetailPage({
             <Card>
               <CardContent>
                 <Stack spacing={2}>
-                  <Typography component="h2" variant="h3">
-                    {detail.author.nickname || detail.author.name}
-                  </Typography>
+                  <AuthorIdentity
+                    accessToken={accessToken}
+                    profile={detail.author}
+                    timestamp={detail.post.created_at}
+                  />
                   {detail.post.content ? (
                     <Typography
                       sx={{ overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}
@@ -187,21 +268,9 @@ export function PostDetailPage({
                 </Stack>
               </CardContent>
             </Card>
-            <Box
-              sx={{
-                alignItems: "start",
-                display: "grid",
-                gap: 3,
-                gridTemplateAreas: {
-                  xs: '"title" "composer" "comments"',
-                  lg: '"title composer" "comments composer"',
-                },
-                gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 280px" },
-              }}
-            >
+            <Stack spacing={2}>
               <Typography
                 component="h2"
-                sx={{ gridArea: "title" }}
                 variant="h3"
               >
                 Comentários
@@ -211,12 +280,6 @@ export function PostDetailPage({
                 onSubmit={(event) => {
                   event.preventDefault();
                   void publish();
-                }}
-                sx={{
-                  alignSelf: "start",
-                  gridArea: "composer",
-                  position: { lg: "sticky" },
-                  top: { lg: 88 },
                 }}
               >
                 <CardContent>
@@ -235,19 +298,21 @@ export function PostDetailPage({
                       type="submit"
                       variant="contained"
                     >
-                      Comentar
+                      Enviar comentário
                     </Button>
                   </Stack>
                 </CardContent>
               </Card>
-              <Stack spacing={2} sx={{ gridArea: "comments" }}>
+              <Stack spacing={2}>
                 {detail.comments.map((item) => (
-                  <Card key={item.id}>
+                  <Card component="article" key={item.id}>
                     <CardContent>
                       <Stack spacing={1}>
-                        <Typography variant="subtitle2">
-                          {item.author.nickname || item.author.name}
-                        </Typography>
+                        <AuthorIdentity
+                          accessToken={accessToken}
+                          profile={item.author}
+                          timestamp={item.created_at}
+                        />
                         {item.content && (
                           <Typography sx={{ whiteSpace: "pre-wrap" }}>
                             {item.content}
@@ -269,7 +334,7 @@ export function PostDetailPage({
                   </Card>
                 ))}
               </Stack>
-            </Box>
+            </Stack>
           </>
         )}
       </Stack>

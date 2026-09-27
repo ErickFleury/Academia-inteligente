@@ -1,14 +1,20 @@
 import {
   AppBar,
+  Avatar,
   Box,
   Button,
   Container,
+  Drawer,
+  IconButton,
   Stack,
   Toolbar,
   Typography,
 } from "@mui/material";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
+import { OidcSessionClient } from "../auth";
+import { getOccupancy } from "../occupancy";
+import { fetchProfileImage, getOwnSocialProfile } from "../social";
 import { RouterButtonLink } from "./router-button-link";
 type ShellProps = { children: ReactNode; onSignOut?: () => void };
 type ContentMaxWidth = false | "xs" | "sm" | "md" | "lg" | "xl";
@@ -52,11 +58,18 @@ function Brand({ heading = false }: { heading?: boolean }) {
   );
 }
 
-function ClientNavigation({ compact = false }: { compact?: boolean }) {
+function ClientNavigation({
+  compact = false,
+  id,
+  onNavigate,
+}: {
+  compact?: boolean;
+  id?: string;
+  onNavigate?: () => void;
+}) {
   const currentPath = window.location.pathname;
   const onboardingComplete = useContext(OnboardingNavigationContext);
   const links = [
-    { href: "/", label: "Início" },
     ...(onboardingComplete === false
       ? [{ href: "/onboarding", label: "Onboarding" }]
       : []),
@@ -64,13 +77,12 @@ function ClientNavigation({ compact = false }: { compact?: boolean }) {
     { href: "/assistente", label: "Assistente" },
     { href: "/feed", label: "Feed" },
     { href: "/equipamentos", label: "Equipamentos" },
-    { href: "/ocupacao", label: "Ocupação" },
-    { href: "/perfil", label: "Meu perfil" },
   ];
   return (
     <Box
       component="nav"
       aria-label="Navegação da área do cliente"
+      id={id}
       sx={
         compact
           ? { width: "100%" }
@@ -97,6 +109,7 @@ function ClientNavigation({ compact = false }: { compact?: boolean }) {
                 aria-current={active ? "page" : undefined}
                 color={active ? "primary" : "inherit"}
                 key={link.href}
+                onClick={onNavigate}
                 size={compact ? "medium" : "small"}
                 sx={
                   compact
@@ -118,6 +131,49 @@ function ClientNavigation({ compact = false }: { compact?: boolean }) {
         </Stack>
       </Container>
     </Box>
+  );
+}
+
+function OccupancyIndicator({ count }: { count: number | null }) {
+  const label = count === null
+    ? "Ocupação da academia indisponível"
+    : count === 1
+      ? "1 pessoa na academia"
+      : `${count} pessoas na academia`;
+  return (
+    <Box aria-label={label} role="status" sx={{ alignItems: "center", display: "flex", gap: 1, px: 1.5, py: 1 }}>
+      <span aria-hidden="true">👤</span>
+      <Typography component="span" sx={{ fontWeight: 700 }}>
+        {count ?? "—"}
+      </Typography>
+    </Box>
+  );
+}
+
+function ProfileNavigationLink({
+  imageUrl,
+  name,
+  onNavigate,
+}: {
+  imageUrl: string | null;
+  name: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <RouterButtonLink
+      aria-label="Abrir meu perfil"
+      onClick={onNavigate}
+      sx={{ justifyContent: "flex-start", px: 1.5, py: 1, width: "100%" }}
+      to="/perfil"
+      variant="text"
+    >
+      <Avatar alt={`Foto de ${name}`} src={imageUrl ?? undefined} sx={{ height: 28, mr: 1, width: 28 }}>
+        {name.slice(0, 1)}
+      </Avatar>
+      <Typography component="span" noWrap sx={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis" }}>
+        {name}
+      </Typography>
+    </RouterButtonLink>
   );
 }
 
@@ -217,6 +273,50 @@ function ClientNavigationShell({
   contentMaxWidth = "lg",
   onSignOut,
 }: ShellProps & { contentMaxWidth?: ContentMaxWidth }) {
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [profileName, setProfileName] = useState("Meu perfil");
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [occupancy, setOccupancy] = useState<number | null>(null);
+
+  useEffect(() => {
+    const accessToken = new OidcSessionClient().getSession()?.accessToken;
+    if (!accessToken) return;
+    let active = true;
+    let imageUrl: string | null = null;
+    void getOwnSocialProfile(accessToken)
+      .then(async (profile) => {
+        if (!active) return;
+        const name = profile.nickname || profile.name;
+        if (typeof name === "string" && name) setProfileName(name);
+        if (!profile.has_image) return;
+        imageUrl = await fetchProfileImage(accessToken, profile.id);
+        if (active) setProfileImageUrl(imageUrl);
+        else URL.revokeObjectURL(imageUrl);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      void getOccupancy()
+        .then((value) => {
+          if (active && Number.isFinite(value.occupancy)) setOccupancy(value.occupancy);
+        })
+        .catch(() => undefined);
+    };
+    load();
+    const refresh = window.setInterval(load, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(refresh);
+    };
+  }, []);
+
   return (
     <Box
       sx={{
@@ -237,12 +337,55 @@ function ClientNavigationShell({
         }}
       >
         <Toolbar sx={{ gap: 2, minHeight: 64, px: 2 }}>
+          <IconButton
+            aria-controls="navegacao-cliente-movel"
+            aria-expanded={mobileNavigationOpen}
+            aria-label="Abrir navegação"
+            onClick={() => setMobileNavigationOpen(true)}
+          >
+            <span aria-hidden="true">☰</span>
+          </IconButton>
           <Brand />
           <Box sx={{ flexGrow: 1 }} />
-          <SignOutButton onSignOut={onSignOut} />
         </Toolbar>
-        <ClientNavigation />
       </Box>
+      <Drawer
+        anchor="left"
+        onClose={() => setMobileNavigationOpen(false)}
+        open={mobileNavigationOpen}
+        sx={{ display: { md: "none" } }}
+      >
+        <Box
+          component="aside"
+          sx={{
+            background:
+              "linear-gradient(160deg, #10181B 0%, #162427 52%, #10181B 100%)",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            p: 2,
+            width: "min(82vw, 300px)",
+          }}
+        >
+          <Stack
+            direction="row"
+            sx={{ alignItems: "center", justifyContent: "space-between", px: 1.5, py: 1.25 }}
+          >
+            <Brand />
+            <IconButton aria-label="Fechar navegação" onClick={() => setMobileNavigationOpen(false)}>
+              <span aria-hidden="true">×</span>
+            </IconButton>
+          </Stack>
+          <Box sx={{ mt: 3 }}>
+            <ClientNavigation compact id="navegacao-cliente-movel" onNavigate={() => setMobileNavigationOpen(false)} />
+          </Box>
+          <Box sx={{ mt: "auto", pb: 1 }}>
+            <Box sx={{ mb: 1.5 }}><OccupancyIndicator count={occupancy} /></Box>
+            <ProfileNavigationLink imageUrl={profileImageUrl} name={profileName} onNavigate={() => setMobileNavigationOpen(false)} />
+            <SignOutButton fullWidth onSignOut={onSignOut} />
+          </Box>
+        </Box>
+      </Drawer>
       <Box
         sx={{
           display: { md: "grid" },
@@ -271,6 +414,8 @@ function ClientNavigationShell({
             <ClientNavigation compact />
           </Box>
           <Box sx={{ mt: "auto", pb: 1 }}>
+            <Box sx={{ mb: 1.5 }}><OccupancyIndicator count={occupancy} /></Box>
+            <ProfileNavigationLink imageUrl={profileImageUrl} name={profileName} />
             <SignOutButton fullWidth onSignOut={onSignOut} />
           </Box>
         </Box>

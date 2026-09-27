@@ -280,6 +280,27 @@ class SocialService:
         session.commit(); session.refresh(update)
         return update
 
+    def remove_post_image(
+        self, session: Session, subject: str, update_id: UUID, image_id: UUID
+    ) -> ProgressUpdate:
+        update, view = self.post_detail(session, subject, update_id)
+        if not view.is_owner:
+            raise SocialForbiddenError
+        images = self.post_images(session, update.id)
+        image = next((item for item in images if item.id == image_id), None)
+        if image is None:
+            raise SocialNotFoundError
+        if not update.content and len(images) == 1:
+            raise SocialValidationError("Post requires content or image")
+        session.delete(image)
+        session.flush()
+        for position, remaining in enumerate(self.post_images(session, update.id)):
+            remaining.position = position
+        update.edited_at = datetime.now(UTC)
+        session.commit()
+        session.refresh(update)
+        return update
+
     def replace_comment_image(self, session: Session, subject: str, comment_id: UUID, raw: bytes | None) -> PostComment:
         comment = session.get(PostComment, comment_id)
         if comment is None: raise SocialNotFoundError

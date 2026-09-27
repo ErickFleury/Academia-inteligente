@@ -19,7 +19,6 @@ import { ProgressPage } from './progress-page'
 import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
 import { EquipmentManagementPage } from './equipment-management-page'
-import { OccupancyPage } from './occupancy-page'
 import { SocialProfilePage } from './social-profile-page'
 import { PostDetailPage } from './post-detail-page'
 
@@ -139,13 +138,12 @@ function Application() {
   const isTrainingChatRoute = location.pathname === '/assistente'
   const isProgressRoute = location.pathname === '/feed'
   const isEquipmentManagementRoute = location.pathname === '/admin/equipamentos'
-  const isOccupancyRoute = location.pathname === '/ocupacao'
   const isProfileRoute = location.pathname === '/perfil'
   const viewedProfileId = location.pathname.match(/^\/perfis\/([^/]+)$/)?.[1]
   const viewedPostId = location.pathname.match(/^\/publicacoes\/([^/]+)$/)?.[1]
   const isInstructorAdaptationsRoute = location.pathname === '/instrutor/adaptacoes'
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isOccupancyRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
+  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
   const isInstructor = session?.roles.includes('instructor') ?? false
 
   function clearSession() {
@@ -204,6 +202,20 @@ function Application() {
     return <PublicShell><LoadingState label="Redirecionando para o login" /></PublicShell>
   }
 
+  if (
+    session.roles.includes('client')
+    && !isAdministrator
+    && (location.pathname === '/' || location.pathname === '/dashboard')
+  ) {
+    return (
+      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
+        {onboardingComplete === null
+          ? <ClientShell onSignOut={endSession} showClientNavigation><LoadingState label="Preparando sua área" /></ClientShell>
+          : <Navigate replace to={onboardingComplete ? '/feed' : '/onboarding'} />}
+      </ClientNavigationStateProvider>
+    )
+  }
+
   if (isClientRoute && !session?.roles.includes('client')) {
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
@@ -238,6 +250,10 @@ function Application() {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OnboardingForm accessToken={session.accessToken} onCompleted={() => setOnboardingComplete(true)} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
+  if (location.pathname === '/ocupacao' && session.roles.includes('client')) {
+    return <Navigate replace to="/feed" />
+  }
+
   if (isCurrentTrainingRoute && session) {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><CurrentTrainingPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
@@ -256,10 +272,6 @@ function Application() {
 
   if (isProgressRoute && session) {
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><ProgressPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
-  }
-
-  if (isOccupancyRoute && session) {
-    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><OccupancyPage onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isProfileRoute && session) {

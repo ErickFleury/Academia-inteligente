@@ -27,10 +27,25 @@ test("client navigation uses the persistent sidebar shell on larger screens", ()
   expect(screen.getByRole("complementary")).toBeInTheDocument();
   expect(
     screen.getAllByRole("navigation", { name: "Navegação da área do cliente" }),
-  ).toHaveLength(2);
+  ).toHaveLength(1);
   expect(screen.getAllByRole("link", { name: "Feed" })[0]).toHaveAttribute(
     "href",
     "/feed",
   );
+  expect(screen.queryByRole("link", { name: "Ocupação" })).not.toBeInTheDocument();
+  expect(screen.getByRole("status", { name: "Ocupação da academia indisponível" })).toBeInTheDocument();
   expect(screen.getByRole("main")).toHaveTextContent("Conteúdo protegido");
+});
+
+test("phone navigation opens in a collapsible side panel", () => {
+  render(<ClientShell showClientNavigation>Conteúdo protegido</ClientShell>);
+
+  fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
+
+  expect(screen.getByRole("button", { name: "Fechar navegação" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("navigation", { name: "Navegação da área do cliente" }),
+  ).toHaveAttribute("id", "navegacao-cliente-movel");
+  fireEvent.click(screen.getByRole("button", { name: "Fechar navegação" }));
+  expect(screen.queryByRole("button", { name: "Fechar navegação" })).not.toBeInTheDocument();
 });
