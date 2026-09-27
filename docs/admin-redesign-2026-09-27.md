@@ -55,3 +55,54 @@ requirements and retry/duplicate-command protections remain in force.
 Checkpoint 2 validation: 19 targeted management/workspace tests passed, including
 registration, edit, provisioning, facial gating, directory searches and draft
 retention. Existing shell/dashboard tests also passed during implementation.
+
+## Verification and delivery
+
+- `4d9eca6`: shared admin navigation, section tabs and dashboard presentation.
+- `100267d`: focused client/instructor management dialogs and regression tests.
+- Final documentation checkpoint records the completed validation below.
+
+Changed implementation files: `app.tsx`, `admin-workspace.tsx`,
+`admin-dashboard-page.tsx`, `client-management.tsx`, `employee-management.tsx`,
+`components/application-shell.tsx`, `components/management-dialog.tsx`, and the
+scope comment in `components/workspace-presentation.tsx`. Tests cover the shell,
+workspace and both management components. Documentation changes are this report
+and `docs/frontend-design.md`.
+
+The full frontend suite exercised all **163 tests in 31 files**: 161 passed and
+two OIDC URL assertions initially failed because Docker inherited local HTTPS
+development URLs. Rerunning the complete app/auth files with the documented
+localhost API/OIDC overrides passed all **44 tests**, resolving those two
+failures without changing authentication code or assertions. All 163 distinct
+tests therefore passed across the full run and targeted environment-corrected
+rerun. The explicit rerun command was:
+
+```sh
+docker compose run --rm --no-deps \
+  -e VITE_API_BASE_URL=http://localhost:8000 \
+  -e VITE_OIDC_ISSUER=http://localhost:8080/realms/academia \
+  -e VITE_OIDC_CLIENT_ID=academia-web \
+  -e VITE_OIDC_REDIRECT_URI=http://localhost:5173/ \
+  frontend npm test -- src/app.test.tsx src/auth.test.ts
+```
+
+TypeScript validation and production build passed after temporary browser
+fixtures were removed (`docker compose run --rm --no-deps frontend npm run build`).
+Output: 793.20 kB, gzip 227.86 kB. The existing non-blocking large-chunk warning
+remains. `git diff --check` passed; no unrelated files, dependencies, backend
+changes or migrations were introduced.
+
+Isolated Firefox checks covered **41 page/layout states** at 360×800, 768×1024
+and 1366×768. Coverage includes overview, both directories, create/edit dialogs,
+account controls, mobile navigation, equipment/details, facial access and
+moderation. Checks found no horizontal overflow, unnamed visible controls or
+buttons below the established 44 px height. Dialog actions remained in the
+viewport; Escape restored focus to registration/menu triggers. Representative
+phone/desktop screenshots were visually inspected. Synthetic browser responses
+were used; no real accounts, biometric captures or external service calls were
+created. These are scoped UI checks, not a claim of complete accessibility or
+live end-to-end biometric certification.
+
+Ephemeral local evidence: `/tmp/admin-redesign-ui-results.json` and
+`/tmp/admin-redesign-*.png`. Temporary repository fixtures were removed.
+There are no unresolved redesign issues. Nothing was pushed.
