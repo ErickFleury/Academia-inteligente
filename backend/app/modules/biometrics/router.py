@@ -18,6 +18,7 @@ from app.modules.biometrics.enrollment import (
 )
 from app.modules.biometrics.enrollment import session_status as staging_status
 from app.modules.biometrics.images import read_capture
+from app.modules.biometrics.passages import PassageService
 from app.modules.clients.models import Account, PersonProfile
 from app.modules.clients.service import normalize_cpf, normalize_email
 from app.modules.identity.authorization import require_roles
@@ -43,6 +44,13 @@ def get_access_service():
 
 
 Access = Annotated[AccessService, Depends(get_access_service)]
+
+
+def get_passage_service(service: Access):
+    return PassageService(service.config, service.provider)
+
+
+Passages = Annotated[PassageService, Depends(get_passage_service)]
 
 
 class SessionRequest(BaseModel):
@@ -106,6 +114,74 @@ class AttemptResponse(BaseModel):
     release_request_id: UUID | None
     release_mode: Literal["simulated"] | None
     can_retry: bool
+
+
+class StateResponse(BaseModel):
+    client_id: UUID
+    client_name: str
+    inside: bool
+    revision: int
+    client_active: bool
+
+
+class CorrectionRequest(CommandRequest):
+    client_id: UUID
+    inside: bool
+    expected_revision: int = Field(ge=0)
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+class PassageResponse(BaseModel):
+    status: Literal["confirmed"]
+    attempt_id: UUID
+    passage_event_id: UUID
+    state: StateResponse
+    occupancy: int
+
+
+class CorrectionResponse(BaseModel):
+    status: Literal["corrected", "unchanged"]
+    correction_id: UUID
+    state: StateResponse
+    occupancy: int
+
+
+@router.get("/clients/{client_id}/state", response_model=StateResponse)
+def get_client_state(
+    client_id: UUID, administrator: Administrator, session: DatabaseSession, service: Passages
+):
+    return service.state(session, client_id)
+
+
+@router.post("/access-attempts/{attempt_id}/passage", response_model=PassageResponse)
+def confirm_passage(
+    attempt_id: UUID,
+    payload: CommandRequest,
+    administrator: Administrator,
+    session: DatabaseSession,
+    service: Passages,
+):
+    return service.confirm(session, administrator.subject, attempt_id, payload.command_id)
+
+
+@router.post("/state-corrections", response_model=CorrectionResponse)
+def correct_state(
+    payload: CorrectionRequest,
+    administrator: Administrator,
+    session: DatabaseSession,
+    service: Passages,
+):
+    return service.correct(session, administrator.subject, **payload.model_dump())
+
+
+@router.post("/pilot-heartbeat")
+def pilot_heartbeat(
+    payload: CommandRequest,
+    administrator: Administrator,
+    session: DatabaseSession,
+    service: Passages,
+):
+    return service.heartbeat(session, administrator.subject, payload.command_id)
 
 
 @router.post("/access-attempts", response_model=AttemptResponse)

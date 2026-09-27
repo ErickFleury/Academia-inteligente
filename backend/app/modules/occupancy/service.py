@@ -158,8 +158,8 @@ class OccupancyService:
         events = list(session.scalars(select(AccessPassageEvent)))
         corrections = list(session.scalars(select(OccupancyCorrection)))
         count = self._calculate(events, corrections)
-        latest_event = max((item.occurred_at for item in events), default=None)
-        latest_correction = max((item.occurred_at for item in corrections), default=None)
+        latest_event = max((self._utc(item.occurred_at) for item in events), default=None)
+        latest_correction = max((self._utc(item.occurred_at) for item in corrections), default=None)
         updated_at = max(
             (item for item in (latest_event, latest_correction) if item is not None), default=None
         )

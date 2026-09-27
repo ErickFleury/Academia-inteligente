@@ -50,8 +50,18 @@ def known_client(session, service, access, *, inside=False, active=True, login_a
     client = session.scalar(select(Client).where(Client.account_id == person_id))
     client.active = active
     session.get(Account, person_id).account_active = login_active
-    state = access_state(session, client.id)
-    state.inside = inside
+    access_state(session, client.id)
+    if inside:
+        session.add(
+            AccessPassageEvent(
+                event_id=str(uuid4()),
+                client_id=client.id,
+                client_reference_digest="f" * 64,
+                occurred_at=utcnow(),
+                checkpoint_id="fixture",
+                direction="entry",
+            )
+        )
     session.commit()
     access.provider.faces = (Face(0.99, (Candidate(enrollment.subject, 0.95),)),)
     return person_id, client.id
@@ -111,7 +121,7 @@ def test_explicit_pilot_entry_exit_policy(
     response = recognize(access, database_session, direction)
     assert response["result_code"] == result
     assert bool(access.release.requests) == (result == "authorized")
-    assert database_session.scalars(select(AccessPassageEvent)).all() == []
+    assert len(database_session.scalars(select(AccessPassageEvent)).all()) == int(inside)
 
 
 @pytest.mark.parametrize(

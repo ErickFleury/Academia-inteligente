@@ -22,7 +22,7 @@ from app.modules.biometrics.release import (
     TurnstileReleaseRequest,
 )
 from app.modules.clients.models import Client
-from app.modules.occupancy.models import AccessPassageEvent
+from app.modules.occupancy.models import AccessPassageEvent, OccupancyCorrection
 
 CHECKPOINT = "pilot-webcam"
 
@@ -35,24 +35,43 @@ def owned_attempt(session, identifier, actor):
 
 
 def access_state(session, client_id):
-    """Initialize from existing confirmed passage history, never from recognition."""
+    """Check/rebuild the projection from confirmed passages and person corrections."""
     state = session.get(ClientAccessState, client_id, populate_existing=True)
-    if state is None:
-        passages = session.scalars(
-            select(AccessPassageEvent)
-            .where(AccessPassageEvent.client_id == client_id)
-            .order_by(AccessPassageEvent.occurred_at, AccessPassageEvent.created_at)
-        ).all()
-        latest = passages[-1] if passages else None
-        state = ClientAccessState(
-            client_id=client_id,
-            inside=bool(latest and latest.direction == "entry"),
-            revision=len(passages),
-            changed_at=latest.occurred_at if latest else None,
+    passages = session.scalars(
+        select(AccessPassageEvent).where(AccessPassageEvent.client_id == client_id)
+    ).all()
+    corrections = session.scalars(
+        select(OccupancyCorrection).where(OccupancyCorrection.client_id == client_id)
+    ).all()
+    records = [(aware(row.occurred_at), 0, row) for row in passages]
+    records += [(aware(row.occurred_at), 1, row) for row in corrections]
+    inside, revision, changed_at = False, 0, None
+    for timestamp, kind, row in sorted(
+        records, key=lambda item: (item[0], item[1], str(item[2].id))
+    ):
+        target = row.direction == "entry" if kind == 0 else row.target_inside
+        changed = target != inside
+        if kind == 0 or changed:
+            changed_at = timestamp
+        inside = target
+        revision = (
+            row.state_revision
+            if row.state_revision is not None
+            else revision + int(kind == 0 or changed)
         )
+    if state is None:
+        state = ClientAccessState(client_id=client_id)
         session.add(state)
-        session.flush()
+    state.inside, state.revision, state.changed_at = inside, revision, changed_at
+    session.flush()
     return state
+
+
+def rebuild_access_states(session):
+    lock_biometrics(session)
+    for client_id in session.scalars(select(Client.id)):
+        access_state(session, client_id)
+    session.commit()
 
 
 def attempt_result(session, row):

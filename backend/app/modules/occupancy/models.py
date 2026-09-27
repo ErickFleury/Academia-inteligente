@@ -35,6 +35,8 @@ class AccessPassageEvent(Base):
         String(32), nullable=False, server_default="passage_confirmed"
     )
     inconsistency: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    source_kind: Mapped[str] = mapped_column(String(20), nullable=False, server_default="external")
+    state_revision: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -47,6 +49,12 @@ class OccupancyCorrection(Base):
     actor_subject: Mapped[str] = mapped_column(String(255), nullable=False)
     adjustment: Mapped[int] = mapped_column(Integer, nullable=False)
     reason: Mapped[str] = mapped_column(String(1000), nullable=False)
+    client_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("client.id"), index=True)
+    command_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, unique=True)
+    previous_inside: Mapped[bool | None] = mapped_column(Boolean)
+    target_inside: Mapped[bool | None] = mapped_column(Boolean)
+    state_revision: Mapped[int | None] = mapped_column(Integer)
+    source_kind: Mapped[str] = mapped_column(String(20), nullable=False, server_default="manual")
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

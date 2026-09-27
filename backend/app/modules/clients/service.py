@@ -23,7 +23,11 @@ from app.modules.identity.reconciliation import (
     queue_reconciliation,
     reconcile_account,
 )
-from app.modules.occupancy.models import AccessPassageEvent, ClientAccessReference
+from app.modules.occupancy.models import (
+    AccessPassageEvent,
+    ClientAccessReference,
+    OccupancyCorrection,
+)
 from app.modules.onboarding.models import (
     Onboarding,
     OnboardingAiConversation,
@@ -549,6 +553,9 @@ class ClientService:
             )
         )
         session.execute(delete(AccessPassageEvent).where(AccessPassageEvent.client_id == client.id))
+        session.execute(
+            delete(OccupancyCorrection).where(OccupancyCorrection.client_id == client.id)
+        )
         session.execute(
             delete(ClientAccessReference).where(ClientAccessReference.client_id == client.id)
         )

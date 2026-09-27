@@ -11,7 +11,7 @@ from app.modules.biometrics.provider import CompreFaceProvider
 
 
 class Response(BytesIO):
-    pass
+    status = 200
 
 
 def transport(monkeypatch, response):
@@ -88,6 +88,23 @@ def test_enrollment_requires_matching_reference_and_valid_image_id(monkeypatch):
     transport(monkeypatch, {"subject": "other", "image_id": str(uuid4())})
     with pytest.raises(BiometricError):
         provider().enroll("expected", b"fixture")
+
+
+def test_readiness_requires_both_api_and_recognition_worker(monkeypatch):
+    calls = []
+
+    class Opener:
+        def open(self, request, timeout):
+            calls.append(request)
+            if len(calls) == 1:
+                return Response(b'{"subjects":[]}')
+            raise URLError("worker unavailable")
+
+    monkeypatch.setattr(adapter, "build_opener", lambda *_: Opener())
+    with pytest.raises(BiometricError, match="provider_unavailable"):
+        provider().ready()
+    assert calls[1].full_url == "http://compreface-core:3000/healthcheck"
+    assert calls[1].get_header("X-api-key") is None
 
 
 @pytest.mark.parametrize(

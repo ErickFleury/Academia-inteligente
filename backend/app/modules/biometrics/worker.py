@@ -13,7 +13,7 @@ from app.modules.biometrics.enrollment import EnrollmentService
 logger = logging.getLogger(__name__)
 
 
-def cleanup_once():
+def cleanup_once(rebuild=False):
     if SessionLocal is None:
         return
     try:
@@ -21,6 +21,10 @@ def cleanup_once():
         if config.mode == "disabled":
             return
         with SessionLocal() as session:
+            if rebuild:
+                from app.modules.biometrics.access import rebuild_access_states
+
+                rebuild_access_states(session)
             EnrollmentService(config).cleanup(session, limit=4)
     except (BiometricError, SQLAlchemyError):
         # Never log DB exception parameters, captures, provider URLs, or keys.
@@ -28,9 +32,11 @@ def cleanup_once():
 
 
 async def cleanup_loop():
+    rebuild = True
     while True:
         started = asyncio.get_running_loop().time()
-        await asyncio.to_thread(cleanup_once)
+        await asyncio.to_thread(cleanup_once, rebuild)
+        rebuild = False
         elapsed = asyncio.get_running_loop().time() - started
         await asyncio.sleep(max(0, 60 - elapsed))
 

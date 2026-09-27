@@ -152,6 +152,15 @@ class CompreFaceProvider:
         payload = self._request("GET", "/subjects")
         if not isinstance(payload.get("subjects"), list):
             raise BiometricError("provider_unavailable", 503)
+        # API/DB readiness alone cannot certify a healthy recognition worker.
+        # This fixed internal endpoint is the pinned Compose core healthcheck.
+        try:
+            request = Request("http://compreface-core:3000/healthcheck")
+            with build_opener(NoRedirect).open(request, timeout=self.config.timeout) as response:
+                if response.status != 200:
+                    raise ValueError
+        except (URLError, TimeoutError, OSError, ValueError):
+            raise BiometricError("provider_unavailable", 503) from None
 
 
 def single_face(faces: tuple[Face, ...], config: BiometricConfig) -> Face:

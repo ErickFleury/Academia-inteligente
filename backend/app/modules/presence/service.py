@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Account, Client
-from app.modules.occupancy.models import AccessPassageEvent
+from app.modules.occupancy.models import AccessPassageEvent, OccupancyCorrection
 from app.modules.occupancy.service import OccupancyService
 from app.modules.presence.models import ProfilePresenceConsentAudit, ProfilePresencePreference
 
@@ -90,6 +90,23 @@ class ProfilePresenceService:
             .order_by(AccessPassageEvent.occurred_at.desc(), AccessPassageEvent.created_at.desc())
             .limit(1)
         )
+        correction = session.scalar(
+            select(OccupancyCorrection)
+            .where(OccupancyCorrection.client_id == client_id, OccupancyCorrection.adjustment != 0)
+            .order_by(OccupancyCorrection.occurred_at.desc(), OccupancyCorrection.created_at.desc())
+            .limit(1)
+        )
+        if correction and (
+            latest is None
+            or self.occupancy_service._utc(correction.occurred_at)
+            >= self.occupancy_service._utc(latest.occurred_at)
+        ):
+            return bool(
+                correction.target_inside
+                and self.occupancy_service._utc(correction.occurred_at)
+                + self.maximum_presence_duration
+                >= self.occupancy_service._utc(timestamp)
+            )
         return bool(
             latest
             and latest.direction == "entry"
