@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.database import Base
+from app.modules.biometrics import models as biometric_models  # noqa: F401 - registers metadata
 from app.modules.clients import models  # noqa: F401 - registers metadata
 from app.modules.onboarding import models as onboarding_models  # noqa: F401 - registers metadata
 from app.modules.training import models as training_models  # noqa: F401 - registers metadata

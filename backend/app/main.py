@@ -2,8 +2,12 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.health.router import router as health_router
+from app.modules.biometrics.config import BiometricError
+from app.modules.biometrics.router import router as biometrics_router
+from app.modules.biometrics.worker import biometric_lifespan
 from app.modules.clients.instructor_router import router as instructor_clients_router
 from app.modules.clients.router import router as clients_router
 from app.modules.dashboard.router import router as dashboard_router
@@ -24,10 +28,16 @@ from app.modules.training.router import router as training_router
 
 def create_app() -> FastAPI:
     app = FastAPI(
+        lifespan=biometric_lifespan,
         title="Academia Inteligente API",
         version="0.1.0",
         description="Foundation API; business endpoints are introduced in their owning tasks.",
     )
+
+    @app.exception_handler(BiometricError)
+    async def biometric_error(request, error):
+        return JSONResponse(status_code=error.status, content={"detail": error.code})
+
     allowed_origins = [
         origin.strip()
         for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
@@ -41,6 +51,7 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type", "X-Access-Integration-Secret"],
     )
     app.include_router(health_router)
+    app.include_router(biometrics_router)
     app.include_router(identity_router)
     app.include_router(clients_router)
     app.include_router(instructor_clients_router)

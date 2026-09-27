@@ -211,7 +211,7 @@ be performed during this feature.
 | Task | Feature task | Scope | Status |
 | --- | --- | --- | --- |
 | 38 | FACE-IMPL-01 | Canonical policy, free-use provider artifacts, pinned Docker preflight | Complete |
-| 39 | FACE-IMPL-02 | Protected enrollment, staging and cleanup | Planned |
+| 39 | FACE-IMPL-02 | Protected enrollment, staging and cleanup | Complete |
 | 40 | FACE-IMPL-03 | Mandatory registration, shared enrollment, capture UI and erasure | Planned |
 | 41 | FACE-IMPL-04 | Recognition, entry/exit policy and simulated release | Planned |
 | 42 | FACE-IMPL-05 | Confirmed passages, state corrections and occupancy | Planned |
