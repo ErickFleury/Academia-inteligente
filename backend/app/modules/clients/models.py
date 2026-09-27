@@ -16,6 +16,7 @@ class Account(Base):
     keycloak_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
     email: Mapped[str] = mapped_column(String(320), unique=True)
     account_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    password_recovery_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

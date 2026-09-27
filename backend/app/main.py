@@ -16,6 +16,7 @@ from app.modules.employees.instructor_social_router import router as instructor_
 from app.modules.employees.router import router as employees_router
 from app.modules.equipment.instructor_router import router as instructor_equipment_router
 from app.modules.equipment.router import router as equipment_router
+from app.modules.identity.recovery_router import router as recovery_router
 from app.modules.identity.router import router as identity_router
 from app.modules.occupancy.router import router as occupancy_router
 from app.modules.onboarding.instructor_router import router as instructor_onboarding_router
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(biometrics_router)
     app.include_router(identity_router)
+    app.include_router(recovery_router)
     app.include_router(clients_router)
     app.include_router(instructor_clients_router)
     app.include_router(employees_router)

@@ -2,6 +2,7 @@ import { Box, Button, Card, CardContent, Chip, Divider, FormControlLabel, Stack,
 import { FormEvent, useEffect, useRef, useState } from 'react'
 
 import { ManagementDialog } from './components/management-dialog'
+import { PasswordRecoveryAction } from './components/password-recovery-action'
 import { WorkspaceIcon } from './components/workspace-presentation'
 import { EmptyState, LoadingState, StatusNotice } from './components/ui'
 import { FacialEnrollment } from './components/facial-enrollment'
@@ -160,6 +161,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
           <Typography component="h3" variant="h4">Acesso e conta</Typography>
           <FormControlLabel control={<Switch checked={clientActive} disabled={writing} onChange={(event) => setClientActive(event.target.checked)} />} label="Cliente ativo" />
           {selected.identity_provisioned === false && <Button onClick={() => void write(provision)} disabled={writing} variant="outlined">{writing ? 'Sincronizando...' : 'Provisionar acesso'}</Button>}
+          {selected.identity_provisioned === true && <PasswordRecoveryAction key={selected.id} accessToken={accessToken} clientId={selected.id} />}
           <Divider />
           <Button color="error" disabled={writing} onClick={() => void write(erase)} sx={{ alignSelf: 'flex-start' }}>Excluir cadastro de cliente</Button>
         </Stack></Box>

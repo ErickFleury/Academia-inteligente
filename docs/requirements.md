@@ -292,7 +292,7 @@ access; see DEC-04.
 
 ### RF-06 Recover access by e-mail
 
-**Scope:** outside the stated MVP.
+**Scope:** approved post-MVP implementation — 2026-09-27.
 
 Allow recovery of an account linked to an e-mail address.
 
@@ -306,6 +306,24 @@ Allow recovery of an account linked to an e-mail address.
 **Consolidation note:** CA-06.4 is a technical deployment constraint for the
 e-mail service, retained for traceability and also recorded in section 6.2.
 DEC-03 records the SMTP versus e-mail API choice.
+
+**Approved recovery policy (DEC-06, 2026-09-27):** administrators can request
+recovery from a provisioned client's administrative details; authenticated
+clients can request it for their own Account from profile settings. Both send
+Keycloak's `UPDATE_PASSWORD` action email to the linked account's registered
+email. The user approved a 15-minute (900-second) link lifetime. Keycloak owns
+password entry, expiry and single-use validation; no password or recovery token
+is received or stored by React or the application database. The existing
+Keycloak version and sign-in flow are retained. A request does not activate an
+account, change roles, or immediately replace its password.
+
+The backend verifies ownership/administrator authorization and requires an
+active, linked Account with no pending identity reconciliation. It verifies the
+Keycloak identity's email before delivery. Admin and self-service share a
+persistent 60-second per-account resend cooldown, including uncertain delivery.
+Provider failures return a controlled error without an automatic resend or false
+success. A success means Keycloak accepted the email send, not that the password
+has already changed. Local development continues to use isolated Mailpit SMTP.
 
 ### RF-07 Register employee
 
@@ -1746,7 +1764,7 @@ This order is implementation guidance added in this consolidation; it does not c
 | Conversational onboarding | Approved MVP extension; implemented | EXT-RF-AI-01; DEC-06, DEC-08, DEC-18 |
 | Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
 | Training generation/version/current view/chat/adaptation | Original MVP; partially implemented | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
-| Employee management, recovery, onboarding self-review | RF-07/RF-08 implemented; RF-06/RF-14 not started | RF-06–RF-08, RF-14; EXT-DEC-INST-01 |
+| Employee management, recovery, onboarding self-review | RF-06/RF-07/RF-08 implemented; RF-14 not started | RF-06–RF-08, RF-14; EXT-DEC-INST-01 |
 | Progress sharing | Approved post-MVP extension; implemented | EXT-RF-SOC-01; EXT-DEC-SOC-01; Task 20 |
 | Social client profiles/interactions | Approved post-MVP extension; planned | EXT-RF-SOC-02; EXT-DEC-SOC-02; Task 26 |
 | Authenticated chronological social feed | Approved post-MVP extension; planned | EXT-RF-SOC-03; EXT-DEC-SOC-03; Task 27 |
@@ -1770,7 +1788,7 @@ retains the chronological decision history.
 | DEC-03 | **Resolved** | Python/FastAPI modular monolith, PostgreSQL/SQLAlchemy/Alembic, React/TS/Vite/MUI, Keycloak/OIDC, SMTP/Mailpit, Docker Compose/Linux/UFW, provider-independent AI adapters, and approved pinned baseline. NestJS has no MVP role. | All architecture and external adapters. |
 | DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients and instructors use authorized administrative provisioning with durable reconciliation and secure first access. One matching Account may hold both client and instructor roles with independent role-active state. Health/biometric access follows section 2.1. | Auth, clients, employees, health, training. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
-| DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, 11, and 12 may proceed. |
+| DEC-06 | Resolved for implemented flows | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved. Password recovery uses Keycloak-owned UPDATE_PASSWORD email links with a user-approved 15-minute lifetime. | Tasks 07, 09, 10, 11, 12 and RF-06 recovery. |
 | DEC-07 | **Resolved for Tasks 13–17** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Task 17 applies this lifecycle to client-confirmed proposals and immutable history. | Tasks 13–17. |
 | DEC-08 | **Resolved for Tasks 11, 14, 16, and 17** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output where applicable, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. Task 17 uses validated structured proposal output only after explicit client confirmation. | Tasks 11, 14, 16, 17, and later AI tasks with their own scope-specific safety contracts. |
 | DEC-09 | **Resolved for biometric recognition and enrollment** | Measured configured-system precision is at least 95%; the provider/model uses a calibrated configurable match threshold; below-threshold results are rejected; biometric references, replacement, retention, and non-sensitive auditing are separately protected. CompreFace is a non-binding personal-use self-hosted pilot recommendation, not a selected provider. | RF-21/RF-22. |
@@ -1852,7 +1870,8 @@ unchecked boxes or planned files.
 | RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
 | EXT-RF-PRES-01 | Approved post-MVP extension | Implemented | Task 22/EXT-DEC-PRES-01 | Task 23. |
 | EXT-RF-INST-01–EXT-RF-INST-05 | Approved post-MVP extension | Implemented; Task 37 done by user direction | RF-07/RF-08; EXT-DEC-INST-01 | Tasks 28–36 implemented. Task 37 technical checks passed: 248 backend tests including PostgreSQL, 115 frontend tests, scoped browser/performance/restart checks. User requested Task 37 closure and will perform the checklist; checklist results and eight-hour soak remain unverified follow-up evidence, not passing criteria. See [Task 37 report](tasks/37-instructor-role-integrated-verification-report.md). |
-| Remaining RF-06, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
+| RF-06 | Approved post-MVP | Implemented | DEC-06 | Admin client-details and own-profile recovery actions; Keycloak password setup email, 15-minute expiry, authenticated ownership checks and shared resend cooldown. |
+| Remaining RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Codex workflow
 
@@ -1922,9 +1941,9 @@ by inference.
   original catalog/MVP.
 - **DEC-02:** resolved; historical RF-24X/RF-25X identifiers are normalized to
   RF-24/RF-25 without changing behavior.
-- **DEC-06:** recovery-token policy remains unresolved. The invitation-token
-  policy, structured schema, editable-draft behavior, and completion
-  prerequisites are approved.
+- **DEC-06:** resolved for implemented invitation, onboarding and recovery flows.
+  Recovery uses Keycloak password-setup emails with a 15-minute link lifetime,
+  approved by the user on 2026-09-27.
 - **DEC-07:** resolved for Tasks 13–17. Later adaptation work must preserve the
   approved proposal/review lifecycle.
 - **DEC-08:** resolved for Tasks 11, 14, 16, and 17. Later AI work still

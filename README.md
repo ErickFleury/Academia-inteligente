@@ -44,11 +44,20 @@ client's password, and then sign in as that client. The password and action
 token never enter PostgreSQL. A local client created before provisioning can be
 selected under **Clientes** and retried with **Provisionar acesso**.
 
-For onboarding, select a provisioned active client under **Clientes** and use
-**Enviar convite de onboarding**. The SMTP message appears in Mailpit and the
-link expires after 24 hours. A newer invitation invalidates unused prior links.
-The link is validated/redeemed by the later secure-onboarding flow; opening it
-must not consume it by itself.
+Clients reach pending onboarding after signing in; the admin panel no longer
+requires an onboarding invitation. Existing secure invitation links remain valid
+under their separate 24-hour policy.
+
+For password recovery, open **Clientes → client details → Redefinir senha** as
+an administrator, or **Meu perfil → settings cog → Redefinir senha** as the
+client. Both send a Keycloak password-setup link valid for **15 minutes** to
+the registered email. In local Docker, retrieve that email in Mailpit at
+`http://localhost:8025`; it is not delivered to an external inbox. The password
+changes only when the user completes Keycloak's form. Repeat requests share a
+one-minute cooldown. Inactive/unlinked accounts or pending identity updates
+must be resolved before sending. This flow does not change the login screen or
+Keycloak version. Existing installations need `alembic upgrade head` (migration
+`20260927_31`) before restarting the backend.
 
 ### Local facial-access pilot
 

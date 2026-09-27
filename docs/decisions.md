@@ -228,6 +228,14 @@ explicitly implemented and approved.
 
 **Status:** partially approved — 2026-09-20
 
+**Password recovery amendment — approved 2026-09-27:** the user requested
+recovery from the admin client panel and the client's profile settings and
+selected a 15-minute link lifetime. RF-06 in requirements.md governs the
+implementation: reuse Keycloak `UPDATE_PASSWORD` emails, keep credentials and
+single-use/expiry validation in Keycloak, enforce backend ownership/admin
+permissions, and prevent repeat sends with a shared account cooldown. This
+resolves the previously open recovery policy without upgrading Keycloak.
+
 This approval resolves only the onboarding invitation-token portion needed by
 RF-09 and Tasks 07 and 09. The onboarding schema, required fields, editability, and
 other DEC-06 matters remain unresolved.

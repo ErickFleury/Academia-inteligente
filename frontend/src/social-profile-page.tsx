@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { WorkspaceIcon } from "./components/workspace-presentation";
 import { ClientShell } from "./components/application-shell";
 import { RouterButtonLink } from "./components/router-button-link";
+import { PasswordRecoveryAction } from "./components/password-recovery-action";
 import {
   EmptyState,
   LoadingState,
@@ -635,6 +636,7 @@ export function SocialProfilePage({
                       A presença começa desativada e é independente da
                       visibilidade do perfil.
                     </Typography>
+                    <PasswordRecoveryAction accessToken={accessToken} />
                   </Stack>
                 </DialogContent>
                 <DialogActions>
