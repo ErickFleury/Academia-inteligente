@@ -1948,3 +1948,27 @@ by inference.
   instructor navigation/feed audience, single-draft training workflows,
   onboarding access, and equipment operational-state boundaries for Tasks
   28–37.
+
+### Production deployment hardening amendment — 2026-09-27
+
+User-approved deployment-only extension to TEC-03/08/09 and RF-04/05:
+provide a separate Linux/Docker Compose production configuration with a free
+Nginx HTTPS gateway, compiled frontend, non-root application processes, private
+internal services, bounded requests, mounted secrets, brute-force protection,
+and documented firewall, monitoring and backup/recovery operations. Existing
+local development commands and application business workflows remain available.
+Nginx is approved as a gateway dependency; use the verified stable 1.30.5 image.
+Keycloak remains pinned to 26.6.3 at the user's explicit request. Administrator
+MFA preparation is approved, but enforcement is deferred and must not change
+the current login steps. The facial pilot remains unchanged and retains its
+existing limitations. Hosting/domain selection and actual host firewall/public
+rollout remain deployment prerequisites, not implied completed actions.
+
+Acceptance: production configuration publishes only its intended HTTPS/redirect
+gateway; internal databases, identity management and metrics are restricted;
+existing login/logout, provisioning, invitations, API contracts, media and
+frontend routes remain usable; controlled limits return understandable failure
+responses; configuration contains no committed secrets; backup/restore and
+monitoring procedures identify external prerequisites and are exercised with
+synthetic data; development regression tests remain passing. This amendment
+does not approve changing gym business rules or upgrading Keycloak.
