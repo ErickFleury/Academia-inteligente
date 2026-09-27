@@ -2,7 +2,26 @@
 
 ## Status
 
-Planned. Depends on Tasks 31, 33, and 35.
+Implemented (2026-09-27). Depends on Tasks 31, 33, and 35.
+
+Verification: targeted lifecycle/generation/adaptation/chat/review/equipment,
+current-plan API, collection/authoring, and fake-adapter suites pass. Fifteen
+shared-editor/workspace/current-view frontend tests pass. Four PostgreSQL tests
+cover the existing item migration/round trip and approval racing an outage,
+unit deactivation, or model deactivation; the three review race regressions also
+pass. Production build, scoped Ruff, and Git whitespace checks pass. Synthetic
+Firefox checks cover 360×800, 768×1024, and 1366×768, including editor focus
+clearance below the mobile header and no horizontal overflow.
+
+Task 31 already supplied the nullable canonical item columns in migration 22;
+no duplicate migration or new dependency was needed. One equipment-domain query
+now supplies bounded UUID/name context and paginated instructor choices. Ordered
+model locks synchronize all inventory writers with validation immediately before
+training persistence/approval. Only exact unchanged approved items, including
+their original multiplicity, qualify for historical preservation. Saved new
+draft items and retained adaptation candidates receive no blanket exemption.
+The shared AI draft-edit schema/context was updated as a necessary dependency.
+Current/history snapshots remain read-only. No unresolved Task 36 issues.
 
 ## Objective
 

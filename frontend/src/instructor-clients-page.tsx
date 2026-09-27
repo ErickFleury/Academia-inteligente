@@ -85,7 +85,7 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
       {selected.draft_id && <RouterButtonLink to={`/instrutor/planos-pendentes?rascunho=${selected.draft_id}`}>Abrir rascunho</RouterButtonLink>}
       {selected.current_id && <RouterButtonLink to={`/instrutor/todos-os-planos?plano=${selected.current_id}`}>Ver plano atual e histórico</RouterButtonLink>}
       {!selected.current_id && !selected.draft_id && !draft && <Button variant="contained" disabled={busy || stale} onClick={() => setDraft(firstDraft())}>Criar primeiro rascunho</Button>}
-      {draft && <Box component="form" onSubmit={(event) => { event.preventDefault(); void create() }}><Stack component="fieldset" disabled={busy || stale} spacing={2} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Typography>O rascunho será salvo para revisão. A aprovação é uma ação separada.</Typography><TrainingDraftFields draft={draft} onChange={setDraft} /><Button type="submit" variant="contained">Salvar primeiro rascunho</Button><Button onClick={() => setDraft(null)}>Cancelar criação</Button></Stack></Box>}
+      {draft && <Box component="form" onSubmit={(event) => { event.preventDefault(); void create() }}><Stack component="fieldset" disabled={busy || stale} spacing={2} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Typography>O rascunho será salvo para revisão. A aprovação é uma ação separada.</Typography><TrainingDraftFields accessToken={accessToken} draft={draft} onChange={setDraft} /><Button type="submit" variant="contained">Salvar primeiro rascunho</Button><Button onClick={() => setDraft(null)}>Cancelar criação</Button></Stack></Box>}
     </Stack></CardContent></Card>}
   </Stack></InstructorShell>
 }

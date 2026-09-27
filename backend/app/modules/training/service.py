@@ -1,5 +1,6 @@
 """Lifecycle service shared by future AI and manual training callers."""
 
+from collections import Counter
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -132,7 +133,6 @@ class TrainingLifecycleService:
         expected_revision: int | None = None,
         origin: PlanOrigin = "instructor",
         commit: bool = True,
-        retained_equipment: set[UUID] | None = None,
     ) -> TrainingPlanVersion:
         source = self._version(session, plan_id, version_number, lock=True)
         if source.status != "current":
@@ -160,7 +160,6 @@ class TrainingLifecycleService:
             origin,
             commit=commit,
             preserved=source,
-            retained_equipment=retained_equipment,
         )
 
     def approve(
@@ -264,10 +263,9 @@ class TrainingLifecycleService:
         *,
         commit: bool = True,
         preserved: TrainingPlanVersion | None = None,
-        retained_equipment: set[UUID] | None = None,
         created_employee_id: UUID | None = None,
     ) -> TrainingPlanVersion:
-        self.validate_equipment(session, data, preserved, retained_equipment)
+        self.validate_equipment(session, data, preserved)
         version = TrainingPlanVersion(
             plan_id=plan_id,
             client_id=client_id,
@@ -354,25 +352,37 @@ class TrainingLifecycleService:
         session: Session,
         data: TrainingPlanVersionInput,
         preserved: TrainingPlanVersion | None = None,
-        retained_equipment: set[UUID] | None = None,
     ) -> None:
-        active = {model.id for model in EquipmentService().active_models_with_units(session)}
-        retained = (
-            set(
-                session.scalars(
-                    select(TrainingPlanItem.equipment_model_id).where(
-                        TrainingPlanItem.version_id == preserved.id,
-                        TrainingPlanItem.equipment_model_id.is_not(None),
-                    )
+        # Only exact approved content is grandfathered, never a newly saved draft
+        # or a whole model ID. Multiplicity prevents duplicating an exempt item.
+        baseline = preserved
+        if baseline is not None and baseline.status == "proposal":
+            baseline = session.scalar(
+                select(TrainingPlanVersion).where(
+                    TrainingPlanVersion.plan_id == baseline.plan_id,
+                    TrainingPlanVersion.status == "current",
                 )
             )
-            if preserved
-            else set()
+        retained = (
+            Counter(
+                item.model_dump_json()
+                for item in TrainingLifecycleService.content(session, baseline).items
+            )
+            if baseline is not None and baseline.status == "current"
+            else Counter()
         )
+        equipment = EquipmentService()
+        references = {item.equipment_model_id for item in data.items if item.equipment_model_id}
+        equipment.lock_models(session, references)
+        usable = {
+            model.id for model in equipment.usable_models_with_units(session, model_ids=references)
+        }
         for item in data.items:
+            signature = item.model_dump_json()
+            if retained[signature]:
+                retained[signature] -= 1
+                continue
             if bool(item.equipment_requirement) != bool(item.equipment_model_id):
                 raise InvalidTrainingContentError
-            if item.equipment_model_id and item.equipment_model_id not in active | retained | (
-                retained_equipment or set()
-            ):
+            if item.equipment_model_id and item.equipment_model_id not in usable:
                 raise InvalidTrainingContentError

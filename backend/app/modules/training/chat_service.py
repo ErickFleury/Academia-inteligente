@@ -17,6 +17,7 @@ from app.integrations.ai import (
     training_chat_provider_from_environment,
 )
 from app.modules.clients.models import Account, Client
+from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.models import Onboarding
 from app.modules.training.models import (
     TrainingAiConversation,
@@ -176,6 +177,9 @@ class TrainingChatService:
             "conversation_summary": conversation.summary,
             "recent_messages": [{"role": item.role, "content": item.content} for item in history],
             "current_training_plan": current_plan,
+            "active_equipment_models": EquipmentService().training_context(session)
+            if draft
+            else [],
             "editable_training_draft": self._draft_context(session, draft) if draft else None,
             "relevant_onboarding": self._onboarding_context(session, client_id, message),
             "rules": {

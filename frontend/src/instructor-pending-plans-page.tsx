@@ -101,11 +101,11 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
     </Stack></CardContent></Card>)}
     {nextOffset !== null && <Button disabled={loading || busy} onClick={() => void load(nextOffset)}>Carregar mais planos</Button>}
     {selected && draft && <Card component="section"><CardContent><Stack spacing={2}>
-      <Typography component="h2" ref={editorHeading} tabIndex={-1} variant="h3">Revisar plano de {selected.client_name}</Typography>
+      <Typography component="h2" ref={editorHeading} tabIndex={-1} variant="h3" sx={{ scrollMarginTop: { xs: 88, md: 16 } }}>Revisar plano de {selected.client_name}</Typography>
       <Typography color="text.secondary">Rascunho · Revisão {selected.revision}</Typography>
       {stale && <Button disabled={busy} onClick={() => void open(selected)}>Recarregar rascunho</Button>}
       <Box component="fieldset" disabled={busy || stale} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Stack spacing={2}>
-        <TrainingDraftFields draft={draft} onChange={setDraft} />
+        <TrainingDraftFields accessToken={accessToken} draft={draft} onChange={setDraft} />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <Button variant="outlined" onClick={() => void submit(selected, false, draft)}>Salvar rascunho</Button>
           <Button variant="contained" onClick={() => void submit(selected, true, draft)}>Aprovar alterações</Button>

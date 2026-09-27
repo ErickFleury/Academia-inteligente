@@ -22,7 +22,7 @@ async function request<T>(token: string, path: string, init?: RequestInit): Prom
   if (!response.ok) {
     const message = response.status === 409 ? 'Este rascunho mudou. Recarregue e revise antes de continuar.'
       : response.status === 404 ? 'Este rascunho não está mais pendente. Recarregue a lista.'
-      : response.status === 422 ? 'Verifique os campos do plano e as referências de equipamento.'
+      : response.status === 422 ? 'Verifique os campos. Itens novos ou alterados exigem equipamento com unidade ativa e operacional. Recarregue as opções de equipamento.'
       : response.status === 401 ? 'Sua sessão expirou. Entre novamente.'
       : response.status === 403 ? 'Você não tem permissão para revisar planos.'
       : 'Não foi possível concluir a revisão. Tente novamente.'

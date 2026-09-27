@@ -11,6 +11,7 @@ from app.integrations.ai import (
     TrainingGenerationProvider,
     training_generation_provider_from_environment,
 )
+from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.draft_service import (
     ClientOnboardingScope,
     OnboardingDraftService,
@@ -72,6 +73,7 @@ class InitialTrainingGenerationService:
         # `completion_data` is the shared form/conversation-independent source
         # of truth. The provider never receives another client's data or identity.
         context = {
+            "active_equipment_models": EquipmentService().training_context(session),
             "completed_onboarding": self._drafts.completion_data(onboarding).model_dump(),
             "proposal_rules": {
                 "status": "proposal",

@@ -15,7 +15,6 @@ from app.integrations.ai import (
     training_adaptation_provider_from_environment,
 )
 from app.modules.clients.models import Account, Client
-from app.modules.equipment.models import EquipmentModel
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.models import Onboarding
 from app.modules.training.models import (
@@ -32,7 +31,11 @@ from app.modules.training.schema import (
     TrainingPlanItemInput,
     TrainingPlanVersionInput,
 )
-from app.modules.training.service import ActiveTrainingProposalExistsError, TrainingLifecycleService
+from app.modules.training.service import (
+    ActiveTrainingProposalExistsError,
+    InvalidTrainingContentError,
+    TrainingLifecycleService,
+)
 
 
 class AdaptationError(Exception):
@@ -99,6 +102,12 @@ class TrainingAdaptationService:
             ]
         except ValidationError as error:
             raise AdaptationStateError from error
+        # Match the lifecycle lock order after the external call, before equipment
+        # locks/persistence. This avoids a model/client lock inversion at approval.
+        TrainingLifecycleService._lock_client(session, client_id)
+        session.refresh(base)
+        if not self._is_current(session, base):
+            raise AdaptationStateError
         self._validate_operations(session, base, operations)
 
         proposal = TrainingAdaptationProposal(
@@ -152,14 +161,6 @@ class TrainingAdaptationService:
                 raise ActiveTrainingProposalExistsError
             try:
                 data = self._apply(session, base, proposal)
-                retained = set(
-                    session.scalars(
-                        select(TrainingAdaptationOperation.equipment_model_id).where(
-                            TrainingAdaptationOperation.proposal_id == proposal.id,
-                            TrainingAdaptationOperation.equipment_model_id.is_not(None),
-                        )
-                    )
-                )
                 draft = lifecycle.create_revision(
                     session,
                     plan_id=base.plan_id,
@@ -168,10 +169,9 @@ class TrainingAdaptationService:
                     actor="ai",
                     origin="ai",
                     commit=False,
-                    retained_equipment=retained,
                 )
                 proposal.resulting_version_id = draft.id
-            except ValidationError:
+            except (ValidationError, InvalidTrainingContentError):
                 session.rollback()
                 raise AdaptationStateError from None
             except Exception:
@@ -304,7 +304,6 @@ class TrainingAdaptationService:
             .where(TrainingPlanItem.version_id == base.id)
             .order_by(TrainingPlanItem.position)
         )
-        active_equipment_models = self._equipment.active_models_with_units(session)
         return {
             "reason": reason,
             "source_client_message": source.content,
@@ -330,9 +329,7 @@ class TrainingAdaptationService:
             "relevant_onboarding": {
                 key: value for key, value in health.items() if value is not None
             },
-            "active_equipment_models": [
-                {"id": str(model.id), "name": model.name} for model in active_equipment_models
-            ],
+            "active_equipment_models": self._equipment.training_context(session),
         }
 
     def _validate_operations(
@@ -340,8 +337,6 @@ class TrainingAdaptationService:
         session: Session,
         base: TrainingPlanVersion,
         operations: list[AdaptationOperationInput],
-        *,
-        preserved_equipment_model_ids: set[UUID] | None = None,
     ) -> None:
         positions = set(
             session.scalars(
@@ -356,31 +351,25 @@ class TrainingAdaptationService:
                 raise AdaptationStateError
             elif operation.operation_type in {"replace", "adjust"} and operation.item is None:
                 raise AdaptationStateError
-        self._validate_equipment_references(
-            session, operations, preserved_equipment_model_ids or set()
-        )
-
-    def _validate_equipment_references(
-        self,
-        session: Session,
-        operations: list[AdaptationOperationInput],
-        preserved_equipment_model_ids: set[UUID],
-    ) -> None:
-        active_model_ids = {model.id for model in self._equipment.active_models_with_units(session)}
-        allowed_model_ids = active_model_ids | preserved_equipment_model_ids
-        for operation in operations:
-            item = operation.item
-            if item is None:
-                continue
-            requirement = (item.equipment_requirement or "").strip()
-            if not requirement:
-                if item.equipment_model_id is not None:
-                    raise InvalidEquipmentReferenceError
-                continue
-            if item.equipment_model_id is None or item.equipment_model_id not in allowed_model_ids:
-                raise InvalidEquipmentReferenceError
-            if session.get(EquipmentModel, item.equipment_model_id) is None:
-                raise InvalidEquipmentReferenceError
+        candidates = [
+            TrainingPlanItemInput.model_validate(
+                operation.item.model_dump(exclude={"is_existing_exercise"})
+            )
+            for operation in operations
+            if operation.item is not None
+        ]
+        if candidates:
+            try:
+                TrainingLifecycleService.validate_equipment(
+                    session,
+                    TrainingPlanVersionInput(
+                        name=base.name,
+                        objective=base.objective,
+                        items=candidates,
+                    ),
+                )
+            except InvalidTrainingContentError:
+                raise InvalidEquipmentReferenceError from None
 
     @staticmethod
     def _replace_operations(

@@ -26,6 +26,8 @@ const currentPlan = {
       load_guidance: 'Carga confortável e técnica controlada',
       rest_seconds: 90,
       position: 1,
+      equipment_requirement: "Máquina histórica",
+      equipment_model_id: "retained",
     },
   ],
 }
@@ -41,6 +43,7 @@ test('renders the current training plan in workout order', async () => {
   expect(await screen.findByRole('heading', { name: 'Meu treino' })).toBeInTheDocument()
   expect(screen.getByText('Força inicial')).toBeInTheDocument()
   expect(screen.getByText('Agachamento')).toBeInTheDocument()
+  expect(screen.getByText('Equipamento registrado: Máquina histórica')).toBeInTheDocument()
   expect(screen.getByText('3 séries')).toBeInTheDocument()
   expect(screen.getByText('8 repetições')).toBeInTheDocument()
   expect(screen.getByText('Descanso: 90 s')).toBeInTheDocument()

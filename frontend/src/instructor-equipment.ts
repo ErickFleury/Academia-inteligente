@@ -12,3 +12,6 @@ const query = (cursor?: string) => `?limit=20${cursor ? `&cursor=${encodeURIComp
 export const getInstructorEquipment = (token: string, cursor?: string) => request<EquipmentPage<InstructorEquipmentModel>>(token, query(cursor))
 export const getOperationalUnits = (token: string, id: string, cursor?: string) => request<EquipmentPage<OperationalUnit>>(token, `/${id}/units${query(cursor)}`)
 export const setOperationalState = (token: string, unit: OperationalUnit) => request<OperationalUnit>(token, `/units/${unit.id}/operational-state`, { method: 'PATCH', body: JSON.stringify({ operational_state: unit.operational_state === 'operational' ? 'out_of_order' : 'operational', expected_revision: unit.revision }) })
+
+export type UsableEquipmentModel = { id: string; name: string }
+export const getUsableEquipment = (token: string, cursor?: string) => request<{ items: UsableEquipmentModel[]; next_cursor: string | null }>(token, `/usable-models?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`)

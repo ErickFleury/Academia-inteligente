@@ -97,12 +97,18 @@ _EXTRACTION = (
     "Extraia somente fatos explicitamente informados para o esquema. "
     "Não invente, diagnostique ou prescreva."
 )
+_TRAINING_EQUIPMENT = (
+    " Para conteúdo novo ou alterado que dependa de máquina, use somente os modelos "
+    "de active_equipment_models: informe UUID exato em equipment_model_id e nome "
+    "em equipment_requirement. Sem equipamento, ambos são null. Preserve as referências "
+    "e descrições de itens históricos não alterados. Não infira ocupação ou uso imediato."
+)
 _TRAINING_GENERATION = (
     "Gere uma proposta inicial de treino de academia em português usando somente o onboarding "
     "fornecido. Respeite limitações, queixas, medicamentos e condições relatadas; não invente "
     "fatos, não faça diagnóstico e não prescreva tratamento. A proposta será obrigatoriamente "
     "revisada por um instrutor antes de poder ser aprovada ou ativada. Retorne apenas o esquema."
-)
+) + _TRAINING_EQUIPMENT
 _TRAINING_CHAT = (
     "Você é o assistente de treino da Academia Inteligente. Responda em português brasileiro, "
     "de forma clara e conversacional, usando somente o contexto fornecido do próprio cliente. "
@@ -120,18 +126,18 @@ _TRAINING_CHAT = (
     "rascunho ou quando não houver rascunho editável. Responda somente ao que foi perguntado, "
     "com no máximo três frases curtas ou três itens breves. Não faça introdução, resumo ou "
     "repetição desnecessária."
-)
+) + _TRAINING_EQUIPMENT
 _TRAINING_ADAPTATION = (
     "Gere uma proposta estruturada de adaptação de treino em português, usando somente o "
     "contexto fornecido do próprio cliente. Não diagnostique, invente fatos ou prescreva "
     "medicação. A proposta não está aprovada nem ativa. Preserve itens não afetados. Você "
     "pode sugerir apenas exercícios reais e reconhecidos; candidatas novas exigem revisão do "
     "instrutor. Quando uma candidata depender de uma máquina, use somente um "
-    "modelo do catálogo ativo fornecido no contexto: informe o UUID exato em "
+    "modelo utilizável fornecido no contexto: informe o UUID exato em "
     "equipment_model_id e uma descrição humana em equipment_requirement. Não "
     "invente, altere ou omita esse UUID. Para exercício sem equipamento, use "
     "equipment_requirement e equipment_model_id como null."
-)
+) + _TRAINING_EQUIPMENT
 
 
 def _json(value: object) -> str:
@@ -180,8 +186,18 @@ def _training_schema() -> dict[str, object]:
             "repetitions": {"type": "string", "minLength": 1, "maxLength": 100},
             "load_guidance": {"type": "string", "minLength": 1, "maxLength": 500},
             "rest_seconds": {"type": "integer", "minimum": 0, "maximum": 3600},
+            "equipment_requirement": {"type": ["string", "null"], "maxLength": 200},
+            "equipment_model_id": {"type": ["string", "null"], "format": "uuid"},
         },
-        "required": ["exercise_name", "sets", "repetitions", "load_guidance", "rest_seconds"],
+        "required": [
+            "exercise_name",
+            "sets",
+            "repetitions",
+            "load_guidance",
+            "rest_seconds",
+            "equipment_requirement",
+            "equipment_model_id",
+        ],
     }
     return {
         "type": "object",

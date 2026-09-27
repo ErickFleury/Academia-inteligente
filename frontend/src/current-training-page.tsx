@@ -107,6 +107,7 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                         <Box sx={{ borderLeft: '3px solid', borderColor: 'primary.main', pl: 1.5 }}>
                           <Typography color="text.secondary" variant="body2">Orientação de carga</Typography>
                           <Typography sx={{ overflowWrap: 'anywhere' }}>{item.load_guidance}</Typography>
+                          {item.equipment_requirement && <Typography>Equipamento registrado: {item.equipment_requirement}</Typography>}
                         </Box>
                       </Stack>
                     </Box>
@@ -132,6 +133,7 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                     <Typography component="h3" sx={{ overflowWrap: 'anywhere' }} variant="h4">{item.position}. {item.exercise_name}</Typography>
                     <Typography color="text.secondary" variant="body2">{item.sets} séries · {item.repetitions} repetições · {restLabel(item.rest_seconds)}</Typography>
                     <Typography color="text.secondary" variant="body2">{item.load_guidance}</Typography>
+                    {item.equipment_requirement && <Typography>Equipamento registrado: {item.equipment_requirement}</Typography>}
                   </Box>)}
                 </Stack>
               </Stack>

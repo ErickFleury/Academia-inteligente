@@ -17,7 +17,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 function mockFetch(action?: (url: string, init?: RequestInit) => unknown) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url.endsWith('/equipment')) return ok([{ id: 'machine', name: 'Leg Press 45°', active_quantity: 4 }])
+    if (url.includes('/usable-models?')) return ok({ items: [{ id: 'machine', name: 'Leg Press 45°' }], next_cursor: null })
     const result = action?.(url, init)
     if (result) return result
     if (url.includes('/pending?')) return ok({ items: [plan], next_offset: null })
@@ -50,9 +50,10 @@ test('edits the whole draft, preserves equipment, and saving never activates', a
   fireEvent.click(await screen.findByRole('button', { name: 'Editar e aprovar' }))
   await screen.findByRole('heading', { name: 'Revisar plano de Maria Silva' })
   expect(screen.getByRole('combobox', { name: 'Equipamento do catálogo 1' })).toHaveTextContent('Leg Press 45°')
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Equipamento do catálogo 1' })).not.toHaveAttribute('aria-disabled', 'true'))
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Equipamento do catálogo 1' }))
-  expect(await screen.findByRole('option', { name: 'Leg Press 45° — 4 unidades ativas' })).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('option', { name: 'Leg Press 45° — 4 unidades ativas' }))
+  expect(await screen.findByRole('option', { name: 'Leg Press 45°' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('option', { name: 'Leg Press 45°' }))
   fireEvent.change(screen.getByLabelText(/Nome do plano/), { target: { value: 'Força revisada' } })
   fireEvent.change(screen.getByLabelText(/Descanso em segundos 1/), { target: { value: '120' } })
   fireEvent.click(screen.getByRole('button', { name: 'Salvar rascunho' }))

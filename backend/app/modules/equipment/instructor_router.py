@@ -29,6 +29,17 @@ def models(
     return service.instructor_models(session, cursor, limit)
 
 
+@router.get("/usable-models")
+def usable_models(
+    session: DatabaseSession, instructor: Instructor, cursor: UUID | None = None, limit: Limit = 20
+):
+    rows = service.usable_models_with_units(session, cursor=cursor, limit=limit + 1)
+    return {
+        "items": [{"id": str(model.id), "name": model.name} for model in rows[:limit]],
+        "next_cursor": str(rows[limit - 1].id) if len(rows) > limit else None,
+    }
+
+
 @router.get("/{model_id}/units")
 def units(
     model_id: UUID,

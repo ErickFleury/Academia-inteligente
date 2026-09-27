@@ -9,7 +9,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 function setup(override?: (url: string, init?: RequestInit) => unknown) {
   const mock = vi.fn(async (url: string, init?: RequestInit) => {
     const result = override?.(url, init); if (result) return result
-    if (url.endsWith('/equipment')) return ok([])
+    if (url.includes('/usable-models?')) return ok({ items: [], next_cursor: null })
     if (url.includes('/responsible')) return ok({ items: [], next_cursor: null })
     if (url.includes('/clients?')) return ok({ items: [client], next_cursor: null })
     return ok(client)

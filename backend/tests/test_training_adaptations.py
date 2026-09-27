@@ -294,6 +294,11 @@ def test_adaptation_uses_active_catalog_models_and_persists_canonical_identity(
     allowed = equipment_model(session, "Leg Press 45°")
     equipment_model(session, "Modelo sem unidades", active_units=0)
     equipment_model(session, "Modelo inativo", active=False)
+    blocked = equipment_model(session, "Modelo fora de serviço")
+    blocked_unit = session.scalar(
+        select(EquipmentUnit).where(EquipmentUnit.equipment_model_id == blocked.id)
+    )
+    EquipmentService().set_operational_state(session, blocked_unit.id, "out_of_order", 1)
     source_id = uuid4()
     source_message(session, ada, source_id)
     provider = FakeAdaptationProvider(
@@ -347,6 +352,7 @@ def test_adaptation_uses_active_catalog_models_and_persists_canonical_identity(
         (True, 1, "unknown", "Modelo desconhecido"),
         (True, 1, None, "Modelo sem referência"),
         (True, 1, "created", None),
+        (True, 1, "out_of_order", "Modelo fora de serviço"),
     ],
 )
 def test_invalid_equipment_references_are_rejected_atomically(
@@ -363,9 +369,14 @@ def test_invalid_equipment_references_are_rejected_atomically(
     )
     source_id = uuid4()
     source_message(session, ada, source_id)
+    if model_reference == "out_of_order":
+        unit = session.scalar(
+            select(EquipmentUnit).where(EquipmentUnit.equipment_model_id == model.id)
+        )
+        EquipmentService().set_operational_state(session, unit.id, "out_of_order", 1)
     reference = (
         str(model.id)
-        if model_reference == "created"
+        if model_reference in {"created", "out_of_order"}
         else str(uuid4())
         if model_reference == "unknown"
         else None
@@ -449,7 +460,10 @@ def test_renamed_or_deactivated_model_preserves_retained_proposal_history(
         image_url=None,
         active=False,
     )
-    service.client_decide(session, "ada", proposal.id, True)
+    with pytest.raises(AdaptationStateError):
+        service.client_decide(session, "ada", proposal.id, True)
+    session.refresh(proposal)
+    assert proposal.status == "proposed" and proposal.resulting_version_id is None
     operation = session.scalar(
         select(TrainingAdaptationOperation).where(
             TrainingAdaptationOperation.proposal_id == proposal.id
@@ -458,14 +472,6 @@ def test_renamed_or_deactivated_model_preserves_retained_proposal_history(
     assert operation is not None
     assert operation.equipment_model_id == model.id
     assert operation.equipment_requirement == "Leg Press 45°"
-    draft_item = session.scalar(
-        select(TrainingPlanItem).where(
-            TrainingPlanItem.version_id == proposal.resulting_version_id,
-            TrainingPlanItem.position == 1,
-        )
-    )
-    assert draft_item.equipment_model_id == model.id
-    assert draft_item.equipment_requirement == "Leg Press 45°"
 
 
 def test_wrong_client_and_provider_failure_create_no_proposal(session: Session) -> None:
@@ -514,3 +520,48 @@ def test_retryable_generation_failure_retries_once(session: Session) -> None:
     )
     assert proposal.status == "proposed"
     assert provider.calls == 2
+
+
+def test_adaptation_carries_unchanged_approved_machine_item_through_outage(session):
+    ada = client(session, "ada", "ada@example.test")
+    base = current_plan(session, ada)
+    model = equipment_model(session, "Máquina histórica")
+    lifecycle = TrainingLifecycleService()
+    content = lifecycle.content(session, base)
+    item = content.items[1]
+    item.equipment_model_id, item.equipment_requirement = model.id, model.name
+    draft = lifecycle.create_revision(
+        session, plan_id=base.plan_id, version_number=1, data=content, actor="instructor-1"
+    )
+    base = lifecycle.approve(
+        session,
+        plan_id=draft.plan_id,
+        version_number=2,
+        actor="instructor-1",
+        expected_revision=draft.revision,
+    )
+    unit = session.scalar(select(EquipmentUnit).where(EquipmentUnit.equipment_model_id == model.id))
+    EquipmentService().set_operational_state(session, unit.id, "out_of_order", 1)
+    source_id = uuid4()
+    source_message(session, ada, source_id)
+    provider = FakeAdaptationProvider(adjust_response())
+    service = TrainingAdaptationService(provider)
+    proposal = service.generate(
+        session,
+        "ada",
+        source_client_request_id=source_id,
+        client_request_id=uuid4(),
+        reason="Ajustar agachamento",
+    )
+    assert provider.contexts[0]["active_equipment_models"] == []
+    service.client_decide(session, "ada", proposal.id, True)
+    draft = session.get(TrainingPlanVersion, proposal.resulting_version_id)
+    lifecycle.approve(
+        session,
+        plan_id=draft.plan_id,
+        version_number=draft.version_number,
+        actor="instructor-1",
+        expected_revision=draft.revision,
+    )
+    assert lifecycle.content(session, draft).items[1] == item
+    assert lifecycle.content(session, base) == content

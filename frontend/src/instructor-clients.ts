@@ -7,7 +7,7 @@ export type ClientFilters = { search: string; onboarding: string; training: stri
 export const emptyClientFilters: ClientFilters = { search: '', onboarding: 'all', training: 'all', responsibility: 'all', responsible: '' }
 async function request<T>(token: string, path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${base}/instructor/clients${path}`, { ...init, cache: 'no-store', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } })
-  if (!response.ok) throw new ApiRequestError(response.status === 409 ? 'O cliente já possui um plano ou rascunho. Recarregue o cadastro para continuar.' : response.status === 422 ? 'Verifique os campos e as referências de equipamento.' : response.status === 404 ? 'Cliente não encontrado nesta área.' : response.status === 401 ? 'Sua sessão expirou. Entre novamente.' : response.status === 403 ? 'Você não tem permissão para acessar esta área.' : 'Não foi possível concluir a operação. Tente novamente.', response.status)
+  if (!response.ok) throw new ApiRequestError(response.status === 409 ? 'O cliente já possui um plano ou rascunho. Recarregue o cadastro para continuar.' : response.status === 422 ? 'Verifique os campos. Itens novos exigem equipamento com unidade ativa e operacional. Recarregue as opções de equipamento.' : response.status === 404 ? 'Cliente não encontrado nesta área.' : response.status === 401 ? 'Sua sessão expirou. Entre novamente.' : response.status === 403 ? 'Você não tem permissão para acessar esta área.' : 'Não foi possível concluir a operação. Tente novamente.', response.status)
   return response.json() as Promise<T>
 }
 export function searchInstructorClients(token: string, filters: ClientFilters, cursor?: string) {

@@ -7,6 +7,8 @@ export type CurrentTrainingItem = {
   load_guidance: string
   rest_seconds: number
   position: number
+  equipment_requirement?: string | null
+  equipment_model_id?: string | null
 }
 
 export type CurrentTrainingPlan = {

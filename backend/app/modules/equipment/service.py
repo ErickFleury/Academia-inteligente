@@ -30,24 +30,55 @@ class ModelSummary:
 
 
 class EquipmentService:
-    def usable_models_with_units(self, session: Session) -> list[EquipmentModel]:
-        """Training usability only; operational never means currently free."""
-        return list(
+    @staticmethod
+    def lock_models(session: Session, model_ids: set[UUID]) -> None:
+        # All inventory/state writers use this same ordered parent-row boundary.
+        list(
             session.scalars(
                 select(EquipmentModel)
-                .where(
-                    EquipmentModel.active,
-                    select(EquipmentUnit.id)
-                    .where(
-                        EquipmentUnit.equipment_model_id == EquipmentModel.id,
-                        EquipmentUnit.active,
-                        EquipmentUnit.operational_state == "operational",
-                    )
-                    .exists(),
-                )
-                .order_by(EquipmentModel.name, EquipmentModel.id)
+                .where(EquipmentModel.id.in_(model_ids))
+                .order_by(EquipmentModel.id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
             )
         )
+
+    def usable_models_with_units(
+        self,
+        session: Session,
+        *,
+        model_ids: set[UUID] | None = None,
+        cursor: UUID | None = None,
+        limit: int | None = None,
+    ) -> list[EquipmentModel]:
+        """Training usability only; operational never means currently free."""
+        statement = (
+            select(EquipmentModel)
+            .where(
+                EquipmentModel.active,
+                select(EquipmentUnit.id)
+                .where(
+                    EquipmentUnit.equipment_model_id == EquipmentModel.id,
+                    EquipmentUnit.active,
+                    EquipmentUnit.operational_state == "operational",
+                )
+                .exists(),
+            )
+            .order_by(EquipmentModel.id)
+        )
+        if model_ids is not None:
+            statement = statement.where(EquipmentModel.id.in_(model_ids))
+        if cursor is not None:
+            statement = statement.where(EquipmentModel.id > cursor)
+        if limit is not None:
+            statement = statement.limit(limit)
+        return list(session.scalars(statement.execution_options(populate_existing=True)))
+
+    def training_context(self, session: Session) -> list[dict[str, str]]:
+        return [
+            {"id": str(model.id), "name": model.name}
+            for model in self.usable_models_with_units(session, limit=100)
+        ]
 
     def instructor_models(self, session: Session, cursor: UUID | None, limit: int):
         statement = (
@@ -187,6 +218,7 @@ class EquipmentService:
         image_url: str | None,
         active: bool | None,
     ) -> EquipmentModel:
+        self.lock_models(session, {model_id})
         model = self.model(session, model_id)
         if name is not None:
             model.name = self._required_name(name)
@@ -203,6 +235,7 @@ class EquipmentService:
     def create_unit(
         self, session: Session, model_id: UUID, label: str | None, active: bool
     ) -> EquipmentUnit:
+        self.lock_models(session, {model_id})
         self.model(session, model_id)
         unit = EquipmentUnit(
             equipment_model_id=model_id, label=self._optional_text(label), active=active
@@ -215,7 +248,11 @@ class EquipmentService:
     def update_unit(
         self, session: Session, unit_id: UUID, *, label: str | None, active: bool | None
     ) -> EquipmentUnit:
-        unit = session.get(EquipmentUnit, unit_id)
+        model_id = session.scalar(
+            select(EquipmentUnit.equipment_model_id).where(EquipmentUnit.id == unit_id)
+        )
+        self.lock_models(session, {model_id} if model_id else set())
+        unit = session.get(EquipmentUnit, unit_id, populate_existing=True)
         if unit is None:
             raise EquipmentNotFoundError
         if label is not None:

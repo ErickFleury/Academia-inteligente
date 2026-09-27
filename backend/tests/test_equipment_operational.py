@@ -95,6 +95,7 @@ def test_operations_require_linked_active_instructor(session, api, role):
     model, unit = equipment(session)
     identity.identity = AuthenticatedIdentity("unlinked", "user", (role,))
     assert http.get(BASE).status_code in (401, 403)
+    assert http.get(BASE + "/usable-models").status_code in (401, 403)
     assert http.get(f"{BASE}/{model.id}/units").status_code in (401, 403)
     assert http.patch(
         f"{BASE}/units/{unit.id}/operational-state",
