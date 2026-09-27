@@ -18,6 +18,8 @@ import type { ReactNode } from 'react'
 import { ClientShell } from './components/application-shell'
 import { RouterButtonLink } from './components/router-button-link'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
+import { InstructorShell } from './instructor-shell'
+import { readInstructorOnboarding, saveInstructorOnboarding, completeInstructorOnboarding } from './instructor-onboarding'
 import { OnboardingCompletion } from './onboarding-completion'
 import {
   completeOwnOnboarding,
@@ -28,7 +30,7 @@ import {
   type TrainingExperience,
 } from './onboarding-draft'
 
-type OnboardingFormProps = { accessToken: string; onCompleted?: () => void; onSignOut: () => void }
+type OnboardingFormProps = { accessToken: string; onCompleted?: () => void; onSignOut: () => void; instructorClient?: { id: string; name: string }; onBack?: () => void }
 
 type FormValues = Omit<OnboardingDraft, 'status' | 'completed_at'>
 
@@ -131,7 +133,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export function OnboardingForm({ accessToken, onCompleted, onSignOut }: OnboardingFormProps) {
+export function OnboardingForm({ accessToken, onCompleted, onSignOut, instructorClient, onBack }: OnboardingFormProps) {
   const [values, setValues] = useState<FormValues>(emptyValues)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -139,10 +141,15 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
   const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [reload, setReload] = useState(0)
 
   useEffect(() => {
     let active = true
-    void getOwnOnboardingDraft(accessToken)
+    setLoading(true)
+    setError(null)
+    setDraft(null)
+    setValues(emptyValues)
+    void (instructorClient ? readInstructorOnboarding(accessToken, instructorClient.id) : getOwnOnboardingDraft(accessToken))
       .then((loadedDraft) => {
         if (active) {
           setDraft(loadedDraft)
@@ -152,7 +159,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
       .catch((reason: unknown) => active && setError(reason instanceof Error ? reason.message : 'Não foi possível carregar o onboarding.'))
       .finally(() => active && setLoading(false))
     return () => { active = false }
-  }, [accessToken])
+  }, [accessToken, instructorClient?.id, reload])
 
   function update<K extends keyof FormValues>(field: K, value: FormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -177,10 +184,11 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
     if (payload.uses_medications === false) payload.medications = null
     if (payload.has_health_conditions === false) payload.health_conditions = null
     try {
-      const saved = await saveOwnOnboardingDraft(accessToken, payload)
+      const saved = await (instructorClient ? saveInstructorOnboarding(accessToken, instructorClient.id, payload) : saveOwnOnboardingDraft(accessToken, payload))
       setDraft(saved)
       setValues(valuesFromDraft(saved))
-      setSuccess('Rascunho salvo com segurança.')
+      setSuccess(saved.status === 'completed' ? 'Onboarding atualizado com segurança.' : 'Rascunho salvo com segurança.')
+      return saved
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível salvar seu onboarding.')
     } finally {
@@ -193,10 +201,12 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
     setError(null)
     setSuccess(null)
     try {
-      const completed = await completeOwnOnboarding(accessToken)
+      const saved = await saveDraft()
+      if (!saved) return
+      const completed = await (instructorClient ? completeInstructorOnboarding(accessToken, instructorClient.id) : completeOwnOnboarding(accessToken))
       setDraft(completed)
       setValues(valuesFromDraft(completed))
-      setSuccess('Seu onboarding foi concluído com sucesso.')
+      setSuccess(instructorClient ? 'Onboarding concluído com sucesso.' : 'Seu onboarding foi concluído com sucesso.')
       onCompleted?.()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível concluir seu onboarding.')
@@ -205,22 +215,24 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
     }
   }
 
-  if (loading) return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando seu onboarding" /></ClientShell>
+  const wrap = (children: ReactNode) => instructorClient ? <InstructorShell onSignOut={onSignOut}>{children}</InstructorShell> : <ClientShell onSignOut={onSignOut} showClientNavigation>{children}</ClientShell>
+  const readOnly = saving || completing || !draft || (draft.status === 'completed' && !instructorClient)
+  if (loading) return wrap(<LoadingState label="Carregando seu onboarding" />)
 
-  return (
-    <ClientShell onSignOut={onSignOut} showClientNavigation>
+  return wrap(
       <Stack spacing={3} sx={{ maxWidth: 840 }}>
         <PageHeader
-          action={<RouterButtonLink to="/assistente" variant="outlined">Responder por conversa</RouterButtonLink>}
+          action={instructorClient ? <Button onClick={onBack} variant="outlined">Voltar aos clientes</Button> : <RouterButtonLink to="/assistente" variant="outlined">Responder por conversa</RouterButtonLink>}
           description="Salve seu progresso quando quiser. Os campos marcados como necessários serão validados na conclusão do onboarding."
-          eyebrow="Seu perfil de treino"
-          title="Conte um pouco sobre você"
+          eyebrow={instructorClient ? "Preparação do treino" : "Seu perfil de treino"}
+          title={instructorClient ? `Onboarding de ${instructorClient.name}` : "Conte um pouco sobre você"}
         />
         {error && <StatusNotice severity="error">{error}</StatusNotice>}
+        {error && !draft && <Button onClick={() => setReload((value) => value + 1)}>Tentar novamente</Button>}
         {success && <StatusNotice severity="success">{success}</StatusNotice>}
         <Section title="Objetivo e experiência">
           <TextField
-            disabled={draft?.status === 'completed'}
+            disabled={readOnly}
             fullWidth
             helperText="Necessário para concluir · até 500 caracteres"
             label="Qual é o seu objetivo de treino?"
@@ -231,7 +243,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
           <FormControl fullWidth>
             <InputLabel id="experience-label">Experiência de treino</InputLabel>
             <Select
-              disabled={draft?.status === 'completed'}
+              disabled={readOnly}
               label="Experiência de treino"
               labelId="experience-label"
               onChange={(event) => update(
@@ -251,7 +263,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
         <Section title="Dados físicos">
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              disabled={draft?.status === 'completed'}
+              disabled={readOnly}
               fullWidth
               helperText="Em centímetros · use apenas números · necessário para concluir"
               inputMode="numeric"
@@ -265,7 +277,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
               value={values.height_cm ?? ''}
             />
             <TextField
-              disabled={draft?.status === 'completed'}
+              disabled={readOnly}
               fullWidth
               helperText="Em quilogramas · use apenas números · até 2 casas decimais"
               inputMode="decimal"
@@ -281,20 +293,19 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut }: Onboardi
           </Stack>
         </Section>
         <Section title="Limitações e queixas">
-          <BooleanSelect disabled={draft?.status === 'completed'} id="limitations-answer" label="Você tem alguma limitação ou queixa relevante?" onChange={(value) => update('has_limitations_or_complaints', value)} value={values.has_limitations_or_complaints} />
-          {values.has_limitations_or_complaints && <TextField disabled={draft?.status === 'completed'} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte quais são as limitações ou queixas" multiline minRows={4} onChange={(event) => update('limitations_or_complaints', event.target.value)} value={values.limitations_or_complaints ?? ''} />}
+          <BooleanSelect disabled={readOnly} id="limitations-answer" label="Você tem alguma limitação ou queixa relevante?" onChange={(value) => update('has_limitations_or_complaints', value)} value={values.has_limitations_or_complaints} />
+          {values.has_limitations_or_complaints && <TextField disabled={readOnly} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte quais são as limitações ou queixas" multiline minRows={4} onChange={(event) => update('limitations_or_complaints', event.target.value)} value={values.limitations_or_complaints ?? ''} />}
         </Section>
         <Section title="Medicações">
-          <BooleanSelect disabled={draft?.status === 'completed'} id="medications-answer" label="Você utiliza alguma medicação?" onChange={(value) => update('uses_medications', value)} value={values.uses_medications} />
-          {values.uses_medications && <TextField disabled={draft?.status === 'completed'} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Quais medicações você utiliza?" multiline minRows={4} onChange={(event) => update('medications', event.target.value)} value={values.medications ?? ''} />}
+          <BooleanSelect disabled={readOnly} id="medications-answer" label="Você utiliza alguma medicação?" onChange={(value) => update('uses_medications', value)} value={values.uses_medications} />
+          {values.uses_medications && <TextField disabled={readOnly} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Quais medicações você utiliza?" multiline minRows={4} onChange={(event) => update('medications', event.target.value)} value={values.medications ?? ''} />}
         </Section>
         <Section title="Condições e histórico de saúde">
-          <BooleanSelect disabled={draft?.status === 'completed'} id="health-conditions-answer" label="Você tem alguma condição de saúde ou histórico relevante?" onChange={(value) => update('has_health_conditions', value)} value={values.has_health_conditions} />
-          {values.has_health_conditions && <TextField disabled={draft?.status === 'completed'} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte as condições ou o histórico relevante" multiline minRows={4} onChange={(event) => update('health_conditions', event.target.value)} value={values.health_conditions ?? ''} />}
+          <BooleanSelect disabled={readOnly} id="health-conditions-answer" label="Você tem alguma condição de saúde ou histórico relevante?" onChange={(value) => update('has_health_conditions', value)} value={values.has_health_conditions} />
+          {values.has_health_conditions && <TextField disabled={readOnly} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte as condições ou o histórico relevante" multiline minRows={4} onChange={(event) => update('health_conditions', event.target.value)} value={values.health_conditions ?? ''} />}
         </Section>
-        {draft?.status !== 'completed' && <Box><Button disabled={saving} onClick={() => void saveDraft()} size="large" variant="contained">{saving ? 'Salvando rascunho…' : 'Salvar rascunho'}</Button></Box>}
-        <OnboardingCompletion completedAt={draft?.completed_at ?? null} missingFields={missingFields(values)} onComplete={() => void complete()} submitting={completing} />
+        {(draft?.status !== 'completed' || instructorClient) && <Box><Button disabled={readOnly} onClick={() => void saveDraft()} size="large" variant="contained">{saving ? 'Salvando…' : draft?.status === 'completed' ? 'Salvar alterações do onboarding' : 'Salvar rascunho'}</Button></Box>}
+        {instructorClient && draft?.status === 'completed' ? <StatusNotice severity="info">Onboarding concluído. As alterações preservam a data original de conclusão.</StatusNotice> : <OnboardingCompletion completedAt={draft?.completed_at ?? null} missingFields={missingFields(values)} onComplete={() => void complete()} submitting={completing || saving || !draft} />}
       </Stack>
-    </ClientShell>
   )
 }

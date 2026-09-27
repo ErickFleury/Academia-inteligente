@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { OnboardingForm } from './onboarding-form'
+vi.mock('./occupancy', () => ({ getOccupancy: async () => ({ occupancy: 0 }) }))
 
 const emptyDraft = {
   status: 'draft',
@@ -107,6 +108,7 @@ test('prevents incomplete completion and displays the completed state after the 
   }
   const fetchMock = vi.fn()
     .mockResolvedValueOnce({ ok: true, json: async () => completeDraft })
+    .mockResolvedValueOnce({ ok: true, json: async () => completeDraft })
     .mockResolvedValueOnce({ ok: true, json: async () => ({ ...completeDraft, status: 'completed', completed_at: '2026-09-21T12:00:00Z' }) })
   vi.stubGlobal('fetch', fetchMock)
 
@@ -121,6 +123,6 @@ test('prevents incomplete completion and displays the completed state after the 
   expect(screen.getByLabelText('Conte quais são as limitações ou queixas')).toBeDisabled()
   expect(screen.getByLabelText('Quais medicações você utiliza?')).toBeDisabled()
   expect(screen.getByLabelText('Conte as condições ou o histórico relevante')).toBeDisabled()
-  expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8000/onboarding/me/completion')
-  expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST' })
+  expect(fetchMock.mock.calls[2][0]).toBe('http://localhost:8000/onboarding/me/completion')
+  expect(fetchMock.mock.calls[2][1]).toMatchObject({ method: 'POST' })
 })

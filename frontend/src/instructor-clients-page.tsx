@@ -6,6 +6,7 @@ import { RouterButtonLink } from './components/router-button-link'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { createManualDraft, emptyClientFilters, getInstructorClient, searchInstructorClients, type ClientFilters, type InstructorClient } from './instructor-clients'
 import { InstructorShell } from './instructor-shell'
+import { OnboardingForm } from './onboarding-form'
 import { getResponsibleOptions } from './training-collections'
 import { TrainingDraftFields } from './training-draft-fields'
 import type { ReviewContent } from './training-review'
@@ -23,6 +24,7 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
   const [options, setOptions] = useState<{ reference: string; name: string }[]>([])
   const [optionsCursor, setOptionsCursor] = useState<string | null>(null)
   const [selected, setSelected] = useState<InstructorClient | null>(null)
+  const [onboardingClient, setOnboardingClient] = useState<InstructorClient | null>(null)
   const [draft, setDraft] = useState<ReviewContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -56,6 +58,7 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
     finally { working.current = false; setBusy(false) }
   }
   const change = (key: keyof ClientFilters, value: string) => setFilters({ ...filters, [key]: value })
+  if (onboardingClient) return <OnboardingForm accessToken={accessToken} onSignOut={onSignOut} instructorClient={onboardingClient} onBack={() => { setOnboardingClient(null); void open(onboardingClient.id); void load() }} />
   return <InstructorShell onSignOut={onSignOut}><Stack spacing={3}>
     <PageHeader title="Clientes" eyebrow="Preparação de treinos" description="Encontre clientes pelo nome e acompanhe o onboarding e os planos." />
     <Stack component="form" spacing={2} onSubmit={(event) => { event.preventDefault(); setSelected(null); setDraft(null); void load(filters) }}>
@@ -77,7 +80,7 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
     {busy && <LoadingState label="Processando dados de treino" />}
     {selected && <Card component="section"><CardContent><Stack spacing={2}>
       <Typography component="h2" tabIndex={-1} ref={heading} variant="h3">Treinos de {selected.name}</Typography><State client={selected} />
-      <Typography color="text.secondary">O preenchimento e a edição do onboarding estarão disponíveis nesta área em breve.</Typography>
+      <Button disabled={busy} onClick={() => setOnboardingClient(selected)}>{selected.onboarding_status === 'completed' ? 'Editar onboarding concluído' : 'Preencher ou continuar onboarding'}</Button>
       <Button disabled={busy} onClick={() => void open(selected.id)}>Recarregar cadastro</Button>
       {selected.draft_id && <RouterButtonLink to={`/instrutor/planos-pendentes?rascunho=${selected.draft_id}`}>Abrir rascunho</RouterButtonLink>}
       {selected.current_id && <RouterButtonLink to={`/instrutor/todos-os-planos?plano=${selected.current_id}`}>Ver plano atual e histórico</RouterButtonLink>}

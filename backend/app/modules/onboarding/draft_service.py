@@ -34,6 +34,7 @@ class OnboardingAlreadyCompletedError(Exception):
 class ClientOnboardingScope:
     client_id: UUID
     account_id: UUID
+    actor_employee_id: UUID | None = None
 
 
 class OnboardingDraftService:
@@ -57,16 +58,22 @@ class OnboardingDraftService:
             raise OnboardingNotFoundError
         return ClientOnboardingScope(client_id=row[0], account_id=row[1])
 
-    def get_or_create_draft(self, session: Session, scope: ClientOnboardingScope) -> Onboarding:
+    def get_or_create_draft(
+        self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
+    ) -> Onboarding:
+        session.scalar(select(Client.id).where(Client.id == scope.client_id).with_for_update())
         onboarding = session.scalar(
-            select(Onboarding).where(Onboarding.client_id == scope.client_id)
+            select(Onboarding)
+            .where(Onboarding.client_id == scope.client_id)
+            .execution_options(populate_existing=True)
         )
         if onboarding is None:
             onboarding = Onboarding(client_id=scope.client_id, status="draft")
             session.add(onboarding)
             session.flush()
             self._audit(session, onboarding, scope, "onboarding_draft_created", ())
-            session.commit()
+            if commit:
+                session.commit()
         return onboarding
 
     def save_draft(
@@ -77,7 +84,7 @@ class OnboardingDraftService:
         *,
         commit: bool = True,
     ) -> Onboarding:
-        onboarding = self.get_or_create_draft(session, scope)
+        onboarding = self.get_or_create_draft(session, scope, commit=commit)
         if onboarding.status != "draft":
             raise OnboardingNotEditableError
 
@@ -97,9 +104,11 @@ class OnboardingDraftService:
             session.flush()
         return onboarding
 
-    def complete_draft(self, session: Session, scope: ClientOnboardingScope) -> Onboarding:
+    def complete_draft(
+        self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
+    ) -> Onboarding:
         """Atomically validate and complete the client's own structured onboarding."""
-        onboarding = self.get_or_create_draft(session, scope)
+        onboarding = self.get_or_create_draft(session, scope, commit=commit)
         if onboarding.status == "completed":
             raise OnboardingAlreadyCompletedError
 
@@ -109,8 +118,11 @@ class OnboardingDraftService:
         onboarding.status = "completed"
         onboarding.completed_at = datetime.now(UTC)
         self._audit(session, onboarding, scope, "onboarding_completed", ())
-        session.commit()
-        session.refresh(onboarding)
+        if commit:
+            session.commit()
+            session.refresh(onboarding)
+        else:
+            session.flush()
         return onboarding
 
     def has_valid_completed_onboarding(self, session: Session, client_id: UUID) -> bool:
@@ -206,7 +218,8 @@ class OnboardingDraftService:
                 onboarding_id=onboarding.id,
                 client_id=scope.client_id,
                 actor_account_id=scope.account_id,
-                action=action,
+                actor_employee_id=scope.actor_employee_id,
+                action=f"instructor_{action}" if scope.actor_employee_id else action,
                 changed_fields=",".join(changed_fields) or None,
                 succeeded=True,
             )

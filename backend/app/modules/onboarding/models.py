@@ -83,6 +83,7 @@ class OnboardingAuditEvent(Base):
     actor_account_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("account.id"), nullable=False
     )
+    actor_employee_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("employee.id"))
     action: Mapped[str] = mapped_column(String(64), nullable=False)
     changed_fields: Mapped[str | None] = mapped_column(String(1000))
     succeeded: Mapped[bool] = mapped_column(Boolean, nullable=False)

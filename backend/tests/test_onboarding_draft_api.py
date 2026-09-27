@@ -11,7 +11,7 @@ from sqlalchemy.pool import StaticPool
 from app.database import Base, get_database_session
 from app.integrations.ai import AiInterviewTurnResponse, AiOnboardingExtractionResponse
 from app.main import create_app
-from app.modules.clients.models import Account, Client
+from app.modules.clients.models import Account, Client, PersonProfile
 from app.modules.identity import router as identity_router
 from app.modules.identity.service import AuthenticatedIdentity
 from app.modules.onboarding import router as onboarding_router
@@ -101,6 +101,18 @@ def create_client(session: Session, subject: str, email: str) -> Client:
     client = Client(
         name=email.split("@")[0],
         account=Account(email=email, keycloak_subject=subject, account_active=True),
+    )
+    client.account.person_profile = PersonProfile(
+        first_name=client.name,
+        surname="Teste",
+        cpf=f"{len(session.scalars(select(Client)).all()):011d}",
+        phone="11998765432",
+        postal_code="01001000",
+        street="Rua de teste",
+        number="1",
+        neighborhood="Centro",
+        city="São Paulo",
+        state="SP",
     )
     session.add(client)
     session.commit()

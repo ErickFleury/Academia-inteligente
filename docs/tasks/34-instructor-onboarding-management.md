@@ -2,7 +2,22 @@
 
 ## Status
 
-Planned. Depends on Tasks 12, 29, 30, and 33.
+Implemented (2026-09-27). Depends on Tasks 12, 29, 30, and 33.
+
+Verification: 31 instructor/client onboarding, conversation, and downstream
+generation backend tests and ten form/workspace frontend tests pass; production
+build, Ruff, and Git whitespace checks pass. Synthetic Firefox checks cover the
+completed editable form at 360×800, 768×1024, and 1366×768 without horizontal
+overflow. Audit migration 20260927_24 applied successfully.
+
+The existing schema and completion service remain authoritative. Instructor
+reads, successful/failed writes, and completion carry Employee attribution and
+field names only. Completed updates retain the original timestamp. Client
+locking prevents a stale client draft write from changing completed data.
+The shared form saves displayed values before explicit completion; completed
+client forms remain read-only. No AI call, onboarding history, or plan mutation
+was added. Existing client API test fixtures were brought up to the approved
+PersonProfile schema.
 
 ## Objective
 
