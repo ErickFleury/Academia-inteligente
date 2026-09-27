@@ -369,6 +369,11 @@ Send a registered client an e-mail containing a link for the first onboarding.
 - [ ] **CA-09.2:** the link points to that client's onboarding.
 - [ ] **CA-09.3:** a delivery failure is recorded as a failure, not as completion.
 
+**Administrative UI amendment:** client registration and detail/edit panels do
+not expose the redundant "Enviar convite de onboarding" action. Clients reach
+their pending onboarding after login. The invitation API and existing secure
+links remain supported.
+
 ### RF-10 Access onboarding through a secure link
 
 **Scope:** stated MVP.

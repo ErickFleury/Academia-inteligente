@@ -6,7 +6,7 @@ import { WorkspaceIcon } from './components/workspace-presentation'
 import { EmptyState, LoadingState, StatusNotice } from './components/ui'
 import { FacialEnrollment } from './components/facial-enrollment'
 import { biometricMessage, isBiometricError, personBinding, validProof, type EnrollmentProof } from './biometrics'
-import { ApiRequestError, type Client, type ClientInput, createClient, eraseClient, getClient, listClients, lookupPostalCode, provisionClientIdentity, sendOnboardingInvitation, updateClient } from './clients'
+import { ApiRequestError, type Client, type ClientInput, createClient, eraseClient, getClient, listClients, lookupPostalCode, provisionClientIdentity, updateClient } from './clients'
 
 type Props = { accessToken: string; onUnauthenticated: () => void }
 type Form = ClientInput
@@ -105,7 +105,6 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
     }
   }
   async function provision() { if (!selected) return; setError(null); setSuccess(null); try { const updated = await provisionClientIdentity(accessToken, selected.id); setClients((items) => items.map((item) => item.id === updated.id ? updated : item)); select(updated); setSuccess('Acesso do cliente sincronizado.') } catch (reason) { setError(message(reason, 'Não foi possível provisionar o acesso do cliente.')) } }
-  async function invite() { if (!selected) return; try { await sendOnboardingInvitation(accessToken, selected.id); setSuccess('Convite de onboarding enviado. Expira em 24 horas.') } catch (reason) { setError(message(reason, 'Não foi possível enviar o convite de onboarding.')) } }
   async function erase() {
     if (!selected || !window.confirm(`Excluir permanentemente o cadastro de cliente de ${selected.name} e seus dados de cliente? Se houver vínculo como instrutor, ele e o acesso correspondente serão preservados. Esta ação não pode ser desfeita.`)) return
     setError(null)
@@ -161,7 +160,6 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
           <Typography component="h3" variant="h4">Acesso e conta</Typography>
           <FormControlLabel control={<Switch checked={clientActive} disabled={writing} onChange={(event) => setClientActive(event.target.checked)} />} label="Cliente ativo" />
           {selected.identity_provisioned === false && <Button onClick={() => void write(provision)} disabled={writing} variant="outlined">{writing ? 'Sincronizando...' : 'Provisionar acesso'}</Button>}
-          {selected.identity_provisioned === true && selected.client_active && <Button onClick={() => void write(invite)} disabled={writing} variant="outlined">Enviar convite de onboarding</Button>}
           <Divider />
           <Button color="error" disabled={writing} onClick={() => void write(erase)} sx={{ alignSelf: 'flex-start' }}>Excluir cadastro de cliente</Button>
         </Stack></Box>
