@@ -124,7 +124,7 @@ function AccessPanel({ token, version, changed, report }: PanelProps) {
   async function chooseDirection(value: Direction | null) {
     if (!value || value === direction) return
     await run(async () => {
-      if (attempt) await biometricRequest(token, `/access-attempts/${attempt.attempt_id}/cancel`, { command_id: crypto.randomUUID() }, controller.current.signal)
+      if (attempt) await biometricRequest(token, `/access-attempts/${attempt.attempt_id}/cancellation`, { command_id: crypto.randomUUID() }, controller.current.signal)
       if (alive.current) { setAttempt(null); setUncertain(false); setDirection(value); startCommand.current = null; changed() }
     })
   }
