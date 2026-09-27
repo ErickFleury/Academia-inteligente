@@ -409,21 +409,22 @@ export function SocialProfilePage({
               <CardContent>
                 <Stack spacing={2.5}>
                   <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    sx={{ alignItems: { sm: "center" } }}
+                    direction="row"
+                    spacing={1.5}
+                    useFlexGap
+                    sx={{ alignItems: "center", flexWrap: "wrap" }}
                   >
                     {isOwner ? (
                       <ButtonBase
                         aria-label="Gerenciar foto de perfil"
                         disabled={saving}
                         onClick={() => setImageDialogOpen(true)}
-                        sx={{ borderRadius: "50%", height: 96, width: 96 }}
+                        sx={{ borderRadius: "50%", height: { xs: 64, sm: 96 }, width: { xs: 64, sm: 96 }, flexShrink: 0 }}
                       >
                         <Avatar
                           alt={`Foto de ${profile.name}`}
                           src={imageUrl ?? undefined}
-                          sx={{ height: 96, width: 96, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
+                          sx={{ height: { xs: 64, sm: 96 }, width: { xs: 64, sm: 96 }, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
                         >
                           {profile.name.slice(0, 1)}
                         </Avatar>
@@ -432,12 +433,12 @@ export function SocialProfilePage({
                       <Avatar
                         alt={`Foto de ${profile.name}`}
                         src={imageUrl ?? undefined}
-                        sx={{ height: 96, width: 96, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
+                        sx={{ height: { xs: 64, sm: 96 }, width: { xs: 64, sm: 96 }, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
                       >
                         {profile.name.slice(0, 1)}
                       </Avatar>
                     )}
-                    <Stack spacing={0.5} sx={{ minWidth: 0, flexGrow: 1 }}>
+                    <Stack spacing={0.5} sx={{ minWidth: 90, flex: 1, overflowWrap: "anywhere" }}>
                       <Typography component="h2" variant="h3">
                         {profile.name}
                       </Typography>
@@ -465,6 +466,7 @@ export function SocialProfilePage({
                       </Stack>
                     ) : (
                       <Button
+                        sx={{ flexBasis: { xs: "100%", sm: "auto" } }}
                         disabled={profile.follow_requested}
                         onClick={() => void toggleFollow()}
                         variant={
