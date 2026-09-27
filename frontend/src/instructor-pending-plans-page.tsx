@@ -1,5 +1,6 @@
 import { Box, Button, Card, CardContent, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { ApiRequestError } from './clients'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
@@ -13,6 +14,8 @@ const emptyItem = (): ReviewItem => ({ exercise_name: '', sets: 3, repetitions: 
 const content = (plan: PendingPlan): ReviewContent => ({ name: plan.name, objective: plan.objective, items: plan.items.map((item) => ({ exercise_name: item.exercise_name, sets: item.sets, repetitions: item.repetitions, load_guidance: item.load_guidance, rest_seconds: item.rest_seconds, equipment_requirement: item.equipment_requirement ?? null, equipment_model_id: item.equipment_model_id ?? null })) })
 
 export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessToken: string; onSignOut: () => void }) {
+  const [searchParams] = useSearchParams()
+  const requestedDraft = searchParams.get('rascunho')
   const [plans, setPlans] = useState<PendingPlan[]>([])
   const [nextOffset, setNextOffset] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,12 +51,15 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
   }
   useEffect(() => { void load() }, [accessToken])
   useEffect(() => {
+    if (requestedDraft) void open({ id: requestedDraft })
+  }, [accessToken, requestedDraft])
+  useEffect(() => {
     let active = true
     void getEquipmentCatalog().then((items) => { if (active) setModels(items.filter((item) => item.active_quantity > 0)) }).catch(() => { if (active) setModels([]) })
     return () => { active = false }
   }, [])
 
-  async function open(plan: PendingPlan) {
+  async function open(plan: Pick<PendingPlan, 'id'>) {
     if (working.current) return
     working.current = true; setBusy(true); setError(null); setNotice(null)
     try {

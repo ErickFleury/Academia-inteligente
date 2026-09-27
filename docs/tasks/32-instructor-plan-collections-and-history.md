@@ -2,7 +2,22 @@
 
 ## Status
 
-Planned. Depends on Task 31.
+Implemented (2026-09-27). Depends on Task 31.
+
+Verification: 24 collection/review backend tests, six isolated PostgreSQL
+concurrency tests, 33 frontend collection/editor/routing tests, and the frontend
+production build pass. Ruff and Git whitespace checks pass. Isolated Firefox
+checks with synthetic API responses verified 360×800 (exact frame viewport),
+768×1024, and 1366×768 with no horizontal overflow, labelled fields, and initial
+dialog focus on Cancelar. Live identity and intended-user integration remain
+Task 37 responsibilities.
+
+Implementation uses approval-time/UUID keyset pagination, set-based list
+projections, and retained approved-version references for responsibility filters
+without publishing Employee identifiers. Confirmed discarded drafts become
+unapproved superseded records, preserving adaptation references; they never
+appear in approved history. Confirmation rechecks both current and draft
+revisions under the client lock. No new dependency or requirement was added.
 
 ## Objective
 

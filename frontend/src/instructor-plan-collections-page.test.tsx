@@ -1,0 +1,76 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { afterEach, expect, test, vi } from 'vitest'
+
+import { InstructorPlanCollectionsPage } from './instructor-plan-collections-page'
+
+const plan = { id: 'current', name: 'Força', client_name: 'Ana Silva', status: 'current', revision: 2, approved_at: '2026-09-27T12:00:00Z', responsible_instructor_name: 'Maria Silva', objective: 'Ganhar força', items: [{ exercise_name: 'Agachamento', sets: 3, repetitions: '8', load_guidance: 'Confortável', rest_seconds: 90, equipment_model_id: null, equipment_requirement: null }] }
+const past = { ...plan, id: 'past', status: 'superseded', name: 'Treino anterior', responsible_instructor_name: 'João Silva' }
+const ok = (body: unknown) => ({ ok: true, json: async () => body })
+function mockFetch(override?: (url: string, init?: RequestInit) => unknown) {
+  const mock = vi.fn(async (url: string, init?: RequestInit) => {
+    const result = override?.(url, init)
+    if (result) return result
+    if (url.includes('/responsible')) return ok({ items: [{ reference: 'current', name: 'Maria Silva' }], next_cursor: null })
+    if (url.includes('/history')) return ok({ items: [plan, past], next_cursor: null })
+    if (url.includes('/collections?')) return ok({ items: [plan], next_cursor: null })
+    if (url.endsWith('/past')) return ok(past)
+    return ok(plan)
+  })
+  vi.stubGlobal('fetch', mock)
+  return mock
+}
+function mount(mine = false) { render(<MemoryRouter><InstructorPlanCollectionsPage accessToken="token" onSignOut={vi.fn()} mine={mine} /></MemoryRouter>) }
+afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+
+test('combines filters and opens immutable history with original responsibility', async () => {
+  const fetchMock = mockFetch()
+  mount()
+  await screen.findByText('Ana Silva')
+  fireEvent.change(screen.getByLabelText('Nome do cliente'), { target: { value: ' Ana ' } })
+  fireEvent.change(screen.getByLabelText('Aprovação a partir de'), { target: { value: '2026-09-27' } })
+  fireEvent.change(screen.getByLabelText('Aprovação até'), { target: { value: '2026-09-27' } })
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Instrutor responsável' }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Maria Silva' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
+  await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url.includes('search=Ana&responsible=current&start=2026-09-27&end=2026-09-27'))).toBe(true))
+  fireEvent.click(screen.getByRole('button', { name: 'Ver plano e histórico' }))
+  await screen.findByRole('button', { name: 'Editar' })
+  fireEvent.click(screen.getByRole('button', { name: /Treino anterior/ }))
+  await screen.findByText('Histórico — somente leitura')
+  expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Treino anterior — Ana Silva' })).toHaveFocus()
+})
+
+test('cancel preserves draft and explicit confirmation sends the exact revision', async () => {
+  const fetchMock = mockFetch((url, init) => {
+    if (!url.endsWith('/draft')) return undefined
+    const payload = JSON.parse(init!.body as string)
+    return payload.discard_id ? { ok: false, status: 409, json: async () => ({ detail: 'stale' }) } : { ok: false, status: 409, json: async () => ({ detail: { code: 'existing_draft', draft: { id: 'existing', name: 'Rascunho de IA', revision: 4 } } }) }
+  })
+  mount()
+  fireEvent.click(await screen.findByRole('button', { name: 'Ver plano e histórico' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Editar' }))
+  await screen.findByRole('dialog', { name: 'Substituir rascunho existente?' })
+  fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/draft'))).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Descartar e criar rascunho' }))
+  await screen.findByText('O plano ou rascunho mudou. Recarregue e revise antes de continuar.')
+  const calls = fetchMock.mock.calls.filter(([url]) => url.endsWith('/draft'))
+  expect(JSON.parse(calls[2][1]!.body as string)).toEqual({ expected_revision: 2, discard_id: 'existing', discard_revision: 4 })
+})
+
+test('my plans requests only own responsibility and supports empty and retry states', async () => {
+  let fail = true
+  const fetchMock = mockFetch((url) => url.includes('/collections?') ? fail ? { ok: false, status: 503, json: async () => ({}) } : ok({ items: [], next_cursor: null }) : undefined)
+  mount(true)
+  expect(screen.getByText('Carregando planos')).toBeInTheDocument()
+  await screen.findByText('Não foi possível carregar ou editar o plano. Tente novamente.')
+  fail = false
+  fireEvent.click(screen.getByRole('button', { name: 'Recarregar planos' }))
+  await screen.findByText('Nenhum plano encontrado')
+  expect(fetchMock.mock.calls.some(([url]) => url.includes('mine=true'))).toBe(true)
+  expect(screen.queryByLabelText('Nome do cliente')).not.toBeInTheDocument()
+})

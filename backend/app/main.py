@@ -15,6 +15,7 @@ from app.modules.onboarding.router import router as onboarding_router
 from app.modules.presence.router import router as presence_router
 from app.modules.progress.router import router as progress_router
 from app.modules.social.router import router as social_router
+from app.modules.training.collections_router import router as training_collections_router
 from app.modules.training.router import router as training_router
 
 
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(progress_router)
     app.include_router(social_router)
     app.include_router(training_router)
+    app.include_router(training_collections_router)
     return app
 
 
