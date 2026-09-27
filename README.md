@@ -105,9 +105,11 @@ service account and SMTP settings through the Keycloak admin console before
 using this flow.
 
 Only the UI, API, Keycloak, and Mailpit are bound to loopback addresses.
-PostgreSQL is available exclusively on the internal Compose network. Configure
-UFW on the Linux host to permit only the intended public reverse-proxy/UI/API
-ports; never publish PostgreSQL.
+PostgreSQL is available exclusively on the internal Compose network. For Internet
+deployment, use the separate [production deployment guide](docs/deployment/README.md)
+and `docker-compose.production.yml`. Only its HTTPS/redirect gateway is public;
+Docker forwarding requires firewall rules in addition to UFW. Do not expose the
+development stack directly.
 
 ## Quality checks
 

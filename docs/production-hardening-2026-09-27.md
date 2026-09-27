@@ -42,3 +42,38 @@ preparation exposes optional Configure OTP with no default/user assignment.
 
 All verification uses separate `academia-hardening-review` projects and synthetic
 credentials under `/tmp`; no existing development accounts or volumes are reset.
+
+Checkpoint 3: all 407 backend tests passed, including PostgreSQL integration
+coverage. Thirteen deployment tests passed, covering private configuration,
+input validation, optional MFA, provider compatibility, firewall plan boundaries,
+backup integrity, restart-after-failure and empty-target restoration guards.
+Ruff lint/format checks and Git whitespace checks passed. The frontend production
+build completed as part of the gateway image; no frontend application code changed.
+
+A maintenance backup stopped/restarted only the synthetic project's active
+writers. Both application and identity dumps restored successfully into a second,
+empty project; application migration version and identity subject hashes matched.
+A second restore was rejected because the target was populated. Health checks
+passed after restarting writers. A sensitive query/header canary was absent from
+gateway logs. The test gateway listened only on loopback test ports 18080/18443.
+
+Operational files: `docs/deployment/README.md`, `firewall-plan.py`, `operations.py`
+and their tests. Firewall generation prints a review plan and changes nothing.
+Monitoring exposes health checks/exit status, with no externally configured alert
+channel. Backup output is private but not encrypted by the tool; encrypted storage
+and off-host replication are required deployment inputs. Setup includes separate
+production state, certificates, authenticated SMTP, private identity administration,
+optional MFA activation, restore drills and rollback instructions.
+
+Remaining rollout prerequisites: actual host/domain, trusted and automatically
+renewed certificates, reviewed Docker-aware/provider firewall policy, isolated
+SMTP relay and delivery validation, real optional provider keys, encrypted off-host
+backups, alert routing and any existing-account migration. No public rollout,
+real SMTP delivery, external firewall scan or production account migration was
+performed. Keycloak remains intentionally unupgraded and the facial pilot retains
+its previous limitations. These are explicit boundaries, not assurances that a
+future Internet deployment is already protected against every attack.
+
+Reversible code checkpoints: `69d6abe` (backend runtime/SMTP) and `f755fdf`
+(production gateway/identity). The following operations/documentation commit
+completes this task; none of these commits are pushed automatically.
