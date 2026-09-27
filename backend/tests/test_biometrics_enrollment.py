@@ -63,8 +63,6 @@ class FakeFaces:
 
 @pytest.fixture
 def service(database_session):
-    database_session.add(BiometricLock(id=1))
-    database_session.commit()
     return EnrollmentService(BiometricConfig(mode="pilot", api_key="fixture"), FakeFaces())
 
 

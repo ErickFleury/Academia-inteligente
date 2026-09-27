@@ -7,14 +7,16 @@ const client = { id: '1', name: 'Ada Lovelace', first_name: 'Ada', surname: 'Lov
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 test('registers complete client data', async () => {
-  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] }).mockResolvedValueOnce({ ok: true, json: async () => client }).mockResolvedValueOnce({ ok: true, json: async () => [client] })
+  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] }).mockResolvedValueOnce({ ok: true, json: async () => ({ person_id: "person", status: "enabled", revision: 1, cleanup_pending: false }) }).mockResolvedValueOnce({ ok: true, json: async () => client }).mockResolvedValueOnce({ ok: true, json: async () => [client] })
   vi.stubGlobal('fetch', fetchMock)
   render(<ClientManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   await screen.findByText('Nenhum cliente encontrado.')
   for (const [label, value] of [['Nome', 'Ada'], ['Sobrenome', 'Lovelace'], ['E-mail', 'ada@example.test'], ['CPF', '529.982.247-25'], ['Telefone', '(11) 99876-5432'], ['CEP', '01001-000'], ['Logradouro', 'Praça da Sé'], ['Número', '1'], ['Bairro', 'Sé'], ['Cidade', 'São Paulo'], ['UF', 'SP']] as const) fireEvent.change(screen.getByRole('textbox', { name: label }), { target: { value } })
+  fireEvent.click(screen.getByRole('button', { name: 'Verificar cadastro facial' }))
+  await screen.findByText(/será reutilizado/)
   fireEvent.click(screen.getByRole('button', { name: 'Cadastrar cliente' }))
   expect(await screen.findByText('Cliente cadastrado. Provisionamento de acesso pendente.')).toBeInTheDocument()
-  expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({ first_name: 'Ada', cpf: '529.982.247-25' })
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toMatchObject({ first_name: 'Ada', cpf: '529.982.247-25' })
 })
 
 test('keeps manual address entry available if CEP lookup fails', async () => {
@@ -30,13 +32,13 @@ test('keeps manual address entry available if CEP lookup fails', async () => {
 })
 
 test('shows a specific Portuguese CPF validation message', async () => {
-  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] }).mockResolvedValueOnce({ ok: false, status: 422, json: async () => ({ detail: 'A valid CPF is required' }) })
+  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] }).mockResolvedValueOnce({ ok: false, status: 422, json: async () => ({ detail: 'identity_invalid' }) })
   vi.stubGlobal('fetch', fetchMock)
   render(<ClientManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   await screen.findByText('Nenhum cliente encontrado.')
   for (const [label, value] of [['Nome', 'Ada'], ['Sobrenome', 'Lovelace'], ['E-mail', 'ada@example.test'], ['CPF', '111.111.111-11'], ['Telefone', '(11) 99876-5432'], ['CEP', '01001-000'], ['Logradouro', 'Praça da Sé'], ['Número', '1'], ['Bairro', 'Sé'], ['Cidade', 'São Paulo'], ['UF', 'SP']] as const) fireEvent.change(screen.getByRole('textbox', { name: label }), { target: { value } })
-  fireEvent.click(screen.getByRole('button', { name: 'Cadastrar cliente' }))
-  expect(await screen.findByText('Informe um CPF válido.')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Verificar cadastro facial' }))
+  expect(await screen.findByText('Informe um e-mail e um CPF válidos antes de verificar o rosto.')).toBeInTheDocument()
 })
 
 test('edits profile data and client-only active state', async () => {

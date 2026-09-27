@@ -1,3 +1,5 @@
+import type { RegistrationProof } from './biometrics'
+
 export type ClientInput = {
   first_name: string
   surname: string
@@ -15,6 +17,7 @@ export type ClientInput = {
 
 export type Client = ClientInput & {
   id: string
+  person_id: string
   name: string
   client_active: boolean
   identity_provisioned?: boolean
@@ -39,8 +42,8 @@ async function request<T>(accessToken: string, path: string, init?: RequestInit)
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>)
 }
 
-export function createClient(accessToken: string, data: ClientInput): Promise<Client> {
-  return request(accessToken, '/clients', { method: 'POST', body: JSON.stringify(data) })
+export function createClient(accessToken: string, data: ClientInput, proof: RegistrationProof): Promise<Client> {
+  return request(accessToken, '/clients', { method: 'POST', body: JSON.stringify({ ...data, ...proof }) })
 }
 export function listClients(accessToken: string, query = ''): Promise<Client[]> {
   const search = query.trim() ? `?${new URLSearchParams({ query }).toString()}` : ''

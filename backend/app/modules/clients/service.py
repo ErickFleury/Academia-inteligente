@@ -97,6 +97,7 @@ class ClientData:
 @dataclass(frozen=True)
 class ClientSummary(ClientData):
     id: UUID
+    person_id: UUID
     client_active: bool
     identity_provisioned: bool
     created_at: datetime
@@ -215,6 +216,7 @@ def summary_from_client(client: Client) -> ClientSummary:
         city=profile.city,
         state=profile.state,
         id=client.id,
+        person_id=client.account_id,
         client_active=client.active,
         identity_provisioned=identity_provisioned(client.account),
         created_at=client.created_at,
@@ -225,7 +227,7 @@ class ClientService:
     def __init__(self, provisioner: ClientIdentityProvisioner | None = None) -> None:
         self.provisioner = provisioner or KeycloakAdminClient()
 
-    def create(self, session: Session, data: ClientData) -> ClientSummary:
+    def create(self, session: Session, data: ClientData, *, commit: bool = True) -> ClientSummary:
         email = data.email
         pending = session.scalar(
             select(ClientIdentityReconciliation).where(ClientIdentityReconciliation.email == email)
@@ -253,7 +255,7 @@ class ClientService:
             session.flush()
             queue_reconciliation(session, account)
             try:
-                session.commit()
+                session.commit() if commit else session.flush()
             except IntegrityError as error:
                 session.rollback()
                 raise ClientIdentityProvisioningError from error
@@ -273,7 +275,7 @@ class ClientService:
             pending.name = None
             pending.account_id = client.account.id
             try:
-                session.commit()
+                session.commit() if commit else session.flush()
             except IntegrityError as error:
                 session.rollback()
                 raise ClientIdentityProvisioningError from error
@@ -290,7 +292,7 @@ class ClientService:
         )
         session.add(pending)
         try:
-            session.commit()
+            session.commit() if commit else session.flush()
         except IntegrityError as error:
             session.rollback()
             raise ClientIdentityProvisioningError from error
@@ -429,6 +431,10 @@ class ClientService:
         subject = account.keycloak_subject
         if subject and not shared:
             self.provisioner.delete_identity(subject)
+        if not shared:
+            from app.modules.biometrics.erasure import erase_person_biometrics
+
+            erase_person_biometrics(session, account)
         conversation_ids = select(OnboardingAiConversation.id).where(
             OnboardingAiConversation.client_id == client.id
         )

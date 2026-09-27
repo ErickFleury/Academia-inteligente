@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import pytest
+from biometric_fixtures import prepare_enrolled_registration
 from fastapi import FastAPI
 from sqlalchemy import select
 from test_clients import AsgiClient, client_data
@@ -25,7 +26,7 @@ def api(session, monkeypatch):
     )
     monkeypatch.setattr(employee_router, "employee_service", EmployeeService(FakeProvisioner()))
     monkeypatch.setattr(employee_router, "reconcile", lambda _: None)
-    return AsgiClient(app)
+    return AsgiClient(app, prepare_enrolled_registration(app, session, actor="admin"))
 
 
 def test_admin_create_search_view_and_clear_optional_fields(api, session):

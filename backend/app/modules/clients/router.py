@@ -13,6 +13,8 @@ from app.integrations.cep import (
     PostalCodeUnavailableError,
     ViaCepLookup,
 )
+from app.modules.biometrics.registration import RegistrationService
+from app.modules.biometrics.router import Service as EnrollmentServiceDependency
 from app.modules.clients.service import (
     ClientIdentityConflictError,
     ClientIdentityProvisioningError,
@@ -50,6 +52,7 @@ class ClientCreateRequest(BaseModel):
 
 class ClientResponse(BaseModel):
     id: UUID
+    person_id: UUID
     name: str
     first_name: str
     surname: str
@@ -71,6 +74,7 @@ class ClientResponse(BaseModel):
 def response_from_summary(summary: ClientSummary) -> ClientResponse:
     return ClientResponse(
         id=summary.id,
+        person_id=summary.person_id,
         name=summary.name,
         first_name=summary.first_name,
         surname=summary.surname,
@@ -156,17 +160,32 @@ def lookup_address(
     return CepAddressResponse(**address.__dict__)
 
 
+class ClientRegistrationRequest(ClientCreateRequest):
+    command_id: UUID
+    enrollment_session_id: UUID | None = None
+
+
 @router.post("", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
 def create_client(
-    payload: ClientCreateRequest,
+    payload: ClientRegistrationRequest,
     background_tasks: BackgroundTasks,
     session: DatabaseSession,
     administrator: Administrator,
+    enrollment: EnrollmentServiceDependency,
 ) -> ClientResponse:
     """Persist a client, then reconcile its external identity asynchronously."""
-    del administrator
     try:
-        client = client_service.create(session, validate_client_data(**payload.model_dump()))
+        client = RegistrationService(enrollment).create(
+            session,
+            actor=administrator.subject,
+            command_id=payload.command_id,
+            enrollment_session_id=payload.enrollment_session_id,
+            role="client",
+            data=validate_client_data(
+                **payload.model_dump(exclude={"command_id", "enrollment_session_id"})
+            ),
+            service=client_service,
+        )
         if not client.identity_provisioned:
             background_tasks.add_task(reconcile_pending_client_identity, client.id)
         return response_from_summary(client)

@@ -12,6 +12,7 @@ from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from sqlalchemy import select
 from test_biometrics_enrollment import FakeFaces, enrolled_person, stage
+from test_clients import FakeProvisioner, client_data
 from test_training_review_postgres import sessions as sessions
 
 from app.modules.biometrics.config import BiometricConfig, BiometricError
@@ -23,6 +24,9 @@ from app.modules.biometrics.models import (
     BiometricLock,
     EnrollmentSession,
 )
+from app.modules.biometrics.registration import RegistrationService
+from app.modules.clients.models import Account, Client
+from app.modules.clients.service import ClientService, validate_client_data
 
 pytestmark = pytest.mark.skipif(
     os.getenv("TEST_POSTGRES") != "1", reason="Isolated PostgreSQL opt-in"
@@ -31,9 +35,6 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture
 def service(sessions):
-    with sessions() as session:
-        session.add(BiometricLock(id=1))
-        session.commit()
     return EnrollmentService(BiometricConfig(mode="pilot", api_key="fixture"), FakeFaces())
 
 
@@ -157,3 +158,39 @@ def test_capture_lease_prevents_two_tabs_enrolling_during_one_provider_write(ses
             finished.wait(timeout=10)
         assert future.result(timeout=10)["status"] == "ready"
     assert len(service.provider.enrolled) == 1
+
+
+def test_registration_retry_creates_one_role_and_erasure_removes_foreign_keys(sessions, service):
+    with sessions() as session:
+        stage_id = stage(service, session)
+    barrier = Barrier(2)
+    command_id = uuid4()
+    clients = ClientService(FakeProvisioner())
+
+    def register(_):
+        with sessions() as session:
+            barrier.wait(timeout=10)
+            return (
+                RegistrationService(service)
+                .create(
+                    session,
+                    actor="admin",
+                    command_id=command_id,
+                    enrollment_session_id=stage_id,
+                    role="client",
+                    data=validate_client_data(**client_data()),
+                    service=clients,
+                )
+                .id
+            )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(register, range(2)))
+    assert results[0] == results[1]
+    with sessions() as session:
+        assert len(session.scalars(select(Client)).all()) == 1
+        assert clients.erase(session, results[0])
+        assert session.scalars(select(Account)).all() == []
+        assert session.scalars(select(EnrollmentSession)).all() == []
+        service.cleanup(session)
+        assert session.scalars(select(BiometricCleanupJob)).all() == []

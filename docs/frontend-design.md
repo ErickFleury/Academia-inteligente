@@ -131,6 +131,15 @@ palette, or page composition.
   prefill street, neighborhood, city, and UF, but all address fields stay
   editable and provider failure leaves an obvious manual-entry path. Never
   clear valid manual values merely because lookup fails.
+- **Facial enrollment:** Reuse `FacialEnrollment` in both administrative person
+  forms. Keep it as one bordered section with status, explicit verification,
+  capture/replacement/revocation actions, and local feedback. New registration
+  stays unavailable until a capture is ready or shared-person reuse is verified.
+  `WebcamCapture` provides the accessible MUI dialog and live preview; capture is
+  button-triggered, has no upload input, and stops camera tracks on close/unmount.
+  Keep transient images out of component state and persistent browser storage.
+  Failed/uncertain requests preserve ordinary form fields and expose result
+  recovery; changing identity invalidates the prior readiness proof.
 - **Onboarding:** Invitation entry leads into a deliberate client journey.
   Group physical and health fields into understandable sections/steps; show
   required/optional status and validation plainly. Conversation and structured

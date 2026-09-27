@@ -1,8 +1,9 @@
 # Facial Access Pilot — Implementation Specification
 
-**Status:** FACE-IMPL-01/02 complete; registration integration follows.
+**Status:** FACE-IMPL-01/02/03 complete; recognition/release integration follows.
 See [Task 38 evidence](tasks/38-facial-provider-foundation.md) and
-[Task 39 evidence](tasks/39-facial-enrollment-and-cleanup.md).
+[Task 39 evidence](tasks/39-facial-enrollment-and-cleanup.md) and
+[Task 40 evidence](tasks/40-mandatory-facial-registration.md).
 **Scope:** a controlled local pilot involving only the project owner.
 **Authority:** `docs/requirements.md` remains the canonical implementation
 specification. This document records the user's approved feature decisions and

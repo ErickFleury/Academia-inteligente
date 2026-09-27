@@ -57,6 +57,7 @@ def normalize_cnpj(value: str | None) -> str | None:
 @dataclass(frozen=True)
 class EmployeeSummary(ClientData):
     id: UUID
+    person_id: UUID
     cnpj: str | None
     specialization: str
     employee_active: bool
@@ -82,6 +83,7 @@ def _summary(employee: Employee) -> EmployeeSummary:
         city=profile.city,
         state=profile.state,
         id=employee.id,
+        person_id=employee.account_id,
         cnpj=employee.cnpj,
         specialization=employee.specialization,
         employee_active=employee.active,
@@ -95,7 +97,13 @@ class EmployeeService:
         self.provisioner = provisioner or KeycloakAdminClient()
 
     def create(
-        self, session: Session, data: ClientData, cnpj: str | None, specialization: str
+        self,
+        session: Session,
+        data: ClientData,
+        cnpj: str | None,
+        specialization: str,
+        *,
+        commit: bool = True,
     ) -> EmployeeSummary:
         if specialization != "instructor":
             raise ClientValidationError("Only instructor specialization is allowed")
@@ -139,7 +147,7 @@ class EmployeeService:
         session.flush()
         queue_reconciliation(session, account, employee=True)
         try:
-            session.commit()
+            session.commit() if commit else session.flush()
         except IntegrityError as error:
             session.rollback()
             raise EmployeeConflictError from error

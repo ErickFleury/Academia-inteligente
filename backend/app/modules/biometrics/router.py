@@ -3,14 +3,22 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.database import get_database_session
 from app.modules.biometrics.config import BiometricConfig
-from app.modules.biometrics.enrollment import EnrollmentService, enrollment_status, owned_session
+from app.modules.biometrics.enrollment import (
+    EnrollmentService,
+    enrollment_status,
+    identity_binding,
+    owned_session,
+)
 from app.modules.biometrics.enrollment import session_status as staging_status
 from app.modules.biometrics.images import read_capture
+from app.modules.clients.models import Account, PersonProfile
+from app.modules.clients.service import normalize_cpf, normalize_email
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
@@ -61,6 +69,36 @@ class EnrollmentResponse(BaseModel):
     status: Literal["enabled", "missing_or_revoked"]
     revision: int
     cleanup_pending: bool
+
+
+class IdentityRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: str = Field(max_length=320)
+    cpf: str = Field(max_length=32)
+
+
+@router.post("/enrollment-readiness")
+def readiness(payload: IdentityRequest, administrator: Administrator, session: DatabaseSession):
+    # POST keeps CPF/e-mail out of URL/access logs; this is a read, not a command.
+    identity_binding(payload.email, payload.cpf)
+    person = session.scalar(
+        select(PersonProfile)
+        .join(Account)
+        .where(
+            Account.email == normalize_email(payload.email),
+            PersonProfile.cpf == normalize_cpf(payload.cpf),
+        )
+    )
+    return (
+        enrollment_status(session, person.account_id)
+        if person
+        else {
+            "person_id": None,
+            "status": "missing_or_revoked",
+            "revision": 0,
+            "cleanup_pending": False,
+        }
+    )
 
 
 @router.post("/enrollment-sessions", response_model=EnrollmentSessionResponse)

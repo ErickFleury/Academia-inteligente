@@ -84,13 +84,18 @@ class ApiResponse:
 
 
 class AsgiClient:
-    def __init__(self, app: FastAPI) -> None:
+    def __init__(self, app: FastAPI, prepare_registration=None) -> None:
         self.app = app
+        self.prepare_registration = prepare_registration
 
     def request(
         self, method: str, url: str, payload: dict[str, object] | None = None
     ) -> ApiResponse:
         path, _, query = url.partition("?")
+        if self.prepare_registration and method == "POST" and path in {"/clients", "/employees"}:
+            payload = self.prepare_registration(
+                "client" if path == "/clients" else "employee", payload
+            )
         body = json.dumps(payload).encode() if payload is not None else b""
         sent: list[dict[str, object]] = []
         headers = [(b"authorization", b"Bearer test-token")]
@@ -173,7 +178,9 @@ def api_client(
     )
     monkeypatch.setattr(clients_router, "reconcile_pending_client_identity", lambda client_id: None)
     app.dependency_overrides[get_database_session] = lambda: database_session
-    yield AsgiClient(app)
+    from biometric_fixtures import prepare_enrolled_registration
+
+    yield AsgiClient(app, prepare_enrolled_registration(app, database_session))
     app.dependency_overrides.clear()
 
 

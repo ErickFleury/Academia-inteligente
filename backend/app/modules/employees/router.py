@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, get_database_session
+from app.modules.biometrics.registration import RegistrationService
+from app.modules.biometrics.router import Service as EnrollmentServiceDependency
 from app.modules.clients.service import ClientValidationError, validate_client_data
 from app.modules.employees.service import (
     EmployeeConflictError,
@@ -62,6 +64,7 @@ class EmployeeUpdate(BaseModel):
 
 class EmployeeResponse(EmployeeInput):
     id: UUID
+    person_id: UUID
     name: str
     employee_active: bool
     identity_provisioned: bool
@@ -71,6 +74,7 @@ class EmployeeResponse(EmployeeInput):
 def response(item: EmployeeSummary) -> EmployeeResponse:
     return EmployeeResponse(
         id=item.id,
+        person_id=item.person_id,
         name=item.name,
         first_name=item.first_name,
         surname=item.surname,
@@ -112,17 +116,34 @@ def error(exc: Exception) -> HTTPException:
     return HTTPException(503, "Employee identity provisioning is pending")
 
 
+class EmployeeRegistrationRequest(EmployeeInput):
+    command_id: UUID
+    enrollment_session_id: UUID | None = None
+
+
 @router.post("", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
 def create(
-    payload: EmployeeInput, tasks: BackgroundTasks, session: DatabaseSession, admin: Administrator
+    payload: EmployeeRegistrationRequest,
+    tasks: BackgroundTasks,
+    session: DatabaseSession,
+    admin: Administrator,
+    enrollment: EnrollmentServiceDependency,
 ) -> EmployeeResponse:
-    del admin
     try:
-        item = employee_service.create(
+        item = RegistrationService(enrollment).create(
             session,
-            validate_client_data(**payload.model_dump(exclude={"cnpj", "specialization"})),
-            payload.cnpj,
-            payload.specialization,
+            actor=admin.subject,
+            command_id=payload.command_id,
+            enrollment_session_id=payload.enrollment_session_id,
+            role="employee",
+            data=validate_client_data(
+                **payload.model_dump(
+                    exclude={"cnpj", "specialization", "command_id", "enrollment_session_id"}
+                )
+            ),
+            service=employee_service,
+            cnpj=payload.cnpj,
+            specialization=payload.specialization,
         )
     except (ClientValidationError, EmployeeConflictError, EmployeeProvisioningError) as exc:
         raise error(exc) from None

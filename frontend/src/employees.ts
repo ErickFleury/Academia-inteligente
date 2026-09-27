@@ -1,8 +1,10 @@
 import { ApiRequestError, lookupPostalCode, type CepAddress, type ClientInput } from './clients'
+import type { RegistrationProof } from './biometrics'
 
 export type EmployeeInput = ClientInput & { cnpj: string | null; specialization: 'instructor' }
 export type Employee = EmployeeInput & {
   id: string
+  person_id: string
   name: string
   employee_active: boolean
   identity_provisioned: boolean
@@ -20,7 +22,7 @@ async function request<T>(accessToken: string, path: string, init?: RequestInit)
   return response.json() as Promise<T>
 }
 
-export function createEmployee(accessToken: string, data: EmployeeInput): Promise<Employee> { return request(accessToken, '/employees', { method: 'POST', body: JSON.stringify(data) }) }
+export function createEmployee(accessToken: string, data: EmployeeInput, proof: RegistrationProof): Promise<Employee> { return request(accessToken, '/employees', { method: 'POST', body: JSON.stringify({ ...data, ...proof }) }) }
 export function listEmployees(accessToken: string, query = ''): Promise<Employee[]> { const search = query.trim() ? `?${new URLSearchParams({ query }).toString()}` : ''; return request(accessToken, `/employees${search}`) }
 export function getEmployee(accessToken: string, id: string): Promise<Employee> { return request(accessToken, `/employees/${id}`) }
 export function updateEmployee(accessToken: string, id: string, data: Partial<EmployeeInput> & { employee_active?: boolean }): Promise<Employee> { return request(accessToken, `/employees/${id}`, { method: 'PATCH', body: JSON.stringify(data) }) }

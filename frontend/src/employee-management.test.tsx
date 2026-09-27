@@ -55,14 +55,16 @@ test('shows a controlled list failure and ends the loading state', async () => {
 })
 
 test('registers an instructor with complete personal data', async () => {
-  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] }).mockResolvedValueOnce({ ok: true, json: async () => employee }).mockResolvedValueOnce({ ok: true, json: async () => [employee] })
+  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] }).mockResolvedValueOnce({ ok: true, json: async () => ({ person_id: "person", status: "enabled", revision: 1, cleanup_pending: false }) }).mockResolvedValueOnce({ ok: true, json: async () => employee }).mockResolvedValueOnce({ ok: true, json: async () => [employee] })
   vi.stubGlobal('fetch', fetchMock)
   render(<EmployeeManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   await screen.findByText('Nenhum instrutor encontrado.')
   for (const [label, value] of [['Nome', 'Maria'], ['Sobrenome', 'Silva'], ['E-mail', 'maria@example.test'], ['CPF', '529.982.247-25'], ['Telefone', '(11) 99876-5432'], ['CEP', '01001-000'], ['Logradouro', 'Praça da Sé'], ['Número', '1'], ['Bairro', 'Sé'], ['Cidade', 'São Paulo'], ['UF', 'SP']] as const) fireEvent.change(screen.getByRole('textbox', { name: label }), { target: { value } })
+  fireEvent.click(screen.getByRole('button', { name: 'Verificar cadastro facial' }))
+  await screen.findByText(/será reutilizado/)
   fireEvent.click(screen.getByRole('button', { name: 'Cadastrar instrutor' }))
   expect(await screen.findByText('Instrutor cadastrado. Provisionamento de acesso pendente.')).toBeInTheDocument()
-  expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({ specialization: 'instructor', cpf: '529.982.247-25' })
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toMatchObject({ specialization: 'instructor', cpf: '529.982.247-25' })
 })
 
 test('keeps failed role updates visible and offers a shared-account retry', async () => {

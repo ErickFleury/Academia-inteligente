@@ -1,4 +1,3 @@
-
 """Shared-account lifecycle regressions; all provider I/O is in-memory."""
 
 from dataclasses import asdict
@@ -129,13 +128,35 @@ def update_client(service, session, client_id, **changes):
 
 
 def test_client_added_to_instructor_is_pending_and_schedules_role_grant(session, monkeypatch):
+    from uuid import UUID, uuid4
+
     fake = MemoryKeycloak()
     make_employee(session, fake)
     clients = ClientService(fake)
     monkeypatch.setattr(client_router, "client_service", clients)
     tasks = BackgroundTasks()
+    from biometric_fixtures import SyntheticFaces
+
+    from app.modules.biometrics.config import BiometricConfig
+    from app.modules.biometrics.enrollment import EnrollmentService
+
+    enrollment = EnrollmentService(
+        BiometricConfig(mode="pilot", api_key="fixture"), SyntheticFaces()
+    )
+    actor = AuthenticatedIdentity("admin", None, ("admin",))
+    stage = enrollment.create(
+        session, actor.subject, uuid4(), email=person().email, cpf=person().cpf, role="client"
+    )
+    stage_id = UUID(stage["session_id"])
+    enrollment.capture(session, actor.subject, stage_id, uuid4(), b"synthetic")
     result = client_router.create_client(
-        client_router.ClientCreateRequest(**asdict(person())), tasks, session, None
+        client_router.ClientRegistrationRequest(
+            **asdict(person()), command_id=uuid4(), enrollment_session_id=stage_id
+        ),
+        tasks,
+        session,
+        actor,
+        enrollment,
     )
     assert not result.identity_provisioned
     assert len(tasks.tasks) == 1

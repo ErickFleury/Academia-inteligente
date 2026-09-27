@@ -2,6 +2,8 @@ import { Box, Button, Card, CardContent, Chip, Divider, FormControlLabel, Stack,
 import { FormEvent, useEffect, useRef, useState } from 'react'
 
 import { EmptyState, LoadingState, StatusNotice } from './components/ui'
+import { FacialEnrollment } from './components/facial-enrollment'
+import { biometricMessage, isBiometricError, personBinding, validProof, type EnrollmentProof } from './biometrics'
 import { ApiRequestError, type Client, type ClientInput, createClient, eraseClient, getClient, listClients, lookupPostalCode, provisionClientIdentity, sendOnboardingInvitation, updateClient } from './clients'
 
 type Props = { accessToken: string; onUnauthenticated: () => void }
@@ -31,6 +33,8 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
     try { await operation() } finally { writeLock.current = false; setWriting(false) }
   }
   const [createForm, setCreateForm] = useState<Form>(blank)
+  const [enrollmentProof, setEnrollmentProof] = useState<EnrollmentProof | null>(null)
+  const registrationCommand = useRef<{ key: string; id: string } | null>(null)
   const [editForm, setEditForm] = useState<Form>(blank)
   const [clientActive, setClientActive] = useState(true)
   const [query, setQuery] = useState('')
@@ -41,6 +45,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const message = (reason: unknown, fallback: string) => {
+    if (isBiometricError(reason)) return biometricMessage(reason)
     if (reason instanceof ApiRequestError && reason.status === 401) { onUnauthenticated(); return 'Sua sessão expirou. Entre novamente.' }
     if (reason instanceof ApiRequestError && reason.status === 404) return 'CEP não encontrado. Preencha o endereço manualmente.'
     if (reason instanceof ApiRequestError && reason.status === 503) return fallback
@@ -65,7 +70,18 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
     const form = kind === 'create' ? createForm : editForm; setLookupPending(kind); setError(null)
     try { const result = await lookupPostalCode(accessToken, form.postal_code); (kind === 'create' ? setCreateForm : setEditForm)((current) => ({ ...current, ...Object.fromEntries(Object.entries(result).filter(([, value]) => value)) })) } catch (reason) { setError(message(reason, 'Não foi possível consultar o CEP. Preencha o endereço manualmente.')) } finally { setLookupPending(null) }
   }
-  async function create(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(null); try { const client = await createClient(accessToken, createForm); setCreateForm(blank); setSuccess(client.identity_provisioned ? 'Cliente cadastrado com sucesso.' : 'Cliente cadastrado. Provisionamento de acesso pendente.'); await load(query); select(client) } catch (reason) { setError(message(reason, 'Não foi possível cadastrar o cliente.')) } }
+  async function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setError(null)
+    if (!validProof(enrollmentProof, createForm.email, createForm.cpf)) { setError('Conclua a verificação facial antes de cadastrar o cliente.'); return }
+    const key = JSON.stringify([createForm, enrollmentProof])
+    if (registrationCommand.current?.key !== key) registrationCommand.current = { key, id: crypto.randomUUID() }
+    try {
+      const client = await createClient(accessToken, createForm, { command_id: registrationCommand.current.id, enrollment_session_id: enrollmentProof?.sessionId ?? null })
+      setCreateForm(blank); setEnrollmentProof(null); registrationCommand.current = null
+      setSuccess(client.identity_provisioned ? 'Cliente cadastrado com sucesso.' : 'Cliente cadastrado. Provisionamento de acesso pendente.')
+      await load(query); select(client)
+    } catch (reason) { setError(message(reason, 'Não foi possível cadastrar o cliente.')) }
+  }
   async function update(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selected) return
@@ -106,9 +122,9 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
   }
   return <Stack spacing={3} sx={{ width: '100%' }}>{writing && <LoadingState label="Salvando dados e sincronizando acesso do cliente"/>}
     <Stack aria-live="polite" spacing={1}>{error && <StatusNotice severity="error">{error}</StatusNotice>}{success && <StatusNotice severity="success">{success}</StatusNotice>}</Stack>
-    <Card component="section"><CardContent><Stack component="form" spacing={2.5} onSubmit={(event) => { event.preventDefault(); void write(() => create(event)) }}><Box><Typography color="primary.main" variant="overline">Novo cadastro</Typography><Typography component="h2" variant="h3">Cadastrar cliente</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Os dados de acesso serão provisionados separadamente.</Typography></Box><Details change={(field, value) => change('create', field, value)} form={createForm} id="create" lookup={() => void address('create')} pending={lookupPending === 'create'} /><Box><Button disabled={writing} type="submit" variant="contained">{writing ? 'Salvando...' : 'Cadastrar cliente'}</Button></Box></Stack></CardContent></Card>
+    <Card component="section"><CardContent><Stack component="form" spacing={2.5} onSubmit={(event) => { event.preventDefault(); void write(() => create(event)) }}><Box><Typography color="primary.main" variant="overline">Novo cadastro</Typography><Typography component="h2" variant="h3">Cadastrar cliente</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Os dados de acesso serão provisionados separadamente.</Typography></Box><Details change={(field, value) => change('create', field, value)} form={createForm} id="create" lookup={() => void address('create')} pending={lookupPending === 'create'} /><FacialEnrollment key={personBinding(createForm.email, createForm.cpf)} token={accessToken} email={createForm.email} cpf={createForm.cpf} role="client" onReady={setEnrollmentProof} onUnauthenticated={onUnauthenticated} /><Box><Button disabled={writing || !validProof(enrollmentProof, createForm.email, createForm.cpf)} type="submit" variant="contained">{writing ? 'Salvando...' : 'Cadastrar cliente'}</Button></Box></Stack></CardContent></Card>
     <Card component="section"><CardContent><Stack component="form" direction={{ xs: 'column', sm: 'row' }} spacing={2} onSubmit={(event) => { event.preventDefault(); setSelected(null); void load(query) }}><TextField fullWidth label="Pesquisar por nome ou e-mail" onChange={(event) => setQuery(event.target.value)} value={query} /><Button type="submit" variant="outlined">Pesquisar</Button></Stack></CardContent></Card>
     <Stack aria-busy={loading} component="section" spacing={1.5} aria-label="Resultados de clientes"><Typography component="h2" variant="h3">Clientes cadastrados</Typography>{loading ? <LoadingState label="Carregando clientes" /> : <Stack component="ul" spacing={1.25} sx={{ listStyle: 'none', m: 0, p: 0 }}>{clients.map((client) => <Box component="li" key={client.id}><Card variant="outlined"><Button aria-label={`${client.name} — ${client.email} (${statusText(client)})`} color="inherit" onClick={() => void getClient(accessToken, client.id).then(select).catch((reason) => setError(message(reason, 'Não foi possível carregar o cliente.')))} sx={{ alignItems: 'center', gap: 1.5, justifyContent: 'space-between', px: 2, py: 1.5, textAlign: 'left', width: '100%' }} variant="text"><Typography sx={{ color: 'text.primary', fontWeight: 750 }}>{client.name} — {client.email}</Typography><Chip color={client.client_active ? 'success' : 'default'} label={statusText(client)} size="small" /></Button></Card></Box>)}{!clients.length && <EmptyState description="Ajuste a busca ou cadastre o primeiro cliente." title="Nenhum cliente encontrado." />}</Stack>}</Stack>
-    {selected && <Card component="section" sx={{ borderColor: 'primary.main' }}><CardContent><Stack component="form" spacing={2.5} onSubmit={(event) => { event.preventDefault(); void write(() => update(event)) }}><Box><Typography color="primary.main" variant="overline">Perfil e acesso</Typography><Typography component="h2" variant="h3">Editar cliente</Typography></Box><Divider /><Details change={(field, value) => change('edit', field, value)} form={editForm} id="edit" lookup={() => void address('edit')} pending={lookupPending === 'edit'} /><FormControlLabel control={<Switch checked={clientActive} onChange={(event) => setClientActive(event.target.checked)} />} label="Cliente ativo" /><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}><Button disabled={writing} type="submit" variant="contained">{writing ? 'Salvando...' : 'Salvar alterações'}</Button>{selected.identity_provisioned === false && <Button onClick={() => void write(provision)} disabled={writing} variant="outlined">{writing ? 'Sincronizando...' : 'Provisionar acesso'}</Button>}{selected.identity_provisioned === true && selected.client_active && <Button onClick={() => void invite()} variant="outlined">Enviar convite de onboarding</Button>}</Stack><Button color="error" onClick={() => void erase()} variant="outlined">Excluir cadastro de cliente</Button></Stack></CardContent></Card>}
+    {selected && <Card component="section" sx={{ borderColor: 'primary.main' }}><CardContent><Stack component="form" spacing={2.5} onSubmit={(event) => { event.preventDefault(); void write(() => update(event)) }}><Box><Typography color="primary.main" variant="overline">Perfil e acesso</Typography><Typography component="h2" variant="h3">Editar cliente</Typography></Box><Divider /><Details change={(field, value) => change('edit', field, value)} form={editForm} id="edit" lookup={() => void address('edit')} pending={lookupPending === 'edit'} /><FacialEnrollment key={`${selected.id}:${selected.email}:${selected.cpf}`} token={accessToken} email={selected.email} cpf={selected.cpf} role="client" personId={selected.person_id} onUnauthenticated={onUnauthenticated} /><FormControlLabel control={<Switch checked={clientActive} onChange={(event) => setClientActive(event.target.checked)} />} label="Cliente ativo" /><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}><Button disabled={writing} type="submit" variant="contained">{writing ? 'Salvando...' : 'Salvar alterações'}</Button>{selected.identity_provisioned === false && <Button onClick={() => void write(provision)} disabled={writing} variant="outlined">{writing ? 'Sincronizando...' : 'Provisionar acesso'}</Button>}{selected.identity_provisioned === true && selected.client_active && <Button onClick={() => void invite()} variant="outlined">Enviar convite de onboarding</Button>}</Stack><Button color="error" onClick={() => void erase()} variant="outlined">Excluir cadastro de cliente</Button></Stack></CardContent></Card>}
   </Stack>
 }
