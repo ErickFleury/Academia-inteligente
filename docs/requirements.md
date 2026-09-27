@@ -516,6 +516,17 @@ concurrency protection. The AI never edits an approved, current, superseded,
 or historical version, and never approves or activates a plan; instructor
 review remains mandatory.
 
+**Confirmation-loop correction (RF-15/RF-18):** when no current plan exists,
+an explicit initial-plan request or a short affirmative reply to the immediately
+preceding assistant's single initial-plan confirmation question invokes the
+existing RF-15 generation service. Completed authoritative onboarding remains
+required. The backend reuses any existing proposal and saves a newly generated
+proposal atomically with the chat reply and request UUID; retries must not
+create duplicate drafts. It reports success only after validated persistence,
+with a pointer to Meu treino and the mandatory instructor-review boundary.
+Negative, conditional, unrelated, or ambiguous replies do not authorize generation.
+Current-plan adaptations retain the RF-19 confirmation and review flow.
+
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
 change could be useful and offer a non-binding draft suggestion. The client

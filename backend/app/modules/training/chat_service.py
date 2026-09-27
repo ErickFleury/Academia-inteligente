@@ -16,13 +16,21 @@ from sqlalchemy.orm import Session
 
 from app.integrations.ai import (
     AiProviderError,
+    AiTrainingChatResponse,
     TrainingChatProvider,
     training_chat_provider_from_environment,
 )
 from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
+from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import Onboarding
+from app.modules.training.generation_service import (
+    CompletedOnboardingRequiredError,
+    InitialTrainingGenerationService,
+    InvalidTrainingGenerationError,
+    TrainingGenerationUnavailableError,
+)
 from app.modules.training.models import (
     TrainingAiConversation,
     TrainingAiMessage,
@@ -70,8 +78,14 @@ class TrainingChatState:
 class TrainingChatService:
     """Client-scoped chat; the sole active proposal may be revised by the AI."""
 
-    def __init__(self, provider: TrainingChatProvider | None = None) -> None:
+    def __init__(
+        self,
+        provider: TrainingChatProvider | None = None,
+        *,
+        generation_service: InitialTrainingGenerationService | None = None,
+    ) -> None:
         self._provider = provider or training_chat_provider_from_environment()
+        self._generation = generation_service or InitialTrainingGenerationService()
         self._lifecycle = TrainingLifecycleService()
         self._recent_message_limit = int(os.environ.get("AI_RECENT_MESSAGE_LIMIT", "6"))
         self._summary_limit = int(os.environ.get("AI_TRAINING_CHAT_SUMMARY_LIMIT", "2000"))
@@ -133,10 +147,14 @@ class TrainingChatService:
         context = self._context(session, client_id, conversation, message, user.id)
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
-        record_turn(path="model")
         try:
-            response = self._retry(lambda: self._provider.training_chat(context))
-        except TrainingChatUnavailableError:
+            initial_reply = self._initial_plan_reply(session, subject, client_id, context)
+            if initial_reply is not None:
+                response = AiTrainingChatResponse(assistant_message=initial_reply)
+            else:
+                record_turn(path="model")
+                response = self._retry(lambda: self._provider.training_chat(context))
+        except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
             session.commit()  # Preserve only the original client message for retry.
             raise
         content = response.assistant_message
@@ -164,12 +182,20 @@ class TrainingChatService:
                     "não há um único rascunho disponível para edição. "
                     "Seu plano atual só pode mudar após revisão profissional."
                 )
-        elif self._claims_saved_change(content):
+        elif initial_reply is None and self._claims_saved_change(content):
             record_turn(outcome="draft_blocked", reason="unsupported_save_claim")
             content = (
                 "Nenhuma alteração foi salva no treino nesta mensagem. "
                 "Diga qual mudança deseja fazer no rascunho para eu ajudar."
             )
+        elif (
+            initial_reply is None
+            and context["current_training_plan"] is None
+            and self._offers_initial_plan(content)
+        ):
+            # Ground an offer in real capabilities; the next confirmation is
+            # handled by the backend, never sent back to the model to ask again.
+            content = self._initial_plan_guidance(context)
         can_suggest_adaptation = context["current_training_plan"] is not None
         assistant = TrainingAiMessage(
             conversation_id=conversation.id,
@@ -254,6 +280,9 @@ class TrainingChatService:
             else [],
             "editable_training_draft": draft_content,
             "relevant_onboarding": self._onboarding_context(session, client_id, health_context),
+            "onboarding_completed": OnboardingDraftService().has_valid_completed_onboarding(
+                session, client_id
+            ),
             "rules": {
                 "language": "pt-BR",
                 "must_not_diagnose": True,
@@ -262,8 +291,98 @@ class TrainingChatService:
                 "may_update_ai_draft": may_update,
                 "client_reports_are_not_completed_onboarding_edits": True,
                 "summary_contains_only_client_statements": True,
+                "initial_generation_requires_explicit_request": True,
             },
         }
+
+    def _initial_plan_reply(
+        self, session: Session, subject: str, client_id: UUID, context: dict
+    ) -> str | None:
+        if context["current_training_plan"] is not None:
+            return None  # Existing-plan changes keep the adaptation/review flow.
+        if not self._requests_initial_plan(
+            context["current_user_message"], context["recent_messages"]
+        ):
+            return None
+        record_turn(path="direct")
+        if self._lifecycle.find_proposal(session, client_id=client_id) is not None:
+            return (
+                "Seu rascunho já está disponível em Meu treino e aguarda revisão do instrutor. "
+                "Não criei outro plano. Você pode pedir uma alteração nesse rascunho."
+            )
+        if not context["onboarding_completed"]:
+            return self._initial_plan_guidance(context)
+        try:
+            # Keep the proposal, reply and request UUID atomic. A failed
+            # generation rolls back only its savepoint, preserving the message.
+            with session.begin_nested():
+                self._generation.generate_for_subject(session, subject, commit=False)
+        except CompletedOnboardingRequiredError:
+            return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
+        except TrainingGenerationUnavailableError:
+            raise TrainingChatUnavailableError from None
+        except InvalidTrainingGenerationError:
+            raise TrainingChatDraftUpdateError from None
+        record_turn(outcome="draft_saved")
+        return (
+            "Criei seu rascunho de treino com base no onboarding concluído. "
+            "Abra Meu treino para conferir. Ele ainda precisa da revisão e aprovação "
+            "do instrutor antes de se tornar seu plano atual."
+        )
+
+    @staticmethod
+    def _initial_plan_guidance(context: dict) -> str:
+        if context["editable_training_draft"] is not None:
+            return (
+                "Seu rascunho já está disponível em Meu treino e aguarda revisão do instrutor. "
+                "Você pode pedir uma alteração nesse rascunho."
+            )
+        if not context["onboarding_completed"]:
+            return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
+        return (
+            "Posso gerar seu rascunho inicial com base no onboarding concluído, "
+            "para revisão do instrutor. Quer que eu prepare seu rascunho de treino?"
+        )
+
+    @classmethod
+    def _offers_initial_plan(cls, message: str) -> bool:
+        text = cls._normalized(message)
+        return bool(
+            re.search(r"\b(?:prepar\w*|gerar|gere|montar|monte|criar|crie|elabor\w*)\b", text)
+            and re.search(r"\b(?:plano|treino|rascunho|ficha|proposta)\b", text)
+            and re.search(r"\b(?:quer|quero|deseja|gostaria|posso|vou|vamos)\b", text)
+        )
+
+    @classmethod
+    def _requests_initial_plan(cls, message: str, history: list[dict]) -> bool:
+        text = cls._normalized(message).strip()
+        # Full matches intentionally exclude conditions, negation, health
+        # corrections and ambiguous compound answers from consent.
+        if re.fullmatch(
+            r"(?:sim(?:[,!]\s*|\s+))?(?:sim|quero|pode|pode sim|confirmo|"
+            r"pode fazer|pode preparar|pode gerar|pode criar|pode montar)"
+            r"(?:[, ]+por favor)?[.!]*",
+            text,
+        ):
+            questions = re.findall(r"[^.!?]*\?", history[-1]["content"]) if history else []
+            return bool(
+                history
+                and history[-1]["role"] == "assistant"
+                and len(questions) == 1
+                and cls._offers_initial_plan(questions[0])
+                and not re.search(r"\bnao\b", cls._normalized(questions[0]))
+            )
+        return bool(
+            re.fullmatch(
+                r"(?:por favor[, ]+)?(?:quero que (?:voce )?|"
+                r"(?:pode|poderia|quero|gostaria de) )?"
+                r"(?:prepare|preparar|gere|gerar|monte|montar|crie|criar|elabore|elaborar) "
+                r"(?:(?:um|o|meu|novo|primeiro|seu) )*"
+                r"(?:plano(?: de treino)?|treino|rascunho(?: de treino)?|ficha)"
+                r"(?: inicial)?(?: para mim)?(?:[, ]+por favor)?[.!?]*",
+                text,
+            )
+        )
 
     @staticmethod
     def _editable_ai_draft(session: Session, client_id: UUID) -> TrainingPlanVersion | None:
@@ -460,7 +579,8 @@ class TrainingChatService:
         text = cls._normalized(message)
         return bool(
             re.search(
-                r"\b(?:atualizei|alterei|salvei|modifiquei|troquei|substitui|aprovei|ativei)\b",
+                r"\b(?:atualizei|alterei|salvei|modifiquei|troquei|substitui|aprovei|ativei|"
+                r"criei|gerei|preparei|montei)\b",
                 text,
             )
         ) or bool(
