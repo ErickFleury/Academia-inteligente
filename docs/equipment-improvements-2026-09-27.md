@@ -16,7 +16,10 @@ number remain administrator-only. Photos support upload and existing links.
    No live pilot reset was performed.
 2. Administrator UI: searchable compact inventory, details drawer, two-step
    registration, editable private details and unit identifiers, photo preview,
-   recoverable upload, batch addition and confirmed inventory changes. In progress.
+   recoverable upload, batch addition and confirmed inventory changes. Complete.
+   Eight workflow regressions and production build passed. Firefox checked list,
+   detail, units, registration and review at 360×800, 768×1024 and 1366×768; no
+   horizontal overflow, unlabeled controls or sub-44px buttons were found.
 3. Instructor and public/client UI: focused operational workspace and responsive
    catalog cards, search and useful empty/error states. Pending.
 4. Responsive, keyboard, regression and live local verification. Pending.

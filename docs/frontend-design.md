@@ -178,6 +178,16 @@ palette, or page composition.
   structured message content when required. Context cues should help without
   crowding the conversation. Reuse chat primitives across onboarding and
   training chat; adaptation adds states to them.
+- **Equipment administration:** Use a compact searchable inventory with one
+  thumbnail/name group per row, derived active-unit totals and explicit model
+  status. Keep creation behind one primary action. A focused details drawer
+  groups overview and physical-unit tabs, with separate inventory/operational
+  chips, label/private-detail editing and batch addition. Registration uses an
+  accessible two-step dialog (full-screen on phone): public information/photo
+  and private metadata, then unit quantity/identifier preview. Keep actions
+  visible while content scrolls; pending saves disable repeat submission and
+  failures preserve the draft. Photo preview must reserve space and provide a
+  readable fallback; all fields marked internal remain administrator-only.
 - **Later modules:** Progress sharing evolves in Task 27 into the authenticated
   chronological social feed specified below. Equipment can use local imagery,
   name/type, concise metadata, detail, and total active units.
