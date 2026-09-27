@@ -1148,3 +1148,24 @@ anonymous occupancy ledger. A later confirmed passage may carry the opaque
 access/biometric subject reference, which the backend resolves to the private
 Client-linked ledger event without placing biometric material in the passage
 payload.
+
+## EXT-DEC-FACE-01 — Local facial-access pilot
+
+**Status:** approved by the user through the requirements interview and explicit
+implementation instruction. Canonical policy: EXT-RF-FACE-01 in requirements.md.
+
+The owner approved local no-cost CompreFace, mandatory shared-person enrollment
+for client/staff registration, administrator-only operation, button webcam capture,
+no liveness or agreement flow, simulated release and explicitly confirmed passage,
+active-client-only entry but recognized exit despite inactivity, reasoned state
+corrections, and the existing occupancy display without an extra simulation label.
+Staff enrollment is reserved for future tracking; none is implemented here.
+Test identities may be erased once replacement registration is usable; bootstrap
+admin/service access and unrelated configuration must survive. No real gate call,
+paid dependency, other participant, or population-accuracy claim is authorized.
+
+The later pilot exception takes precedence over the older biometric deferral and
+full membership prerequisite only within this explicit scope. CompreFace's exact
+free-use artifacts and operational preflight remain an implementation gate.
+See facial-access-specification.md for the complete interview decisions, contracts
+and task order. No changes to unrelated health, training or financial policy.

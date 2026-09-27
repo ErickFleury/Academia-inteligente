@@ -203,10 +203,21 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
-Task 26, social client profile and post interactions, is next in dependency
-order. Task 25 now connects the implemented Task 21 catalog to Task 17
-adaptation through canonical model UUIDs and inventory-only active-unit
-semantics. Outstanding Task 19 RNF evidence remains manual/external
-verification rather than missing product implementation. The social feed
-requested as the subsequent change remains a separate future requirement/task
-and is not part of Task 26.
+The user explicitly selected the controlled facial-access pilot as the next
+implementation sequence. See [specification](facial-access-specification.md).
+Historical task coverage above is not a claim that unrelated planned work should
+be performed during this feature.
+
+| Task | Feature task | Scope | Status |
+| --- | --- | --- | --- |
+| 38 | FACE-IMPL-01 | Canonical policy, free-use provider artifacts, pinned Docker preflight | Complete |
+| 39 | FACE-IMPL-02 | Protected enrollment, staging and cleanup | Planned |
+| 40 | FACE-IMPL-03 | Mandatory registration, shared enrollment, capture UI and erasure | Planned |
+| 41 | FACE-IMPL-04 | Recognition, entry/exit policy and simulated release | Planned |
+| 42 | FACE-IMPL-05 | Confirmed passages, state corrections and occupancy | Planned |
+| 43 | FACE-IMPL-06 | Acesso facial admin workspace and integrated UI | Planned |
+| 44 | FACE-IMPL-07 | Authorized reset and owner-only integrated verification | Planned |
+
+Complete/test/review/commit each task before proceeding. Stop for unforeseen
+functional decisions; never claim owner webcam validation or population precision
+based on fixture tests.

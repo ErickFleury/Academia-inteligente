@@ -1,6 +1,7 @@
 # Facial Access Pilot — Implementation Specification
 
-**Status:** requirements interview consolidated; implementation has not started.
+**Status:** implementation started; FACE-IMPL-01 foundation complete.
+See [Task 38 evidence](tasks/38-facial-provider-foundation.md).
 **Scope:** a controlled local pilot involving only the project owner.
 **Authority:** `docs/requirements.md` remains the canonical implementation
 specification. This document records the user's approved feature decisions and
@@ -605,8 +606,9 @@ specific reviewed procedure; schema downgrades are tested on disposable data.
 ## 13. Completion and remaining gates
 
 The product questions for this controlled, owner-only pilot are resolved above.
-No implementation, installation, facial capture or account reset was performed
-by this documentation task. Only this new specification file was changed.
+The original documentation checkpoint performed no installation or reset.
+Implementation now proceeds through the checkpoints below; the foundation is
+installed, but no owner facial capture or account reset has been performed.
 
 Before affected code: canonical amendments are mandatory. Before provider use:
 pin/verify the exact free-use model and service artifacts and calibration settings.

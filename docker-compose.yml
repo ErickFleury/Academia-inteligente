@@ -24,6 +24,14 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       OIDC_ISSUER_URL: http://keycloak:8080/realms/academia
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      FACIAL_ACCESS_MODE: ${FACIAL_ACCESS_MODE:-disabled}
+      COMPREFACE_URL: http://compreface-api:8080
+      COMPREFACE_API_KEY: ${COMPREFACE_API_KEY:-}
+      BIOMETRIC_DETECTION_THRESHOLD: ${BIOMETRIC_DETECTION_THRESHOLD:-0.90}
+      BIOMETRIC_MATCH_THRESHOLD: ${BIOMETRIC_MATCH_THRESHOLD:-0.80}
+      BIOMETRIC_AMBIGUITY_MARGIN: ${BIOMETRIC_AMBIGUITY_MARGIN:-0.10}
+      BIOMETRIC_TIMEOUT_SECONDS: ${BIOMETRIC_TIMEOUT_SECONDS:-10}
+      BIOMETRIC_MODEL: facenet-20180402-114759
       ACCESS_EVENT_INTEGRATION_SECRET: ${ACCESS_EVENT_INTEGRATION_SECRET:-}
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
@@ -48,6 +56,7 @@ services:
       - "${LOCAL_BIND_ADDRESS:-127.0.0.1}:8000:8000"
     volumes:
       - ./backend:/app
+    networks: [default, biometrics]
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -142,7 +151,110 @@ services:
         condition: service_healthy
     restart: "no"
 
+  compreface-postgres-db:
+    image: exadel/compreface-postgres-db:1.2.0@sha256:fe898d327bc3dd738513ef7cafcbe97da51ac10d2542493141ac7878d3bc9f3a
+    profiles: [biometrics]
+    networks: [biometrics]
+    environment:
+      POSTGRES_USER: biometrics
+      POSTGRES_PASSWORD: ${COMPREFACE_DATABASE_PASSWORD:-}
+      POSTGRES_DB: biometrics
+    volumes:
+      - biometrics_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U biometrics -d biometrics']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  compreface-core:
+    image: exadel/compreface-core:1.2.0@sha256:c9c70f0f270b1767bdf59d8e549f00f7d8f06e29315ac2ff624e276dcf37385b
+    profiles: [biometrics]
+    networks: [biometrics]
+    environment:
+      ML_PORT: '3000'
+      IMG_LENGTH_LIMIT: '640'
+      UWSGI_PROCESSES: '1'
+      UWSGI_THREADS: '1'
+      LOGGING_LEVEL_NAME: CRITICAL
+      # Upstream treats an empty string as its default plugin list. Whitespace splits to none.
+      EXTRA_PLUGINS: " "
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://localhost:3000/healthcheck]
+      interval: 10s
+      timeout: 3s
+      start_period: 60s
+      retries: 12
+
+  compreface-api:
+    image: exadel/compreface-api:1.2.0@sha256:4e131ba2c51a2e711f0bdad0720f9ab47c827f383c5c956b1be4dfd994edc1cc
+    profiles: [biometrics]
+    networks: [biometrics]
+    environment:
+      POSTGRES_USER: biometrics
+      POSTGRES_PASSWORD: ${COMPREFACE_DATABASE_PASSWORD:-}
+      POSTGRES_URL: jdbc:postgresql://compreface-postgres-db:5432/biometrics
+      SPRING_PROFILES_ACTIVE: dev
+      API_JAVA_OPTS: -Xmx1g
+      SAVE_IMAGES_TO_DB: 'true'
+      MAX_FILE_SIZE: 5MB
+      MAX_REQUEST_SIZE: 6MB
+      CONNECTION_TIMEOUT: '3000'
+      READ_TIMEOUT: '10000'
+      MAX_ATTEMPTS: '1'
+      PYTHON_URL: http://compreface-core:3000
+      LOGGING_LEVEL_ROOT: "OFF"
+    depends_on:
+      compreface-postgres-db:
+        condition: service_healthy
+      compreface-core:
+        condition: service_healthy
+
+  compreface-admin:
+    image: exadel/compreface-admin:1.2.0@sha256:1d199d4d1ab703e8c8bec5825ac6150c49de70568cd2b27658dd234c444fa7ed
+    profiles: [biometrics]
+    networks: [biometrics]
+    environment:
+      POSTGRES_USER: biometrics
+      POSTGRES_PASSWORD: ${COMPREFACE_DATABASE_PASSWORD:-}
+      POSTGRES_URL: jdbc:postgresql://compreface-postgres-db:5432/biometrics
+      SPRING_PROFILES_ACTIVE: dev
+      ENABLE_EMAIL_SERVER: 'false'
+      ADMIN_JAVA_OPTS: -Xmx512m
+      MAX_FILE_SIZE: 5MB
+      MAX_REQUEST_SIZE: 6MB
+      LOGGING_LEVEL_ROOT: "OFF"
+    depends_on:
+      compreface-api:
+        condition: service_started
+
+  compreface-fe:
+    image: exadel/compreface-fe:1.2.0@sha256:3c92742ba75295b474b83ab27f8418aa94041e6e48d6006fe6ca7e6f06536508
+    profiles: [biometrics]
+    networks: [biometrics, biometrics_management]
+    ports:
+      - '127.0.0.1:8005:80'
+    environment:
+      CLIENT_MAX_BODY_SIZE: 6M
+      PROXY_READ_TIMEOUT: 10000ms
+      PROXY_CONNECT_TIMEOUT: 3000ms
+    depends_on:
+      - compreface-api
+      - compreface-admin
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://127.0.0.1/]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+networks:
+  biometrics:
+    internal: true
+  # Only the loopback management proxy joins this bridge; processing stays internal.
+  biometrics_management: {}
+
 volumes:
+  biometrics_data:
   frontend_node_modules:
   postgres_data:
   keycloak_data:

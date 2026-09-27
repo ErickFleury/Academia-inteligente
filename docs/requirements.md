@@ -1263,6 +1263,83 @@ Suggestions and chat responses do not become the current plan: approval,
 versioning, safety, professional responsibility, manual fallback, and history
 rules in RF-17/RF-19 and RN-12–RN-19/RN-31 continue to govern changes.
 
+#### EXT-RF-FACE-01 — Controlled local facial-access pilot
+
+**Status:** approved for implementation, not yet implemented. **Scope:** owner-only
+local test; RF-01/03/07/08 and RF-20–RF-25. **Decision:** EXT-DEC-FACE-01.
+
+This later explicit policy amends DEC-04/05/09/10/11/17/18 only for the pilot:
+
+- Administrators enroll, replace/revoke faces, operate the access panel and view
+  safe operational history. No instructor permission or new attendant workflow.
+- Valid biometric enrollment is mandatory before either new Client or Employee
+  registration completes. One separately protected enrollment belongs to the
+  shared person and is reused when adding a second role. Bootstrap administration
+  needs no scan. Ordinary login remains independent of biometric readiness.
+- Capture live webcam images only on explicit button presses. Reject zero/multiple
+  faces, unknown/ambiguous or below-threshold matches. At most one additional
+  capture per failed recognition attempt. No liveness protection is claimed.
+- Use local Docker CompreFace at no software/model fee. Provider enrollment images
+  are retained locally until replacement, revocation or person deletion; only
+  opaque references/lifecycle metadata belong in the application database.
+  Attempt captures are transient; no biometric material in logs/AI/social/APIs.
+- Safe replacement activates a successful replacement before deleting the old
+  subject. Staged/revoked/superseded references never authorize. Cleanup survives
+  failures. Shared-role removal preserves the remaining person's enrollment;
+  full erasure removes local/provider material and related history.
+- Entry requires a recognized, enrolled active Client currently outside. This is
+  an explicit pilot-only RN-35/RN-36 exception: no membership/payment/modality/
+  access-allowance implementation. Exit permits a recognized Client currently
+  inside regardless of Client/account activity. Deactivation retains enrollment
+  for exit; explicit revocation denies recognition use immediately.
+- Authorization produces one idempotent recorded/displayed simulated release,
+  never an external turnstile call. Only explicit admin confirmation of simulated
+  passage changes state/count. Reject inconsistent transitions; protect concurrent
+  confirmation/correction with server-side transaction and revision checks.
+- Admin state corrections require a reason, append audit and ledger adjustments,
+  and update per-client state atomically; they never pretend recognition/release.
+- Simulated events retain internal provenance and update the existing aggregate
+  count with its existing 60-second heartbeat/120-second freshness behavior.
+  No extra simulation label is added to the occupancy page. The test panel is
+  explicitly simulated. Named presence remains separately consented and must
+  respect corrections, not infer presence from recognition.
+- Add enrollment to existing admin person forms and one Acesso facial page with
+  test panel, recent events, corrections and controlled failures. All UI pt-BR.
+- No agreement/consent UI for the owner-only controlled experiment. No enrolling
+  others, staff tracking/attendance, cloud recognition or actual gate control.
+- Keep event/audit history until test reset/person deletion. The authorized reset
+  removes local test identities from Keycloak/database after new registration is
+  usable, preserving bootstrap admin/service access and unrelated gym configuration.
+- CA-21.4's representative >=95% precision remains unverified; a self-test does
+  not pass it. Full eligibility, hardware, liveness/privacy and representative
+  quality validation remain gates for any later real/additional-person rollout.
+
+**Acceptance criteria (definition of pilot completion):**
+
+| ID | Required evidence |
+| --- | --- |
+| FACE-CA-01 | Both registration APIs/UI reject missing/invalid enrollment; successful scan enables registration; failed enrollment creates no partial Client/Employee and abandoned provider material is cleaned. |
+| FACE-CA-02 | Same-person second-role creation reuses enrollment; conflicting CPF/e-mail remains rejected; staff-only scans cannot enter/count as clients. |
+| FACE-CA-03 | Only admin may operate new endpoints; direct client/instructor/anonymous calls fail; cross-operator sessions/attempts cannot be consumed. |
+| FACE-CA-04 | Capture is live, button-triggered, bounded and single-face; no background recognition; camera tracks stop when closing. |
+| FACE-CA-05 | Failed replacement preserves old enrollment; successful replacement disables old reference; revocation immediately denies use and cleanup resumes after restart. |
+| FACE-CA-06 | Entry requires a valid recognized active Client outside; exit accepts recognized inside Client despite deactivation; unknown/ambiguous/low-score results never authorize. |
+| FACE-CA-07 | Successful authorization produces one persisted/displayed simulated release; no actual turnstile call; stable trigger locator and adapter contract are documented. |
+| FACE-CA-08 | Scan/release without confirmation leaves count unchanged; one timely confirmation transitions state/count exactly once; stale, repeated and concurrent transitions do not double-count. |
+| FACE-CA-09 | Reasoned admin correction updates client state and count atomically with audit; no forged match/release; repeated/no-op corrections do not drift. |
+| FACE-CA-10 | Existing occupancy page shows the updated count with normal stale handling and no new simulation label; no identities leak to aggregate views. |
+| FACE-CA-11 | Local-only provider behavior, no paid dependency, no browser API key, no ordinary image/template endpoint, no sensitive logging or AI context; attempt captures transient. |
+| FACE-CA-12 | Shared-role removal preserves needed enrollment; full person erasure removes associated local/provider data and leaves coherent count; reset verified in both Keycloak and database. |
+| FACE-CA-13 | Provider/camera/database failure and restarts follow section 8; bounded retries and cleanup; unrelated app functions remain usable. |
+| FACE-CA-14 | Admin forms/page work at 360×800, 768×1024 and 1366×768 with keyboard focus, understandable feedback and no horizontal page overflow. |
+| FACE-CA-15 | No agreement workflow, staff tracking/attendance, attendant provisioning, continuous recognition, real release, or membership billing introduced. |
+| FACE-CA-16 | Record actual model/threshold, latency and self-test evidence without claiming measured population precision or liveness. Real-hardware quality gate remains unverified. |
+
+Detailed bounded API/state/transaction contracts, technical defaults, failure
+behavior, owner-only verification and dependency order are recorded in
+[the facial-access specification](facial-access-specification.md), sections 3–12.
+They support this canonical policy; conflicts require a human decision.
+
 ## 4 Non-functional requirements
 
 The six RNFs below preserve all their criteria. DEC-16 defines their approved
