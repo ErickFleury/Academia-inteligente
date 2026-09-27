@@ -333,3 +333,10 @@ together, and health forms use numbered section headers without changing
 completion gates. Chats use quiet sender-specific bubbles and a bordered
 sticky composer. Social cards group identity and time above content, with
 persistent actions below a divider; use shared outline icons instead of emoji.
+
+Instructor client search uses a bordered filter area followed by the client
+list and focused workspace on wide screens; they stack on smaller screens,
+retaining the existing focus-on-selection behavior. Show onboarding and training
+states as named chips and keep the responsible instructor visible. Plan lists
+retain their existing preview/edit/history controls with clearer selected
+surfaces, client identity, objective and grouped exercise details.

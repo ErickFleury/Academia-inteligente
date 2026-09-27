@@ -42,3 +42,7 @@ The final verification section records the exact commit range and results.
 - Client content checkpoint: 21 targeted client/social regression tests and
   TypeScript passed. Changes are limited to markup, styles and accessible
   presentation; existing request handlers and persistence contracts are retained.
+- Instructor content checkpoint: 24 targeted tests passed, covering exact client
+  filters, onboarding validation, draft editing/saving, approval, stale state,
+  immutable history, equipment references and read-only social access.
+  TypeScript passed. The instructor Perfil placeholder remains a placeholder.

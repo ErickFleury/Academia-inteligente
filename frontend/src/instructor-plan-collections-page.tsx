@@ -149,13 +149,13 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
           {plans.map((plan) => <Button key={plan.id} ref={(element) => { if (element) listButtons.current.set(plan.id, element); else listButtons.current.delete(plan.id) }}
             aria-label={`Ver plano e histórico de ${plan.client_name}`} aria-pressed={Boolean(detail && historyAnchor === plan.id)}
             disabled={busy} onClick={() => void open(plan.id)} color="inherit"
-            sx={{ display: 'block', flexShrink: 0, textAlign: 'left', p: 2, border: '1px solid', borderColor: detail && historyAnchor === plan.id ? 'primary.main' : 'divider', bgcolor: detail && historyAnchor === plan.id ? 'action.selected' : 'background.paper', width: '100%' }}>
+            sx={{ display: 'block', flexShrink: 0, textAlign: 'left', p: 2.5, borderRadius: 3, border: '1px solid', borderColor: detail && historyAnchor === plan.id ? 'primary.main' : 'divider', bgcolor: detail && historyAnchor === plan.id ? 'rgba(255,133,100,0.08)' : 'background.paper', width: '100%' }}>
             <Stack spacing={1}>
               <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'start', gap: 1 }}>
                 <Typography component="span" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{plan.name}</Typography>
                 <Chip component="span" size="small" color="success" variant="outlined" label="Atual" />
               </Stack>
-              <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {plan.client_name}</Typography>
+              <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere', color: 'primary.main' }}>Cliente: {plan.client_name}</Typography>
               <Typography component="span" variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>Responsável: {plan.responsible_instructor_name ?? 'Não informado'}</Typography>
               <Typography component="span" variant="caption" color="text.secondary">Aprovado em {shortDate(plan.approved_at)}</Typography>
               <Typography component="span" variant="body2" color="primary.main" sx={{ fontWeight: 750 }}>Ver plano e histórico →</Typography>
@@ -166,12 +166,12 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
       </Stack>
       <Box sx={{ minWidth: 0, display: { xs: detail || busy ? 'block' : 'none', lg: 'block' } }}>
         {busy && <LoadingState label="Carregando detalhes do plano" />}
-        {!detail && !busy && <Card variant="outlined"><CardContent sx={{ py: 7 }}><Stack spacing={1.5} sx={{ maxWidth: 380, mx: 'auto' }}>
+        {!detail && !busy && <Card variant="outlined" sx={{ bgcolor: 'rgba(245,247,244,0.025)' }}><CardContent sx={{ py: 7 }}><Stack spacing={1.5} sx={{ maxWidth: 380, mx: 'auto' }}>
           <Typography variant="overline" color="primary.main">Visão do treino</Typography>
           <Typography component="h2" variant="h3">Selecione um plano para consultar</Typography>
           <Typography color="text.secondary">Veja a sequência de exercícios, as orientações de carga e o histórico de aprovações em um só lugar.</Typography>
         </Stack></CardContent></Card>}
-        {detail && <Card component="section" ref={detailSection} aria-label="Detalhes do plano" sx={{ scrollMarginTop: { xs: 80, md: 24 } }}><CardContent sx={{ p: { xs: 2, sm: 3 } }}><Stack spacing={3}>
+        {detail && <Card component="section" ref={detailSection} aria-label="Detalhes do plano" sx={{ scrollMarginTop: { xs: 80, md: 24 }, borderTop: '3px solid', borderTopColor: 'primary.main' }}><CardContent sx={{ p: { xs: 2, sm: 3 } }}><Stack spacing={3}>
           <Box><Button disabled={busy} onClick={closeDetail}>← Voltar à lista</Button></Box>
           <Stack spacing={1.5}>
             <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
@@ -179,7 +179,7 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
               <Chip size="small" variant="outlined" label="Aprovado" />
             </Stack>
             <Typography ref={heading} tabIndex={-1} component="h2" variant="h3" sx={{ fontSize: { xs: '1.35rem', sm: '1.6rem' }, overflowWrap: 'anywhere', scrollMarginTop: { xs: 88, md: 24 } }}>{detail.name}</Typography>
-            <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {detail.client_name}</Typography>
+            <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere', color: 'primary.main', bgcolor: 'rgba(255,133,100,0.06)', p: 1.5, borderRadius: 2 }}>Cliente: {detail.client_name}</Typography>
             <Box component="dl" sx={{ m: 0, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
               <Box><Typography component="dt" variant="caption" color="text.secondary">Instrutor responsável</Typography><Typography component="dd" sx={{ m: 0, overflowWrap: 'anywhere' }}>{detail.responsible_instructor_name ?? 'Não informado'}</Typography></Box>
               <Box><Typography component="dt" variant="caption" color="text.secondary">Aprovado em</Typography><Typography component="dd" sx={{ m: 0 }}>{approvalDate(detail.approved_at)}</Typography></Box>

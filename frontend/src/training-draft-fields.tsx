@@ -20,13 +20,13 @@ export function TrainingDraftFields({ accessToken, draft, onChange }: { accessTo
   function move(index: number, delta: number) { const items = [...draft.items]; [items[index], items[index + delta]] = [items[index + delta], items[index]]; onChange({ ...draft, items }) }
   return <Stack spacing={2}>
         {error && <StatusNotice severity="error">Não foi possível consultar os equipamentos para prescrição. Recarregue a lista.</StatusNotice>}
-        <Button disabled={loading} onClick={() => void load()}>Recarregar equipamentos para prescrição</Button>
+        <Button sx={{ alignSelf: 'flex-start' }} disabled={loading} onClick={() => void load()}>Recarregar equipamentos para prescrição</Button>
         {loading && <Typography role="status">Consultando equipamentos para prescrição…</Typography>}
         {cursor && <Button disabled={loading} onClick={() => void load(cursor)}>Carregar mais opções de equipamento</Button>}
         <TextField required fullWidth label="Nome do plano" value={draft.name} onChange={(event) => onChange({ ...draft, name: event.target.value })} />
         <TextField required fullWidth multiline label="Objetivo" value={draft.objective} onChange={(event) => onChange({ ...draft, objective: event.target.value })} />
-        {draft.items.map((item, index) => <Card key={index} variant="outlined"><CardContent><Stack spacing={1.5}>
-          <Typography component="h3" variant="h4">Exercício {index + 1}</Typography>
+        {draft.items.map((item, index) => <Card key={index} variant="outlined" sx={{ bgcolor: 'rgba(16,24,27,0.35)', borderRadius: 2.5 }}><CardContent><Stack spacing={1.5}>
+          <Typography component="h3" variant="h4" sx={{ color: 'primary.main', pb: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>Exercício {index + 1}</Typography>
           <TextField required label={`Nome do exercício ${index + 1}`} value={item.exercise_name} onChange={(event) => changeItem(index, { exercise_name: event.target.value })} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <TextField fullWidth required label={`Séries ${index + 1}`} type="number" value={item.sets} onChange={(event) => changeItem(index, { sets: Number(event.target.value) })} />
@@ -46,6 +46,6 @@ export function TrainingDraftFields({ accessToken, draft, onChange }: { accessTo
             <Button color="error" disabled={draft.items.length === 1} onClick={() => onChange({ ...draft, items: draft.items.filter((_, position) => position !== index) })}>Remover exercício {index + 1}</Button>
           </Stack>
         </Stack></CardContent></Card>)}
-        <Button disabled={draft.items.length >= 100} onClick={() => onChange({ ...draft, items: [...draft.items, emptyItem()] })}>Adicionar exercício</Button>
+        <Button variant="outlined" disabled={draft.items.length >= 100} onClick={() => onChange({ ...draft, items: [...draft.items, emptyItem()] })}>Adicionar exercício</Button>
   </Stack>
 }
