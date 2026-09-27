@@ -26,7 +26,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 test('combines filters and opens immutable history with original responsibility', async () => {
   const fetchMock = mockFetch()
   mount()
-  await screen.findByText('Ana Silva')
+  await screen.findByText('Cliente: Ana Silva')
   fireEvent.click(screen.getByRole('button', { name: 'Mais filtros' }))
   fireEvent.change(screen.getByLabelText('Nome do cliente'), { target: { value: ' Ana ' } })
   fireEvent.change(screen.getByLabelText('Aprovação a partir de'), { target: { value: '2026-09-27' } })
@@ -38,10 +38,12 @@ test('combines filters and opens immutable history with original responsibility'
   fireEvent.click(screen.getByRole('button', { name: 'Ver plano e histórico de Ana Silva' }))
   await screen.findByRole('button', { name: 'Editar' })
   fireEvent.click(screen.getByRole('tab', { name: 'Histórico' }))
-  fireEvent.click(screen.getByRole('button', { name: /Treino anterior/ }))
+  const historical = screen.getByRole('button', { name: /Treino anterior/ })
+  expect(within(historical).getByText('Cliente: Ana Silva')).toBeInTheDocument()
+  fireEvent.click(historical)
   await screen.findByText('Histórico — somente leitura')
   expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Treino anterior — Ana Silva' })).toHaveFocus()
+  expect(screen.getByRole('heading', { name: 'Treino anterior' })).toHaveFocus()
 })
 
 test('cancel preserves draft and explicit confirmation sends the exact revision', async () => {
@@ -78,13 +80,15 @@ test('my plans requests only own responsibility and supports empty and retry sta
 })
 
 
-test('focused reading view groups exercise details and restores the selected list button', async () => {
+test.each([false, true])('collection mine=%s identifies the client in cards and the reading view', async (mine) => {
   mockFetch()
-  mount(true)
+  mount(mine)
   const open = await screen.findByRole('button', { name: 'Ver plano e histórico de Ana Silva' })
+  expect(within(open).getByText('Cliente: Ana Silva')).toBeInTheDocument()
   fireEvent.click(open)
   const detail = await screen.findByRole('region', { name: 'Detalhes do plano' })
-  expect(within(detail).getByRole('heading', { name: 'Força — Ana Silva' })).toHaveFocus()
+  expect(within(detail).getByRole('heading', { name: 'Força' })).toHaveFocus()
+  expect(within(detail).getByText('Cliente: Ana Silva')).toBeInTheDocument()
   expect(within(detail).getByRole('heading', { name: 'Agachamento' })).toBeInTheDocument()
   for (const label of ['Séries', 'Repetições', 'Descanso', 'Orientação de carga', 'Confortável']) expect(within(detail).getByText(label)).toBeInTheDocument()
   expect(open).toHaveAttribute('aria-pressed', 'true')
@@ -96,7 +100,7 @@ test('focused reading view groups exercise details and restores the selected lis
 test('clears every applied filter and returns to the complete collection', async () => {
   const fetchMock = mockFetch()
   mount()
-  await screen.findByText('Ana Silva')
+  await screen.findByText('Cliente: Ana Silva')
   fireEvent.change(screen.getByLabelText('Nome do cliente'), { target: { value: 'Ana' } })
   fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
   await screen.findByText('Consulta filtrada')

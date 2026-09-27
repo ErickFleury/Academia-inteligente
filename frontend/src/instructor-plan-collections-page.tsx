@@ -152,10 +152,10 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
             sx={{ display: 'block', flexShrink: 0, textAlign: 'left', p: 2, border: '1px solid', borderColor: detail && historyAnchor === plan.id ? 'primary.main' : 'divider', bgcolor: detail && historyAnchor === plan.id ? 'action.selected' : 'background.paper', width: '100%' }}>
             <Stack spacing={1}>
               <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'start', gap: 1 }}>
-                <Typography component="span" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{plan.client_name}</Typography>
+                <Typography component="span" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{plan.name}</Typography>
                 <Chip component="span" size="small" color="success" variant="outlined" label="Atual" />
               </Stack>
-              <Typography component="span" variant="body2" sx={{ overflowWrap: 'anywhere' }}>{plan.name}</Typography>
+              <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {plan.client_name}</Typography>
               <Typography component="span" variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>Responsável: {plan.responsible_instructor_name ?? 'Não informado'}</Typography>
               <Typography component="span" variant="caption" color="text.secondary">Aprovado em {shortDate(plan.approved_at)}</Typography>
               <Typography component="span" variant="body2" color="primary.main" sx={{ fontWeight: 750 }}>Ver plano e histórico →</Typography>
@@ -178,7 +178,8 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
               <Chip color={detail.status === 'current' ? 'success' : 'default'} size="small" label={detail.status === 'current' ? 'Plano atual' : 'Histórico — somente leitura'} />
               <Chip size="small" variant="outlined" label="Aprovado" />
             </Stack>
-            <Typography ref={heading} tabIndex={-1} component="h2" variant="h3" sx={{ fontSize: { xs: '1.35rem', sm: '1.6rem' }, overflowWrap: 'anywhere', scrollMarginTop: { xs: 88, md: 24 } }}>{detail.name} — {detail.client_name}</Typography>
+            <Typography ref={heading} tabIndex={-1} component="h2" variant="h3" sx={{ fontSize: { xs: '1.35rem', sm: '1.6rem' }, overflowWrap: 'anywhere', scrollMarginTop: { xs: 88, md: 24 } }}>{detail.name}</Typography>
+            <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {detail.client_name}</Typography>
             <Box component="dl" sx={{ m: 0, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
               <Box><Typography component="dt" variant="caption" color="text.secondary">Instrutor responsável</Typography><Typography component="dd" sx={{ m: 0, overflowWrap: 'anywhere' }}>{detail.responsible_instructor_name ?? 'Não informado'}</Typography></Box>
               <Box><Typography component="dt" variant="caption" color="text.secondary">Aprovado em</Typography><Typography component="dd" sx={{ m: 0 }}>{approvalDate(detail.approved_at)}</Typography></Box>
@@ -202,6 +203,7 @@ export function InstructorPlanCollectionsPage({ accessToken, onSignOut, mine = f
               {history.map((item) => <Button key={item.id} disabled={busy} onClick={() => void open(item.id, true)} color="inherit" variant="outlined" sx={{ textAlign: 'left', justifyContent: 'flex-start', p: 2 }}>
                 <Stack spacing={0.75} sx={{ minWidth: 0 }}>
                   <Typography component="span" sx={{ fontWeight: 750, overflowWrap: 'anywhere' }}>{item.name}{item.status === 'current' ? ' · Atual' : ''}</Typography>
+                  <Typography component="span" variant="body2" sx={{ overflowWrap: 'anywhere' }}>Cliente: {item.client_name}</Typography>
                   <Typography component="span" variant="body2">{approvalDate(item.approved_at)}</Typography>
                   <Typography component="span" variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{item.responsible_instructor_name ?? 'Não informado'}</Typography>
                 </Stack>

@@ -144,6 +144,8 @@ palette, or page composition.
   compact selectable list beside a focused reading pane on larger desktops,
   within the shared shell's wider content option. Phone and tablet show the
   list or selected plan with an explicit return action and restored focus.
+  Show the plan title separately from an explicit “Cliente: {nome}” label on
+  list cards, selected-plan headers, and approval-history entries.
   Reuse the shared training content view: objective, numbered exercises, grouped
   sets/repetitions/rest, load guidance, and retained equipment labels. Keep
   approved/current/history states explicit, with a separate approval-history

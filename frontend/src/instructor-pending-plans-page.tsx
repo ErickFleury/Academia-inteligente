@@ -121,8 +121,8 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
             onClick={() => afterDiscard(() => void open(plan))}
             sx={{ display: 'block', flexShrink: 0, textAlign: 'left', p: 2, width: '100%', border: '1px solid', borderColor: selected?.id === plan.id ? 'primary.main' : 'divider', bgcolor: selected?.id === plan.id ? 'action.selected' : 'background.paper' }}>
             <Stack spacing={1}>
-              <Typography component="span" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{plan.client_name}</Typography>
-              <Typography component="span" variant="body2" sx={{ overflowWrap: 'anywhere' }}>{plan.name}</Typography>
+              <Typography component="span" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{plan.name}</Typography>
+              <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {plan.client_name}</Typography>
               <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                 <Chip component="span" size="small" variant="outlined" color="warning" label={sources[plan.source]} sx={{ height: 'auto', minHeight: 24, '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }} />
                 <Chip component="span" size="small" label={`${plan.items.length} ${plan.items.length === 1 ? 'exercício' : 'exercícios'}`} />
@@ -150,8 +150,8 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
               <Chip size="small" color="warning" variant="outlined" label="Aguardando aprovação" />
               <Chip size="small" label={`Origem: ${sources[selected.source]}`} sx={{ height: 'auto', minHeight: 24, '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }} />
             </Stack>
-            <Typography component="h2" ref={editorHeading} tabIndex={-1} variant="h3" sx={{ fontSize: { xs: '1.35rem', sm: '1.6rem' }, overflowWrap: 'anywhere', scrollMarginTop: { xs: 88, md: 24 } }}>Revisar plano de {selected.client_name}</Typography>
-            <Typography variant="h4" sx={{ overflowWrap: 'anywhere' }}>{draft.name}</Typography>
+            <Typography component="h2" ref={editorHeading} tabIndex={-1} variant="h3" sx={{ fontSize: { xs: '1.35rem', sm: '1.6rem' }, overflowWrap: 'anywhere', scrollMarginTop: { xs: 88, md: 24 } }}>{draft.name}</Typography>
+            <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {selected.client_name}</Typography>
             <Typography variant="body2" color="text.secondary">Atualizado em {date(selected.updated_at)} · Revisão {selected.revision}</Typography>
             {dirty && <Typography role="status" variant="body2" color="warning.main">Alterações não salvas</Typography>}
             {stale && <Button disabled={busy} onClick={() => afterDiscard(() => void open(selected))}>Recarregar rascunho</Button>}

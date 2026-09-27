@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
 
@@ -31,6 +31,7 @@ test('lists minimized pending metadata and approves directly with the viewed rev
   const fetchMock = mockFetch()
   mount()
   expect(await screen.findByRole('button', { name: 'Revisar plano de Maria Silva' })).toBeInTheDocument()
+  expect(within(screen.getByRole('button', { name: 'Revisar plano de Maria Silva' })).getByText('Cliente: Maria Silva')).toBeInTheDocument()
   expect(screen.getByText(/Adaptação aceita pelo cliente/)).toBeInTheDocument()
   expect(screen.getByText(/Instrutor responsável pelo treino atual: João Silva/)).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Revisar plano de Maria Silva' }))
@@ -50,7 +51,7 @@ test('edits the whole draft, preserves equipment, and saving never activates', a
   })
   mount()
   fireEvent.click(await screen.findByRole('button', { name: 'Revisar plano de Maria Silva' }))
-  await screen.findByRole('heading', { name: 'Revisar plano de Maria Silva' })
+  await screen.findByRole('heading', { name: 'Força' })
   fireEvent.click(screen.getByRole('tab', { name: 'Editar rascunho' }))
   expect(screen.getByRole('combobox', { name: 'Equipamento do catálogo 1' })).toHaveTextContent('Leg Press 45°')
   await waitFor(() => expect(screen.getByRole('combobox', { name: 'Equipamento do catálogo 1' })).not.toHaveAttribute('aria-disabled', 'true'))
@@ -73,7 +74,7 @@ test('stale save blocks approval until the draft has been reloaded', async () =>
   const fetchMock = mockFetch((_, init) => init?.method === 'PATCH' ? { ok: false, status: 409 } : undefined)
   mount()
   fireEvent.click(await screen.findByRole('button', { name: 'Revisar plano de Maria Silva' }))
-  await screen.findByRole('heading', { name: 'Revisar plano de Maria Silva' })
+  await screen.findByRole('heading', { name: 'Força' })
   fireEvent.click(screen.getByRole('tab', { name: 'Editar rascunho' }))
   fireEvent.click(screen.getByRole('button', { name: 'Aprovar alterações' }))
   await screen.findByText('Este rascunho mudou. Recarregue e revise antes de continuar.')
@@ -100,7 +101,8 @@ test('loads another bounded page without replacing the existing list', async () 
   mount()
   fireEvent.click(await screen.findByRole('button', { name: 'Carregar mais planos' }))
   expect(await screen.findByRole('button', { name: 'Revisar plano de Outro cliente' })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Revisar plano de Maria Silva' })).toBeInTheDocument()
+  expect(within(screen.getByRole('button', { name: 'Revisar plano de Maria Silva' })).getByText('Cliente: Maria Silva')).toBeInTheDocument()
+  expect(within(screen.getByRole('button', { name: 'Revisar plano de Outro cliente' })).getByText('Cliente: Outro cliente')).toBeInTheDocument()
 })
 
 
@@ -109,6 +111,7 @@ test('opens a readable preview before editing and preserves unsaved changes acro
   mount()
   fireEvent.click(await screen.findByRole('button', { name: 'Revisar plano de Maria Silva' }))
   expect(await screen.findByRole('heading', { name: 'Leg Press' })).toBeInTheDocument()
+  expect(within(screen.getByRole('region', { name: 'Revisão do plano' })).getByText('Cliente: Maria Silva')).toBeInTheDocument()
   expect(screen.queryByLabelText(/Nome do plano/)).not.toBeInTheDocument()
   expect(fetchMock.mock.calls.some(([url]) => url.includes('/usable-models'))).toBe(false)
   fireEvent.click(screen.getByRole('tab', { name: 'Editar rascunho' }))

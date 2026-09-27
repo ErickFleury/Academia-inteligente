@@ -73,3 +73,26 @@ The browser audit is scoped and does not claim comprehensive WCAG or
 screen-reader certification. Backend tests were not rerun because this change
 contains no backend behavior or contract changes. No blocking issue remains for
 this UI follow-up.
+
+## Follow-up: explicit client names
+
+At the user's request, all three instructor plan pages now separate the plan
+name from an explicit “Cliente: {nome}” label on list cards and detail headers.
+Approval-history entries also show the attached client. Names use the existing
+API `client_name` field; no backend or data changes were needed.
+
+Changed both instructor plan pages, their corresponding test files, the frontend
+design guide, and this report. Focused regression tests verify the client label
+on pending, personal, and all-plan collections, details, and history.
+
+Verification for this follow-up:
+
+- Both affected frontend test files: **13 passed**.
+- Frontend lint and production build: passed; the existing non-fatal bundle-size
+  advisory remains.
+- Firefox synthetic-fixture audit: **36 state/viewport checks passed** across
+  phone, tablet, and desktop sizes, including explicit client-label assertions.
+  Representative list and detail screenshots were inspected.
+- Temporary browser fixtures removed; Git diff whitespace and scope reviewed.
+
+No unresolved issue was introduced by this follow-up.
