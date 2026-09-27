@@ -130,7 +130,8 @@ undefined rather than implicitly granted.
 Backend authorization is authoritative and independent from frontend route or
 control visibility. Employee/admin identities are not publicly registered: the
 initial administrator is realm-bootstrapped from environment configuration,
-and future employees are provisioned by an authorized employee-management flow.
+and employees are provisioned by the authorized RF-07/RF-08 administrative
+flow approved under EXT-DEC-INST-01.
 
 ### 2.2 Approved authentication and identity model
 
@@ -160,10 +161,12 @@ and future employees are provisioned by an authorized employee-management flow.
   `docs/decisions.md` DEC-04 session-renewal amendment.
 - Administrative client creation first persists the local Account/Client pair
   and a durable, per-client provisioning record. It reports a distinct pending
-  state while an independent background reconciliation provisions one Keycloak
-  identity with matching e-mail and only the `client` role, persists its `sub`,
-  and starts Keycloak's secure first-access required action so the client
-  defines their password. A pending client cannot authenticate, and one pending
+  state while an independent background reconciliation provisions or updates
+  one Keycloak identity with matching e-mail, adds the `client` role, preserves
+  any independently active approved `instructor`/`employee` roles on a matched
+  dual-role Account, persists its `sub`, and starts Keycloak's secure
+  first-access required action for a new identity so the person defines their
+  password. A pending client cannot use the client role, and one pending
   identity never blocks another administrative registration.
 - Public self-registration is disabled. Creating a client never grants an
   administrative or employee role.
@@ -172,8 +175,13 @@ and future employees are provisioned by an authorized employee-management flow.
 - Protected client behavior resolves `sub → account → client` server-side and
   rejects inactive, unlinked, unauthorized, or cross-client requests.
 
-The same Account abstraction is intended for later employee/admin identities;
-it is not client-specific credential storage.
+The same Account abstraction is used by client and employee identities; it is
+not client-specific credential storage. One Account may be linked to both a
+Client and an Employee when the normalized e-mail and CPF identify the same
+person. Client and employee activation are independent. Backend policy must
+check the active domain role as well as the authenticated Account, and Keycloak
+role reconciliation must remove only the deactivated specialization while
+preserving any other active role.
 
 ## 3 Functional requirements
 
@@ -191,8 +199,16 @@ e-mail address.
 **Acceptance criteria**
 
 - [ ] **CA-01.1:** with valid required fields, the system creates the client and generates a unique identifier.
-- [ ] **CA-01.2:** an e-mail address already associated with another active account is rejected.
+- [ ] **CA-01.2:** an e-mail already associated with a different person or an
+  incompatible account is rejected; the matching dual-role case in CA-01.5 is
+  not treated as a duplicate person.
 - [ ] **CA-01.3:** invalid fields return a validation message, and no partial registration is created.
+- [ ] **CA-01.4:** registration captures first name, surname, normalized e-mail,
+  mathematically validated CPF, phone number, CEP, street, number, optional
+  complement, neighborhood, city, and state; Client has no CNPJ field.
+- [ ] **CA-01.5:** matching e-mail and CPF may attach a Client to an existing
+  Employee Account without duplicating the person or removing the employee's
+  active specialized role; conflicting e-mail/CPF identity is rejected.
 
 ### RF-02 View and search clients
 
@@ -218,11 +234,32 @@ Allow changes to basic registration data and client activation/deactivation.
 - [ ] **CA-03.2:** a deactivated client is no longer treated as an enabled user.
 - [ ] **CA-03.3:** deactivation does not automatically erase the client's history.
 - [ ] **CA-03.4:** enabled clients need a valid facial photo for biometrics.
+- [ ] **CA-03.5:** an administrator can update every field accepted at client
+  registration, and valid changes persist after reload.
+- [ ] **CA-03.6:** name/e-mail and active-role changes are durably reconciled
+  with Keycloak; deactivating the Client removes client authorization but does
+  not remove an independently active Employee specialization on the same
+  Account.
 
 **Consolidation note:** CA-03.4 depends on RF-22 biometrics, which is not in the
 stated MVP. The relationship among an active client, an enabled client, a valid
 photo, and payment needed definition under DEC-05; the approved result and
 deferral are recorded in section 9.
+
+**Approved Brazilian contact/address policy for RF-01, RF-03, RF-07, and
+RF-08:** store CEP, street (`logradouro`), number, optional complement,
+neighborhood (`bairro`), city (`localidade`), and two-letter state (`UF`). This
+matches the standard address elements documented by Correios. ViaCEP is the
+approved free CEP lookup adapter. It may prefill only values actually returned
+by the service; every address field remains manually editable, number remains a
+manual field, and lookup not-found, invalid input, timeout, rate limiting, or
+provider failure must produce a controlled Portuguese state without blocking
+manual entry or corrupting existing form values. Validate the normalized
+eight-digit CEP before the external request. Keep the adapter server-side,
+bounded by timeout, and replaceable; do not treat ViaCEP as authoritative
+person data or make registration availability depend on it. Phone input accepts
+Brazilian presentation formatting, is normalized for persistence, and must
+represent a valid 10- or 11-digit national number.
 
 ### RF-04 Authenticate user
 
@@ -281,6 +318,26 @@ Allow basic employee registration.
 - [ ] **CA-07.1:** an administrator can create an employee with the required data.
 - [ ] **CA-07.2:** the employee receives a unique identifier.
 - [ ] **CA-07.3:** an incompatible duplicate account/e-mail is rejected.
+- [ ] **CA-07.4:** registration records first name, surname, normalized e-mail,
+  mathematically validated CPF, phone number, CEP, street, number, optional
+  complement, neighborhood, city, state, optional CNPJ, and the specialized
+  role; the only employee specialization currently assignable is `instructor`.
+- [ ] **CA-07.5:** registration uses the durable Keycloak reconciliation and
+  secure first-access delivery flow; PostgreSQL stores no employee password or
+  first-access credential.
+- [ ] **CA-07.6:** when e-mail and CPF match one existing client Account, the
+  employee profile may be linked to that same person and receive the
+  `instructor` role without duplicating identity data or removing `client`.
+
+**Approved registration-data policy:** reusable personal data belongs to one
+Account-linked person record: first name, surname (which may contain spaces),
+globally unique CPF, phone, and Brazilian address. CPF is stored normalized to
+digits and validated with its official check-digit calculation; repeated-digit
+placeholders are invalid. Employee-only data contains optional CNPJ and the
+specialized employee role. An optional CNPJ is normalized and check-digit
+validated but is not globally unique because more than one employee may be
+associated with the same organization. A conflicting e-mail/CPF combination
+must be rejected rather than joining two people.
 
 ### RF-08 View, update, and deactivate employee
 
@@ -293,6 +350,12 @@ Maintain registered employees' data and status.
 - [ ] **CA-08.1:** an administrator can list and view employees.
 - [ ] **CA-08.2:** valid changes persist.
 - [ ] **CA-08.3:** a deactivated employee loses permissions linked to the account.
+- [ ] **CA-08.4:** an administrator can update every field accepted at employee
+  registration, with shared personal-data changes reflected consistently in a
+  linked Client profile.
+- [ ] **CA-08.5:** name/e-mail and active-role changes are durably reconciled
+  with Keycloak; a client/instructor account retains the other active role when
+  one domain role is deactivated.
 
 ### RF-09 Send onboarding invitation by e-mail
 
@@ -971,6 +1034,160 @@ lifecycle enforced; `EXT-CA-PRES-01.4` sensitive data excluded;
 `EXT-CA-PRES-01.5` anonymous count remains independent;
 `EXT-CA-PRES-01.6` staff visibility does not imply client/public visibility.
 
+#### EXT-RF-INST-01 — Instructor authenticated area and read-only feed
+
+**Scope:** approved post-MVP extension. **Related:** RF-04, RF-05, RF-07,
+RF-08, EXT-RF-SOC-02, EXT-RF-SOC-03, EXT-RF-LANG-01, RN-04, RN-05,
+RN-11, RN-23, RN-31, RNF02–RNF04.
+
+An active locally linked Employee with the `instructor` specialization and an
+authenticated Keycloak `instructor` role has a dedicated SPA area. Its ordered
+navigation is Feed, Planos pendentes, Meus planos, Todos os planos, Clientes,
+Equipamentos, and Perfil. Feed is the post-login default and there is no
+dashboard/home destination. Perfil is a clearly bounded future-feature state,
+not an invented instructor social profile.
+
+The instructor feed reuses the existing chronological social-feed projection
+and presentation. It contains only moderation-visible posts belonging to
+public client profiles. Private-profile posts remain unavailable because an
+instructor has no client follow identity. The instructor may read the feed and
+permitted post detail, but may not create, edit, like, unlike, comment, follow,
+or act through a client social identity.
+
+Acceptance: `EXT-CA-INST-01.1` local active-employee and Keycloak-role
+authorization; `EXT-CA-INST-01.2` exact responsive navigation and default Feed
+route; `EXT-CA-INST-01.3` reuse of the public-profile-only feed policy;
+`EXT-CA-INST-01.4` read-only post detail and absence/denial of every social
+mutation; `EXT-CA-INST-01.5` bounded Perfil placeholder without social-profile
+creation; `EXT-CA-INST-01.6` direct API denial for inactive or unauthorized
+identities.
+
+#### EXT-RF-INST-02 — Single-draft instructor review and responsibility
+
+**Scope:** approved post-MVP extension. **Related:** RF-15–RF-19, RF-07,
+RF-08, RN-12–RN-19, RN-29–RN-33, DEC-07, DEC-15.
+
+Every client has at most one editable training-plan draft (`proposal`) across
+initial AI generation, instructor manual creation, editing a current plan, and
+client-accepted AI adaptation. A retained adaptation source/history record may
+remain, but it is not a second instructor-editable draft. Moving an adaptation
+to instructor review must use the sole draft boundary and must never silently
+replace another draft.
+
+Planos pendentes lists every current draft requiring instructor review,
+regardless of instructor assignment. Each result identifies the client, draft
+origin, creation/update information, and the responsible instructor for an
+existing current plan when applicable. Any instructor may save a concurrency-
+checked edit without activation, approve directly, or explicitly approve after
+editing. Approval and activation form one atomic instructor action: the draft
+becomes current, the prior current version becomes immutable history, the
+approving Employee becomes responsible, and the approval timestamp is recorded.
+The first successful stale-state-sensitive write wins; later stale writes return
+a conflict requiring reload.
+
+The client current-plan view displays the responsible instructor's current
+first name and surname and the approval date. Historical versions retain their
+original immutable instructor attribution even if that employee is later
+renamed or deactivated; therefore historical attribution must not depend only
+on a mutable live display name.
+
+Acceptance: `EXT-CA-INST-02.1` one cross-source draft per client;
+`EXT-CA-INST-02.2` complete pending list and required metadata;
+`EXT-CA-INST-02.3` save-edit does not activate;
+`EXT-CA-INST-02.4` direct and edit-then-approve atomically create the new
+current version; `EXT-CA-INST-02.5` responsible instructor and date appear to
+the client; `EXT-CA-INST-02.6` immutable historical attribution;
+`EXT-CA-INST-02.7` stale concurrent writes cannot overwrite newer state;
+`EXT-CA-INST-02.8` backend instructor authorization and cross-client data
+minimization.
+
+#### EXT-RF-INST-03 — Instructor plan collections, history, and authoring
+
+**Scope:** approved post-MVP extension. **Related:** EXT-RF-INST-02, RF-16,
+RF-17, RF-19, RN-14, RN-16–RN-19, RN-31–RN-33.
+
+Meus planos lists current plans for which the authenticated instructor is the
+responsible Employee. Todos os planos lists all current plans and supports
+combinable client-name search, responsible-instructor filtering, and approval
+date/date-range filtering. Results identify client, responsible instructor,
+latest approval date, and current status. Any instructor may open and edit any
+current plan through the sole-draft workflow and may inspect immutable approved
+history.
+
+Editing current content never changes the current or historical version in
+place. If a draft already exists, the UI must identify it and obtain explicit
+confirmation before discarding it and cloning the current plan; cancellation
+preserves the existing draft. An instructor may manually create the first draft
+only when the client has neither a current plan nor another draft. Creation and
+activation remain separate; only explicit approval activates it.
+
+Acceptance: `EXT-CA-INST-03.1` correctly scoped Meus planos;
+`EXT-CA-INST-03.2` complete Todos os planos with combinable filters;
+`EXT-CA-INST-03.3` current/history detail with read-only history;
+`EXT-CA-INST-03.4` approved-plan editing through a new sole draft;
+`EXT-CA-INST-03.5` explicit existing-draft discard confirmation;
+`EXT-CA-INST-03.6` first-plan manual draft and separate approval;
+`EXT-CA-INST-03.7` direct API authorization and concurrency enforcement.
+
+#### EXT-RF-INST-04 — Instructor client workspace and onboarding
+
+**Scope:** approved post-MVP extension. **Related:** RF-02, RF-11–RF-15,
+EXT-RF-INST-02, EXT-RF-INST-03, RN-04, RN-05, RN-11, RN-23, RN-31,
+DEC-06, DEC-18.
+
+Any instructor may search active clients by partial, case-insensitive name,
+with accent-insensitive matching where supported by the approved PostgreSQL
+deployment, ordered alphabetically. Combinable filters cover onboarding
+(Todos, Concluído, Não concluído), training (Todos, Sem plano, Pendente de
+aprovação, Plano ativo), and responsible instructor (Todos, Sem instrutor, Eu,
+Instrutor específico). There is no instructor filter for client account-active
+state and no separate “Somente rascunho” state.
+
+Results and the client workspace expose only the name and onboarding/training
+state needed for the instructor's function, current responsible instructor,
+sole draft when present, and current plan when present. Contextual actions allow
+continuing/completing unfinished onboarding, editing completed onboarding in
+place, creating the first manual draft when eligible, and opening the draft or
+current plan. Normal onboarding validation remains authoritative. Instructor
+reads and writes are attributable through minimized audit metadata containing
+actor, target, action, timestamp, outcome, and changed field names, never health
+values. Admin role alone, attendants, and ordinary employees receive no access.
+
+Acceptance: `EXT-CA-INST-04.1` active-client name search and ordering;
+`EXT-CA-INST-04.2` exact combinable filters without redundant draft state;
+`EXT-CA-INST-04.3` minimized workspace status and contextual actions;
+`EXT-CA-INST-04.4` continuation and valid completion of unfinished onboarding;
+`EXT-CA-INST-04.5` valid in-place update of completed onboarding;
+`EXT-CA-INST-04.6` need-to-know authorization and cross-client isolation;
+`EXT-CA-INST-04.7` non-sensitive instructor attribution.
+
+#### EXT-RF-INST-05 — Instructor equipment operational state
+
+**Scope:** approved post-MVP extension. **Related:** RF-32, RF-33,
+EXT-RF-EQP-01, RF-15, RF-19, RN-04, RN-20, RN-33,
+EXT-DEC-EQP-01.
+
+EquipmentUnit gains an operational state independent from its inventory-active
+state, limited to `operational` and `out_of_order`. Instructors may view active
+equipment models and their physical units and change only this operational
+state. They may not create, edit, activate/deactivate, or delete models/units or
+change labels, descriptions, images, or other inventory metadata.
+
+An active EquipmentModel is usable for new training-plan content only when it
+has at least one unit that is both inventory-active and operational. If every
+active unit is out of order, the model is unusable for new initial-generation,
+adaptation, and instructor-authoring/review choices. Existing current and
+historical plans retain their references and are never rewritten. Operational
+does not mean currently free, and no occupancy, reservation, telemetry, or
+real-time availability semantics are added.
+
+Acceptance: `EXT-CA-INST-05.1` separate persisted operational state;
+`EXT-CA-INST-05.2` instructor read and operational/out-of-order mutation only;
+`EXT-CA-INST-05.3` admin inventory behavior remains distinct;
+`EXT-CA-INST-05.4` training usability requires an active operational unit;
+`EXT-CA-INST-05.5` retained plans/history are unchanged;
+`EXT-CA-INST-05.6` no live-availability meaning or unauthorized mutation.
+
 #### EXT-RF-LANG-01 — Portuguese user-facing application
 
 **Scope:** approved cross-cutting extension for existing, MVP, and post-MVP UI.
@@ -1275,15 +1492,15 @@ cardinalities remain undecided.
 
 | Entity/concept | Purpose, ownership, relationships, privacy/lifecycle |
 | --- | --- |
-| Account | Local identity linkage. Application UUID; unique normalized e-mail; unique nullable Keycloak subject; active state. Owns no password. Reusable by client/employee/admin identities. |
-| Client | Client-domain profile with independent UUID and unique Account FK. Owns onboarding, plans, progress, and attendance relationships; deactivation preserves history. |
-| Employee/role authorization | Later employee profile linked to Account; Keycloak roles and backend policy enforce specialization. Exact employee schema awaits RF-07/RF-08 work. |
+| Account / PersonProfile | Account owns local OIDC linkage, unique normalized e-mail, and no password. One Account-linked personal record owns first name, multiword surname, globally unique validated CPF, phone, and Brazilian address so a client/instructor identity is not duplicated. |
+| Client | Client-domain profile with independent UUID and unique Account FK. Owns onboarding, plans, progress, and attendance relationships; role-specific deactivation preserves history and need not deactivate a separately active Employee. |
+| Employee/role authorization | Employee has an independent UUID, unique Account FK, role-specific active state, optional validated CNPJ, and currently only the `instructor` specialization. Keycloak and backend policy enforce specialization; one Account may also own a Client when e-mail and CPF match. |
 | Onboarding / structured data | Client-owned draft/completed aggregate for approved physical and health fields. Structured values are authoritative; completion/timestamps follow RF-13. Health access is need-to-know. |
 | AI onboarding conversation/message | Client-owned resumable EXT-RF-AI-01 interaction that maps into structured onboarding. Raw messages and summary are client-only and retained for five days; structured data remains authoritative. |
 | TrainingPlan / TrainingPlanVersion / TrainingPlanItem | Client-owned plan aggregate, immutable/versioned current/history states, responsible professional, structured exercise items. At most one plan may be current and at most one version may be a `proposal` for a client; activating another preserves the prior plan as superseded. |
 | Exercise | Referenced prescription content; inactive exercises remain in history under RN-20. Full management flow awaits DEC-15. |
 | AI training conversation/message/proposal | Client-scoped RF-18/RF-19 context and proposed changes. A proposal is not a current approved plan; changes use the version lifecycle. |
-| EquipmentModel / EquipmentUnit | RF-32 administrative records and RF-33 catalog use UUID-identified logical models and their physical units. Active quantity is derived from active units for an active model, never stored as an authoritative mutable aggregate; it is not live availability. |
+| EquipmentModel / EquipmentUnit | RF-32 administrative records and RF-33 catalog use UUID-identified logical models and their physical units. Active quantity is derived from inventory-active units for an active model, never stored as an authoritative mutable aggregate. Unit operational/out-of-order state is separate; training usability requires at least one active operational unit. Neither state is live availability. |
 | ProgressUpdate | Client-author-owned post with private/shared visibility, moderation, and deletion lifecycle governed by EXT-DEC-SOC-01. Task 26 adds likes/comments for accessible shared, non-hidden posts; Task 27 adds bounded post media, author content/attachment editing, and the shared chronological feed without creating a second post aggregate. No sensitive data is automatically derived into it. |
 | SocialProfile / ProfileImage | Client-owned default-on authenticated social projection with optional non-unique nickname, 160-character biography, visibility preference, and a separately stored normalized image. The Client UUID remains canonical; old image bytes are deleted on replacement/removal. |
 | ClientFollow | Directed client-to-client relationship with a unique follower/followed pair; no self-follow, request, approval, friendship, or recommendation semantics. |
@@ -1386,12 +1603,13 @@ This order is implementation guidance added in this consolidation; it does not c
 | Conversational onboarding | Approved MVP extension; implemented | EXT-RF-AI-01; DEC-06, DEC-08, DEC-18 |
 | Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
 | Training generation/version/current view/chat/adaptation | Original MVP; partially implemented | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
-| Employee management, recovery, onboarding self-review | Original post-MVP; not started | RF-06–RF-08, RF-14 |
+| Employee management, recovery, onboarding self-review | RF-07/RF-08 approved for instructor dependency; RF-06/RF-14 not started | RF-06–RF-08, RF-14; EXT-DEC-INST-01 |
 | Progress sharing | Approved post-MVP extension; implemented | EXT-RF-SOC-01; EXT-DEC-SOC-01; Task 20 |
 | Social client profiles/interactions | Approved post-MVP extension; planned | EXT-RF-SOC-02; EXT-DEC-SOC-02; Task 26 |
 | Authenticated chronological social feed | Approved post-MVP extension; planned | EXT-RF-SOC-03; EXT-DEC-SOC-03; Task 27 |
 | Equipment management/catalog | Original post-MVP; implemented | RF-32, RF-33 |
 | Equipment quantity | Approved post-MVP extension; implemented | EXT-RF-EQP-01; EXT-DEC-EQP-01 |
+| Instructor professional area | Approved post-MVP extension; planned | RF-07/RF-08; EXT-RF-INST-01–EXT-RF-INST-05; EXT-DEC-INST-01 |
 | Access/attendance/anonymous occupancy | Original post-MVP; Task 22 implemented | RF-23–RF-25; confirmed-passage/correction ledger and aggregate-only client view. RF-20–RF-22 biometric/access work remains separate |
 | Named visible presence | Approved post-MVP extension; implemented | EXT-RF-PRES-01; Task 23, EXT-DEC-PRES-01 |
 | Billing/plans/dashboard/classes | Original post-MVP; not started | RF-26–RF-31; DEC-12–DEC-14 |
@@ -1407,7 +1625,7 @@ retains the chronological decision history.
 | DEC-01 | Unresolved; non-blocking while original scope is used | Professor validation may later change scope. Preserve all original requirements and the explicit original MVP meanwhile. | Overall scope; no independent task is blocked. |
 | DEC-02 | **Resolved** | The historical `X` suffix has no separate meaning; canonical occupancy requirements are RF-24 and RF-25. | Occupancy tasks. |
 | DEC-03 | **Resolved** | Python/FastAPI modular monolith, PostgreSQL/SQLAlchemy/Alembic, React/TS/Vite/MUI, Keycloak/OIDC, SMTP/Mailpit, Docker Compose/Linux/UFW, provider-independent AI adapters, and approved pinned baseline. NestJS has no MVP role. | All architecture and external adapters. |
-| DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients are administratively provisioned with only client role; future employees use an administrative flow. Health/biometric access follows section 2.1. | Auth, clients, health, training, future employees. |
+| DEC-04 | **Resolved for current roles/provisioning** | Roles are client, employee, attendant, instructor, admin. Initial admin is environment-bootstrapped; clients and instructors use authorized administrative provisioning with durable reconciliation and secure first access. One matching Account may hold both client and instructor roles with independent role-active state. Health/biometric access follows section 2.1. | Auth, clients, employees, health, training. |
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
 | DEC-06 | Partially resolved | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved; recovery-token policy remains unresolved. | Tasks 07, 09, 10, 11, and 12 may proceed. |
 | DEC-07 | **Resolved for Tasks 13–17** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Task 17 applies this lifecycle to client-confirmed proposals and immutable history. | Tasks 13–17. |
@@ -1420,7 +1638,7 @@ retains the chronological decision history.
 | DEC-14 | Unresolved | Class recurrence, visibility, reservation/capacity and authorized exceptions. | RF-30/RN-25. |
 | DEC-15 | **Resolved for Tasks 13, 15, and 17** | Instructors may manually create and edit proposals; the minimum version/item model, responsibility metadata, one current plan per client, and Task 17 review of recognized exercise candidates are approved. Exercise catalog, evaluations, completed workouts, notices, and export remain future work. | Tasks 13, 15, and 17 may proceed; later affected tasks need their remaining gates. |
 | DEC-16 | **Resolved for personal-use MVP verification** | One normal active user, a three-request burst, approximately 50 synthetic clients, ten-run performance samples, approved adapter timeouts, three representative viewports, checklist-based intended-user testing, accessibility checks, an eight-hour local availability soak, five-minute restart recovery, failure isolation, and maintainability/integration evidence. No commercial-scale load, high availability, redundancy, or production uptime SLA is required. | Task 19 formal end-to-end RNF verification may proceed. |
-| DEC-17 | **Resolved for identity/client model** | Independent Account and Client UUIDs; unique normalized Account e-mail and unique nullable Keycloak subject; one-to-one Account↔Client; no local credentials. Other domain slices remain to be decided before their migrations. | Client/identity now; later domain schemas. |
+| DEC-17 | **Resolved for identity/client/employee model** | Independent Account, Client, and Employee UUIDs; unique normalized Account e-mail and nullable Keycloak subject; unique Account↔Client and Account↔Employee links; one Account-linked personal record with unique CPF; no local credentials. | Client/employee identity and later linked domain schemas. |
 | DEC-18 | Partially resolved | Health/onboarding policy plus Task 11's client-only raw conversation, five-day retention, minimized AI context, logging, failure safety, and idempotency policy are approved. Biometric storage/replacement/retention is governed by DEC-09. | Tasks 10 and 11 may proceed. |
 
 DEC-19 is a later approved decision, not an original question: it records the
@@ -1436,12 +1654,13 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 | EXT-DEC-SOC-03 | **Resolved for Task 27** | Authenticated newest-first shared-post feed; private-by-default publishing; bounded post/comment media; author edits; private-profile shell; cursor pagination; aggregate moderation/erasure; no ranking or replies. | Task 27 feed redesign may proceed. |
 | EXT-DEC-EQP-01 | **Resolved for Task 21** | UUID-identified `EquipmentModel` canonical grouping; each physical `EquipmentUnit` belongs to one model; active quantity is derived from active units, not a mutable aggregate; no live availability semantics. | Equipment catalog and quantities may proceed. |
 | EXT-DEC-PRES-01 | **Resolved for Task 23** | Default-off client-owned profile tag only; derived from fresh confirmed passages with a 12-hour limit; immediate opt-out; no directory, staff override, or occupancy impact. | Opt-in profile presence may proceed. |
+| EXT-DEC-INST-01 | **Resolved for Tasks 28–37** | Shared person identity and RF-07/RF-08 instructor provisioning; dedicated instructor area; public-profile-only read-only feed; one cross-source plan draft; plan responsibility/history/search/onboarding workflows; separate equipment operational state; ViaCEP-assisted but always editable Brazilian addresses. | Instructor professional-area tasks may proceed in dependency order. |
 
 ### 9.2 Privacy and sensitive-data rules
 
 | Data category | Access and handling boundary |
 | --- | --- |
-| Account/profile | Owner and explicitly authorized administrative operations; normalized e-mail is account-owned. Client lists remain administrative. EXT-RF-SOC-02 exposes only its minimized authenticated social projection when enabled. |
+| Account/profile | Owner and explicitly authorized administrative operations; normalized e-mail and Account-linked personal data are authoritative. CPF/CNPJ, phone, and address are restricted personal data and never enter instructor search/social projections, ordinary logs, URLs, or external AI context. Client/employee administrative detail remains authorized-only. EXT-RF-SOC-02 exposes only its minimized authenticated social projection when enabled. |
 | Health/onboarding | Client and only staff with functional need; attendants and admin status alone do not grant medical access. Apply RN-11/RN-23 and DEC-18. |
 | Biometrics | Separate from ordinary profile data; authorized biometric staff only; never common reports or social/presence views. Apply RN-10/RN-34. |
 | Authentication | Keycloak owns credentials. Tokens/secrets are not stored as domain data or logged. Subject is an external reference only. |
@@ -1464,8 +1683,9 @@ unchecked boxes or planned files.
 | Foundation | Enabler | Implemented | DEC-03 | Task 01 verified baseline. |
 | RF-04 | Original MVP | Implemented | DEC-03–DEC-05 | Task 02; Task 06 integration verifies real provisioned clients. |
 | RF-05 | Original MVP | Implemented | DEC-04 | Task 03; client-role denial reverified in Task 06. |
-| RF-01/RF-02 | Original MVP | Implemented | DEC-04/DEC-17 | Task 04 plus Task 06 provisioning integration. |
-| RF-03 | Original MVP | **Partially implemented** | DEC-05 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred and not satisfied. |
+| RF-01/RF-02 | Original MVP | **Partially implemented after contact-data amendment** | DEC-04/DEC-17; EXT-DEC-INST-01 | Original Task 04/06 behavior exists; structured name, CPF, phone, address, shared-person linkage, and CEP assistance are planned in Task 28. |
+| RF-03 | Original MVP | **Partially implemented** | DEC-05; EXT-DEC-INST-01 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred; amended all-field editing, role-specific activation, and Keycloak reconciliation are planned in Task 28. |
+| RF-07/RF-08 | Original post-MVP | Planned | DEC-04/DEC-17; EXT-DEC-INST-01 | Task 29 will implement instructor employee registration, management, provisioning, and dual-role linkage. |
 | Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
 | Frontend design system and existing UI restyle | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 08: shared MUI theme, shells, and restyle; preserves Tasks 01–07 behavior. |
@@ -1488,7 +1708,8 @@ unchecked boxes or planned files.
 | RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Implemented | Resolved EXT-DEC-EQP-01 | Task 21: authorized two-level model/unit management and public active catalog with derived total. |
 | RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
 | EXT-RF-PRES-01 | Approved post-MVP extension | Implemented | Task 22/EXT-DEC-PRES-01 | Task 23. |
-| Remaining RF-06–RF-08, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
+| EXT-RF-INST-01–EXT-RF-INST-05 | Approved post-MVP extension | Planned | RF-07/RF-08; EXT-DEC-INST-01 | Tasks 30–36 plus Task 37 integrated verification. |
+| Remaining RF-06, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Codex workflow
 
@@ -1596,3 +1817,7 @@ by inference.
   active quantity, and no live-availability semantics.
 - **EXT-DEC-PRES-01:** named-presence consent/data/source/retention model; blocks
   Task 23 together with Task 22.
+- **EXT-DEC-INST-01:** resolved RF-07/RF-08 identity/contact/provisioning,
+  instructor navigation/feed audience, single-draft training workflows,
+  onboarding access, and equipment operational-state boundaries for Tasks
+  28–37.

@@ -105,6 +105,24 @@ palette, or page composition.
   provisioning/invitation outcomes legible; retain clear action hierarchy.
   Confirmation UI is used for genuinely consequential actions as approved by
   the owning workflow, not added as a new business rule by styling alone.
+- **InstructorShell:** Reuse the ClientShell responsive navigation mechanics and
+  the denser operational clarity of AdminShell without combining their
+  permissions. Its ordered destinations are Feed, Planos pendentes, Meus
+  planos, Todos os planos, Clientes, Equipamentos, and Perfil; Feed is the
+  default and there is no home/dashboard item. On larger screens use the shared
+  persistent sidebar pattern; on phone use the same keyboard-accessible compact
+  header/panel behavior. Plan review, client workspace, sensitive onboarding,
+  and equipment state use clear operational hierarchy rather than decorative
+  imagery. The read-only feed reuses social cards but omits every interaction
+  composer/control. Perfil is a deliberate pt-BR future-feature state until an
+  instructor social profile is separately specified.
+- **Administrative person forms:** Client and employee create/edit screens
+  group identity, contact, and address fields. Keep first name and surname
+  separate, allow a multiword surname, format CPF/CNPJ/phone/CEP for reading,
+  and expose validation without relying on masks alone. CEP assistance may
+  prefill street, neighborhood, city, and UF, but all address fields stay
+  editable and provider failure leaves an obvious manual-entry path. Never
+  clear valid manual values merely because lookup fails.
 - **Onboarding:** Invitation entry leads into a deliberate client journey.
   Group physical and health fields into understandable sections/steps; show
   required/optional status and validation plainly. Conversation and structured

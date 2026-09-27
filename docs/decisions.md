@@ -120,9 +120,11 @@ and client UUIDs remain independent from that external identifier under
 DEC-17. Later authorized e-mail changes must preserve the same subject linkage
 and keep the Keycloak e-mail synchronized with the local authoritative value.
 
-- A newly provisioned client receives only the `client` realm role. Client
-  creation must never grant `admin` or another employee role, and backend
-  authorization must continue to reject client access to administrative APIs.
+- A newly provisioned client-only Account receives only the `client` realm role.
+  Attaching Client to an already approved active instructor Account adds
+  `client` without removing its employee/instructor roles. Client creation must
+  never originate or elevate an employee/admin role, and backend authorization
+  must continue to reject client-only access to administrative APIs.
 - The administrator does not choose a permanent client password. Keycloak owns
   all credentials and must send the client through its secure first-access
   required-action flow to define a password. PostgreSQL stores no password,
@@ -156,12 +158,51 @@ attribute; a client-role token without a linked local account is rejected by
 the application. The reproducible local first-access procedure is documented
 in `README.md`.
 
+### Employee/person provisioning amendment
+
+**Status:** approved for RF-07/RF-08 and instructor work — 2026-09-26
+
+Client and employee identities reuse one Account-linked personal record for
+first name, multiword surname, globally unique mathematically validated CPF,
+Brazilian phone, and Brazilian address. Client has no CNPJ; Employee may have
+an optional mathematically validated CNPJ and currently supports only the
+`instructor` specialization. The address consists of CEP, street, number,
+optional complement, neighborhood, city, and UF. ViaCEP is a replaceable
+server-side convenience adapter only: returned fields may be prefilled but are
+always editable, and failure never blocks manual address entry.
+
+This field set follows the Correios technical address structure (street type/
+name, number, complement, neighborhood, CEP, locality, and UF). ViaCEP was
+selected because its documented free JSON service returns the corresponding
+CEP, `logradouro`, `bairro`, `localidade`, and `uf` fields and explicitly
+defines invalid and not-found behavior. Its warning against bulk validation is
+respected: the application performs individual form assistance, not database
+harvesting. Supporting references: <https://www.correios.com.br/enviar/precisa-de-ajuda/guia-de-enderecamento/guia-de-enderecamento>
+and <https://viacep.com.br/>.
+
+An administrator may register, view, update, and deactivate employees and may
+update every initial client or employee field. Name/e-mail and role changes are
+durably reconciled with Keycloak. Employee creation uses the same secure
+first-access and no-local-password boundary as client provisioning. Matching
+normalized e-mail and CPF may attach both Client and Employee to one Account;
+conflicting combinations are rejected. The Keycloak identity receives the
+union of its active approved domain roles. Deactivating one domain profile
+removes only that role, while backend authorization also checks local
+role-specific active state so a stale token cannot retain permission.
+
 ## DEC-05 — Account activity and physical-access eligibility
 
 **Status:** approved — 2026-09-20
 
 `account_active` alone determines whether an identity may authenticate to the
 application. An inactive account must not authenticate normally.
+
+**Multi-role amendment — 2026-09-26:** Client and Employee have independent
+role-active state. For an Account linked to both, deactivating one domain role
+does not end login while the other remains active; Keycloak and backend policy
+remove only the deactivated role. `account_active` remains the overall login
+gate and becomes false when no linked application role remains active. This is
+separate from physical-access eligibility.
 
 `gym_access_enabled` is a separate physical-entry state. An active client can
 log in even without biometrics, a valid/current enrolment, payment/access
@@ -864,6 +905,47 @@ and API wording must say “active units”/“total active units”, never
 “available” or “free units”. A future Task 17 equipment-aware proposal may use
 an active model with one or more active units only as evidence that the gym has
 that equipment; it must not infer real-time availability.
+
+## EXT-DEC-INST-01 — Instructor professional area
+
+**Status:** approved for Tasks 28–37 — 2026-09-26
+
+The instructor feature depends on RF-07/RF-08 and the Account-linked person
+model recorded under DEC-04. A responsible instructor is a stable local
+Employee identity, not an unverified browser identifier or mutable token name.
+Current presentation uses first name plus surname; immutable approved-version
+history retains the attribution necessary to survive later rename or
+deactivation.
+
+The dedicated instructor SPA opens at Feed and provides, in order, Feed,
+Planos pendentes, Meus planos, Todos os planos, Clientes, Equipamentos, and
+Perfil. Perfil is only a bounded future-feature state. The feed reuses the
+existing social query/presentation and includes moderation-visible posts from
+public client profiles only. Instructors have no client social identity and no
+posting, liking, commenting, following, or other social mutation authority.
+
+There is exactly one instructor-editable training draft per client across
+initial AI creation, manual authoring, current-plan editing, and accepted
+adaptation. Retained adaptation source/history is not a second editable draft.
+All drafts requiring review appear in Planos pendentes. Saving edits never
+activates; explicit instructor approval atomically makes the draft current,
+supersedes the prior current version, records responsible Employee and approval
+time, and rejects stale competing writes. Editing a current plan with an
+existing draft requires explicit confirmation before that draft is discarded.
+
+Instructor client search covers active clients only and has onboarding,
+training, and responsible-instructor filters. Training states are Todos, Sem
+plano, Pendente de aprovação, and Plano ativo; the redundant “Somente
+rascunho” state is not used. Instructors may complete unfinished onboarding and
+edit completed onboarding in place for training work, with ordinary validation
+and non-sensitive audit attribution.
+
+Equipment inventory-active state remains governed by EXT-DEC-EQP-01. A new
+independent unit state is `operational` or `out_of_order`. Instructors may only
+change that operational state. A model is usable for newly authored/generated
+training content only with at least one unit that is both active and
+operational. Historical/current plans are not rewritten, and operational never
+means free or available now.
 
 ## DEC-02 — Occupancy requirement identifier normalization
 
