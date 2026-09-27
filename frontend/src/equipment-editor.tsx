@@ -89,7 +89,7 @@ export function EquipmentEditor({ token, model, onClose, onSaved }: Props) {
               <TextField label="Quantidade inicial" type="number" required fullWidth value={form.initial_quantity} onChange={(event) => change('initial_quantity', event.target.value)} error={!!errors.initial_quantity} helperText={errors.initial_quantity || 'De 1 a 100 unidades por cadastro.'} slotProps={{ htmlInput: { min: 1, max: 100, step: 1 } }} disabled={busy} />
               {field('unit_prefix', 'Prefixo dos identificadores', 40)}
             </Stack>
-            <Box sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2 }}><Typography variant="overline" color="primary">Identificação automática</Typography><Typography sx={{ overflowWrap: 'anywhere' }}>{form.unit_prefix.trim() || 'UN'}-01{Number(form.initial_quantity) > 1 ? ` até ${form.unit_prefix.trim() || 'UN'}-${String(form.initial_quantity).padStart(2, '0')}` : ''}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Cada unidade será cadastrada como ativa e em funcionamento. Você poderá editar seus detalhes após salvar.</Typography></Box>
+            <Box sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2 }}><Typography variant="overline" color="primary">Identificação automática</Typography><Typography sx={{ overflowWrap: 'anywhere' }}>{form.unit_prefix.trim() || 'UN'}-01{Number(form.initial_quantity) > 1 ? ` até ${form.unit_prefix.trim() || 'UN'}-${String(Number(form.initial_quantity)).padStart(2, '0')}` : ''}</Typography><Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Cada unidade será cadastrada como ativa e em funcionamento. Você poderá editar seus detalhes após salvar.</Typography></Box>
           </>}
         </Stack>
       </DialogContent>

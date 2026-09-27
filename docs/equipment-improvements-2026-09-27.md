@@ -25,7 +25,14 @@ number remain administrator-only. Photos support upload and existing links.
    tests passed, including StrictMode loading and query-preserving pagination.
    Firefox verified all three surfaces at the target sizes, keyboard activation,
    dialog Escape/restore-focus and mobile return-to-list focus.
-4. Responsive, keyboard, regression and live local verification. Pending.
+4. Responsive, keyboard, regression and live local verification. Complete.
+   Full frontend suite: **159 passed**. Backend coverage: **395 distinct tests**
+   passed across the full run and the targeted reset rerun described above.
+   Production build, TypeScript checks, Ruff and Git whitespace checks passed.
+   Local migration `20260927_30` applied, backend restarted, HTTP health 200,
+   batch/photo API contracts confirmed in live OpenAPI. Temporary browser
+   fixtures removed; visual checks used synthetic browser data and did not
+   create or remove real inventory.
 
 ## Boundaries
 
@@ -35,3 +42,24 @@ metadata stripping and 1024×1024 output bound. It never handles face enrollment
 Legacy model creation without initial units remains supported. No existing
 training plan is modified. Equipment changes do not alter attendance/biometrics.
 Keycloak remains pinned as requested.
+
+## Delivery and changed files
+
+- Backend checkpoint `a8321ed`: equipment models/service/admin/instructor routers,
+  migration 30, shared `app/media_images.py` decoder and upload-size middleware.
+  Social image normalization delegates to the same decoder without policy changes.
+  The pilot reset allowlist/test was updated only to preserve equipment photos.
+- Administrator checkpoint `1aa0757`: `equipment-management-page.tsx`,
+  `equipment-editor.tsx`, `equipment.ts`, shared equipment presentation, and
+  workflow/photo-recovery tests.
+- Instructor/catalog checkpoint `abd3e4a`: instructor equipment page/API client,
+  public/client catalog, tests and an optional wider public-shell content area.
+- Canonical requirements, supporting decisions and frontend design guidance
+  record the approved metadata/privacy and interaction choices.
+
+## Remaining limitations
+
+The existing large-JavaScript-bundle build warning remains non-blocking. Image
+links depend on the referenced host; uploads avoid that dependency. No new
+product decisions are pending for this equipment scope. The separate owner
+webcam checklist and deferred Keycloak upgrade remain outside this change.
