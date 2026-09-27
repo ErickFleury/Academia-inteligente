@@ -19,7 +19,7 @@ FIELDS = tuple(OnboardingDraftUpdate.model_fields)
 CORRECTION = (
     r"\b(corrig\w*|correcao|na verdade|errei|errad[oa]|enganei|quis dizer|o correto|atualiz\w*)\b"
 )
-UNKNOWN = r"\b(nao sei|nao lembro|nao tenho certeza|talvez)\b"
+UNKNOWN = r"\b(nao sei|nao lembro|nao tenho certeza|talvez|acho que|pode ser)\b"
 
 
 def draft_values(onboarding: Onboarding) -> OnboardingDraftUpdate:
@@ -110,7 +110,7 @@ class InterviewState:
             if not topics and not changed:
                 self.needs_target = True
         if re.search(UNKNOWN, text):
-            if not topics:
+            if not topics and not self.pending:
                 self.needs_target = True
             self.pending = list(dict.fromkeys([*self.pending, *sorted(topics)]))
         for name in ("height_cm", "weight_kg"):

@@ -412,3 +412,20 @@ def test_failed_provider_and_expiry_preserve_authoritative_form(database_session
     expired = service.state(database_session, scope)
     assert expired.known_answers.training_goal == "Força"
     assert expired.known_answers.height_cm is None and expired.messages == []
+
+
+@pytest.mark.parametrize("uncertain", ["Acho que meu peso é 82 kg", "Meu peso pode ser 82 kg"])
+def test_uncertain_existing_answer_blocks_ready_without_losing_other_fields(
+    database_session, uncertain
+):
+    drafts, scope = scope_for(database_session)
+    drafts.save_draft(database_session, scope, OnboardingDraftUpdate(**extraction().onboarding))
+    provider = CurrentMessageProvider([], [{"weight_kg": 82}, {}])
+    service = OnboardingConversationService(provider, drafts)
+    state = service.submit(database_session, scope, message=uncertain, client_request_id=uuid4())
+    assert not state.completion_ready and state.clarification_fields == ["weight_kg"]
+    assert state.known_answers.weight_kg != 82 and state.known_answers.height_cm == 170
+    state = service.submit(database_session, scope, message="Não lembro", client_request_id=uuid4())
+    assert not state.completion_ready and state.clarification_fields == ["weight_kg"]
+    conversation = service.state(database_session, scope)
+    assert "Qual é o seu peso" in conversation.messages[-1].content
