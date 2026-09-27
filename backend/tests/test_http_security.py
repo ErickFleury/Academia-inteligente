@@ -36,6 +36,7 @@ def exercise(path, chunks, headers=(), method="PUT"):
         ("/social-profiles/comments/id/image", "PUT"),
         ("/progress/post/images/0", "PUT"),
         ("/progress/image-only", "POST"),
+        ("/equipment/admin/models/id/image", "PUT"),
     ],
 )
 def test_oversized_declared_upload_is_rejected_before_body_or_framework(path, method):

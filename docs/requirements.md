@@ -1027,6 +1027,30 @@ Acceptance: `EXT-CA-EQP-01.1` authorized grouping management;
 the count while preserving required history; `EXT-CA-EQP-01.4` total units are
 never represented as real-time free/available units.
 
+**Equipment administration and UI amendment — 2026-09-27:** The owner approved
+an integrated model-and-units registration flow, bulk unit creation with an
+optional identifier prefix, equipment search/filtering and a dedicated details
+workspace, image preview/error feedback, per-field pt-BR validation, duplicate
+submission prevention, deactivation confirmation and editable unit labels.
+Administrator units show inventory and operational states separately. Redesign
+administrator, instructor and public/client equipment surfaces using the
+existing visual system and existing role boundaries. Model creation and its
+initial units commit atomically. Bulk creation accepts 1–100 units, gives each
+an individual identity and avoids generated-label collisions within its model.
+Counts remain derived from units. Instructor search applies before pagination.
+Existing historical plans and the operational-state permissions are preserved.
+Optional brand, manufacturer model and free-text category belong to the model;
+optional gym location and serial number belong to each physical unit. All five
+fields are administrator-only and excluded from public/client/instructor/AI
+projections. No serial-number uniqueness, maintenance or tracking workflow is
+introduced. Direct image upload is approved alongside existing links: reuse the
+bounded JPEG/PNG/WebP 5 MiB decoder, strip metadata, normalize to at most 1024×1024
+and store ordinary equipment images separately from biometrics in PostgreSQL.
+Only administrators mutate photos; public images require an active model.
+Replacing the photo/link removes the superseded source. If photo upload fails
+after atomic model-and-units creation, show the saved equipment and offer photo
+retry without creating the model or units again.
+
 #### EXT-RF-PRES-01 — Opt-in visible presence
 
 **Scope:** approved post-MVP extension; Task 22 and `EXT-DEC-PRES-01` are complete.

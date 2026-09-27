@@ -7,7 +7,7 @@ from starlette.responses import JSONResponse
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 IMAGE_UPLOAD = re.compile(
     r"^(?:/progress/image-only|/progress/[^/]+/images/[^/]+|"
-    r"/social-profiles/me/image|/social-profiles/comments/[^/]+/image)/?$"
+    r"/equipment/admin/models/[^/]+/image|/social-profiles/me/image|/social-profiles/comments/[^/]+/image)/?$"
 )
 
 

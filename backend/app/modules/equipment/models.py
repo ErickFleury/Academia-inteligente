@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     Uuid,
@@ -24,6 +25,9 @@ class EquipmentModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    brand: Mapped[str | None] = mapped_column(String(100))
+    manufacturer_model: Mapped[str | None] = mapped_column(String(100))
+    category: Mapped[str | None] = mapped_column(String(80))
     description: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(2048))
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
@@ -51,6 +55,8 @@ class EquipmentUnit(Base):
         Uuid, ForeignKey("equipment_model.id"), nullable=False, index=True
     )
     label: Mapped[str | None] = mapped_column(String(200))
+    location: Mapped[str | None] = mapped_column(String(120))
+    serial_number: Mapped[str | None] = mapped_column(String(120))
     operational_state: Mapped[str] = mapped_column(
         String(20), nullable=False, default="operational", server_default="operational"
     )
@@ -64,3 +70,14 @@ class EquipmentUnit(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+
+class EquipmentImage(Base):
+    __tablename__ = "equipment_image"
+    equipment_model_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("equipment_model.id"), primary_key=True
+    )
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    media_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)

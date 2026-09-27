@@ -18,7 +18,13 @@ from app.modules.biometrics.provider import CompreFaceProvider
 from app.modules.clients.models import Account
 from app.modules.identity.keycloak_admin import KeycloakAdminClient, KeycloakAdminConfig
 
-PRESERVED_TABLES = {"account", "biometric_lock", "equipment_model", "equipment_unit"}
+PRESERVED_TABLES = {
+    "account",
+    "biometric_lock",
+    "equipment_model",
+    "equipment_unit",
+    "equipment_image",
+}
 RESET_TABLES = {
     "person_profile",
     "client",
@@ -179,7 +185,7 @@ def main():
         validate_schema(session)  # fail before any external identity is removed
         equipment = {
             name: session.execute(select(Base.metadata.tables[name])).all()
-            for name in ("equipment_model", "equipment_unit")
+            for name in ("equipment_model", "equipment_unit", "equipment_image")
         }
         for user in users:
             if user["id"] not in protected:

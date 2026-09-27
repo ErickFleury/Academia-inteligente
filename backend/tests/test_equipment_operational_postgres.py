@@ -67,3 +67,38 @@ def test_two_operational_updates_cannot_overwrite_stale_revision(sessions):
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         assert sorted(pool.map(update, range(2))) == ["conflict", "success"]
+
+
+def test_parallel_batches_generate_distinct_unit_labels(sessions):
+    service = EquipmentService()
+    with sessions() as session:
+        model_id = service.create_model(session, "Esteira", None, None, True).id
+    ready = Barrier(2)
+
+    def add(_):
+        with sessions() as session:
+            ready.wait(timeout=10)
+            return [u.label for u in service.create_units(session, model_id, 3, "EST")]
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        labels = [label for batch in pool.map(add, range(2)) for label in batch]
+    assert len(set(labels)) == 6
+
+
+def test_equipment_details_migration_preserves_inventory(sessions):
+    with sessions() as session:
+        service = EquipmentService()
+        model = service.create_model(session, "Esteira", None, None, True, initial_quantity=2)
+        identifier = model.id
+        spec = importlib.util.spec_from_file_location(
+            "equipment_details", Path("alembic/versions/20260927_30_equipment_details_images.py")
+        )
+        migration = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(migration)
+        migration.op = Operations(MigrationContext.configure(session.connection()))
+        migration.downgrade()
+        migration.upgrade()
+        session.commit()
+        session.expire_all()
+        assert service.model(session, identifier).brand is None
+        assert service.catalog(session)[0].active_quantity == 2

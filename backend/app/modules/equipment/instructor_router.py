@@ -24,9 +24,13 @@ class OperationalStateUpdate(BaseModel):
 
 @router.get("")
 def models(
-    session: DatabaseSession, instructor: Instructor, cursor: UUID | None = None, limit: Limit = 20
+    session: DatabaseSession,
+    instructor: Instructor,
+    cursor: UUID | None = None,
+    limit: Limit = 20,
+    query: Annotated[str, Query(max_length=200)] = "",
 ):
-    return service.instructor_models(session, cursor, limit)
+    return service.instructor_models(session, cursor, limit, query)
 
 
 @router.get("/usable-models")

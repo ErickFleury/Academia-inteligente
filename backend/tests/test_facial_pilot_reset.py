@@ -7,7 +7,7 @@ from test_biometric_access_postgres import services
 from test_training_review_postgres import sessions as sessions
 
 from app.modules.clients.models import Account
-from app.modules.equipment.models import EquipmentModel, EquipmentUnit
+from app.modules.equipment.models import EquipmentImage, EquipmentModel, EquipmentUnit
 from scripts.reset_facial_pilot import RESET_TABLES, clear_database, protected_users, table_counts
 
 
@@ -41,6 +41,15 @@ def test_explicit_reset_preserves_equipment_and_bootstrap_and_is_idempotent(sess
         session.flush()
         unit = EquipmentUnit(equipment_model_id=model.id, label="Preserved unit")
         session.add(unit)
+        session.add(
+            EquipmentImage(
+                equipment_model_id=model.id,
+                content=b"preserved-photo",
+                media_type="image/webp",
+                width=1,
+                height=1,
+            )
+        )
         session.commit()
         model_id, unit_id = model.id, unit.id
         clear_database(session, {"bootstrap", "service"})
@@ -48,6 +57,7 @@ def test_explicit_reset_preserves_equipment_and_bootstrap_and_is_idempotent(sess
         session.expire_all()
         assert session.get(EquipmentModel, model_id).name == "Preserved equipment"
         assert session.get(EquipmentUnit, unit_id).label == "Preserved unit"
+        assert session.get(EquipmentImage, model_id).content == b"preserved-photo"
         assert session.scalars(select(Account.keycloak_subject)).all() == ["bootstrap"]
         counts = table_counts(session)
         assert all(counts[name] == 0 for name in RESET_TABLES)

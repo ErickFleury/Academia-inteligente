@@ -2,18 +2,16 @@
 
 import base64
 import json
-import warnings
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from io import BytesIO
 from uuid import UUID
 
-from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.media_images import ImageValidationError, normalize_image
 from app.modules.clients.models import Account, Client, Employee
 from app.modules.presence.models import ProfilePresencePreference
 from app.modules.presence.service import ProfilePresenceService
@@ -237,33 +235,10 @@ class SocialService:
         return image
 
     def normalize_image(self, raw: bytes) -> tuple[bytes, str, int, int]:
-        if not raw or len(raw) > self.image_size_maximum:
-            raise SocialValidationError("Image size is invalid")
         try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", Image.DecompressionBombWarning)
-                with Image.open(BytesIO(raw), formats=("JPEG", "PNG", "WEBP")) as source:
-                    if getattr(source, "n_frames", 1) != 1:
-                        raise SocialValidationError("Unsupported image")
-                    if source.width * source.height > 4096 * 4096:
-                        raise SocialValidationError("Image dimensions are too large")
-                    source.verify()
-                with Image.open(BytesIO(raw), formats=("JPEG", "PNG", "WEBP")) as source:
-                    image = ImageOps.exif_transpose(source).convert("RGB")
-                    image.thumbnail((1024, 1024))
-                    clean = Image.new("RGB", image.size)
-                    clean.paste(image)
-                    output = BytesIO()
-                    clean.save(output, format="WEBP", quality=88, method=6)
-                    return output.getvalue(), "image/webp", clean.width, clean.height
-        except (
-            UnidentifiedImageError,
-            OSError,
-            ValueError,
-            Image.DecompressionBombError,
-            Image.DecompressionBombWarning,
-        ):
-            raise SocialValidationError("Invalid image") from None
+            return normalize_image(raw)
+        except ImageValidationError as error:
+            raise SocialValidationError(str(error)) from None
 
     def _cursor(self, value: str | None) -> tuple[datetime, UUID] | None:
         if not value:

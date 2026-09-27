@@ -1169,3 +1169,18 @@ full membership prerequisite only within this explicit scope. CompreFace's exact
 free-use artifacts and operational preflight remain an implementation gate.
 See facial-access-specification.md for the complete interview decisions, contracts
 and task order. No changes to unrelated health, training or financial policy.
+
+
+## EXT-DEC-EQP-02 — Equipment registration and visual refresh
+
+**Status:** approved by the owner — 2026-09-27.
+
+The owner approved guided model-and-unit registration, generated unit batches,
+unit-label editing, search/filter/details workspaces, image preview and direct
+upload, and redesign of all administrator/instructor/public/client equipment
+surfaces. Brand, manufacturer model, free-text category, unit location and unit
+serial number are optional and **administrator-only**. Public catalog, instructor
+and AI projections retain their existing data scope. The canonical amendment
+under EXT-RF-EQP-01 governs the implementation. Task 21's earlier exclusion of
+serial-number metadata is superseded only for this optional internal field;
+maintenance, telemetry, live availability and reservations remain unapproved.

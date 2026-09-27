@@ -1,10 +1,13 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from urllib.parse import urlsplit
 from uuid import UUID
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
-from app.modules.equipment.models import EquipmentModel, EquipmentUnit
+from app.media_images import ImageValidationError, normalize_image
+from app.modules.equipment.models import EquipmentImage, EquipmentModel, EquipmentUnit
 
 
 class EquipmentNotFoundError(Exception):
@@ -80,7 +83,7 @@ class EquipmentService:
             for model in self.usable_models_with_units(session, limit=100)
         ]
 
-    def instructor_models(self, session: Session, cursor: UUID | None, limit: int):
+    def instructor_models(self, session: Session, cursor: UUID | None, limit: int, query: str = ""):
         statement = (
             select(
                 EquipmentModel.id,
@@ -94,6 +97,9 @@ class EquipmentService:
             .where(EquipmentModel.active)
             .group_by(EquipmentModel.id, EquipmentModel.name)
         )
+        if query.strip():
+            escaped = query.strip().replace("!", "!!").replace("%", "!%").replace("_", "!_")
+            statement = statement.where(EquipmentModel.name.ilike(f"%{escaped}%", escape="!"))
         if cursor:
             statement = statement.where(EquipmentModel.id > cursor)
         rows = session.execute(statement.order_by(EquipmentModel.id).limit(limit + 1)).all()
@@ -196,14 +202,22 @@ class EquipmentService:
         description: str | None,
         image_url: str | None,
         active: bool,
+        *,
+        initial_quantity: int = 0,
+        unit_prefix: str = "UN",
+        metadata: dict[str, str | None] | None = None,
     ) -> EquipmentModel:
+        prefix = self._batch_options(initial_quantity, unit_prefix, allow_zero=True)
         model = EquipmentModel(
             name=self._required_name(name),
             description=self._optional_text(description),
-            image_url=self._optional_text(image_url),
+            image_url=self._image_link(image_url),
             active=active,
         )
+        self._metadata(model, metadata or {})
         session.add(model)
+        session.flush()
+        self._append_units(session, model.id, initial_quantity, prefix)
         session.commit()
         session.refresh(model)
         return model
@@ -217,6 +231,7 @@ class EquipmentService:
         description: str | None,
         image_url: str | None,
         active: bool | None,
+        metadata: dict[str, str | None] | None = None,
     ) -> EquipmentModel:
         self.lock_models(session, {model_id})
         model = self.model(session, model_id)
@@ -225,9 +240,13 @@ class EquipmentService:
         if description is not None:
             model.description = self._optional_text(description)
         if image_url is not None:
-            model.image_url = self._optional_text(image_url)
+            model.image_url = self._image_link(image_url)
+            image = session.get(EquipmentImage, model_id)
+            if image is not None:
+                session.delete(image)
         if active is not None:
             model.active = active
+        self._metadata(model, metadata or {})
         session.commit()
         session.refresh(model)
         return model
@@ -245,8 +264,64 @@ class EquipmentService:
         session.refresh(unit)
         return unit
 
+    @staticmethod
+    def _batch_options(quantity: int, prefix: str, *, allow_zero: bool = False) -> str:
+        minimum = 0 if allow_zero else 1
+        if (
+            isinstance(quantity, bool)
+            or not isinstance(quantity, int)
+            or not minimum <= quantity <= 100
+        ):
+            raise EquipmentValidationError("Unit quantity must be between 1 and 100")
+        normalized = prefix.strip() or "UN"
+        if len(normalized) > 40:
+            raise EquipmentValidationError("Unit prefix is too long")
+        return normalized
+
+    @staticmethod
+    def _append_units(
+        session: Session, model_id: UUID, quantity: int, prefix: str
+    ) -> list[EquipmentUnit]:
+        existing = {
+            label.casefold()
+            for label in session.scalars(
+                select(EquipmentUnit.label).where(EquipmentUnit.equipment_model_id == model_id)
+            )
+            if label
+        }
+        units = []
+        number = 1
+        while len(units) < quantity:
+            label = f"{prefix}-{number:02}"
+            number += 1
+            if label.casefold() in existing:
+                continue
+            unit = EquipmentUnit(equipment_model_id=model_id, label=label, active=True)
+            units.append(unit)
+            existing.add(label.casefold())
+        session.add_all(units)
+        return units
+
+    def create_units(
+        self, session: Session, model_id: UUID, quantity: int, prefix: str
+    ) -> list[EquipmentUnit]:
+        prefix = self._batch_options(quantity, prefix)
+        self.lock_models(session, {model_id})
+        self.model(session, model_id)
+        units = self._append_units(session, model_id, quantity, prefix)
+        session.commit()
+        for unit in units:
+            session.refresh(unit)
+        return units
+
     def update_unit(
-        self, session: Session, unit_id: UUID, *, label: str | None, active: bool | None
+        self,
+        session: Session,
+        unit_id: UUID,
+        *,
+        label: str | None,
+        active: bool | None,
+        metadata: dict[str, str | None] | None = None,
     ) -> EquipmentUnit:
         model_id = session.scalar(
             select(EquipmentUnit.equipment_model_id).where(EquipmentUnit.id == unit_id)
@@ -259,9 +334,74 @@ class EquipmentService:
             unit.label = self._optional_text(label)
         if active is not None:
             unit.active = active
+        self._metadata(unit, metadata or {})
         session.commit()
         session.refresh(unit)
         return unit
+
+    @staticmethod
+    def _metadata(record, values: dict[str, str | None]) -> None:
+        allowed = (
+            {"brand", "manufacturer_model", "category"}
+            if isinstance(record, EquipmentModel)
+            else {"location", "serial_number"}
+        )
+        for key, value in values.items():
+            if key not in allowed:
+                raise EquipmentValidationError("Invalid metadata field")
+            setattr(record, key, EquipmentService._optional_text(value))
+
+    @staticmethod
+    def _image_link(value: str | None) -> str | None:
+        value = EquipmentService._optional_text(value)
+        if value is None:
+            return None
+        try:
+            parts = urlsplit(value)
+        except ValueError:
+            raise EquipmentValidationError("Invalid image URL") from None
+        if (
+            "\\" in value
+            or any(ord(char) < 33 for char in value)
+            or parts.username
+            or parts.password
+            or not (
+                (parts.scheme in {"https", "http"} and parts.netloc)
+                or (value.startswith("/") and not value.startswith("//") and not parts.netloc)
+            )
+        ):
+            raise EquipmentValidationError("Invalid image URL")
+        return value
+
+    def save_image(self, session: Session, model_id: UUID, raw: bytes) -> None:
+        try:
+            content, media_type, width, height = normalize_image(raw)
+        except ImageValidationError as error:
+            raise EquipmentValidationError(str(error)) from None
+        self.lock_models(session, {model_id})
+        model = self.model(session, model_id)
+        image = session.get(EquipmentImage, model_id)
+        if image is None:
+            image = EquipmentImage(equipment_model_id=model_id)
+            session.add(image)
+        image.content, image.media_type, image.width, image.height = (
+            content,
+            media_type,
+            width,
+            height,
+        )
+        model.image_url = None
+        model.updated_at = datetime.now(UTC)
+        session.commit()
+
+    def image(
+        self, session: Session, model_id: UUID, *, administrator: bool = False
+    ) -> EquipmentImage:
+        model = self.model(session, model_id)
+        image = session.get(EquipmentImage, model_id)
+        if image is None or (not administrator and not model.active):
+            raise EquipmentNotFoundError
+        return image
 
     @staticmethod
     def _required_name(value: str) -> str:
@@ -279,7 +419,14 @@ class EquipmentService:
     @staticmethod
     def _models_with_counts(session: Session, *, active_only: bool) -> list[ModelSummary]:
         statement = (
-            select(EquipmentModel, func.count(EquipmentUnit.id).label("active_quantity"))
+            select(
+                EquipmentModel,
+                func.count(EquipmentUnit.id).label("active_quantity"),
+                select(EquipmentImage.equipment_model_id)
+                .where(EquipmentImage.equipment_model_id == EquipmentModel.id)
+                .exists()
+                .label("has_image"),
+            )
             .outerjoin(
                 EquipmentUnit,
                 and_(
@@ -297,9 +444,9 @@ class EquipmentService:
                 id=model.id,
                 name=model.name,
                 description=model.description,
-                image_url=model.image_url,
+                image_url=f"/equipment/{model.id}/image" if has_image else model.image_url,
                 active=model.active,
                 active_quantity=count,
             )
-            for model, count in session.execute(statement)
+            for model, count, has_image in session.execute(statement)
         ]
