@@ -188,6 +188,17 @@ palette, or page composition.
   visible while content scrolls; pending saves disable repeat submission and
   failures preserve the draft. Photo preview must reserve space and provide a
   readable fallback; all fields marked internal remain administrator-only.
+- **Instructor equipment:** Keep the search/list beside the selected model's
+  units on wide desktops; phone and tablet show one view at a time with an
+  explicit return action and restored focus. Use compact unit rows with named
+  inventory/operational chips and a warning accent for active units out of
+  order. Preserve confirmation and stale-revision recovery for state changes.
+  Never show administrator-only metadata in this workspace.
+- **Equipment catalog:** Public and client pages share searchable responsive
+  image cards and a read-only detail dialog. Use one column on phone, two on
+  tablet and three on wide desktops. Keep image areas stable, descriptions
+  readable, and active-unit wording distinct from live availability. Missing or
+  broken images show the shared equipment fallback without hiding content.
 - **Later modules:** Progress sharing evolves in Task 27 into the authenticated
   chronological social feed specified below. Equipment can use local imagery,
   name/type, concise metadata, detail, and total active units.

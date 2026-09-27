@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
 import { InstructorEquipmentPage } from './instructor-equipment-page'
@@ -12,7 +13,7 @@ function setup(override?: (url:string,init?:RequestInit)=>unknown) {
 }
 test('shows exact states and confirms only the operational change, preserving quantity',async()=>{
   const fetchMock=setup((_,init)=>init?.method==='PATCH'?ok({...unit,operational_state:'out_of_order',revision:2}):undefined)
-  fireEvent.click(await screen.findByRole('button',{name:'Ver unidades'}))
+  fireEvent.click(await screen.findByRole('button',{name:'Ver unidades de Leg Press'}))
   fireEvent.click(await screen.findByRole('button',{name:'Marcar fora de serviço: Unidade A'}))
   await screen.findByRole('dialog',{name:'Marcar fora de serviço'})
   fireEvent.click(screen.getByRole('button',{name:'Cancelar'}))
@@ -30,7 +31,7 @@ test('shows exact states and confirms only the operational change, preserving qu
 })
 test('stale toggle requires reloading units',async()=>{
   setup((_,init)=>init?.method==='PATCH'?{ok:false,status:409}:undefined)
-  fireEvent.click(await screen.findByRole('button',{name:'Ver unidades'}))
+  fireEvent.click(await screen.findByRole('button',{name:'Ver unidades de Leg Press'}))
   fireEvent.click(await screen.findByRole('button',{name:'Marcar fora de serviço: Unidade A'}))
   fireEvent.click(await screen.findByRole('button',{name:'Confirmar alteração'}))
   await screen.findByText('A unidade mudou ou foi desativada. Recarregue antes de continuar.')
@@ -44,4 +45,21 @@ test('empty and failed lists offer clear feedback',async()=>{
   await screen.findByText('Não foi possível carregar ou atualizar os equipamentos. Tente novamente.')
   fail=false;fireEvent.click(screen.getByRole('button',{name:'Recarregar equipamentos'}))
   await screen.findByText('Nenhum equipamento ativo')
+})
+
+
+test('sends search to the paginated API and keeps query on subsequent pages', async () => {
+  const fetchMock = setup((url) => url.includes('query=leg') ? ok({items:[model],next_cursor:url.includes('cursor=') ? null : 'page-two'}) : undefined)
+  await screen.findByRole('button', {name:'Ver unidades de Leg Press'})
+  fireEvent.change(screen.getByRole('textbox',{name:'Buscar equipamento'}), {target:{value:'leg'}})
+  fireEvent.click(screen.getByRole('button',{name:'Buscar'}))
+  fireEvent.click(await screen.findByRole('button',{name:'Carregar mais equipamentos'}))
+  await waitFor(()=>expect(fetchMock.mock.calls.some(([url])=>url.includes('cursor=page-two') && url.includes('query=leg'))).toBe(true))
+})
+
+
+test('loads the equipment list under React StrictMode', async () => {
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(ok({items:[model],next_cursor:null})))
+  render(<StrictMode><MemoryRouter><InstructorEquipmentPage accessToken="token" onSignOut={vi.fn()}/></MemoryRouter></StrictMode>)
+  expect(await screen.findByRole('button',{name:'Ver unidades de Leg Press'})).toBeEnabled()
 })

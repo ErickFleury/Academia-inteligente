@@ -21,7 +21,10 @@ number remain administrator-only. Photos support upload and existing links.
    detail, units, registration and review at 360×800, 768×1024 and 1366×768; no
    horizontal overflow, unlabeled controls or sub-44px buttons were found.
 3. Instructor and public/client UI: focused operational workspace and responsive
-   catalog cards, search and useful empty/error states. Pending.
+   catalog cards, search and useful empty/error states. Complete. Eight related
+   tests passed, including StrictMode loading and query-preserving pagination.
+   Firefox verified all three surfaces at the target sizes, keyboard activation,
+   dialog Escape/restore-focus and mobile return-to-list focus.
 4. Responsive, keyboard, regression and live local verification. Pending.
 
 ## Boundaries

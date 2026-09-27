@@ -9,7 +9,7 @@ async function request<T>(token: string, path: string, init?: RequestInit): Prom
   return response.json() as Promise<T>
 }
 const query = (cursor?: string) => `?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`
-export const getInstructorEquipment = (token: string, cursor?: string) => request<EquipmentPage<InstructorEquipmentModel>>(token, query(cursor))
+export const getInstructorEquipment = (token: string, cursor?: string, search = '') => request<EquipmentPage<InstructorEquipmentModel>>(token, `${query(cursor)}${search ? `&query=${encodeURIComponent(search)}` : ''}`)
 export const getOperationalUnits = (token: string, id: string, cursor?: string) => request<EquipmentPage<OperationalUnit>>(token, `/${id}/units${query(cursor)}`)
 export const setOperationalState = (token: string, unit: OperationalUnit) => request<OperationalUnit>(token, `/units/${unit.id}/operational-state`, { method: 'PATCH', body: JSON.stringify({ operational_state: unit.operational_state === 'operational' ? 'out_of_order' : 'operational', expected_revision: unit.revision }) })
 

@@ -475,7 +475,7 @@ export function SidebarShell({
   );
 }
 
-export function PublicShell({ children }: { children: ReactNode }) {
+export function PublicShell({ children, contentMaxWidth = "md" }: { children: ReactNode; contentMaxWidth?: ContentMaxWidth }) {
   return (
     <Box
       component="main"
@@ -485,7 +485,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
         minHeight: "100vh",
       }}
     >
-      <Container maxWidth="md" sx={{ py: { xs: 3, sm: 5 } }}>
+      <Container maxWidth={contentMaxWidth} sx={{ py: { xs: 3, sm: 5 } }}>
         <Box component="header" sx={{ mb: { xs: 6, sm: 10 } }}>
           <Brand heading />
         </Box>
