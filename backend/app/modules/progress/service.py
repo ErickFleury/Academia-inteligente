@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Account, Client
 from app.modules.progress.models import ProgressUpdate
-from app.modules.social.models import ClientFollow, PostComment, PostImage, SocialProfile
+from app.modules.social.models import PostImage, SocialProfile
 from app.modules.social.service import SocialService
 
 

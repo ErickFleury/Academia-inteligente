@@ -28,7 +28,9 @@ class SocialProfile(Base):
     )
     nickname: Mapped[str | None] = mapped_column(String(40))
     biography: Mapped[str | None] = mapped_column(String(160))
-    visible_to_clients: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+    visible_to_clients: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
     biography_moderation_status: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default="visible"
     )
@@ -85,7 +87,9 @@ class ClientFollow(Base):
 class ClientFollowRequest(Base):
     __tablename__ = "client_follow_request"
     __table_args__ = (
-        CheckConstraint("requester_client_id <> requested_client_id", name="ck_client_follow_request_not_self"),
+        CheckConstraint(
+            "requester_client_id <> requested_client_id", name="ck_client_follow_request_not_self"
+        ),
     )
 
     requester_client_id: Mapped[uuid.UUID] = mapped_column(
@@ -138,7 +142,9 @@ class PostComment(Base):
 
 class PostImage(Base):
     __tablename__ = "post_image"
-    __table_args__ = (CheckConstraint("position >= 0 AND position < 4", name="ck_post_image_position"),)
+    __table_args__ = (
+        CheckConstraint("position >= 0 AND position < 4", name="ck_post_image_position"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     progress_update_id: Mapped[uuid.UUID] = mapped_column(
@@ -149,18 +155,24 @@ class PostImage(Base):
     media_type: Mapped[str] = mapped_column(String(32), nullable=False)
     width: Mapped[int] = mapped_column(nullable=False)
     height: Mapped[int] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class CommentImage(Base):
     __tablename__ = "comment_image"
 
-    comment_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("post_comment.id"), primary_key=True)
+    comment_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("post_comment.id"), primary_key=True
+    )
     content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
     media_type: Mapped[str] = mapped_column(String(32), nullable=False)
     width: Mapped[int] = mapped_column(nullable=False)
     height: Mapped[int] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class SocialModerationAudit(Base):

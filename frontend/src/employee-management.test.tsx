@@ -87,3 +87,21 @@ test('keeps failed role updates visible and offers a shared-account retry', asyn
   expect(await screen.findByText('Acesso do instrutor sincronizado.')).toBeInTheDocument()
   expect(screen.queryByText(/recebeu as instruções/)).not.toBeInTheDocument()
 })
+
+test('shows immediate processing and prevents duplicate provisioning while the adapter is pending', async () => {
+  let resolve!: (value: unknown) => void
+  const pending = new Promise((done) => { resolve = done })
+  const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [employee] }).mockResolvedValueOnce({ ok: true, json: async () => employee }).mockImplementationOnce(() => pending)
+  vi.stubGlobal('fetch', fetchMock)
+  render(<EmployeeManagement accessToken="token" onUnauthenticated={vi.fn()}/>)
+  fireEvent.click(await screen.findByRole('button', {name:/Maria Silva/}))
+  const provision = await screen.findByRole('button', {name:'Provisionar acesso'})
+  fireEvent.click(provision)
+  expect(screen.getByText('Salvando dados e sincronizando acesso do instrutor')).toBeInTheDocument()
+  expect(provision).toBeDisabled()
+  expect(provision).toHaveTextContent('Sincronizando...')
+  fireEvent.click(provision)
+  expect(fetchMock).toHaveBeenCalledTimes(3)
+  resolve({ok:true,json:async()=>({...employee,identity_provisioned:true})})
+  await screen.findByText('Acesso do instrutor sincronizado.')
+})

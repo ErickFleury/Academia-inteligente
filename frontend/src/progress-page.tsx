@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Card,
@@ -16,7 +15,8 @@ import {
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { ClientShell } from "./components/application-shell";
-import { RouterButtonLink } from "./components/router-button-link";
+import { PostCard } from "./post-card";
+import { PostMedia } from "./post-media";
 import {
   EmptyState,
   LoadingState,
@@ -28,7 +28,6 @@ import {
   deleteProgressImage,
   createProgressUpdate,
   deleteProgressUpdate,
-  fetchProgressImage,
   getProgressFeed,
   replaceProgressImage,
   type ProgressUpdate,
@@ -36,102 +35,10 @@ import {
 } from "./progress";
 import { setPostLike } from "./social";
 
-const date = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
 const openPost = (postId: string) => {
   window.history.pushState({}, "", `/publicacoes/${postId}`);
   window.dispatchEvent(new PopStateEvent("popstate"));
 };
-function PostMedia({
-  accessToken,
-  onRemove,
-  post,
-}: {
-  accessToken: string;
-  onRemove?: (imageId: string) => void;
-  post: ProgressUpdate;
-}) {
-  const [urls, setUrls] = useState<string[]>([]);
-  useEffect(() => {
-    let active = true;
-    let loaded: string[] = [];
-    if (!post.images.length) {
-      setUrls([]);
-      return;
-    }
-    void Promise.all(
-      post.images.map((image) =>
-        fetchProgressImage(accessToken, post.id, image.id),
-      ),
-    )
-      .then((values) => {
-        loaded = values;
-        if (active) setUrls(values);
-        else values.forEach(URL.revokeObjectURL);
-      })
-      .catch(() => {
-        if (active) setUrls([]);
-      });
-    return () => {
-      active = false;
-      loaded.forEach(URL.revokeObjectURL);
-    };
-  }, [accessToken, post.id, post.images]);
-  if (!urls.length) return null;
-  return (
-    <Box
-      aria-label={`Imagens da publicação de ${post.author_name}`}
-      sx={{
-        display: "grid",
-        gap: 1,
-        gridTemplateColumns:
-          urls.length === 1 ? "1fr" : "repeat(2, minmax(0, 1fr))",
-      }}
-    >
-      {urls.map((url, index) => (
-        <Box
-          key={post.images[index].id}
-          sx={{
-            aspectRatio: `${post.images[index].width} / ${post.images[index].height}`,
-            bgcolor: "action.hover",
-            borderRadius: 1,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {onRemove && (
-            <IconButton
-              aria-label={`Remover imagem ${index + 1}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemove(post.images[index].id);
-              }}
-              size="small"
-              sx={{ bgcolor: "background.paper", position: "absolute", right: 6, top: 6, zIndex: 1 }}
-            >
-              <span aria-hidden="true">×</span>
-            </IconButton>
-          )}
-          <Box
-            alt={`Imagem ${index + 1} da publicação de ${post.author_name}`}
-            component="img"
-            loading="lazy"
-            src={url}
-            sx={{
-              display: "block",
-              height: "100%",
-              objectFit: "cover",
-              width: "100%",
-            }}
-          />
-        </Box>
-      ))}
-    </Box>
-  );
-}
 export function ProgressPage({
   accessToken,
   onSignOut,
@@ -428,101 +335,9 @@ export function ProgressPage({
             />
           ) : (
             items.map((item) => (
-              <Card
-                component="article"
-                key={item.id}
-                onClick={() => openPost(item.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openPost(item.id);
-                  }
-                }}
-                role="link"
-                sx={{ cursor: "pointer" }}
-                tabIndex={0}
-              >
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{ alignItems: "center" }}
-                    >
-                      <Avatar>{item.author_name.slice(0, 1)}</Avatar>
-                      {item.author_profile_id ? (
-                        <RouterButtonLink
-                          onClick={(event) => event.stopPropagation()}
-                          to={`/perfis/${item.author_profile_id}`}
-                          variant="text"
-                        >
-                          {item.author_name}
-                        </RouterButtonLink>
-                      ) : (
-                        <Typography sx={{ fontWeight: 700 }}>
-                          {item.author_name}
-                        </Typography>
-                      )}
-                      <Typography color="text.secondary" variant="body2">
-                        {date(item.created_at)}
-                      </Typography>
-                    </Stack>
-                    {item.content && (
-                      <Typography
-                        sx={{
-                          whiteSpace: "pre-wrap",
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        {item.content}
-                      </Typography>
-                    )}
-                    <PostMedia accessToken={accessToken} post={item} />
-                    {item.edited_at && (
-                      <Typography color="text.secondary" variant="caption">
-                        editado
-                      </Typography>
-                    )}
-                    <Stack direction="row">
-                      <Button
-                        aria-label={
-                          item.liked_by_viewer
-                            ? "Descurtir publicação"
-                            : "Curtir publicação"
-                        }
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void toggleLike(item);
-                        }}
-                        variant="text"
-                      >
-                        {item.liked_by_viewer ? "♥" : "♡"} {item.like_count}
-                      </Button>
-                      <Button
-                        aria-label="Abrir comentários"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openPost(item.id);
-                        }}
-                        variant="text"
-                      >
-                        💬 {item.comment_count}
-                      </Button>
-                      {item.is_own && (
-                        <IconButton
-                          aria-label="Editar publicação"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openEditor(item);
-                          }}
-                        >
-                          <span aria-hidden="true">✎</span>
-                        </IconButton>
-                      )}
-                    </Stack>
-                  </Stack>
-                </CardContent>
-              </Card>
+              <PostCard key={item.id} post={item} accessToken={accessToken}
+                onOpen={() => openPost(item.id)} onLike={() => void toggleLike(item)}
+                onEdit={item.is_own ? () => openEditor(item) : undefined} />
             ))
           )}
           <Box ref={sentinel} />

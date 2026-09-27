@@ -1,3 +1,4 @@
+
 """Shared-account lifecycle regressions; all provider I/O is in-memory."""
 
 from dataclasses import asdict
@@ -9,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from test_clients import AsgiClient, FakeIdentityProvider
 from test_employees import person
+from test_employees import session as session
 
 from app.database import get_database_session
 from app.main import create_app
@@ -37,8 +39,6 @@ from app.modules.identity.keycloak_admin import (
 from app.modules.identity.reconciliation import pending_records
 from app.modules.identity.service import AuthenticatedIdentity
 from app.modules.progress.models import ProgressUpdate
-
-pytest_plugins = ["test_employees"]
 
 
 class MemoryKeycloak(KeycloakAdminClient):

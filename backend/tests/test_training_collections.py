@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy import event, select
 from test_training_lifecycle import data
+from test_training_lifecycle import session as session
 from test_training_review import api as api
 from test_training_review import approve, draft
 
@@ -13,7 +14,6 @@ from app.modules.training.collections_service import clone_current
 from app.modules.training.models import TrainingPlanVersion
 from app.modules.training.service import TrainingLifecycleService
 
-pytest_plugins = ["test_training_lifecycle"]
 BASE = "/training/collections"
 
 

@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 from test_onboarding_draft_api import request
 from test_onboarding_drafts import create_client
+from test_training_lifecycle import session as session
 from test_training_review import api as api
 from training_fixtures import instructor
 
@@ -11,8 +12,6 @@ from app.modules.identity.service import AuthenticatedIdentity
 from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import Onboarding, OnboardingAuditEvent
 from app.modules.training.models import TrainingPlanVersion
-
-pytest_plugins = ["test_training_lifecycle"]
 
 PAYLOAD = {
     "training_goal": "Ganhar força",

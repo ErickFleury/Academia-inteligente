@@ -12,7 +12,7 @@ from app.modules.clients.models import Account
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
-from app.modules.social.models import CommentImage, PostComment, PostImage, ProfileImage
+from app.modules.social.models import PostComment, ProfileImage
 from app.modules.social.service import (
     SocialForbiddenError,
     SocialNotFoundError,
@@ -122,7 +122,9 @@ def profile_response(session: Session, view, private_shell: bool = False) -> Pro
         id=view.profile.id,
         name=view.client.name,
         nickname=view.profile.nickname,
-        biography=None if private_shell else view.profile.biography
+        biography=None
+        if private_shell
+        else view.profile.biography
         if own or view.profile.biography_moderation_status == "visible"
         else None,
         visible_to_clients=view.profile.visible_to_clients if own else None,
@@ -160,10 +162,26 @@ def post_response(session: Session, update, viewer_client_id: UUID | None = None
         moderation_reason=update.moderation_reason,
         created_at=update.created_at.isoformat(),
         edited_at=update.edited_at.isoformat() if update.edited_at else None,
-        images=[MediaSummary(id=image.id, width=image.width, height=image.height) for image in service.post_images(session, update.id)],
+        images=[
+            MediaSummary(id=image.id, width=image.width, height=image.height)
+            for image in service.post_images(session, update.id)
+        ],
         like_count=service.like_count(session, update.id),
-        comment_count=(session.scalar(select(func.count()).select_from(PostComment).where(PostComment.progress_update_id == update.id, PostComment.deleted_at.is_(None), PostComment.moderation_status == "visible")) or 0),
-        liked_by_viewer=service.is_liked(session, viewer_client_id, update.id) if viewer_client_id else False,
+        comment_count=(
+            session.scalar(
+                select(func.count())
+                .select_from(PostComment)
+                .where(
+                    PostComment.progress_update_id == update.id,
+                    PostComment.deleted_at.is_(None),
+                    PostComment.moderation_status == "visible",
+                )
+            )
+            or 0
+        ),
+        liked_by_viewer=service.is_liked(session, viewer_client_id, update.id)
+        if viewer_client_id
+        else False,
     )
 
 
@@ -301,7 +319,9 @@ def posts(
         view = service.viewer_profile(session, client.subject, profile_id)
         viewer = service.client_for_subject(session, client.subject)
         return [
-            post_response(session, update, viewer.id).model_copy(update={"author_name": view.client.name})
+            post_response(session, update, viewer.id).model_copy(
+                update={"author_name": view.client.name}
+            )
             for update in service.profile_posts(session, client.subject, profile_id, offset, limit)
         ]
     except (SocialNotFoundError, SocialForbiddenError) as exc:
@@ -330,12 +350,18 @@ def detail(
                 moderation_status=item.moderation_status if item.client_id == viewer.id else None,
                 moderation_reason=item.moderation_reason if item.client_id == viewer.id else None,
                 edited_at=item.edited_at.isoformat() if item.edited_at else None,
-                image=(MediaSummary(id=item.id, width=image.width, height=image.height) if (image := service.comment_image(session, item.id)) else None),
+                image=(
+                    MediaSummary(id=item.id, width=image.width, height=image.height)
+                    if (image := service.comment_image(session, item.id))
+                    else None
+                ),
             )
             for item, owner in service.comments(session, client.subject, update_id, offset, limit)
         ]
         return PostDetailResponse(
-            post=post_response(session, update, viewer.id).model_copy(update={"author_name": author.client.name}),
+            post=post_response(session, update, viewer.id).model_copy(
+                update={"author_name": author.client.name}
+            ),
             author=summary(session, author),
             like_count=service.like_count(session, update.id),
             liked_by_viewer=service.is_liked(session, viewer.id, update.id),
@@ -388,17 +414,34 @@ def delete_comment(comment_id: UUID, session: DatabaseSession, client: ClientUse
 
 
 @router.patch("/comments/{comment_id}", response_model=CommentResponse)
-def patch_comment(comment_id: UUID, payload: CommentInput, session: DatabaseSession, client: ClientUser):
+def patch_comment(
+    comment_id: UUID, payload: CommentInput, session: DatabaseSession, client: ClientUser
+):
     try:
         item = service.edit_comment(session, client.subject, comment_id, payload.content)
         image = service.comment_image(session, item.id)
-        return CommentResponse(id=item.id, author=summary(session, service.own_profile(session, client.subject)), content=item.content or "", created_at=item.created_at.isoformat(), is_own=True, edited_at=item.edited_at.isoformat() if item.edited_at else None, image=MediaSummary(id=item.id, width=image.width, height=image.height) if image else None)
+        return CommentResponse(
+            id=item.id,
+            author=summary(session, service.own_profile(session, client.subject)),
+            content=item.content or "",
+            created_at=item.created_at.isoformat(),
+            is_own=True,
+            edited_at=item.edited_at.isoformat() if item.edited_at else None,
+            image=MediaSummary(id=item.id, width=image.width, height=image.height)
+            if image
+            else None,
+        )
     except (SocialNotFoundError, SocialForbiddenError, SocialValidationError) as exc:
         raise error(exc) from None
 
 
 @router.put("/comments/{comment_id}/image", status_code=204)
-def put_comment_image(comment_id: UUID, raw: bytes = Body(...), session: DatabaseSession = None, client: ClientUser = None):
+def put_comment_image(
+    comment_id: UUID,
+    raw: bytes = Body(...),
+    session: DatabaseSession = None,
+    client: ClientUser = None,
+):
     try:
         service.replace_comment_image(session, client.subject, comment_id, raw)
     except (SocialNotFoundError, SocialForbiddenError, SocialValidationError) as exc:
@@ -409,10 +452,12 @@ def put_comment_image(comment_id: UUID, raw: bytes = Body(...), session: Databas
 def get_comment_image(comment_id: UUID, session: DatabaseSession, client: ClientUser):
     try:
         comment = session.get(PostComment, comment_id)
-        if comment is None: raise SocialNotFoundError
+        if comment is None:
+            raise SocialNotFoundError
         service.post_detail(session, client.subject, comment.progress_update_id)
         image = service.comment_image(session, comment.id)
-        if image is None: raise SocialNotFoundError
+        if image is None:
+            raise SocialNotFoundError
         return BinaryResponse(image.content, media_type=image.media_type)
     except (SocialNotFoundError, SocialForbiddenError) as exc:
         raise error(exc) from None

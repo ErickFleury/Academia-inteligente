@@ -36,6 +36,7 @@ export const theme = createTheme({
         '*:focus-visible': { outline: `3px solid ${alpha('#90CBE9', 0.95)}`, outlineOffset: 3 },
       },
     },
+    MuiIconButton: { styleOverrides: { root: { minWidth: 44, minHeight: 44 } } },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {

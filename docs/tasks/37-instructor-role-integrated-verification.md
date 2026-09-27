@@ -2,7 +2,12 @@
 
 ## Status
 
-Planned. Run only after Tasks 28–36 are implemented.
+Done by explicit user direction on 2026-09-27. Technical verification passed:
+248 backend tests (including PostgreSQL), 115 frontend tests, lint/build, and
+scoped browser/performance/restart checks. The user will perform the intended-user
+checklist. Checklist results and the eight-hour availability soak remain
+unverified follow-up evidence, not passing acceptance results. See the
+[evidence and completion report](37-instructor-role-integrated-verification-report.md).
 
 ## Objective
 

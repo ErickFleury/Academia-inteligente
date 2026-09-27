@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from sqlalchemy import select
 from test_clients import AsgiClient, client_data
 from test_employees import FakeProvisioner
+from test_employees import session as session
 
 from app.database import get_database_session
 from app.modules.clients.models import Account, PersonProfile
@@ -12,8 +13,6 @@ from app.modules.employees import router as employee_router
 from app.modules.employees.service import EmployeeService
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
-
-pytest_plugins = ["test_employees"]
 
 
 @pytest.fixture

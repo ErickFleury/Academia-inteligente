@@ -4,7 +4,10 @@
 
 Implemented. Depends on Task 28. Employee editing/API feedback gaps verified
 on 2026-09-27: 47 targeted backend and 7 employee UI tests pass with fake
-external adapters. Browser viewport verification remains part of Task 37.
+external adapters. Task 37 subsequently passed full regression and browser
+checks at all three required sizes. Intended-user usability and the availability
+soak remain pending; see the
+[verification report](37-instructor-role-integrated-verification-report.md).
 
 ## Objective
 

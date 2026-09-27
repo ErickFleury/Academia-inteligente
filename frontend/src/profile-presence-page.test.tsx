@@ -3,6 +3,8 @@ import { afterEach, expect, test, vi } from 'vitest'
 
 import { ProfilePresencePage } from './profile-presence-page'
 
+vi.mock('./occupancy', () => ({ getOccupancy: async () => ({ occupancy: 0 }) }))
+
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 test('shows the opt-in profile tag without turning the page into a presence directory', async () => {

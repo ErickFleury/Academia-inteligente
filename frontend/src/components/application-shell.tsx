@@ -369,6 +369,7 @@ export function SidebarShell({
           position: "sticky",
           top: 0,
           zIndex: "appBar",
+          bgcolor: "background.default",
           backdropFilter: "blur(14px)",
           borderBottom: "1px solid",
           borderColor: "divider",

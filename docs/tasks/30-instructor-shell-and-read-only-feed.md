@@ -2,7 +2,10 @@
 
 ## Status
 
-Implemented. Depends on Tasks 27 and 29.
+Implemented. Depends on Tasks 27 and 29. Task 37 verified authorization,
+public-profile pagination, read-only post/comment media, shared card presentation,
+and all three viewports; see the
+[verification report](37-instructor-role-integrated-verification-report.md).
 
 ## Objective
 

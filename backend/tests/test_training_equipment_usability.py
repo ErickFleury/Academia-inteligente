@@ -5,6 +5,7 @@ from sqlalchemy import select
 from test_equipment_operational import equipment
 from test_training_generation import FakeProvider, complete_onboarding, proposal
 from test_training_lifecycle import client_id, data
+from test_training_lifecycle import session as session
 from test_training_review import api as api
 
 from app.integrations.ai import _training_schema
@@ -16,8 +17,6 @@ from app.modules.training.generation_service import (
 )
 from app.modules.training.models import TrainingPlan, TrainingPlanVersion
 from app.modules.training.service import InvalidTrainingContentError, TrainingLifecycleService
-
-pytest_plugins = ["test_training_lifecycle"]
 
 
 def machine_content(model):

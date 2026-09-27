@@ -164,3 +164,78 @@ def test_instructor_feed_excludes_private_profiles_hidden_and_deleted_posts(
 
     with pytest.raises(SocialNotFoundError):
         social.instructor_post_detail(session, "instructor", private_post.id)
+
+
+def test_instructor_pagination_filters_private_posts_before_limit(session):
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import select
+    from training_fixtures import instructor
+
+    from app.modules.progress.models import ProgressUpdate
+
+    instructor(session, "instructor")
+    client(session, "public")
+    client(session, "private")
+    progress, social = ProgressService(), SocialService()
+    social.update_own(session, "public", None, None, True)
+    social.update_own(session, "private", None, None, False)
+    public_posts = [
+        progress.create(session, "public", f"Público {index}", "shared").id for index in range(3)
+    ]
+    for index in range(6):
+        progress.create(session, "private", f"Privado {index}", "shared")
+    # Explicit timestamps use the same bind representation in SQLite; PostgreSQL
+    # stores native timestamptz. Do not depend on SQLite CURRENT_TIMESTAMP text.
+    for index, post in enumerate(session.scalars(select(ProgressUpdate))):
+        post.created_at = datetime(2026, 9, 27, 12, tzinfo=UTC) + timedelta(seconds=index)
+    session.commit()
+    first = social.instructor_feed_page(session, "instructor", None, 2)
+    assert len(first.items) == 2 and not first.end_reached and first.next_cursor
+    second = social.instructor_feed_page(session, "instructor", first.next_cursor, 2)
+    assert len(second.items) == 1 and second.end_reached
+    assert {item.id for item in first.items + second.items} == set(public_posts)
+
+
+def test_instructor_comment_media_checks_parent_privacy_and_moderation(session):
+    from fastapi import HTTPException
+    from training_fixtures import instructor
+
+    from app.modules.employees import instructor_social_router as router
+    from app.modules.identity.service import AuthenticatedIdentity
+    from app.modules.social.models import CommentImage, PostComment
+
+    instructor(session, "instructor")
+    owner = client(session, "public")
+    progress, social = ProgressService(), SocialService()
+    social.update_own(session, "public", None, None, True)
+    post = progress.create(session, "public", "Público", "shared")
+    other = progress.create(session, "public", "Outro", "shared")
+    comment = PostComment(progress_update_id=post.id, client_id=owner.id, content="Comentário")
+    session.add(comment)
+    session.flush()
+    session.add(
+        CommentImage(
+            comment_id=comment.id,
+            content=b"synthetic-image",
+            media_type="image/webp",
+            width=1,
+            height=1,
+        )
+    )
+    session.commit()
+    identity = AuthenticatedIdentity("instructor", "test", ("instructor",))
+    assert router.detail(post.id, session, identity).comments[0].image.id == comment.id
+    assert router.comment_image(post.id, comment.id, session, identity).body == b"synthetic-image"
+    with pytest.raises(HTTPException) as wrong:
+        router.comment_image(other.id, comment.id, session, identity)
+    assert wrong.value.status_code == 404
+    comment.moderation_status = "hidden"
+    session.commit()
+    with pytest.raises(HTTPException):
+        router.comment_image(post.id, comment.id, session, identity)
+    comment.moderation_status = "visible"
+    session.commit()
+    social.update_own(session, "public", None, None, False)
+    with pytest.raises(HTTPException):
+        router.comment_image(post.id, comment.id, session, identity)

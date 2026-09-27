@@ -22,7 +22,10 @@ def upgrade() -> None:
         sa.Column("enabled", sa.Boolean(), server_default=sa.text("false"), nullable=False),
         sa.Column("consented_at", sa.DateTime(timezone=True)),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["client_id"], ["client.id"]),
         sa.PrimaryKeyConstraint("client_id"),
@@ -34,7 +37,10 @@ def upgrade() -> None:
         sa.Column("previous_enabled", sa.Boolean(), nullable=False),
         sa.Column("new_enabled", sa.Boolean(), nullable=False),
         sa.Column(
-            "occurred_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+            "occurred_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["client_id"], ["client.id"]),
         sa.PrimaryKeyConstraint("id"),
@@ -47,6 +53,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_profile_presence_consent_audit_client_id", table_name="profile_presence_consent_audit")
+    op.drop_index(
+        "ix_profile_presence_consent_audit_client_id", table_name="profile_presence_consent_audit"
+    )
     op.drop_table("profile_presence_consent_audit")
     op.drop_table("profile_presence_preference")

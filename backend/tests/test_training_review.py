@@ -5,6 +5,7 @@ from sqlalchemy import select
 from test_clients import AsgiClient
 from test_training_adaptations import FakeAdaptationProvider, adjust_response, source_message
 from test_training_lifecycle import client_id, data
+from test_training_lifecycle import session as session
 from training_fixtures import instructor
 
 from app.database import get_database_session
@@ -26,8 +27,6 @@ from app.modules.training.service import (
     InvalidTrainingTransitionError,
     TrainingLifecycleService,
 )
-
-pytest_plugins = ["test_training_lifecycle"]
 
 
 def draft(session):

@@ -3,13 +3,13 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.exc import IntegrityError
 from test_onboarding_draft_api import request
+from test_training_lifecycle import session as session
 from test_training_review import api as api
 from training_fixtures import instructor
 
 from app.modules.equipment.service import EquipmentService
 from app.modules.identity.service import AuthenticatedIdentity
 
-pytest_plugins = ["test_training_lifecycle"]
 BASE = "/instructor/equipment"
 
 

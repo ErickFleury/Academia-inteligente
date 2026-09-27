@@ -2,8 +2,10 @@
 
 ## Status
 
-Planned. This is the identity/data prerequisite for RF-07/RF-08 and the
-instructor tasks.
+Implemented. Shared-person registration/editing, independent client activity,
+identity reconciliation, and CEP success/manual fallback passed Task 37
+automated and three-viewport checks. CA-03.4 remains deferred. See the
+[verification report](37-instructor-role-integrated-verification-report.md).
 
 ## Objective
 

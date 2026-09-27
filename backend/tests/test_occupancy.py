@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from training_fixtures import instructor
 
 from app.database import Base, get_database_session
 from app.main import create_app
@@ -230,6 +231,7 @@ def test_only_admin_or_attendant_can_correct(
 
     app.dependency_overrides[get_database_session] = override_database_session
     headers = [(b"authorization", b"Bearer token"), (b"content-type", b"application/json")]
+    instructor(session, "operator")
     monkeypatch.setattr(identity_router, "identity_provider", FakeIdentityProvider(("instructor",)))
     denied, _ = request(
         app, "POST", "/occupancy/admin/corrections", {"adjustment": 1, "reason": "Teste"}, headers

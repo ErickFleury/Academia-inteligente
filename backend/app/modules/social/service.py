@@ -266,8 +266,11 @@ class SocialService:
 
     @staticmethod
     def _encode_cursor(item: ProgressUpdate) -> str:
+        timestamp = item.created_at
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=UTC)
         payload = json.dumps(
-            {"t": item.created_at.isoformat(), "i": str(item.id)}, separators=(",", ":")
+            {"t": timestamp.isoformat(), "i": str(item.id)}, separators=(",", ":")
         )
         return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
 
@@ -325,8 +328,14 @@ class SocialService:
     ) -> CursorPage:
         self.instructor_for_subject(session, subject)
         marker = self._cursor(cursor)
-        statement = select(ProgressUpdate).where(
-            ProgressUpdate.deleted_at.is_(None), ProgressUpdate.moderation_status == "visible"
+        statement = (
+            select(ProgressUpdate)
+            .join(SocialProfile, SocialProfile.client_id == ProgressUpdate.client_id)
+            .where(
+                ProgressUpdate.deleted_at.is_(None),
+                ProgressUpdate.moderation_status == "visible",
+                SocialProfile.visible_to_clients,
+            )
         )
         if marker:
             timestamp, identifier = marker
@@ -345,7 +354,6 @@ class SocialService:
                     ).limit(self._limit(limit) + 1)
                 ).all()
             )
-            if self.profile_for_client(session, item.client_id).visible_to_clients
         ]
         has_more = len(items) > self._limit(limit)
         items = items[: self._limit(limit)]
@@ -371,7 +379,12 @@ class SocialService:
         return update, profile, author
 
     def instructor_comments(
-        self, session: Session, subject: str, update_id: UUID, limit: int
+        self,
+        session: Session,
+        subject: str,
+        update_id: UUID,
+        limit: int,
+        comment_id: UUID | None = None,
     ) -> list[tuple[PostComment, Client]]:
         update, _, _ = self.instructor_post_detail(session, subject, update_id)
         return list(
@@ -380,6 +393,7 @@ class SocialService:
                 .join(Client)
                 .where(
                     PostComment.progress_update_id == update.id,
+                    PostComment.id == comment_id if comment_id is not None else True,
                     PostComment.deleted_at.is_(None),
                     PostComment.moderation_status == "visible",
                 )

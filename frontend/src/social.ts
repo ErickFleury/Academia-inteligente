@@ -4,7 +4,7 @@ export type SocialProfile = { id: string; name: string; nickname: string | null;
 export type SocialPostImage = { id: string; width: number; height: number }
 export type SocialPost = { id: string; author_name: string; content: string; visibility: 'private' | 'shared'; moderation_status: 'visible' | 'hidden'; moderation_reason: string | null; created_at: string; images: SocialPostImage[]; like_count: number; comment_count: number; liked_by_viewer: boolean }
 export type ProfileSummary = { id: string; name: string; nickname: string | null; has_image: boolean }
-export type PostComment = { id: string; author: ProfileSummary; content: string; created_at: string; is_own: boolean; moderation_status: string | null; moderation_reason: string | null }
+export type PostComment = { image?: { id: string; width: number; height: number } | null; id: string; author: ProfileSummary; content: string; created_at: string; is_own: boolean; moderation_status: string | null; moderation_reason: string | null }
 export type PostDetail = { post: SocialPost; author: ProfileSummary; like_count: number; liked_by_viewer: boolean; comments: PostComment[] }
 
 async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {

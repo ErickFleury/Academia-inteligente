@@ -20,8 +20,13 @@ from app.modules.progress.service import (
     ProgressService,
     ProgressStateError,
 )
-from app.modules.social.models import PostComment, PostImage, SocialProfile
-from app.modules.social.service import SocialForbiddenError, SocialNotFoundError, SocialService, SocialValidationError
+from app.modules.social.models import PostComment, SocialProfile
+from app.modules.social.service import (
+    SocialForbiddenError,
+    SocialNotFoundError,
+    SocialService,
+    SocialValidationError,
+)
 
 router = APIRouter(prefix="/progress", tags=["progress"])
 service = ProgressService()
@@ -84,7 +89,9 @@ def response(
     update: ProgressUpdate,
     client: Client,
     is_own: bool = False,
-    author_profile_id: UUID | None = None, session: Session | None = None, viewer_client_id: UUID | None = None,
+    author_profile_id: UUID | None = None,
+    session: Session | None = None,
+    viewer_client_id: UUID | None = None,
 ) -> UpdateResponse:
     return UpdateResponse(
         id=update.id,
@@ -99,15 +106,42 @@ def response(
         updated_at=update.updated_at,
         edited_at=update.edited_at,
         like_count=SocialService().like_count(session, update.id) if session else 0,
-        liked_by_viewer=SocialService().is_liked(session, viewer_client_id, update.id) if session and viewer_client_id else False,
-        comment_count=(session.scalar(select(func.count()).select_from(PostComment).where(PostComment.progress_update_id == update.id, PostComment.deleted_at.is_(None), PostComment.moderation_status == "visible")) or 0) if session else 0,
-        image_count=len(images := SocialService().post_images(session, update.id)) if session else 0,
-        images=[MediaResponse(id=image.id, width=image.width, height=image.height) for image in images] if session else [],
+        liked_by_viewer=SocialService().is_liked(session, viewer_client_id, update.id)
+        if session and viewer_client_id
+        else False,
+        comment_count=(
+            session.scalar(
+                select(func.count())
+                .select_from(PostComment)
+                .where(
+                    PostComment.progress_update_id == update.id,
+                    PostComment.deleted_at.is_(None),
+                    PostComment.moderation_status == "visible",
+                )
+            )
+            or 0
+        )
+        if session
+        else 0,
+        image_count=len(images := SocialService().post_images(session, update.id))
+        if session
+        else 0,
+        images=[
+            MediaResponse(id=image.id, width=image.width, height=image.height) for image in images
+        ]
+        if session
+        else [],
     )
 
 
 def own_response(session: Session, update: ProgressUpdate) -> UpdateResponse:
-    return response(update, session.get(Client, update.client_id), True, session=session, viewer_client_id=update.client_id)
+    return response(
+        update,
+        session.get(Client, update.client_id),
+        True,
+        session=session,
+        viewer_client_id=update.client_id,
+    )
 
 
 def error(error: Exception) -> HTTPException:
@@ -118,27 +152,40 @@ def error(error: Exception) -> HTTPException:
     if isinstance(error, ProgressForbiddenError):
         return HTTPException(403, "Forbidden")
     if isinstance(error, ProgressStateError):
-        return HTTPException(409, "A publicação não pode ser alterada; comentários retidos impedem torná-la privada.")
+        return HTTPException(
+            409, "A publicação não pode ser alterada; comentários retidos impedem torná-la privada."
+        )
     return HTTPException(404, "Progress update not found")
 
 
 @router.get("", response_model=FeedResponse)
-def list_feed(session: DatabaseSession, client: ClientUser, cursor: str | None = None, limit: int = 20) -> FeedResponse:
+def list_feed(
+    session: DatabaseSession, client: ClientUser, cursor: str | None = None, limit: int = 20
+) -> FeedResponse:
     try:
         page = SocialService().feed_page(session, client.subject, cursor, limit)
         viewer = SocialService().client_for_subject(session, client.subject)
-        return FeedResponse(items=[
-            response(
-                update,
-                session.get(Client, update.client_id),
-                update.client_id == viewer.id,
-                profile.id if profile else None, session, viewer.id,
-            )
-            for update in page.items
-            for profile in [
-                session.scalar(select(SocialProfile).where(SocialProfile.client_id == update.client_id)) or SocialService().profile_for_client(session, update.client_id)
-            ]
-        ], next_cursor=page.next_cursor, end_reached=page.end_reached)
+        return FeedResponse(
+            items=[
+                response(
+                    update,
+                    session.get(Client, update.client_id),
+                    update.client_id == viewer.id,
+                    profile.id if profile else None,
+                    session,
+                    viewer.id,
+                )
+                for update in page.items
+                for profile in [
+                    session.scalar(
+                        select(SocialProfile).where(SocialProfile.client_id == update.client_id)
+                    )
+                    or SocialService().profile_for_client(session, update.client_id)
+                ]
+            ],
+            next_cursor=page.next_cursor,
+            end_reached=page.end_reached,
+        )
     except (ProgressNotFoundError, SocialValidationError) as exc:
         raise error(exc) from None
 
@@ -157,15 +204,24 @@ def create_update(
 
 
 @router.post("/image-only", response_model=UpdateResponse, status_code=status.HTTP_201_CREATED)
-def create_image_only(raw: bytes = Body(...), visibility: Literal["private", "shared"] = "private", session: DatabaseSession = None, client: ClientUser = None) -> UpdateResponse:
+def create_image_only(
+    raw: bytes = Body(...),
+    visibility: Literal["private", "shared"] = "private",
+    session: DatabaseSession = None,
+    client: ClientUser = None,
+) -> UpdateResponse:
     try:
-        return own_response(session, service.create(session, client.subject, None, visibility, [raw]))
+        return own_response(
+            session, service.create(session, client.subject, None, visibility, [raw])
+        )
     except (ProgressNotFoundError, ProgressStateError, SocialValidationError) as exc:
         raise error(exc) from None
 
 
 @router.post("", response_model=UpdateResponse, status_code=status.HTTP_201_CREATED)
-def create_update_root(payload: UpdateInput, session: DatabaseSession, client: ClientUser) -> UpdateResponse:
+def create_update_root(
+    payload: UpdateInput, session: DatabaseSession, client: ClientUser
+) -> UpdateResponse:
     return create_update(payload, session, client)
 
 
@@ -189,18 +245,32 @@ def patch_update(
 
 
 @router.put("/{update_id}/images/{position}", response_model=UpdateResponse)
-def replace_image(update_id: UUID, position: int, raw: bytes = Body(...), session: DatabaseSession = None, client: ClientUser = None) -> UpdateResponse:
+def replace_image(
+    update_id: UUID,
+    position: int,
+    raw: bytes = Body(...),
+    session: DatabaseSession = None,
+    client: ClientUser = None,
+) -> UpdateResponse:
     """Replace the ordered media set by addressing its position; bytes never enter JSON."""
     if position < 0 or position > 3:
         raise HTTPException(422, "Invalid image position")
     try:
         current = SocialService().post_images(session, update_id)
         values = [item.content for item in current]
-        while len(values) <= position: values.append(b"")
+        while len(values) <= position:
+            values.append(b"")
         values[position] = raw
-        updated = SocialService().replace_post_images(session, client.subject, update_id, [value for value in values if value])
+        updated = SocialService().replace_post_images(
+            session, client.subject, update_id, [value for value in values if value]
+        )
         return own_response(session, updated)
-    except (ProgressNotFoundError, SocialForbiddenError, SocialNotFoundError, SocialValidationError) as exc:
+    except (
+        ProgressNotFoundError,
+        SocialForbiddenError,
+        SocialNotFoundError,
+        SocialValidationError,
+    ) as exc:
         raise error(exc) from None
 
 
@@ -224,8 +294,16 @@ def delete_image(
 def post_image(update_id: UUID, image_id: UUID, session: DatabaseSession, client: ClientUser):
     try:
         update, _ = SocialService().post_detail(session, client.subject, update_id)
-        image = next((item for item in SocialService().post_images(session, update.id) if item.id == image_id), None)
-        if image is None: raise SocialNotFoundError
+        image = next(
+            (
+                item
+                for item in SocialService().post_images(session, update.id)
+                if item.id == image_id
+            ),
+            None,
+        )
+        if image is None:
+            raise SocialNotFoundError
         return BinaryResponse(image.content, media_type=image.media_type)
     except (SocialNotFoundError, SocialForbiddenError) as exc:
         raise error(exc) from None

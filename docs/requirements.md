@@ -1629,13 +1629,13 @@ This order is implementation guidance added in this consolidation; it does not c
 | Conversational onboarding | Approved MVP extension; implemented | EXT-RF-AI-01; DEC-06, DEC-08, DEC-18 |
 | Portuguese user-facing UI | Approved cross-cutting extension; applies to existing, MVP, and post-MVP screens | EXT-RF-LANG-01; RNF02/RNF03 |
 | Training generation/version/current view/chat/adaptation | Original MVP; partially implemented | RF-15–RF-19; DEC-07, DEC-08, DEC-15, DEC-18 |
-| Employee management, recovery, onboarding self-review | RF-07/RF-08 approved for instructor dependency; RF-06/RF-14 not started | RF-06–RF-08, RF-14; EXT-DEC-INST-01 |
+| Employee management, recovery, onboarding self-review | RF-07/RF-08 implemented; RF-06/RF-14 not started | RF-06–RF-08, RF-14; EXT-DEC-INST-01 |
 | Progress sharing | Approved post-MVP extension; implemented | EXT-RF-SOC-01; EXT-DEC-SOC-01; Task 20 |
 | Social client profiles/interactions | Approved post-MVP extension; planned | EXT-RF-SOC-02; EXT-DEC-SOC-02; Task 26 |
 | Authenticated chronological social feed | Approved post-MVP extension; planned | EXT-RF-SOC-03; EXT-DEC-SOC-03; Task 27 |
 | Equipment management/catalog | Original post-MVP; implemented | RF-32, RF-33 |
 | Equipment quantity | Approved post-MVP extension; implemented | EXT-RF-EQP-01; EXT-DEC-EQP-01 |
-| Instructor professional area | Approved post-MVP extension; planned | RF-07/RF-08; EXT-RF-INST-01–EXT-RF-INST-05; EXT-DEC-INST-01 |
+| Instructor professional area | Implemented; Task 37 closed by user direction with formal evidence follow-up | RF-07/RF-08; EXT-RF-INST-01–EXT-RF-INST-05; EXT-DEC-INST-01 |
 | Access/attendance/anonymous occupancy | Original post-MVP; Task 22 implemented | RF-23–RF-25; confirmed-passage/correction ledger and aggregate-only client view. RF-20–RF-22 biometric/access work remains separate |
 | Named visible presence | Approved post-MVP extension; implemented | EXT-RF-PRES-01; Task 23, EXT-DEC-PRES-01 |
 | Billing/plans/dashboard/classes | Original post-MVP; not started | RF-26–RF-31; DEC-12–DEC-14 |
@@ -1709,9 +1709,9 @@ unchecked boxes or planned files.
 | Foundation | Enabler | Implemented | DEC-03 | Task 01 verified baseline. |
 | RF-04 | Original MVP | Implemented | DEC-03–DEC-05 | Task 02; Task 06 integration verifies real provisioned clients. |
 | RF-05 | Original MVP | Implemented | DEC-04 | Task 03; client-role denial reverified in Task 06. |
-| RF-01/RF-02 | Original MVP | **Partially implemented after contact-data amendment** | DEC-04/DEC-17; EXT-DEC-INST-01 | Original Task 04/06 behavior exists; structured name, CPF, phone, address, shared-person linkage, and CEP assistance are planned in Task 28. |
-| RF-03 | Original MVP | **Partially implemented** | DEC-05; EXT-DEC-INST-01 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred; amended all-field editing, role-specific activation, and Keycloak reconciliation are planned in Task 28. |
-| RF-07/RF-08 | Original post-MVP | Implemented | DEC-04/DEC-17; EXT-DEC-INST-01 | Task 29: instructor employee registration, management, provisioning, dual-role linkage, and independent activation; employee API validation/error regressions verified. Integrated viewport verification remains in Task 37. |
+| RF-01/RF-02 | Original MVP | Implemented | DEC-04/DEC-17; EXT-DEC-INST-01 | Task 28 structured person/contact/address data, shared identity, and CEP assistance; Task 37 automated and scoped browser checks passed. |
+| RF-03 | Original MVP | **Partially implemented** | DEC-05; EXT-DEC-INST-01 | CA-03.1–CA-03.3 and CA-03.5–CA-03.6 implemented and integration-tested, including all-field editing, independent role activity, and durable Keycloak reconciliation. CA-03.4 remains deferred and unsatisfied. |
+| RF-07/RF-08 | Original post-MVP | Implemented | DEC-04/DEC-17; EXT-DEC-INST-01 | Task 29: instructor employee registration, management, provisioning, dual-role linkage, and independent activation; employee API validation/error regressions verified. Task 37 technical checks passed at all three required viewports; intended-user and soak evidence remain pending. |
 | Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
 | Frontend design system and existing UI restyle | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 08: shared MUI theme, shells, and restyle; preserves Tasks 01–07 behavior. |
@@ -1720,12 +1720,12 @@ unchecked boxes or planned files.
 | RF-11/RF-12 | Original MVP | Implemented | DEC-06/DEC-18 | Task 10: client-scoped structured draft, physical/health validation, separate persistence, and non-sensitive audit evidence. |
 | RF-13 | Original MVP | Implemented | DEC-06 | Task 12: shared authoritative validation, intentional atomic completion timestamp, and a downstream completed-onboarding contract. |
 | EXT-RF-AI-01 | Approved MVP extension | Implemented | DEC-06/08/18 | Task 11: client-scoped resumable interview, final validated structured extraction, bounded context, idempotency, and five-day raw-message retention. |
-| EXT-RF-LANG-01 | Approved cross-cutting extension | Planned verification | RNF02/RNF03 | Applies to all UI work; MVP language audit in Tasks 18–19. |
+| EXT-RF-LANG-01 | Approved cross-cutting extension | Scoped verification performed | RNF02/RNF03 | Task 37 audited affected administrative/instructor journeys in pt-BR at three sizes. Hosted Keycloak screens were not newly browser-audited; no blanket verification claim. |
 | RF-17 | Original MVP | Implemented | DEC-07/DEC-15 | Task 13 plus follow-up: immutable version lifecycle, current selection, responsibility metadata, manual proposal path, and the client-wide single-draft rule. |
 | RF-15 | Original MVP | Implemented | DEC-07/08/15/18 | Task 14 plus follow-up: completed-onboarding-scoped AI generation and reuse of the sole client draft; instructor review remains mandatory. |
 | RF-16 | Original MVP | Implemented | DEC-07/15/16 | Task 15: authenticated client-only current-sheet API and responsive exercise view, including empty/loading/error states. |
 | RF-18 | Original MVP | Implemented | DEC-08/DEC-18 | Task 16 plus follow-up: client-only persisted training chat, bounded own-context, idempotency, controlled failures, and validated editing of the sole client draft regardless of creator. |
-| RF-19 | Original MVP | Implemented | DEC-07/08/15; EXT-DEC-EQP-01 | Tasks 17 and 25: client-confirmed structured adaptation proposals, instructor review, immutable current-version transition, preserved history, and server-validated active EquipmentModel UUID references for machine-dependent candidates. Active units express catalog inventory only, never live availability. |
+| RF-19 | Original MVP | Implemented | DEC-07/08/15; EXT-DEC-EQP-01 | Tasks 17, 25, and 36: client-confirmed adaptation, instructor review, immutable history, and server-validated EquipmentModel references. New/changed machine items require an active operational unit; exactly unchanged approved items retain their history. Inventory and operational state never imply live availability. |
 | MVP frontend polish | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 18: shared visual, responsive, loading/empty/error, pt-BR copy, and accessibility consistency pass; Task 19 retains end-to-end verification. |
 | MVP integrated verification | Original MVP verification | Planned | DEC-16 | Task 19. |
 | EXT-RF-SOC-01 | Approved post-MVP extension | Implemented | EXT-DEC-SOC-01 | Task 20. |
@@ -1734,7 +1734,7 @@ unchecked boxes or planned files.
 | RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Implemented | Resolved EXT-DEC-EQP-01 | Task 21: authorized two-level model/unit management and public active catalog with derived total. |
 | RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
 | EXT-RF-PRES-01 | Approved post-MVP extension | Implemented | Task 22/EXT-DEC-PRES-01 | Task 23. |
-| EXT-RF-INST-01–EXT-RF-INST-05 | Approved post-MVP extension | Partially implemented | RF-07/RF-08; EXT-DEC-INST-01 | Task 31 single-draft review and approval implemented; remaining scope tracked in Tasks 30–36 plus Task 37 integrated verification. |
+| EXT-RF-INST-01–EXT-RF-INST-05 | Approved post-MVP extension | Implemented; Task 37 done by user direction | RF-07/RF-08; EXT-DEC-INST-01 | Tasks 28–36 implemented. Task 37 technical checks passed: 248 backend tests including PostgreSQL, 115 frontend tests, scoped browser/performance/restart checks. User requested Task 37 closure and will perform the checklist; checklist results and eight-hour soak remain unverified follow-up evidence, not passing criteria. See [Task 37 report](tasks/37-instructor-role-integrated-verification-report.md). |
 | Remaining RF-06, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Codex workflow

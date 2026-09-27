@@ -106,3 +106,20 @@ test('routes failed post-erasure reconciliation to the surviving employee', asyn
   expect(screen.queryByRole('heading', { name: 'Editar cliente' })).not.toBeInTheDocument()
   confirm.mockRestore()
 })
+
+test('shows processing and prevents duplicate shared-account synchronization', async () => {
+  let resolve!: (value: unknown) => void
+  const pending = new Promise((done) => { resolve = done })
+  const fetchMock=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>[client]}).mockResolvedValueOnce({ok:true,json:async()=>client}).mockImplementationOnce(()=>pending)
+  vi.stubGlobal('fetch',fetchMock)
+  render(<ClientManagement accessToken="token" onUnauthenticated={vi.fn()}/>)
+  fireEvent.click(await screen.findByRole('button',{name:/Ada Lovelace/}))
+  const provision=await screen.findByRole('button',{name:'Provisionar acesso'})
+  fireEvent.click(provision)
+  expect(screen.getByText('Salvando dados e sincronizando acesso do cliente')).toBeInTheDocument()
+  expect(provision).toBeDisabled()
+  expect(provision).toHaveTextContent('Sincronizando...')
+  fireEvent.click(provision);expect(fetchMock).toHaveBeenCalledTimes(3)
+  resolve({ok:true,json:async()=>({...client,identity_provisioned:true})})
+  await screen.findByText('Acesso do cliente sincronizado.')
+})

@@ -15,3 +15,9 @@ export async function fetchInstructorPostImage(token: string, postId: string, im
   return URL.createObjectURL(await response.blob())
 }
 export type { ProgressUpdate }
+
+export async function fetchInstructorCommentImage(token: string, postId: string, commentId: string): Promise<string> {
+  const response = await fetch(`${apiBaseUrl}/instructor/social/posts/${postId}/comments/${commentId}/image`, { headers: { Authorization: `Bearer ${token}` } })
+  if (!response.ok) throw new Error('Não foi possível carregar a imagem do comentário.')
+  return URL.createObjectURL(await response.blob())
+}

@@ -97,6 +97,21 @@ def feed(
         raise forbidden_or_missing(exc) from None
 
 
+def comment_response(session: Session, item: PostComment, author_client: Client):
+    profile = service.profile_for_client(session, author_client.id)
+    image = service.comment_image(session, item.id)
+    return CommentResponse(
+        id=item.id,
+        author=ProfileSummary(
+            id=profile.id, name=author_client.name, nickname=profile.nickname, has_image=False
+        ),
+        content=item.content or "",
+        created_at=item.created_at.isoformat(),
+        is_own=False,
+        image=MediaSummary(id=item.id, width=image.width, height=image.height) if image else None,
+    )
+
+
 @router.get("/posts/{update_id}", response_model=PostDetailResponse)
 def detail(update_id: UUID, session: DatabaseSession, instructor: Instructor) -> PostDetailResponse:
     try:
@@ -112,19 +127,7 @@ def detail(update_id: UUID, session: DatabaseSession, instructor: Instructor) ->
             like_count=service.like_count(session, update.id),
             liked_by_viewer=False,
             comments=[
-                CommentResponse(
-                    id=item.id,
-                    author=ProfileSummary(
-                        id=service.profile_for_client(session, author_client.id).id,
-                        name=author_client.name,
-                        nickname=service.profile_for_client(session, author_client.id).nickname,
-                        has_image=False,
-                    ),
-                    content=item.content or "",
-                    created_at=item.created_at.isoformat(),
-                    is_own=False,
-                )
-                for item, author_client in comments
+                comment_response(session, item, author_client) for item, author_client in comments
             ],
         )
     except (SocialForbiddenError, SocialNotFoundError) as exc:
@@ -144,5 +147,21 @@ def image(
         if item is None:
             raise SocialNotFoundError
         return Response(item.content, media_type=item.media_type)
+    except (SocialForbiddenError, SocialNotFoundError) as exc:
+        raise forbidden_or_missing(exc) from None
+
+
+@router.get("/posts/{update_id}/comments/{comment_id}/image")
+def comment_image(
+    update_id: UUID, comment_id: UUID, session: DatabaseSession, instructor: Instructor
+) -> Response:
+    try:
+        comments = service.instructor_comments(
+            session, instructor.subject, update_id, 1, comment_id
+        )
+        image = service.comment_image(session, comment_id) if comments else None
+        if image is None:
+            raise SocialNotFoundError
+        return Response(image.content, media_type=image.media_type)
     except (SocialForbiddenError, SocialNotFoundError) as exc:
         raise forbidden_or_missing(exc) from None

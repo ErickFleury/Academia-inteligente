@@ -3,6 +3,8 @@ import { afterEach, expect, test, vi } from 'vitest'
 
 import { OnboardingConversationPage } from './onboarding-conversation-page'
 
+vi.mock('./occupancy', () => ({ getOccupancy: async () => ({ occupancy: 0 }) }))
+
 const emptyConversation = {
   messages: [],
   missing_required_fields: ['training_goal', 'height_cm'],
