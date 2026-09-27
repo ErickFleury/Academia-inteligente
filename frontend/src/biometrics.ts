@@ -56,11 +56,32 @@ const messages: Record<string, string> = {
   biometric_configuration_invalid: 'O serviço facial ainda não está configurado. Tente novamente após a configuração.',
   provider_unavailable: 'O serviço facial não respondeu. Consulte o resultado antes de fazer outra captura.',
   command_conflict: 'Esta solicitação já foi usada com outros dados. Atualize a página e confira o cadastro.',
+  unknown_face: 'Rosto não reconhecido. Confira o cadastro facial ou tente uma nova captura.',
+  ambiguous_face: 'Mais de um cadastro pode corresponder ao rosto. Faça uma nova captura.',
+  match_below_threshold: 'Não foi possível identificar o rosto com segurança. Faça uma nova captura.',
+  staff_only: 'Este cadastro não possui o papel de cliente. Acesso de funcionários não está disponível neste teste.',
+  client_inactive: 'O cliente está inativo e não pode entrar.',
+  already_inside: 'O cliente já está dentro. A contagem foi mantida.',
+  already_outside: 'O cliente já está fora. A contagem foi mantida.',
+  processing: 'A captura ainda está sendo processada. Consulte o resultado em instantes.',
+  capture_required: 'Faça uma captura para reconhecer o rosto.',
+  enrollment_unavailable: 'O cadastro facial está ausente ou foi revogado.',
+  attempt_not_capturable: 'Esta tentativa não aceita outra captura. Consulte o resultado ou inicie uma nova tentativa.',
+  enrollment_changed: 'O cadastro facial mudou. Inicie uma nova tentativa.',
+  state_changed: 'A presença mudou em outra operação. Confira o estado atualizado antes de continuar.',
+  state_corrected: 'A presença foi corrigida. Inicie uma nova tentativa.',
+  passage_not_authorized: 'A autorização não está mais disponível. Inicie uma nova tentativa.',
+  attempt_expired: 'A tentativa expirou. Inicie uma nova tentativa.',
+  attempt_canceled: 'Tentativa cancelada.',
+  attempt_superseded: 'Outra tentativa substituiu esta solicitação.',
+  attempt_not_found: 'A tentativa não está disponível nesta sessão.',
+  correction_invalid: 'Informe o motivo da correção, com até 1.000 caracteres.',
+  history_cursor_invalid: 'Atualize o histórico para consultar os eventos novamente.',
 }
 export function biometricMessage(reason: unknown): string {
   const code = reason instanceof Error ? reason.message : String(reason)
   if (reason instanceof ApiRequestError && reason.status === 401) return 'Sua sessão expirou. Entre novamente.'
   if (reason instanceof ApiRequestError && reason.status === 403) return 'Somente administradores podem gerenciar o cadastro facial.'
-  return messages[code] ?? 'Não foi possível concluir a operação facial. Seus dados do formulário foram preservados.'
+  return messages[code] ?? 'Não foi possível concluir a operação facial. Consulte o resultado e tente novamente.'
 }
 export function isBiometricError(reason: unknown) { return reason instanceof Error && reason.message in messages }

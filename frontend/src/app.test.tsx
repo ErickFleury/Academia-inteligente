@@ -9,6 +9,16 @@ beforeEach(() => {
   sessionStorage.clear()
 })
 
+test.each(['client', 'instructor'])('protects the facial workspace from the %s role', async (role) => {
+  sessionStorage.setItem('academia.session', JSON.stringify({ accessToken: 'access-token', refreshToken: 'refresh-token', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: [role] }))
+  window.history.replaceState({}, '', '/admin/acesso-facial')
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'completed' }) })
+  vi.stubGlobal('fetch', fetchMock)
+  render(<App />)
+  expect(await screen.findByRole('heading', { name: 'Área restrita' })).toBeInTheDocument()
+  expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/biometrics'))).toBe(false)
+})
+
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()

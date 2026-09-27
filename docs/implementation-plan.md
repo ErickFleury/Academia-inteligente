@@ -215,7 +215,7 @@ be performed during this feature.
 | 40 | FACE-IMPL-03 | Mandatory registration, shared enrollment, capture UI and erasure | Complete |
 | 41 | FACE-IMPL-04 | Recognition, entry/exit policy and simulated release | Complete |
 | 42 | FACE-IMPL-05 | Confirmed passages, state corrections and occupancy | Complete |
-| 43 | FACE-IMPL-06 | Acesso facial admin workspace and integrated UI | Planned |
+| 43 | FACE-IMPL-06 | Acesso facial admin workspace and integrated UI | Complete |
 | 44 | FACE-IMPL-07 | Authorized reset and owner-only integrated verification | Planned |
 
 Complete/test/review/commit each task before proceeding. Stop for unforeseen

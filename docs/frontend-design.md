@@ -140,6 +140,14 @@ palette, or page composition.
   Keep transient images out of component state and persistent browser storage.
   Failed/uncertain requests preserve ordinary form fields and expose result
   recovery; changing identity invalidates the prior readiness proof.
+- **Facial access:** `/admin/acesso-facial` uses the AdminShell with the simulated
+  passage panel and reasoned presence correction alongside each other on desktop,
+  stacked on phone/tablet, followed by filtered recent events. Keep recognition
+  and passage confirmation separate, show identified client names and expiration,
+  offer safe result recovery, and explain deferred liveness. Reuse WebcamCapture;
+  no upload field or automatic scanning. History is a responsive semantic list
+  with bounded cursor loading and localized result/time labels. Provider failure
+  must preserve the last occupancy count and show an explicit service retry.
 - **Onboarding:** Invitation entry leads into a deliberate client journey.
   Group physical and health fields into understandable sections/steps; show
   required/optional status and validation plainly. Conversation and structured

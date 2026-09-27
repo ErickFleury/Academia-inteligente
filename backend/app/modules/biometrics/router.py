@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,6 +17,7 @@ from app.modules.biometrics.enrollment import (
     owned_session,
 )
 from app.modules.biometrics.enrollment import session_status as staging_status
+from app.modules.biometrics.history import event_history, provider_status
 from app.modules.biometrics.images import read_capture
 from app.modules.biometrics.passages import PassageService
 from app.modules.clients.models import Account, PersonProfile
@@ -122,6 +123,49 @@ class StateResponse(BaseModel):
     inside: bool
     revision: int
     client_active: bool
+
+
+class EventResponse(BaseModel):
+    id: str
+    kind: Literal["audit", "correction"]
+    occurred_at: str
+    operation: str
+    result: str
+    client_id: UUID | None
+    person_name: str | None
+    direction: Literal["entry", "exit"] | None
+    reason: str | None
+
+
+class HistoryResponse(BaseModel):
+    items: list[EventResponse]
+    next_cursor: str | None
+
+
+class ProviderStatusResponse(BaseModel):
+    mode: Literal["disabled", "pilot"]
+    available: bool
+    cleanup_pending: int
+
+
+@router.get("/events", response_model=HistoryResponse)
+def recent_events(
+    administrator: Administrator,
+    session: DatabaseSession,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    cursor: Annotated[str | None, Query(max_length=512)] = None,
+    client_id: UUID | None = None,
+    result: Annotated[str | None, Query(max_length=60, pattern=r"^[a-z_]+$")] = None,
+    direction: Literal["entry", "exit"] | None = None,
+):
+    return event_history(
+        session, limit=limit, cursor=cursor, client_id=client_id, result=result, direction=direction
+    )
+
+
+@router.get("/provider-status", response_model=ProviderStatusResponse)
+def get_provider_status(administrator: Administrator, session: DatabaseSession, service: Access):
+    return provider_status(session, service)
 
 
 class CorrectionRequest(CommandRequest):

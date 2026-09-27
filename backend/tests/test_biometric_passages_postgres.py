@@ -47,6 +47,14 @@ def test_migration_roundtrip(sessions):
         assert session.scalars(select(OccupancyCorrection)).all() == []
 
 
+def test_history_pagination_on_postgres(sessions):
+    from test_biometric_history import verify_pagination
+
+    enrollment, access = services()
+    with sessions() as session:
+        verify_pagination(session, enrollment, access)
+
+
 @pytest.mark.parametrize("second_action", ["confirm", "correct"])
 def test_competing_commands_cannot_apply_two_transitions(sessions, second_action):
     passages, client_id, first, second = setup(sessions)

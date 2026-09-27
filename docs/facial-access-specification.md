@@ -1,6 +1,6 @@
 # Facial Access Pilot — Implementation Specification
 
-**Status:** FACE-IMPL-01–05 complete; the administrator workspace follows.
+**Status:** FACE-IMPL-01–06 complete; authorized reset and owner verification remain.
 See [Task 38 evidence](tasks/38-facial-provider-foundation.md) and
 [Task 39 evidence](tasks/39-facial-enrollment-and-cleanup.md) and
 [Task 40 evidence](tasks/40-mandatory-facial-registration.md) and

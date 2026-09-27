@@ -9,6 +9,7 @@ import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
 import { ClientManagement } from './client-management'
 import { EmployeeManagement } from './employee-management'
 import { AdminDashboard } from './admin-dashboard-page'
+import { FacialAccessPage } from './facial-access-page'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
 import { OnboardingForm } from './onboarding-form'
@@ -146,6 +147,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
   const isTrainingChatRoute = location.pathname === '/assistente'
   const isProgressRoute = location.pathname === '/feed'
   const isEquipmentManagementRoute = location.pathname === '/admin/equipamentos'
+  const isFacialAccessRoute = location.pathname === '/admin/acesso-facial'
   const isProfileRoute = location.pathname === '/perfil'
   const viewedProfileId = location.pathname.match(/^\/perfis\/([^/]+)$/)?.[1]
   const viewedPostId = location.pathname.match(/^\/publicacoes\/([^/]+)$/)?.[1]
@@ -298,7 +300,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><PostDetailPage accessToken={session.accessToken} onSignOut={endSession} postId={viewedPostId} /></ClientNavigationStateProvider>
   }
 
-  if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute) && !isAdministrator) {
+  if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute || isFacialAccessRoute) && !isAdministrator) {
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
         <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
@@ -317,12 +319,16 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return <EquipmentManagementPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
+  if (isFacialAccessRoute && session) {
+    return <FacialAccessPage accessToken={session.accessToken} onSignOut={endSession} onUnauthenticated={clearSession} />
+  }
+
   if (isAdministrativeRoute && session) {
     return (
       <AdminShell onSignOut={endSession}>
         <Stack spacing={3}>
           <PageHeader
-            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><RouterButtonLink to="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</RouterButtonLink><RouterButtonLink to="/admin/publicacoes" variant="outlined">Moderar publicações</RouterButtonLink></Stack>}
+            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><RouterButtonLink to="/admin/acesso-facial" variant="outlined">Acesso facial</RouterButtonLink><RouterButtonLink to="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</RouterButtonLink><RouterButtonLink to="/admin/publicacoes" variant="outlined">Moderar publicações</RouterButtonLink></Stack>}
             description="Acompanhe indicadores agregados e gerencie clientes e instrutores da academia."
             eyebrow="Operação"
             title="Painel administrativo"
