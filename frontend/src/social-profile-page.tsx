@@ -18,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import { WorkspaceIcon } from "./components/workspace-presentation";
 import { ClientShell } from "./components/application-shell";
 import { RouterButtonLink } from "./components/router-button-link";
 import {
@@ -191,8 +192,10 @@ function PostCards({
                     onLike(post);
                   }}
                   variant="text"
+                  aria-pressed={post.liked_by_viewer}
+                  sx={{ gap: 1, '& path': { fill: post.liked_by_viewer ? 'currentColor' : 'none' } }}
                 >
-                  {post.liked_by_viewer ? "♥" : "♡"} {post.like_count}
+                  <WorkspaceIcon name="heart" /> {post.like_count}
                 </Button>
                 <Button
                   aria-label="Abrir comentários"
@@ -201,8 +204,9 @@ function PostCards({
                     openPost(post.id);
                   }}
                   variant="text"
+                  sx={{ gap: 1 }}
                 >
-                  💬 {post.comment_count}
+                  <WorkspaceIcon name="comment" /> {post.comment_count}
                 </Button>
               </Stack>
             </Stack>
@@ -386,7 +390,7 @@ export function SocialProfilePage({
   }
   return (
     <ClientShell onSignOut={onSignOut} showClientNavigation>
-      <Stack spacing={3} sx={{ maxWidth: 800, minWidth: 0 }}>
+      <Stack spacing={3} sx={{ maxWidth: 800, minWidth: 0, mx: "auto" }}>
         <PageHeader
           eyebrow={isOwner ? "Meu perfil" : "Perfil"}
           title={profile ? profile.nickname || profile.name : "Perfil"}
@@ -401,7 +405,7 @@ export function SocialProfilePage({
           <LoadingState label="Carregando perfil" />
         ) : (
           <>
-            <Card component="section">
+            <Card component="section" sx={{ borderTop: "3px solid", borderTopColor: "primary.main" }}>
               <CardContent>
                 <Stack spacing={2.5}>
                   <Stack
@@ -419,7 +423,7 @@ export function SocialProfilePage({
                         <Avatar
                           alt={`Foto de ${profile.name}`}
                           src={imageUrl ?? undefined}
-                          sx={{ height: 96, width: 96 }}
+                          sx={{ height: 96, width: 96, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
                         >
                           {profile.name.slice(0, 1)}
                         </Avatar>
@@ -428,7 +432,7 @@ export function SocialProfilePage({
                       <Avatar
                         alt={`Foto de ${profile.name}`}
                         src={imageUrl ?? undefined}
-                        sx={{ height: 96, width: 96 }}
+                        sx={{ height: 96, width: 96, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
                       >
                         {profile.name.slice(0, 1)}
                       </Avatar>
@@ -456,7 +460,7 @@ export function SocialProfilePage({
                           aria-label="Configurações do perfil"
                           onClick={() => setSettingsDialogOpen(true)}
                         >
-                          <span aria-hidden="true">⚙</span>
+                          <WorkspaceIcon name="settings" />
                         </IconButton>
                       </Stack>
                     ) : (
@@ -533,7 +537,7 @@ export function SocialProfilePage({
                       </Typography>
                     )
                   )}
-                  <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+                  <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap", borderTop: "1px solid", borderColor: "divider", pt: 2 }}>
                     <Typography>{profile.follower_count} seguidores</Typography>
                     {isOwner && profile.pending_follow_request_count > 0 && (
                       <IconButton
@@ -655,7 +659,7 @@ export function SocialProfilePage({
                           direction="row"
                           key={request.id}
                           spacing={2}
-                          sx={{ alignItems: "center", justifyContent: "space-between" }}
+                          sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}
                         >
                           <Typography>
                             {request.nickname || request.name}

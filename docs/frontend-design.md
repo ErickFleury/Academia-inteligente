@@ -326,3 +326,10 @@ these areas so administrative and Keycloak surfaces retain their design.
 Page headers use a compact eyebrow, readable title, description and a divider;
 empty states use a quiet bordered surface. No decorative photographic assets,
 new destinations or application capabilities are introduced by this redesign.
+
+Client content keeps the existing actions in place: current and draft plans
+have distinct accent borders, exercise blocks keep sets/repetitions/rest
+together, and health forms use numbered section headers without changing
+completion gates. Chats use quiet sender-specific bubbles and a bordered
+sticky composer. Social cards group identity and time above content, with
+persistent actions below a divider; use shared outline icons instead of emoji.

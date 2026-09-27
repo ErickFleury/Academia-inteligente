@@ -54,17 +54,18 @@ export function ChatMessage({ role, children }: { role: 'user' | 'assistant'; ch
       component="article"
       sx={{
         alignSelf: isUser ? 'flex-end' : 'flex-start',
-        bgcolor: isUser ? 'primary.main' : 'background.paper',
-        border: isUser ? 0 : '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2.5,
-        color: isUser ? 'primary.contrastText' : 'text.primary',
-        maxWidth: { xs: '92%', sm: '76%' },
+        bgcolor: isUser ? 'rgba(255,133,100,0.10)' : 'background.paper',
+        border: '1px solid',
+        borderColor: isUser ? 'rgba(255,133,100,0.3)' : 'divider',
+        borderRadius: isUser ? '20px 20px 4px 20px' : '4px 20px 20px 20px',
+        color: 'text.primary',
+        maxWidth: { xs: '96%', sm: '84%' },
+        overflowWrap: 'anywhere',
         px: 2,
         py: 1.5,
       }}
     >
-      <Typography color={isUser ? 'inherit' : 'primary.main'} variant="overline">
+      <Typography color="primary.main" variant="overline">
         {isUser ? 'Você' : 'Assistente'}
       </Typography>
       <Typography component="p" sx={{ whiteSpace: 'pre-wrap' }}>{children}</Typography>

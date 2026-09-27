@@ -120,12 +120,15 @@ function BooleanSelect({
   )
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, number, children }: { title: string; number: string; children: ReactNode }) {
   return (
     <Card component="section">
-      <CardContent>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack spacing={2.5}>
-          <Typography component="h2" variant="h3">{title}</Typography>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Typography aria-hidden="true" sx={{ color: 'primary.main', fontWeight: 800, fontSize: '1.2rem' }}>{number}</Typography>
+            <Typography component="h2" variant="h3">{title}</Typography>
+          </Stack>
           {children}
         </Stack>
       </CardContent>
@@ -220,7 +223,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut, instructor
   if (loading) return wrap(<LoadingState label="Carregando seu onboarding" />)
 
   return wrap(
-      <Stack spacing={3} sx={{ maxWidth: 840 }}>
+      <Stack spacing={3} sx={{ maxWidth: 840, mx: 'auto', minWidth: 0 }}>
         <PageHeader
           action={instructorClient ? <Button onClick={onBack} variant="outlined">Voltar aos clientes</Button> : <RouterButtonLink to="/assistente" variant="outlined">Responder por conversa</RouterButtonLink>}
           description="Salve seu progresso quando quiser. Os campos marcados como necessários serão validados na conclusão do onboarding."
@@ -230,7 +233,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut, instructor
         {error && <StatusNotice severity="error">{error}</StatusNotice>}
         {error && !draft && <Button onClick={() => setReload((value) => value + 1)}>Tentar novamente</Button>}
         {success && <StatusNotice severity="success">{success}</StatusNotice>}
-        <Section title="Objetivo e experiência">
+        <Section number="01" title="Objetivo e experiência">
           <TextField
             disabled={readOnly}
             fullWidth
@@ -260,7 +263,7 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut, instructor
             </Select>
           </FormControl>
         </Section>
-        <Section title="Dados físicos">
+        <Section number="02" title="Dados físicos">
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
               disabled={readOnly}
@@ -292,15 +295,15 @@ export function OnboardingForm({ accessToken, onCompleted, onSignOut, instructor
             />
           </Stack>
         </Section>
-        <Section title="Limitações e queixas">
+        <Section number="03" title="Limitações e queixas">
           <BooleanSelect disabled={readOnly} id="limitations-answer" label="Você tem alguma limitação ou queixa relevante?" onChange={(value) => update('has_limitations_or_complaints', value)} value={values.has_limitations_or_complaints} />
           {values.has_limitations_or_complaints && <TextField disabled={readOnly} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte quais são as limitações ou queixas" multiline minRows={4} onChange={(event) => update('limitations_or_complaints', event.target.value)} value={values.limitations_or_complaints ?? ''} />}
         </Section>
-        <Section title="Medicações">
+        <Section number="04" title="Medicações">
           <BooleanSelect disabled={readOnly} id="medications-answer" label="Você utiliza alguma medicação?" onChange={(value) => update('uses_medications', value)} value={values.uses_medications} />
           {values.uses_medications && <TextField disabled={readOnly} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Quais medicações você utiliza?" multiline minRows={4} onChange={(event) => update('medications', event.target.value)} value={values.medications ?? ''} />}
         </Section>
-        <Section title="Condições e histórico de saúde">
+        <Section number="05" title="Condições e histórico de saúde">
           <BooleanSelect disabled={readOnly} id="health-conditions-answer" label="Você tem alguma condição de saúde ou histórico relevante?" onChange={(value) => update('has_health_conditions', value)} value={values.has_health_conditions} />
           {values.has_health_conditions && <TextField disabled={readOnly} fullWidth helperText="Necessário quando a resposta for sim · até 2.000 caracteres" label="Conte as condições ou o histórico relevante" multiline minRows={4} onChange={(event) => update('health_conditions', event.target.value)} value={values.health_conditions ?? ''} />}
         </Section>

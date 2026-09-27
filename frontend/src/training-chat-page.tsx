@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 
+import { WorkspaceIcon } from './components/workspace-presentation'
 import { ClientShell } from './components/application-shell'
 import { RouterButtonLink } from './components/router-button-link'
 import { ChatMessage, EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
@@ -61,13 +62,13 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível revisar a proposta.') }
   }
 
-  if (!chat || hasCurrentPlan === null) return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando assistente de treino" /></ClientShell>
+  if (!chat || hasCurrentPlan === null) return <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md"><LoadingState label="Carregando assistente de treino" /></ClientShell>
 
   const suggestions = chat.messages.filter((item) => item.role === 'assistant' && item.adaptation_suggested && item.reply_to_client_request_id && item.adaptation_reason)
 
   return (
-    <ClientShell onSignOut={onSignOut} showClientNavigation>
-      <Stack spacing={3} sx={{ maxWidth: 880, minWidth: 0 }}>
+    <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md">
+      <Stack spacing={3} sx={{ maxWidth: 880, mx: 'auto', width: '100%', minWidth: 0 }}>
         <PageHeader
           action={<RouterButtonLink to="/treino" variant="outlined">Ver meu treino</RouterButtonLink>}
           description="Tire dúvidas sobre o seu plano atual e seus exercícios. Mudanças no treino precisam de revisão profissional."
@@ -75,17 +76,17 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
           title="Como posso ajudar hoje?"
         />
         {error && <Stack spacing={1} sx={{ alignItems: 'flex-start' }}><StatusNotice severity="error">{error}</StatusNotice>{retry && <Button onClick={() => void submit(retry.message, retry.id)} variant="outlined">Tentar novamente</Button>}</Stack>}
-        <Stack aria-live="polite" aria-relevant="additions" spacing={1.5} sx={{ minHeight: 280 }}>
+        <Stack aria-live="polite" aria-relevant="additions" spacing={1.5} sx={{ minHeight: 280, p: { xs: 1, sm: 2 }, borderRadius: 3, bgcolor: 'rgba(16,24,27,0.35)' }}>
           {chat.messages.length === 0
             ? <EmptyState description="Pergunte sobre os exercícios, séries, repetições ou orientações do seu treino atual." title="Seu espaço para tirar dúvidas" />
             : chat.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role}>{item.content}</ChatMessage>)}
         </Stack>
         <Box aria-hidden="true" ref={chatEndRef} sx={{ height: 1, scrollMarginBottom: { xs: 184, sm: 132 } }} />
-        <Card aria-busy={pending !== null} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky' }}>
+        <Card aria-busy={pending !== null} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky', zIndex: 1, borderColor: 'rgba(255,133,100,0.35)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key !== 'Enter') return; event.preventDefault(); void submit(message) }} placeholder="Ex.: Como devo fazer este exercício?" value={message} />
-              <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained">{pending ? 'Enviando…' : 'Enviar'}</Button>
+              <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained" startIcon={<WorkspaceIcon name="send" />}>{pending ? 'Enviando…' : 'Enviar'}</Button>
             </Stack>
           </CardContent>
         </Card>

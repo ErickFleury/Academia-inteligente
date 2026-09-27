@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, Chip, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 
+import { WorkspaceIcon } from './components/workspace-presentation'
 import { ClientShell } from './components/application-shell'
 import { RouterButtonLink } from './components/router-button-link'
 import { ChatMessage, EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
@@ -73,13 +74,13 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
   }
 
   if (!conversation) {
-    return <ClientShell onSignOut={onSignOut} showClientNavigation><LoadingState label="Carregando conversa de onboarding" /></ClientShell>
+    return <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md"><LoadingState label="Carregando conversa de onboarding" /></ClientShell>
   }
 
   const missing = conversation.missing_required_fields.map((field) => fieldLabels[field] ?? field)
   return (
-    <ClientShell onSignOut={onSignOut} showClientNavigation>
-      <Stack spacing={3} sx={{ maxWidth: 880 }}>
+    <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md">
+      <Stack spacing={3} sx={{ maxWidth: 880, mx: 'auto', width: '100%' }}>
         <PageHeader
           action={<RouterButtonLink to="/onboarding" variant="outlined">Preencher formulário</RouterButtonLink>}
           description="Converse no seu ritmo. Quando a entrevista estiver pronta, as informações são validadas antes de entrar no seu onboarding."
@@ -92,12 +93,12 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
               <Typography component="h2" variant="h3">Progresso do onboarding</Typography>
               {conversation.completion_ready
                 ? <StatusNotice severity="success">As informações obrigatórias estão prontas para a próxima etapa.</StatusNotice>
-                : <><Typography color="text.secondary">Ainda precisamos destas informações:</Typography><Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>{missing.map((field) => <Chip key={field} label={field} />)}</Stack></>}
+                : <><Typography color="text.secondary">Ainda precisamos destas informações:</Typography><Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>{missing.map((field) => <Chip key={field} label={field} />)}</Stack></>}
             </Stack>
           </CardContent>
         </Card>
         {error && <Stack spacing={1}><StatusNotice severity="error">{error}</StatusNotice>{retry && <Box><Button onClick={() => void submit(retry.message, retry.requestId)} variant="outlined">Tentar novamente</Button></Box>}</Stack>}
-        <Stack aria-live="polite" spacing={1.5} sx={{ minHeight: 240 }}>
+        <Stack aria-live="polite" spacing={1.5} sx={{ minHeight: 240, p: { xs: 1, sm: 2 }, borderRadius: 3, bgcolor: 'rgba(16,24,27,0.35)' }}>
           {conversation.messages.length === 0
             ? <EmptyState description="Você pode responder por mensagem ou usar o formulário quando preferir." title="Comece quando estiver pronto" />
             : conversation.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role}>{item.content}</ChatMessage>)}
@@ -106,7 +107,7 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
         {conversation.messages.length === 0 && <Box><Button disabled={pending !== null} onClick={() => void submit('Quero começar meu onboarding.')} variant="contained">Começar conversa</Button></Box>}
         {draft?.status !== 'completed' && (conversation.completion_ready
           ? <Card component="section"><CardContent><Stack spacing={1.5}><Typography component="h2" variant="h3">Revise suas informações</Typography><Typography color="text.secondary">Confira os dados no formulário antes de concluir o onboarding.</Typography><Box><RouterButtonLink to="/onboarding" variant="contained">Revisar e confirmar informações</RouterButtonLink></Box></Stack></CardContent></Card>
-          : <Card component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ position: 'sticky', bottom: 16 }}>
+          : <Card component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ position: 'sticky', bottom: 16, zIndex: 1, borderColor: 'rgba(255,133,100,0.35)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
             <CardContent>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                 <TextField
@@ -123,7 +124,7 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
                   placeholder="Conte com suas palavras o que você quer alcançar."
                   value={message}
                 />
-                <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained">{pending ? 'Enviando…' : 'Enviar'}</Button>
+                <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained" startIcon={<WorkspaceIcon name="send" />}>{pending ? 'Enviando…' : 'Enviar'}</Button>
               </Stack>
             </CardContent>
           </Card>)}

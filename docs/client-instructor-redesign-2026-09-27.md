@@ -33,3 +33,12 @@ needed. Individual commits can be reverted with `git revert <commit>`; revert
 later commits first when they touch the same presentation code. If this branch
 is merged/pushed, use new revert commits rather than rewriting shared history.
 The final verification section records the exact commit range and results.
+
+## Implementation evidence
+
+- Foundation checkpoint: `d2c1815`; 16 navigation/area-switch tests and TypeScript
+  passed. The menu order, responsive drawer and authorization-dependent switch
+  remain intact.
+- Client content checkpoint: 21 targeted client/social regression tests and
+  TypeScript passed. Changes are limited to markup, styles and accessible
+  presentation; existing request handlers and persistence contracts are retained.
