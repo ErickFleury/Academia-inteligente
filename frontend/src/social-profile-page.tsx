@@ -231,6 +231,8 @@ export function SocialProfilePage({
   const [profile, setProfile] = useState<SocialProfile | null>(null);
   const [posts, setPosts] = useState<SocialPost[] | null>(null);
   const [presence, setPresence] = useState<ProfilePresence | null>(null);
+  const [presenceSaving, setPresenceSaving] = useState(false);
+  const [presenceError, setPresenceError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -259,11 +261,27 @@ export function SocialProfilePage({
   };
   useEffect(load, [accessToken, profileId]);
   useEffect(() => {
+    let active = true;
+    setPresence(null);
+    setPresenceError(null);
     if (isOwner)
       void getOwnProfilePresence(accessToken)
-        .then(setPresence)
-        .catch(() => undefined);
+        .then((value) => { if (active) setPresence(value); })
+        .catch(() => { if (active) setPresenceError("Não foi possível carregar a preferência de presença. Atualize a página para tentar novamente."); });
+    return () => { active = false; };
   }, [accessToken, isOwner]);
+  async function updatePresence(enabled: boolean) {
+    if (presenceSaving) return;
+    setPresenceSaving(true);
+    setPresenceError(null);
+    try {
+      setPresence(await updateOwnProfilePresence(accessToken, enabled));
+    } catch {
+      setPresenceError("Não foi possível salvar a preferência de presença. Tente novamente.");
+    } finally {
+      setPresenceSaving(false);
+    }
+  }
   useEffect(() => {
     if (!profile?.has_image) {
       setImageUrl(null);
@@ -448,7 +466,7 @@ export function SocialProfilePage({
                           {profile.nickname}
                         </Typography>
                       )}
-                      {profile.currently_present && (
+                      {(isOwner && presence ? presence.currently_present : profile.currently_present) && (
                         <Chip
                           color="success"
                           label="Na academia"
@@ -620,13 +638,8 @@ export function SocialProfilePage({
                         control={
                           <Switch
                             checked={presence.sharing_enabled}
-                            disabled={saving}
-                            onChange={(event) =>
-                              void updateOwnProfilePresence(
-                                accessToken,
-                                event.target.checked,
-                              ).then(setPresence)
-                            }
+                            disabled={saving || presenceSaving}
+                            onChange={(event) => void updatePresence(event.target.checked)}
                           />
                         }
                         label="Mostrar no meu perfil quando eu estiver na academia"
@@ -634,8 +647,10 @@ export function SocialProfilePage({
                     )}
                     <Typography color="text.secondary" variant="body2">
                       A presença começa desativada e é independente da
-                      visibilidade do perfil.
+                      visibilidade do perfil. A indicação aparece apenas com uma
+                      entrada confirmada e válida, até a saída.
                     </Typography>
+                    {presenceError && <StatusNotice severity="error">{presenceError}</StatusNotice>}
                     <PasswordRecoveryAction accessToken={accessToken} />
                   </Stack>
                 </DialogContent>
