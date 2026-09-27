@@ -6,9 +6,7 @@ import { AdminShell, ClientNavigationStateProvider, ClientShell, PublicShell } f
 import { RouterButtonLink } from './components/router-button-link'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
-import { ClientManagement } from './client-management'
-import { EmployeeManagement } from './employee-management'
-import { AdminDashboard } from './admin-dashboard-page'
+import { AdminWorkspace } from './admin-workspace'
 import { FacialAccessPage } from './facial-access-page'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
@@ -328,17 +326,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
   if (isAdministrativeRoute && session) {
     return (
       <AdminShell onSignOut={endSession}>
-        <Stack spacing={3}>
-          <PageHeader
-            action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><RouterButtonLink to="/admin/acesso-facial" variant="outlined">Acesso facial</RouterButtonLink><RouterButtonLink to="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</RouterButtonLink><RouterButtonLink to="/admin/publicacoes" variant="outlined">Moderar publicações</RouterButtonLink></Stack>}
-            description="Acompanhe indicadores agregados e gerencie clientes e instrutores da academia."
-            eyebrow="Operação"
-            title="Painel administrativo"
-          />
-          <AdminDashboard accessToken={session.accessToken} onUnauthenticated={clearSession} />
-          <ClientManagement accessToken={session.accessToken} onUnauthenticated={clearSession} />
-          <EmployeeManagement accessToken={session.accessToken} onUnauthenticated={clearSession} />
-        </Stack>
+        <AdminWorkspace accessToken={session.accessToken} onUnauthenticated={clearSession} />
       </AdminShell>
     )
   }

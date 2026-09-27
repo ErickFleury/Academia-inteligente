@@ -340,3 +340,17 @@ retaining the existing focus-on-selection behavior. Show onboarding and training
 states as named chips and keep the responsible instructor visible. Plan lists
 retain their existing preview/edit/history controls with clearer selected
 surfaces, client identity, objective and grouped exercise details.
+
+## Administrative dashboard refinement (2026-09-27)
+
+AdminShell now reuses the same authenticated sidebar, typography, cards, icons
+and mobile drawer as the client/instructor areas. Its navigation contains the
+existing dashboard, facial access, equipment and moderation destinations. The
+administrative role has its own menu and does not inherit a client/instructor
+area switch. This extends the earlier visual refinement to administration;
+Keycloak presentation is unchanged.
+
+The dashboard groups the existing overview, client directory and instructor
+directory into accessible tabs. Existing aggregate indicators stay independent
+on failure. Weekly attendance uses proportional decorative bars alongside exact
+counts and week labels, retaining the distinction between entries and people.

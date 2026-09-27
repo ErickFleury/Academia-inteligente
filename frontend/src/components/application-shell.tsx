@@ -344,7 +344,7 @@ export function SidebarShell({
   renderNavigation,
   renderFooter,
 }: ShellProps & {
-  area: ApplicationArea;
+  area: ApplicationArea | "admin";
   contentMaxWidth?: ContentMaxWidth;
   navigationId: string;
   renderNavigation: (options: { id?: string; onNavigate?: () => void }) => ReactNode;
@@ -413,11 +413,11 @@ export function SidebarShell({
             </IconButton>
           </Stack>
           <Box sx={{ mt: 4 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ display: "block", px: 1.75, mb: 1.5 }}>{area === "client" ? "Área do cliente" : "Área do instrutor"}</Typography>
+            <Typography variant="overline" color="text.secondary" sx={{ display: "block", px: 1.75, mb: 1.5 }}>{area === "admin" ? "Administração" : area === "client" ? "Área do cliente" : "Área do instrutor"}</Typography>
             {renderNavigation({ id: navigationId, onNavigate: () => setMobileNavigationOpen(false) })}
           </Box>
           <Box sx={{ mt: "auto", pt: 3, pb: 1 }}>
-            <AreaSwitch area={area} onNavigate={() => setMobileNavigationOpen(false)} />
+            {area !== "admin" && <AreaSwitch area={area} onNavigate={() => setMobileNavigationOpen(false)} />}
             {renderFooter?.(() => setMobileNavigationOpen(false))}
             <SignOutButton fullWidth onSignOut={onSignOut} />
           </Box>
@@ -450,11 +450,11 @@ export function SidebarShell({
             <Brand />
           </Box>
           <Box sx={{ mt: 4 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ display: "block", px: 1.75, mb: 1.5 }}>{area === "client" ? "Área do cliente" : "Área do instrutor"}</Typography>
+            <Typography variant="overline" color="text.secondary" sx={{ display: "block", px: 1.75, mb: 1.5 }}>{area === "admin" ? "Administração" : area === "client" ? "Área do cliente" : "Área do instrutor"}</Typography>
             {renderNavigation({})}
           </Box>
           <Box sx={{ mt: "auto", pt: 3, pb: 1 }}>
-            <AreaSwitch area={area} />
+            {area !== "admin" && <AreaSwitch area={area} />}
             {renderFooter?.()}
             <SignOutButton fullWidth onSignOut={onSignOut} />
           </Box>
@@ -496,12 +496,25 @@ export function PublicShell({ children, contentMaxWidth = "md" }: { children: Re
   );
 }
 
+function AdminNavigation({ id, onNavigate }: { id?: string; onNavigate?: () => void }) {
+  const links: { href: string; label: string; icon: WorkspaceIconName }[] = [
+    { href: "/admin", label: "Painel administrativo", icon: "equipment" },
+    { href: "/admin/acesso-facial", label: "Acesso facial", icon: "profile" },
+    { href: "/admin/equipamentos", label: "Gerenciar equipamentos", icon: "training" },
+    { href: "/admin/publicacoes", label: "Moderar publicações", icon: "feed" },
+  ];
+  return <Stack component="nav" aria-label="Navegação da administração" id={id} spacing={0.5}>
+    {links.map(({ href, label, icon }) => <RouterButtonLink key={href} to={href} onClick={onNavigate}
+      aria-current={window.location.pathname === href ? "page" : undefined}
+      startIcon={<WorkspaceIcon name={icon} />} sx={navigationLinkSx} variant="text">{label}</RouterButtonLink>)}
+  </Stack>;
+}
+
 export function AdminShell({ children, onSignOut }: ShellProps) {
-  return (
-    <BaseShell area="Administração" onSignOut={onSignOut}>
-      {children}
-    </BaseShell>
-  );
+  return <SidebarShell area="admin" navigationId="navegacao-admin-movel" onSignOut={onSignOut}
+    renderNavigation={(props) => <AdminNavigation {...props} />}>
+    {children}
+  </SidebarShell>;
 }
 
 export function ClientShell({

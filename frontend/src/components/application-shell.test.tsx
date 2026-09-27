@@ -49,3 +49,15 @@ test("phone navigation opens in a collapsible side panel", () => {
   fireEvent.click(screen.getByRole("button", { name: "Fechar navegação" }));
   expect(screen.queryByRole("button", { name: "Fechar navegação" })).not.toBeInTheDocument();
 });
+
+test("admin sidebar retains every existing destination and its mobile menu", () => {
+  render(<AdminShell onSignOut={() => {}}>Painel</AdminShell>);
+  expect(screen.getByRole("navigation", { name: "Navegação da administração" })).toBeInTheDocument();
+  for (const [name, href] of [["Painel administrativo", "/admin"], ["Acesso facial", "/admin/acesso-facial"], ["Gerenciar equipamentos", "/admin/equipamentos"], ["Moderar publicações", "/admin/publicacoes"]]) {
+    expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
+  }
+  fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
+  expect(screen.getByRole("navigation", { name: "Navegação da administração" })).toHaveAttribute("id", "navegacao-admin-movel");
+  fireEvent.click(screen.getByRole("button", { name: "Fechar navegação" }));
+  expect(screen.queryByRole("button", { name: "Fechar navegação" })).not.toBeInTheDocument();
+});

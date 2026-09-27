@@ -9,6 +9,7 @@ import {
   type AttendanceHistory,
   type DashboardOccupancy,
 } from './admin-dashboard'
+import { WorkspaceIcon } from './components/workspace-presentation'
 import { LoadingState, StatusNotice } from './components/ui'
 
 type AdminDashboardProps = {
@@ -64,20 +65,24 @@ export function AdminDashboard({ accessToken, onUnauthenticated }: AdminDashboar
 
   return <Stack aria-label="Indicadores administrativos" component="section" spacing={2}>
     <Typography component="h2" variant="h3">Indicadores da academia</Typography>
-    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' } }}>
+    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' } }}>
       <Card component="section"><CardContent><Stack spacing={1.5} sx={{ minHeight: 156 }}>
-        <Typography color="text.secondary" variant="overline">Clientes ativos</Typography>
-        {activeClientsError ? <IndicatorError message={activeClientsError} onRetry={loadActiveClients} /> : activeClients === null ? <LoadingState label="Carregando clientes ativos" /> : <><Typography component="p" sx={{ color: 'primary.main', fontSize: '3rem', fontWeight: 850, lineHeight: 1 }}>{activeClients}</Typography><Typography color="text.secondary">contas de clientes ativas</Typography></>}
+        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', color: 'primary.main' }}><Typography variant="overline">Clientes ativos</Typography><WorkspaceIcon name="clients" /></Stack>
+        {activeClientsError ? <IndicatorError message={activeClientsError} onRetry={loadActiveClients} /> : activeClients === null ? <LoadingState label="Carregando clientes ativos" /> : <><Typography component="p" sx={{ color: 'primary.main', fontSize: 'clamp(2.8rem, 5vw, 4rem)', fontWeight: 850, lineHeight: 1 }}>{activeClients}</Typography><Typography color="text.secondary">contas de clientes ativas</Typography></>}
       </Stack></CardContent></Card>
       <Card component="section"><CardContent><Stack spacing={1.5} sx={{ minHeight: 156 }}>
-        <Typography color="text.secondary" variant="overline">Ocupação atual</Typography>
-        {occupancyError ? <IndicatorError message={occupancyError} onRetry={loadOccupancy} /> : occupancy === null ? <LoadingState label="Carregando ocupação" /> : <><Typography component="p" sx={{ color: 'primary.main', fontSize: '3rem', fontWeight: 850, lineHeight: 1 }}>{occupancy.occupancy}</Typography><Typography color="text.secondary">{occupancy.occupancy === 1 ? 'cliente na academia' : 'clientes na academia'}</Typography>{occupancy.status === 'current' ? <StatusNotice severity="success">Contagem atualizada pela entrada e saída confirmadas.</StatusNotice> : <StatusNotice severity="info">Última contagem conhecida. A fonte de acesso está desatualizada.</StatusNotice>}</>}
+        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', color: 'primary.main' }}><Typography variant="overline">Ocupação atual</Typography><WorkspaceIcon name="profile" /></Stack>
+        {occupancyError ? <IndicatorError message={occupancyError} onRetry={loadOccupancy} /> : occupancy === null ? <LoadingState label="Carregando ocupação" /> : <><Typography component="p" sx={{ color: 'primary.main', fontSize: 'clamp(2.8rem, 5vw, 4rem)', fontWeight: 850, lineHeight: 1 }}>{occupancy.occupancy}</Typography><Typography color="text.secondary">{occupancy.occupancy === 1 ? 'cliente na academia' : 'clientes na academia'}</Typography>{occupancy.status === 'current' ? <StatusNotice severity="success">Contagem atualizada pela entrada e saída confirmadas.</StatusNotice> : <StatusNotice severity="info">Última contagem conhecida. A fonte de acesso está desatualizada.</StatusNotice>}</>}
       </Stack></CardContent></Card>
     </Box>
     <Card component="section"><CardContent><Stack spacing={2}>
       <Box><Typography color="text.secondary" variant="overline">Frequência recente</Typography><Typography component="h3" variant="h4">Entradas confirmadas por semana</Typography><Typography color="text.secondary" variant="body2">Total de entradas confirmadas no controle de acesso. Não representa clientes únicos nem tempo de permanência.</Typography></Box>
       {attendanceError ? <IndicatorError message={attendanceError} onRetry={loadAttendance} /> : attendance === null ? <LoadingState label="Carregando frequência" /> : <Box component="ul" sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))', lg: 'repeat(8, minmax(0, 1fr))' }, listStyle: 'none', m: 0, p: 0 }}>
-        {attendance.weeks.map((week) => <Box component="li" key={week.week_start} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, minWidth: 0, p: 1.25 }}><Typography color="text.secondary" variant="caption">Semana de {formatWeek(week.week_start)}</Typography><Typography sx={{ color: 'primary.main', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2 }}>{week.confirmed_entries}</Typography><Typography color="text.secondary" variant="caption">entradas</Typography></Box>)}
+        {attendance.weeks.map((week) => <Box component="li" key={week.week_start} sx={{ minWidth: 0, p: 1.25, borderRadius: 1.5, bgcolor: 'rgba(245,247,244,0.025)' }}>
+          <Box aria-hidden="true" sx={{ height: 88, display: 'flex', alignItems: 'flex-end', mb: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ width: '100%', height: `${100 * week.confirmed_entries / Math.max(1, ...attendance.weeks.map((item) => item.confirmed_entries))}%`, bgcolor: 'primary.main', borderRadius: '6px 6px 0 0', maxWidth: 40, mx: 'auto' }} />
+          </Box>
+          <Typography color="text.secondary" variant="caption">Semana de {formatWeek(week.week_start)}</Typography><Typography sx={{ color: 'primary.main', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2 }}>{week.confirmed_entries}</Typography><Typography color="text.secondary" variant="caption">entradas</Typography></Box>)}
       </Box>}
     </Stack></CardContent></Card>
   </Stack>

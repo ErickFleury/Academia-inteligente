@@ -3,7 +3,7 @@ import { alpha, createTheme } from '@mui/material/styles'
 import { createContext } from 'react'
 import { theme } from '../theme'
 
-// Scoped to client/instructor shells; administration and authentication retain their theme.
+// Shared by authenticated client, instructor and admin sidebars; authentication retains its theme.
 export const WorkspacePresentationContext = createContext(false)
 export const workspaceTheme = createTheme(theme, {
   typography: {
