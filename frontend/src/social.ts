@@ -1,6 +1,6 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
-export type SocialProfile = { id: string; name: string; nickname: string | null; biography: string | null; visible_to_clients: boolean | null; biography_moderation_status: string | null; biography_moderation_reason: string | null; has_image: boolean; follower_count: number; following_count: number; is_following: boolean; follow_requested: boolean; pending_follow_request_count: number; is_owner: boolean; currently_present: boolean }
+export type SocialProfile = { id: string; name: string; nickname: string | null; biography: string | null; visible_to_clients: boolean | null; biography_moderation_status: string | null; biography_moderation_reason: string | null; has_image: boolean; follower_count: number; following_count: number; is_following: boolean; follow_requested: boolean; pending_follow_request_count: number; is_owner: boolean; currently_present: boolean; private_shell?: boolean }
 export type SocialPostImage = { id: string; width: number; height: number }
 export type SocialPost = { id: string; author_name: string; content: string; visibility: 'private' | 'shared'; moderation_status: 'visible' | 'hidden'; moderation_reason: string | null; created_at: string; images: SocialPostImage[]; like_count: number; comment_count: number; liked_by_viewer: boolean }
 export type ProfileSummary = { id: string; name: string; nickname: string | null; has_image: boolean }
@@ -20,6 +20,8 @@ export const getSocialProfile = (token: string, id: string) => request<SocialPro
 export const getProfilePosts = (token: string, id: string) => request<SocialPost[]>(`/social-profiles/profiles/${id}/posts`, token)
 export const followProfile = (token: string, id: string, follow: boolean) => request<SocialProfile>(`/social-profiles/profiles/${id}/follow`, token, { method: follow ? 'PUT' : 'DELETE' })
 export const getFollowRequests = (token: string) => request<ProfileSummary[]>('/social-profiles/me/follow-requests', token)
+export type ProfileConnectionDirection = 'followers' | 'following'
+export const getProfileConnections = (token: string, id: string, direction: ProfileConnectionDirection, offset = 0) => request<ProfileSummary[]>(`/social-profiles/profiles/${encodeURIComponent(id)}/graph/${direction}?offset=${offset}&limit=20`, token)
 export const decideFollowRequest = (token: string, requesterProfileId: string, accept: boolean) => request<void>(`/social-profiles/me/follow-requests/${requesterProfileId}`, token, { method: accept ? 'PUT' : 'DELETE' })
 export const getPostDetail = (token: string, id: string) => request<PostDetail>(`/social-profiles/posts/${id}`, token)
 export const setPostLike = (token: string, id: string, liked: boolean) => request<PostDetail>(`/social-profiles/posts/${id}/like`, token, { method: liked ? 'PUT' : 'DELETE' })

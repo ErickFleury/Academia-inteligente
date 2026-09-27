@@ -61,3 +61,15 @@ test('failed presence updates keep the saved preference and show an error in set
   expect(toggle).not.toBeDisabled()
   expect(screen.queryByText('Na academia')).not.toBeInTheDocument()
 })
+
+test.each(['followers', 'following'] as const)('profile count opens the %s list', async (direction) => {
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: true, json: async () =>
+    url.includes('/graph/') ? [{ id: 'grace', name: 'Grace', nickname: null, has_image: false }]
+      : url.includes('/posts') ? [] : url.includes('/profile-presence/') ? { sharing_enabled: false, currently_present: false }
+        : { id: 'profile-1', name: 'Ada', has_image: false, is_owner: true, visible_to_clients: true, follower_count: 1, following_count: 1 },
+  })))
+  render(<SocialProfilePage accessToken="token" onSignOut={vi.fn()} />)
+  fireEvent.click(await screen.findByRole('button', { name: direction === 'followers' ? '1 seguidores' : '1 seguindo' }))
+  expect(await screen.findByRole('link', { name: /Grace/ })).toHaveAttribute('href', '/perfis/grace')
+  expect(screen.getByRole('dialog', { name: direction === 'followers' ? 'Seguidores' : 'Seguindo' })).toBeInTheDocument()
+})

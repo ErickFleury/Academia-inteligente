@@ -611,9 +611,19 @@ class SocialService:
                 .where(
                     Account.account_active,
                     Client.active.is_(True),
-                    SocialProfile.visible_to_clients,
+                    or_(
+                        SocialProfile.visible_to_clients,
+                        Client.id == viewer.id,
+                        select(ClientFollow.follower_client_id)
+                        .where(
+                            ClientFollow.follower_client_id == viewer.id,
+                            ClientFollow.followed_client_id == Client.id,
+                        )
+                        .correlate(Client)
+                        .exists(),
+                    ),
                 )
-                .order_by(Client.name)
+                .order_by(Client.name, Client.id)
                 .offset(offset)
                 .limit(self._limit(limit))
             ).all()

@@ -22,6 +22,7 @@ import { WorkspaceIcon } from "./components/workspace-presentation";
 import { ClientShell } from "./components/application-shell";
 import { RouterButtonLink } from "./components/router-button-link";
 import { PasswordRecoveryAction } from "./components/password-recovery-action";
+import { ProfileConnectionsDialog } from "./components/profile-connections-dialog";
 import {
   EmptyState,
   LoadingState,
@@ -47,6 +48,7 @@ import {
   updateOwnSocialProfile,
   uploadProfileImage,
   type ProfileSummary,
+  type ProfileConnectionDirection,
   type SocialPost,
   type SocialProfile,
 } from "./social";
@@ -241,6 +243,7 @@ export function SocialProfilePage({
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const [requests, setRequests] = useState<ProfileSummary[]>([]);
+  const [connections, setConnections] = useState<ProfileConnectionDirection | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const isOwner = ownProfileRoute || profile?.is_owner === true;
   const load = () => {
@@ -364,6 +367,7 @@ export function SocialProfilePage({
                 0,
                 current.pending_follow_request_count - 1,
               ),
+              follower_count: current.follower_count + (accept ? 1 : 0),
             }
           : current,
       );
@@ -559,7 +563,7 @@ export function SocialProfilePage({
                     )
                   )}
                   <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap", borderTop: "1px solid", borderColor: "divider", pt: 2 }}>
-                    <Typography>{profile.follower_count} seguidores</Typography>
+                    <Button disabled={profile.private_shell === true} onClick={() => setConnections('followers')} aria-haspopup="dialog">{profile.follower_count} seguidores</Button>
                     {isOwner && profile.pending_follow_request_count > 0 && (
                       <IconButton
                         aria-label={`${profile.pending_follow_request_count} solicitações para seguir`}
@@ -570,11 +574,12 @@ export function SocialProfilePage({
                         <span aria-hidden="true">!</span>
                       </IconButton>
                     )}
-                    <Typography>{profile.following_count} seguindo</Typography>
+                    <Button disabled={profile.private_shell === true} onClick={() => setConnections('following')} aria-haspopup="dialog">{profile.following_count} seguindo</Button>
                   </Stack>
                 </Stack>
               </CardContent>
             </Card>
+            {connections && <ProfileConnectionsDialog key={`${profile.id}-${connections}`} accessToken={accessToken} profileId={profile.id} direction={connections} onClose={() => setConnections(null)} />}
             <Dialog
               aria-labelledby="foto-perfil-titulo"
               onClose={() => setImageDialogOpen(false)}

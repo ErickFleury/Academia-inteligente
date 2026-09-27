@@ -216,7 +216,12 @@ palette, or page composition.
   language and open into an accessible detail presentation for like count and
   comments. Clearly distinguish owner-only editing/moderation states from what
   another authenticated client may see. The existing green presence tag remains
-  visually and semantically separate from social-profile visibility. On phone,
+  visually and semantically separate from social-profile visibility and updates
+  from the saved presence response when consent changes. Follower/following
+  counts open an accessible dialog with permitted profile names, avatars and
+  profile links, bounded pagination, and loading/empty/error/retry states.
+  Private profile graphs remain restricted to their owner and accepted followers;
+  list entries respect each viewer's profile access. On phone,
   keep the picture, identity, visibility, follow action, and post navigation
   usable without dense desktop columns. Task 26 must not add a global feed or
   imitate another social network's visual identity.

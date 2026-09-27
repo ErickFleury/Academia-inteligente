@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
 from fastapi.responses import Response as BinaryResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -297,8 +297,8 @@ def list_graph(
     direction: Literal["followers", "following"],
     session: DatabaseSession,
     client: ClientUser,
-    offset: int = 0,
-    limit: int = 20,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=50),
 ):
     try:
         return [
