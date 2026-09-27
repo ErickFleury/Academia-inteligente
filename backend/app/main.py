@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.health.router import router as health_router
+from app.http_security import HttpSecurityMiddleware
 from app.modules.biometrics.config import BiometricError
 from app.modules.biometrics.router import router as biometrics_router
 from app.modules.biometrics.worker import biometric_lifespan
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
         for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
         if origin.strip()
     ]
+    app.add_middleware(HttpSecurityMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,

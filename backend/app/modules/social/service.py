@@ -2,6 +2,7 @@
 
 import base64
 import json
+import warnings
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from io import BytesIO
@@ -234,22 +235,30 @@ class SocialService:
         if not raw or len(raw) > self.image_size_maximum:
             raise SocialValidationError("Image size is invalid")
         try:
-            with Image.open(BytesIO(raw)) as source:
-                if getattr(source, "n_frames", 1) != 1 or source.format not in {
-                    "JPEG",
-                    "PNG",
-                    "WEBP",
-                }:
-                    raise SocialValidationError("Unsupported image")
-                source.verify()
-            with Image.open(BytesIO(raw)) as source:
-                image = ImageOps.exif_transpose(source).convert("RGB")
-                image.thumbnail((1024, 1024))
-                output = BytesIO()
-                image.save(output, format="WEBP", quality=88, method=6)
-                return output.getvalue(), "image/webp", image.width, image.height
-        except (UnidentifiedImageError, OSError, ValueError) as error:
-            raise SocialValidationError("Invalid image") from error
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                with Image.open(BytesIO(raw), formats=("JPEG", "PNG", "WEBP")) as source:
+                    if getattr(source, "n_frames", 1) != 1:
+                        raise SocialValidationError("Unsupported image")
+                    if source.width * source.height > 4096 * 4096:
+                        raise SocialValidationError("Image dimensions are too large")
+                    source.verify()
+                with Image.open(BytesIO(raw), formats=("JPEG", "PNG", "WEBP")) as source:
+                    image = ImageOps.exif_transpose(source).convert("RGB")
+                    image.thumbnail((1024, 1024))
+                    clean = Image.new("RGB", image.size)
+                    clean.paste(image)
+                    output = BytesIO()
+                    clean.save(output, format="WEBP", quality=88, method=6)
+                    return output.getvalue(), "image/webp", clean.width, clean.height
+        except (
+            UnidentifiedImageError,
+            OSError,
+            ValueError,
+            Image.DecompressionBombError,
+            Image.DecompressionBombWarning,
+        ):
+            raise SocialValidationError("Invalid image") from None
 
     def _cursor(self, value: str | None) -> tuple[datetime, UUID] | None:
         if not value:
@@ -269,9 +278,7 @@ class SocialService:
         timestamp = item.created_at
         if timestamp.tzinfo is None:
             timestamp = timestamp.replace(tzinfo=UTC)
-        payload = json.dumps(
-            {"t": timestamp.isoformat(), "i": str(item.id)}, separators=(",", ":")
-        )
+        payload = json.dumps({"t": timestamp.isoformat(), "i": str(item.id)}, separators=(",", ":"))
         return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
 
     def feed_page(
@@ -413,6 +420,18 @@ class SocialService:
 
     def comment_image(self, session: Session, comment_id: UUID) -> CommentImage | None:
         return session.get(CommentImage, comment_id)
+
+    def comment_image_for_viewer(self, session: Session, subject: str, comment_id: UUID):
+        comment = session.get(PostComment, comment_id)
+        if comment is None or comment.deleted_at is not None:
+            raise SocialNotFoundError
+        _, view = self.post_detail(session, subject, comment.progress_update_id)
+        if not view.is_owner and comment.moderation_status != "visible":
+            raise SocialNotFoundError
+        image = self.comment_image(session, comment.id)
+        if image is None:
+            raise SocialNotFoundError
+        return image
 
     def replace_post_images(
         self, session: Session, subject: str, update_id: UUID, raw_images: list[bytes]

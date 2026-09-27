@@ -20,7 +20,7 @@ def normalize_capture(raw: bytes) -> bytes:
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(BytesIO(raw)) as source:
+            with Image.open(BytesIO(raw), formats=("JPEG", "PNG")) as source:
                 if (
                     source.format not in {"JPEG", "PNG"}
                     or getattr(source, "n_frames", 1) != 1

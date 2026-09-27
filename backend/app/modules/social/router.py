@@ -451,13 +451,7 @@ def put_comment_image(
 @router.get("/comments/{comment_id}/image")
 def get_comment_image(comment_id: UUID, session: DatabaseSession, client: ClientUser):
     try:
-        comment = session.get(PostComment, comment_id)
-        if comment is None:
-            raise SocialNotFoundError
-        service.post_detail(session, client.subject, comment.progress_update_id)
-        image = service.comment_image(session, comment.id)
-        if image is None:
-            raise SocialNotFoundError
+        image = service.comment_image_for_viewer(session, client.subject, comment_id)
         return BinaryResponse(image.content, media_type=image.media_type)
     except (SocialNotFoundError, SocialForbiddenError) as exc:
         raise error(exc) from None
