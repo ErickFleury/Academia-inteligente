@@ -99,3 +99,42 @@ def test_citation_cannot_drop_a_negation_or_turn_a_target_into_current_weight():
     assert (
         result("training_experience", "beginner", "Não sou iniciante.", quote="iniciante") is None
     )
+
+
+def test_independent_clauses_accept_multiple_facts_despite_other_negation_or_uncertainty():
+    text = "Sou iniciante e não uso medicamentos e talvez meu peso seja 80 kg"
+    assert result("training_experience", "beginner", text) == "beginner"
+    assert result("uses_medications", False, text) is False
+    assert result("weight_kg", 80, text) is None
+
+
+def test_current_turn_cannot_reapply_evidence_from_an_older_answer():
+    from app.modules.onboarding.schema import OnboardingDraftUpdate
+
+    messages = [OnboardingAiMessage(sequence=1, role="user", content="Peso 80 kg")]
+    response = AiOnboardingExtractionResponse(
+        onboarding={"weight_kg": 80},
+        evidence={"weight_kg": {"message_sequence": 1, "quote": "Peso 80 kg"}},
+    )
+    assert (
+        grounded_answers(
+            response, OnboardingDraftUpdate(weight_kg=82), messages, latest_sequence=3
+        ).weight_kg
+        == 82
+    )
+
+
+@pytest.mark.parametrize("proposed", [None, 80, 82])
+def test_explicit_numeric_correction_is_normalized_even_when_model_omits_or_reverses_it(proposed):
+    from app.modules.onboarding.schema import OnboardingDraftUpdate
+
+    response = AiOnboardingExtractionResponse(onboarding={"weight_kg": proposed})
+    messages = [
+        OnboardingAiMessage(
+            sequence=3, role="user", content="Na verdade, meu peso é 82 kg, não 80 kg."
+        )
+    ]
+    result = grounded_answers(
+        response, OnboardingDraftUpdate(weight_kg=80, height_cm=180), messages, latest_sequence=3
+    )
+    assert result.weight_kg == 82 and result.height_cm == 180

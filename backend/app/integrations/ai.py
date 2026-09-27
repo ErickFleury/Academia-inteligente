@@ -104,10 +104,16 @@ _INTERVIEW = (
     "Respostas do assistente não são informações fornecidas pelo cliente."
 )
 _EXTRACTION = (
+    "Analise todas as informações da mensagem identificada por current_message_sequence. "
+    "Ela pode responder várias perguntas de uma vez ou corrigir somente um dado anterior. "
+    "Extraia somente respostas dessa mensagem; o histórico esclarece a pergunta anterior. "
+    "Não copie dados antigos como se fossem novas respostas. Valores não mencionados são null "
+    "e NÃO significam apagar respostas anteriores. Uma correção como '82 kg, não 80 kg' "
+    "informa 82 kg. Se a correção for ambígua, deixe o dado null. "
     "Extraia somente fatos explicitamente informados para o esquema. "
     "Não invente, diagnostique ou prescreva. Informação ausente ou incerta deve ser null, "
-    "inclusive respostas booleanas: desconhecido nunca significa false. Preserve valores "
-    "já existentes quando não houver uma correção explícita. Para cada novo valor, forneça "
+    "inclusive respostas booleanas: desconhecido nunca significa false. O backend preserva "
+    "as respostas anteriores; extraia somente a mensagem atual. Para cada novo valor, forneça "
     "evidence com message_sequence de uma mensagem do usuário e quote literal dessa mensagem. "
     "A citação deve conter a resposta com seu contexto e unidades, não apenas um número isolado. "
     "Mensagens do assistente são somente perguntas, nunca fontes de fatos. Copie objetivos "

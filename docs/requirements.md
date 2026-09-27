@@ -1972,3 +1972,31 @@ responses; configuration contains no committed secrets; backup/restore and
 monitoring procedures identify external prerequisites and are exercised with
 synthetic data; development regression tests remain passing. This amendment
 does not approve changing gym business rules or upgrading Keycloak.
+
+### Fluid assistant amendment — 2026-09-27
+
+The owner approved improving onboarding and post-onboarding conversations to
+accept multiple facts per message, retain verified interview answers, correct
+only affected information and ask targeted clarifications without restarting.
+This refines EXT-RF-AI-01 and RF-11–13/18–19 within their existing privacy and
+training-approval boundaries. Each onboarding message may now trigger a
+schema-constrained extraction into client-owned, five-day interview working
+state. This supersedes DEC-08's extraction-only-at-the-end restriction; the
+structured onboarding draft is still updated only after complete verified
+answers pass final validation, and completion still requires the client's
+explicit review/action. Form edits override stale working state. Corrections
+remain possible in chat until onboarding is completed; completed medical data
+and approved/current training plans cannot be silently changed.
+
+Acceptance: multiple supported facts are collected together; unmentioned facts
+survive corrections and context-window truncation; ambiguous corrections request
+clarification and block readiness; progress survives reload; clients can review
+collected answers and correct them before completion; provider failures preserve
+prior verified state; retries/concurrent submissions cannot apply duplicate or
+stale corrections. Training chat distinguishes attributed client reports from
+assistant suggestions, honors explicit corrections in bounded retained context,
+and accurately communicates whether a draft change was actually persisted.
+Client isolation, existing five-/30-day conversation retention, backend validation,
+manual fallback, single-draft revision protection and instructor approval remain
+mandatory. No model replacement, new dependency or new health schema is approved
+by this amendment.

@@ -1197,3 +1197,13 @@ facial pilot retain their existing behavior. No host policy, public deployment,
 account migration, mandatory OTP enrollment or Keycloak upgrade is authorized or
 performed by preparing these files. Operator choices for hosting, certificates,
 SMTP, encrypted off-host backup and alert delivery remain rollout prerequisites.
+
+## Fluid assistant amendment — 2026-09-27
+
+The owner's later request to implement fluid, trustworthy multi-answer and
+correction-aware conversations approves per-message source-validated extraction
+into five-day onboarding interview state. The canonical fluid assistant amendment
+in `requirements.md` supersedes DEC-08's final-extraction-only timing. It retains
+final structured validation, explicit client completion, immutable completed
+onboarding and instructor approval. RF-18 memory improvements keep client reports
+separate from model-generated suggestions within the existing 30-day lifecycle.

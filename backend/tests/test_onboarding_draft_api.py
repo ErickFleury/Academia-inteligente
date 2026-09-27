@@ -38,7 +38,7 @@ class FakeConversationProvider:
 
     def extract_onboarding(self, context: dict[str, object]) -> AiOnboardingExtractionResponse:
         del context
-        raise AssertionError("final extraction should not be called")
+        return AiOnboardingExtractionResponse(onboarding={})
 
 
 @pytest.fixture
@@ -252,7 +252,7 @@ def test_client_conversation_is_own_scoped_and_admin_cannot_read_raw_history(
         },
     )
     assert sent_status == 200
-    assert sent["messages"][-1]["content"] == "Qual é o seu objetivo de treino?"
+    assert sent["messages"][-1]["content"] == "Qual é o seu principal objetivo de treino?"
 
     monkeypatch.setattr(
         identity_router,

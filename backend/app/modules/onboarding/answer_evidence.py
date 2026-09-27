@@ -56,33 +56,19 @@ def _topic_fields(text: str) -> set[str]:
     return {field for field, pattern in _TOPICS.items() if re.search(pattern, text)}
 
 
-def _supports(field: str, value: object, quote: str, question: str, answer: str) -> bool:
-    quote, question, answer = map(_normalize, (quote, question, answer))
-    # Include the surrounding client sentence, so citing "uso remédios" from
-    # "não uso remédios" cannot reverse the answer by dropping its negation.
-    surrounding = [part for part in re.split(r"(?<=[.!?;])\s+", answer) if quote in part]
-    if len(surrounding) == 1:
-        quote = surrounding[0]
-    topic = _DETAILS.get(field, field)
-    topics = _topic_fields(quote)
-    focused = _topic_fields(question) == {topic} and (not topics or topic in topics)
-    explicit = topic in topics
-    # Never turn uncertainty or a question into a reported fact.
-    if re.search(_UNCERTAIN, answer) or "?" in quote:
-        return False
-    if field in {"height_cm", "weight_kg"}:
-        if re.search(r"\b(nao|meta|quero|queria|pretendo|objetivo|chegar|pesava|media)\b", quote):
-            return False
-        # Unit-bearing spans must contain the exact reported measurement. A bare
-        # number is accepted only as a direct answer to that measurement's question.
-        unit = (
-            r"(?:cm|centimetros?|m|metros?)"
-            if field == "height_cm"
-            else r"(?:kg|quilos?|quilogramas?)"
-        )
-        matches = list(re.finditer(rf"(?<![\w.,])([0-9]+(?:[.,][0-9]+)?)\s*({unit})\b", quote))
+def measurement_values(field: str, text: str, *, focused: bool = False) -> set[Decimal]:
+    """Ignore negated/target measurements, preserve ambiguous alternatives for clarification."""
+    text = _normalize(text)
+    unit = (
+        r"(?:cm|centimetros?|m|metros?)" if field == "height_cm" else r"(?:kg|quilos?|quilogramas?)"
+    )
+    values = set()
+    for clause in re.split(r",(?!\d)|;|\s+(?:e|mas)\s+", text):
+        if re.search(r"\b(nao|meta|quero|queria|pretendo|objetivo|chegar|pesava|media)\b", clause):
+            continue
+        matches = list(re.finditer(rf"(?<![\w.,])([0-9]+(?:[.,][0-9]+)?)\s*({unit})\b", clause))
         if not matches and focused:
-            bare = re.fullmatch(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*[.!]?", quote)
+            bare = re.fullmatch(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*[.!]?", clause)
             matches = [bare] if bare else []
         for match in matches:
             number = Decimal(match[1].replace(",", "."))
@@ -91,9 +77,34 @@ def _supports(field: str, value: object, quote: str, question: str, answer: str)
                 units in {"m", "metro", "metros"} or (units is None and number < 3)
             ):
                 number *= 100
-            if number == Decimal(str(value)):
-                return True
+            values.add(number)
+    return values
+
+
+def _supports(field: str, value: object, quote: str, question: str, answer: str) -> bool:
+    quote, question, answer = map(_normalize, (quote, question, answer))
+    # Include the surrounding client sentence, so citing "uso remédios" from
+    # "não uso remédios" cannot reverse the answer by dropping its negation.
+    surrounding = [part for part in re.split(r"(?<=[.!?;])\s+", answer) if quote in part]
+    if len(surrounding) == 1:
+        quote = surrounding[0]
+    # Acknowledgments may mention other fields; only the final question sets focus.
+    question = re.split(r"[.!]\s+", question)[-1]
+    topic = _DETAILS.get(field, field)
+    clauses = re.split(r",(?!\d)|;|\s+(?:e|mas|porem)\s+", quote)
+    relevant = [clause for clause in clauses if topic in _topic_fields(clause)]
+    if field == "height_cm":
+        relevant += [clause for clause in clauses if re.search(r"\d\s*(?:cm|m|metros?)\b", clause)]
+    if relevant:
+        quote = " ; ".join(dict.fromkeys(relevant))
+    topics = _topic_fields(quote)
+    focused = _topic_fields(question) == {topic} and (not topics or topic in topics)
+    explicit = topic in topics
+    # Never turn uncertainty or a question into a reported fact.
+    if re.search(_UNCERTAIN, quote) or "?" in quote:
         return False
+    if field in {"height_cm", "weight_kg"}:
+        return measurement_values(field, quote, focused=focused) == {Decimal(str(value))}
     if field == "training_experience":
         if value != "none" and re.search(_NEGATIVE, quote):
             return False
@@ -127,19 +138,22 @@ def _supports(field: str, value: object, quote: str, question: str, answer: str)
 
 def grounded_answers(
     extraction: AiOnboardingExtractionResponse,
-    onboarding: Onboarding,
+    onboarding: Onboarding | OnboardingDraftUpdate,
     messages: list[OnboardingAiMessage],
+    *,
+    latest_sequence: int | None = None,
+    accepted_fields: set[str] | None = None,
 ) -> OnboardingDraftUpdate:
     """Filter unsupported values without writing the draft or persisting citations."""
     candidate = OnboardingDraftUpdate.model_validate(extraction.onboarding)
     values = {field: getattr(onboarding, field) for field in OnboardingDraftUpdate.model_fields}
     by_sequence = {message.sequence: message for message in messages}
     for field, value in candidate.model_dump().items():
-        if value is not None and value == values[field]:
-            continue
         evidence = extraction.evidence.get(field)
         source = by_sequence.get(evidence.message_sequence) if evidence else None
         if not source or source.role != "user" or evidence.quote not in source.content:
+            continue
+        if latest_sequence is not None and source.sequence != latest_sequence:
             continue
         previous = by_sequence.get(source.sequence - 1)
         question = previous.content if previous and previous.role == "assistant" else ""
@@ -161,11 +175,36 @@ def grounded_answers(
             ]
             if len(supported) == 1:
                 values[field] = supported[0]
+                if accepted_fields is not None:
+                    accepted_fields.add(field)
             continue
         if value is None:
             continue
         if _supports(field, value, evidence.quote, question, source.content):
             values[field] = value
+            if accepted_fields is not None:
+                accepted_fields.add(field)
+    # Explicit measurements can be normalized directly from the current client
+    # statement, even if the model omitted or reversed the number. This uses the
+    # same negation/uncertainty checks and never borrows measurements from history.
+    source = by_sequence.get(latest_sequence)
+    if source and source.role == "user":
+        previous = by_sequence.get(source.sequence - 1)
+        question = previous.content if previous and previous.role == "assistant" else ""
+        focus = _topic_fields(_normalize(re.split(r"[.!]\s+", question)[-1]))
+        for field in ("height_cm", "weight_kg"):
+            measurements = measurement_values(field, source.content, focused=focus == {field})
+            if len(measurements) != 1:
+                continue
+            number = next(iter(measurements))
+            if _supports(field, number, source.content, question, source.content):
+                try:
+                    normalized = OnboardingDraftUpdate(**{field: number})
+                except ValueError:
+                    continue
+                values[field] = getattr(normalized, field)
+                if accepted_fields is not None:
+                    accepted_fields.add(field)
     for detail, flag in _DETAILS.items():
         if values[flag] is False:
             values[detail] = None

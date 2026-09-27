@@ -1,10 +1,10 @@
-"""Client-owned interview orchestration; extraction occurs only when interview is ready."""
+"""Client-owned progressive interview with verified, expiring working memory."""
 
 from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -18,7 +18,12 @@ from app.integrations.ai import (
     onboarding_ai_provider_from_environment,
 )
 from app.modules.onboarding.answer_evidence import grounded_answers
-from app.modules.onboarding.draft_service import ClientOnboardingScope, OnboardingDraftService
+from app.modules.onboarding.draft_service import (
+    ClientOnboardingScope,
+    OnboardingDraftService,
+    OnboardingNotEditableError,
+)
+from app.modules.onboarding.interview_state import InterviewState, draft_values
 from app.modules.onboarding.models import OnboardingAiConversation, OnboardingAiMessage
 from app.modules.onboarding.schema import OnboardingCompletionData, OnboardingDraftUpdate
 
@@ -39,12 +44,18 @@ class ConversationState:
     messages: list[ConversationMessage]
     missing_required_fields: list[str]
     completion_ready: bool
+    known_answers: OnboardingDraftUpdate = field(default_factory=OnboardingDraftUpdate)
+    clarification_fields: list[str] = field(default_factory=list)
+    needs_clarification: bool = False
 
 
 @dataclass(frozen=True)
 class ConversationTurn:
     missing_required_fields: list[str]
     completion_ready: bool
+    known_answers: OnboardingDraftUpdate = field(default_factory=OnboardingDraftUpdate)
+    clarification_fields: list[str] = field(default_factory=list)
+    needs_clarification: bool = False
 
 
 _LABELS = {
@@ -100,8 +111,19 @@ class OnboardingConversationService:
         self.purge_expired_content(session)
         conversation = self._conversation(session, scope)
         onboarding = self._drafts.get_or_create_draft(session, scope)
-        missing = self._drafts.missing_required_fields(onboarding)
-        return ConversationState(self._messages(session, conversation.id), missing, not missing)
+        memory = InterviewState.load(conversation.summary, onboarding)
+        return self._state(session, conversation, memory)
+
+    def _state(self, session, conversation, memory):
+        missing = self._drafts.missing_required_fields(memory.answers)
+        return ConversationState(
+            self._messages(session, conversation.id),
+            missing,
+            not missing and not memory.pending and not memory.needs_target,
+            memory.answers,
+            memory.pending,
+            memory.needs_target or bool(memory.pending),
+        )
 
     def submit(
         self,
@@ -112,7 +134,13 @@ class OnboardingConversationService:
         client_request_id: UUID,
     ) -> ConversationTurn:
         self.purge_expired_content(session)
-        conversation = self._conversation(session, scope)
+        # Serialize this client's form/completion/conversation operations. The
+        # verified memory and reply commit together after the provider succeeds.
+        onboarding = self._drafts.get_or_create_draft(session, scope, commit=False)
+        if onboarding.status != "draft":
+            raise OnboardingNotEditableError
+        conversation = self._conversation(session, scope, commit=False)
+        memory = InterviewState.load(conversation.summary, onboarding)
         reply = session.scalar(
             select(OnboardingAiMessage).where(
                 OnboardingAiMessage.conversation_id == conversation.id,
@@ -120,9 +148,14 @@ class OnboardingConversationService:
             )
         )
         if reply:
-            onboarding = self._drafts.get_or_create_draft(session, scope)
-            missing = self._drafts.missing_required_fields(onboarding)
-            return ConversationTurn(missing, bool(reply.completion_ready) and not missing)
+            state = self._state(session, conversation, memory)
+            return ConversationTurn(
+                state.missing_required_fields,
+                state.completion_ready,
+                state.known_answers,
+                state.clarification_fields,
+                state.needs_clarification,
+            )
         user = session.scalar(
             select(OnboardingAiMessage).where(
                 OnboardingAiMessage.conversation_id == conversation.id,
@@ -138,109 +171,107 @@ class OnboardingConversationService:
                 client_request_id=client_request_id,
             )
             session.add(user)
+            session.flush()
+        elif user.sequence <= memory.last_sequence:
+            raise OnboardingNotEditableError
+        message = user.content
+        sources = self._source_messages(session, conversation.id)
+        sources = [item for item in sources if item.sequence <= user.sequence]
+        context = self._extraction_context(
+            sources[-self._recent_message_limit - 1 :], memory.answers
+        )
+        context.update(
+            current_message_sequence=user.sequence,
+            pending_clarifications=memory.pending,
+            needs_correction_target=memory.needs_target,
+        )
+        try:
+            extracted = self._retry(lambda: self._provider.extract_onboarding(context))
+            accepted: set[str] = set()
+            candidate = grounded_answers(
+                extracted,
+                memory.answers,
+                sources,
+                latest_sequence=user.sequence,
+                accepted_fields=accepted,
+            )
+        except (AiConversationUnavailableError, ValidationError):
+            # Keep the original message for an idempotent retry, but no proposed
+            # state, reply or draft change from a failed operation.
             conversation.raw_expires_at = self._expiry()
             session.commit()
-        onboarding = self._drafts.get_or_create_draft(session, scope)
-        # Retries must use the original persisted message, not a new body sent
-        # under the same idempotency key.
-        message = user.content
-        turn = self._retry(
-            lambda: self._provider.interview_turn(
-                self._context(session, conversation, onboarding, message, user.id)
+            raise AiConversationUnavailableError from None
+        changed = memory.merge(candidate, message, user.sequence, accepted)
+        missing = self._drafts.missing_required_fields(memory.answers)
+        ready = not missing and not memory.pending and not memory.needs_target
+        if ready:
+            complete = OnboardingCompletionData.model_validate(memory.answers.model_dump())
+            self._drafts.save_draft(
+                session,
+                scope,
+                OnboardingDraftUpdate(**complete.model_dump()),
+                commit=False,
+                sync_interview=False,
+            )
+            memory.baseline = draft_values(onboarding)
+            text = _INTERVIEW_COMPLETE_MESSAGE
+        elif memory.needs_target:
+            text = "Qual informação você quer corrigir? As outras respostas foram mantidas."
+        else:
+            target = memory.pending[0] if memory.pending else missing[0]
+            acknowledgment = (
+                "Atualizei " + ", ".join(_LABELS[name] for name in changed) + ". "
+                if changed
+                else ""
+            )
+            text = acknowledgment + ("Vamos confirmar esse dado. " if memory.pending else "")
+            text += _QUESTIONS[target]
+        session.add(
+            OnboardingAiMessage(
+                conversation_id=conversation.id,
+                role="assistant",
+                content=text,
+                sequence=self._next(session, conversation.id),
+                reply_to_client_request_id=client_request_id,
+                missing_required_fields=json.dumps(missing),
+                completion_ready=ready,
             )
         )
-        text, ready = turn.assistant_message, False
-        missing = self._drafts.missing_required_fields(onboarding)
-        if turn.interview_status == "ready":
-            try:
-                sources = self._source_messages(session, conversation.id)
-                extracted = self._retry(
-                    lambda: self._provider.extract_onboarding(
-                        self._extraction_context(sources, onboarding)
-                    )
-                )
-                grounded = grounded_answers(extracted, onboarding, sources)
-                missing = self._drafts.missing_required_fields(grounded)
-                if missing:
-                    text = self._recovery_message(missing)
-                else:
-                    complete = OnboardingCompletionData.model_validate(grounded.model_dump())
-                    self._drafts.save_draft(
-                        session,
-                        scope,
-                        OnboardingDraftUpdate.model_validate(complete.model_dump()),
-                        commit=False,
-                    )
-                    ready, text = True, _INTERVIEW_COMPLETE_MESSAGE
-            except (AiConversationUnavailableError, ValidationError):
-                missing = self._drafts.missing_required_fields(onboarding)
-                text = self._recovery_message(missing)
-        assistant = OnboardingAiMessage(
-            conversation_id=conversation.id,
-            role="assistant",
-            content=text,
-            sequence=self._next(session, conversation.id),
-            reply_to_client_request_id=client_request_id,
-            missing_required_fields=json.dumps(missing),
-            completion_ready=ready,
-        )
-        session.add(assistant)
+        conversation.summary = memory.dump()
         conversation.raw_expires_at = self._expiry()
         session.commit()
-        return ConversationTurn(missing, ready)
+        return ConversationTurn(
+            missing,
+            ready,
+            memory.answers,
+            memory.pending,
+            memory.needs_target or bool(memory.pending),
+        )
 
     def _retry(self, operation):
         for attempt in range(2):
             try:
                 return operation()
-            except AiProviderError:
-                if attempt:
+            except AiProviderError as error:
+                if attempt or not error.retryable:
                     raise AiConversationUnavailableError from None
         raise AiConversationUnavailableError
 
-    def _recovery_message(self, missing: list[str]) -> str:
-        return (
-            _QUESTIONS[missing[0]]
-            if missing
-            else "Quero confirmar alguns detalhes antes de seguir. Pode explicar um pouco mais?"
-        )
-
     def _conversation(
-        self, session: Session, scope: ClientOnboardingScope
+        self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
     ) -> OnboardingAiConversation:
         value = session.scalar(
-            select(OnboardingAiConversation).where(
-                OnboardingAiConversation.client_id == scope.client_id
-            )
+            select(OnboardingAiConversation)
+            .where(OnboardingAiConversation.client_id == scope.client_id)
+            .execution_options(populate_existing=True)
         )
         if value is None:
             value = OnboardingAiConversation(client_id=scope.client_id)
             session.add(value)
-            session.commit()
+            session.flush()
+            if commit:
+                session.commit()
         return value
-
-    def _context(
-        self,
-        session: Session,
-        conversation: OnboardingAiConversation,
-        onboarding: object,
-        message: str,
-        message_id: UUID,
-    ) -> dict[str, object]:
-        history = self._messages(session, conversation.id, message_id)[
-            -self._recent_message_limit :
-        ]
-        manual = {
-            field: getattr(onboarding, field)
-            for field in _LABELS
-            if getattr(onboarding, field) is not None
-        }
-        return {
-            "current_user_message": message,
-            "recent_messages": [{"role": item.role, "content": item.content} for item in history],
-            "existing_structured_onboarding": manual,
-            "required_information": list(_LABELS),
-        }
 
     def _extraction_context(
         self,

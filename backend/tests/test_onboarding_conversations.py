@@ -40,7 +40,7 @@ class FakeProvider:
 
     def extract_onboarding(self, context: dict[str, object]) -> AiOnboardingExtractionResponse:
         self.extraction_contexts.append(context)
-        result = self.extractions.pop(0)
+        result = self.extractions.pop(0) if self.extractions else extraction()
         if isinstance(result, Exception):
             raise result
         return result
@@ -128,7 +128,7 @@ def test_normal_interview_turn_never_mutates_structured_draft_and_is_idempotent(
         database_session, scope, message="Quero ganhar força.", client_request_id=request_id
     )
     assert drafts.get_or_create_draft(database_session, scope).training_goal is None
-    assert len(provider.turn_contexts) == 1
+    assert len(provider.extraction_contexts) == 1
     assert len(database_session.scalars(select(OnboardingAiMessage)).all()) == 2
 
 
@@ -156,11 +156,13 @@ def test_invalid_final_extraction_preserves_existing_draft(database_session: Ses
     provider = FakeProvider([turn("ready")], [extraction(height_cm=0)])
     drafts, scope = scope_for(database_session)
     drafts.save_draft(database_session, scope, OnboardingDraftUpdate(training_goal="Resistência"))
-    result = OnboardingConversationService(provider=provider, draft_service=drafts).submit(
-        database_session, scope, message="Terminei.", client_request_id=uuid4()
-    )
+    from app.modules.onboarding.conversation_service import AiConversationUnavailableError
+
+    with pytest.raises(AiConversationUnavailableError):
+        OnboardingConversationService(provider=provider, draft_service=drafts).submit(
+            database_session, scope, message="Terminei.", client_request_id=uuid4()
+        )
     onboarding = drafts.get_or_create_draft(database_session, scope)
-    assert result.completion_ready is False
     assert onboarding.training_goal == "Resistência" and onboarding.height_cm is None
 
 
@@ -179,12 +181,12 @@ def test_context_expires_after_five_day_window(database_session: Session) -> Non
 
 
 def test_transient_interview_failure_retries_once(database_session: Session) -> None:
-    provider = FakeProvider([AiProviderError("timeout", retryable=True), turn()])
+    provider = FakeProvider([], [AiProviderError("timeout", retryable=True), extraction()])
     drafts, scope = scope_for(database_session)
     OnboardingConversationService(provider=provider, draft_service=drafts).submit(
         database_session, scope, message="Olá", client_request_id=uuid4()
     )
-    assert len(provider.turn_contexts) == 2
+    assert len(provider.extraction_contexts) == 2
 
 
 @pytest.mark.parametrize("fabricated_evidence", [False, True])
@@ -232,11 +234,12 @@ def test_retry_uses_original_client_message_as_its_source(database_session: Sess
 
     drafts, scope = scope_for(database_session)
     provider = FakeProvider(
+        [],
         [
             AiProviderError("timeout", retryable=True),
             AiProviderError("timeout", retryable=True),
-            turn(),
-        ]
+            extraction(),
+        ],
     )
     service = OnboardingConversationService(provider=provider, draft_service=drafts)
     request_id = uuid4()
@@ -247,7 +250,7 @@ def test_retry_uses_original_client_message_as_its_source(database_session: Sess
     service.submit(
         database_session, scope, message="Um texto diferente", client_request_id=request_id
     )
-    assert provider.turn_contexts[-1]["current_user_message"] == "Ganhar força"
+    assert provider.extraction_contexts[-1]["conversation"][-1]["content"] == "Ganhar força"
 
 
 def test_cached_ready_reply_cannot_override_a_later_incomplete_draft(database_session: Session):
@@ -265,7 +268,7 @@ def test_cached_ready_reply_cannot_override_a_later_incomplete_draft(database_se
     )
     assert not repeated.completion_ready
     assert "height_cm" in repeated.missing_required_fields
-    assert len(provider.turn_contexts) == 1
+    assert len(provider.extraction_contexts) == 1
 
 
 def test_progressive_answers_are_required_before_ready_even_if_model_always_claims_ready(
@@ -280,7 +283,9 @@ def test_progressive_answers_are_required_before_ready_even_if_model_always_clai
                 onboarding=proposed.onboarding,
                 evidence={
                     field: {"message_sequence": item["message_sequence"], "quote": item["content"]}
-                    for field, item in zip(ANSWERS, users, strict=False)
+                    for field, item in [
+                        (list(ANSWERS)[len(self.extraction_contexts) - 1], users[-1])
+                    ]
                 },
             )
 
@@ -297,3 +302,113 @@ def test_progressive_answers_are_required_before_ready_even_if_model_always_clai
             assert draft.height_cm is None  # No partial AI writes to the authoritative draft.
     assert draft.training_experience == "beginner" and draft.height_cm == 170
     assert draft.uses_medications is False and draft.has_health_conditions is False
+
+
+class CurrentMessageProvider(FakeProvider):
+    """A scripted extractor whose evidence always references the current client message."""
+
+    def extract_onboarding(self, context):
+        self.extraction_contexts.append(context)
+        values = self.extractions.pop(0)
+        if isinstance(values, Exception):
+            raise values
+        source = context["conversation"][-1]
+        return AiOnboardingExtractionResponse(
+            onboarding=values,
+            evidence={
+                name: {"message_sequence": source["message_sequence"], "quote": source["content"]}
+                for name in values
+            },
+        )
+
+
+def test_multi_fact_corrections_survive_reload_and_do_not_restart(database_session):
+    drafts, scope = scope_for(database_session)
+    provider = CurrentMessageProvider(
+        [],
+        [
+            {"height_cm": 180, "weight_kg": 80},
+            {"weight_kg": 82},
+            {},
+            {},
+            {"weight_kg": 83},
+        ],
+    )
+    service = OnboardingConversationService(provider, drafts)
+
+    def send(message):
+        return service.submit(database_session, scope, message=message, client_request_id=uuid4())
+
+    first = send("Tenho 1,80 m e peso 80 kg.")
+    assert first.known_answers.height_cm == 180
+    assert first.known_answers.weight_kg == 80
+    corrected = send("Na verdade, meu peso é 82 kg, não 80 kg.")
+    assert corrected.known_answers.weight_kg == 82
+    assert corrected.known_answers.height_cm == 180
+    assert service.state(database_session, scope).known_answers == corrected.known_answers
+    assert send("Errei uma informação.").needs_clarification
+    assert send("O peso").clarification_fields == ["weight_kg"]
+    final = send("83")
+    assert final.known_answers.weight_kg == 83
+    assert final.known_answers.height_cm == 180
+    assert not final.needs_clarification
+    assert drafts.get_or_create_draft(database_session, scope).height_cm is None
+
+
+def test_conflict_blocks_completion_until_confirmation_and_preserves_other_answers(
+    database_session,
+):
+    from app.modules.onboarding.draft_service import OnboardingDraftValidationError
+
+    drafts, scope = scope_for(database_session)
+    drafts.save_draft(database_session, scope, OnboardingDraftUpdate(**extraction().onboarding))
+    provider = CurrentMessageProvider([], [{"weight_kg": 82}, {"weight_kg": 82}])
+    service = OnboardingConversationService(provider, drafts)
+    result = service.submit(
+        database_session, scope, message="Peso 82 kg", client_request_id=uuid4()
+    )
+    assert result.clarification_fields == ["weight_kg"]
+    assert result.known_answers.weight_kg != 82 and not result.completion_ready
+    with pytest.raises(OnboardingDraftValidationError):
+        drafts.complete_draft(database_session, scope)
+    confirmed = service.submit(database_session, scope, message="82 kg", client_request_id=uuid4())
+    assert confirmed.completion_ready and confirmed.known_answers.weight_kg == 82
+    assert confirmed.known_answers.height_cm == 170
+    assert drafts.get_or_create_draft(database_session, scope).weight_kg == 82
+
+
+def test_manual_form_can_resolve_pending_conflict_with_original_value(database_session):
+    drafts, scope = scope_for(database_session)
+    drafts.save_draft(database_session, scope, OnboardingDraftUpdate(**extraction().onboarding))
+    service = OnboardingConversationService(CurrentMessageProvider([], [{"weight_kg": 82}]), drafts)
+    service.submit(database_session, scope, message="Peso 82 kg", client_request_id=uuid4())
+    drafts.save_draft(database_session, scope, OnboardingDraftUpdate(weight_kg="70.50"))
+    state = service.state(database_session, scope)
+    assert state.completion_ready and not state.needs_clarification
+    drafts.complete_draft(database_session, scope)
+    from app.modules.onboarding.draft_service import OnboardingNotEditableError
+
+    with pytest.raises(OnboardingNotEditableError):
+        service.submit(database_session, scope, message="Peso 83 kg", client_request_id=uuid4())
+
+
+def test_failed_provider_and_expiry_preserve_authoritative_form(database_session):
+    from app.modules.onboarding.conversation_service import AiConversationUnavailableError
+
+    drafts, scope = scope_for(database_session)
+    drafts.save_draft(database_session, scope, OnboardingDraftUpdate(training_goal="Força"))
+    provider = CurrentMessageProvider(
+        [], [{"height_cm": 180}, AiProviderError("invalid", retryable=False)]
+    )
+    service = OnboardingConversationService(provider, drafts)
+    service.submit(database_session, scope, message="Tenho 180 cm", client_request_id=uuid4())
+    with pytest.raises(AiConversationUnavailableError):
+        service.submit(database_session, scope, message="Peso 80 kg", client_request_id=uuid4())
+    state = service.state(database_session, scope)
+    assert state.known_answers.height_cm == 180 and state.known_answers.weight_kg is None
+    conversation = database_session.scalar(select(OnboardingAiConversation))
+    conversation.raw_expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    database_session.commit()
+    expired = service.state(database_session, scope)
+    assert expired.known_answers.training_goal == "Força"
+    assert expired.known_answers.height_cm is None and expired.messages == []
