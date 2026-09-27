@@ -1,5 +1,6 @@
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material'
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
+import { WorkspacePresentationContext } from './workspace-presentation'
 
 type PageHeaderProps = {
   eyebrow?: string
@@ -9,10 +10,11 @@ type PageHeaderProps = {
 }
 
 export function PageHeader({ eyebrow, title, description, action }: PageHeaderProps) {
+  const workspace = useContext(WorkspacePresentationContext)
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', mb: 3 }}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', mb: 3, ...(workspace ? { pb: { xs: 2.5, sm: 3 }, borderBottom: '1px solid', borderColor: 'divider', gap: 1 } : {}) }}>
       <Box sx={{ minWidth: 0 }}>
-        {eyebrow && <Typography color="primary.main" variant="overline">{eyebrow}</Typography>}
+        {eyebrow && <Typography color="primary.main" variant="overline" sx={workspace ? { display: 'block', mb: 1 } : undefined}>{eyebrow}</Typography>}
         <Typography component="h1" sx={{ overflowWrap: 'anywhere' }} variant="h2">{title}</Typography>
         {description && <Typography color="text.secondary" sx={{ maxWidth: 680, mt: 1 }}>{description}</Typography>}
       </Box>
@@ -31,8 +33,9 @@ export function LoadingState({ label }: { label: string }) {
 }
 
 export function EmptyState({ title, description }: { title: string; description: string }) {
+  const workspace = useContext(WorkspacePresentationContext)
   return (
-    <Stack component="section" spacing={0.75} sx={{ alignItems: 'flex-start', border: '1px dashed', borderColor: 'divider', borderRadius: 2, maxWidth: 680, p: 3 }}>
+    <Stack component="section" spacing={0.75} sx={{ alignItems: 'flex-start', border: '1px dashed', borderColor: 'divider', borderRadius: 2, maxWidth: 680, p: 3, ...(workspace ? { width: '100%', borderStyle: 'solid', bgcolor: 'background.paper', borderRadius: 3, py: 4 } : {}) }}>
       <Typography component="h2" variant="h4">{title}</Typography>
       <Typography color="text.secondary">{description}</Typography>
     </Stack>

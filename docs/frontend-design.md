@@ -314,3 +314,15 @@ The Keycloak `academia` theme is a later, cross-cutting authentication
 presentation integration. It does not retroactively change Task 08 or the
 authentication/provisioning task scopes, and it must preserve the existing OIDC
 and Keycloak security behavior.
+
+## Client/instructor visual refinement (2026-09-27)
+
+The client and instructor sidebar shells scope a presentation theme derived
+from the existing MUI theme. Preserve ink/chalk/coral, system fonts, original
+menus and area-switch behavior. Use consistent outline SVG icons, quiet tinted
+active navigation with a visible edge, a labeled area, a separated account
+footer, and a stable reading canvas. Scope typography/card/tab refinements to
+these areas so administrative and Keycloak surfaces retain their design.
+Page headers use a compact eyebrow, readable title, description and a divider;
+empty states use a quiet bordered surface. No decorative photographic assets,
+new destinations or application capabilities are introduced by this redesign.

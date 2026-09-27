@@ -8,6 +8,7 @@ import {
   IconButton,
   Stack,
   Toolbar,
+  ThemeProvider,
   Typography,
 } from "@mui/material";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
@@ -16,6 +17,7 @@ import { OidcSessionClient } from "../auth";
 import { getOccupancy } from "../occupancy";
 import { fetchProfileImage, getOwnSocialProfile } from "../social";
 import { RouterButtonLink } from "./router-button-link";
+import { WorkspaceIcon, WorkspacePresentationContext, workspaceTheme, navigationLinkSx, type WorkspaceIconName } from "./workspace-presentation";
 import { AreaSwitch, type ApplicationArea } from "./area-switch";
 type ShellProps = { children: ReactNode; onSignOut?: () => void };
 type ContentMaxWidth = false | "xs" | "sm" | "md" | "lg" | "xl";
@@ -70,14 +72,14 @@ function ClientNavigation({
 }) {
   const currentPath = window.location.pathname;
   const onboardingComplete = useContext(OnboardingNavigationContext);
-  const links = [
+  const links: { href: string; label: string; icon: WorkspaceIconName }[] = [
     ...(onboardingComplete === false
-      ? [{ href: "/onboarding", label: "Onboarding" }]
+      ? [{ href: "/onboarding", label: "Onboarding", icon: "onboarding" as const }]
       : []),
-    { href: "/treino", label: "Meu treino" },
-    { href: "/assistente", label: "Assistente" },
-    { href: "/feed", label: "Feed" },
-    { href: "/equipamentos", label: "Equipamentos" },
+    { href: "/treino", label: "Meu treino", icon: "training" },
+    { href: "/assistente", label: "Assistente", icon: "assistant" },
+    { href: "/feed", label: "Feed", icon: "feed" },
+    { href: "/equipamentos", label: "Equipamentos", icon: "equipment" },
   ];
   return (
     <Box
@@ -107,23 +109,15 @@ function ClientNavigation({
               (link.href === "/" && currentPath === "/dashboard");
             return (
               <RouterButtonLink
+                startIcon={<WorkspaceIcon name={link.icon} />}
                 aria-current={active ? "page" : undefined}
                 color={active ? "primary" : "inherit"}
                 key={link.href}
                 onClick={onNavigate}
                 size={compact ? "medium" : "small"}
-                sx={
-                  compact
-                    ? {
-                        justifyContent: "flex-start",
-                        px: 1.5,
-                        py: 1,
-                        width: "100%",
-                      }
-                    : undefined
-                }
+                sx={compact ? navigationLinkSx : undefined}
                 to={link.href}
-                variant={active ? "contained" : "text"}
+                variant="text"
               >
                 {link.label}
               </RouterButtonLink>
@@ -142,11 +136,12 @@ function OccupancyIndicator({ count }: { count: number | null }) {
       ? "1 pessoa na academia"
       : `${count} pessoas na academia`;
   return (
-    <Box aria-label={label} role="status" sx={{ alignItems: "center", display: "flex", gap: 1, px: 1.5, py: 1 }}>
-      <span aria-hidden="true">👤</span>
+    <Box aria-label={label} role="status" sx={{ alignItems: "center", display: "flex", gap: 1, px: 1.5, py: 1, borderRadius: 2, bgcolor: "action.hover", color: "text.secondary" }}>
+      <WorkspaceIcon name="clients" />
       <Typography component="span" sx={{ fontWeight: 700 }}>
         {count ?? "—"}
       </Typography>
+      <Typography variant="caption">na academia</Typography>
     </Box>
   );
 }
@@ -196,6 +191,7 @@ function SignOutButton({
   if (!onSignOut) return null;
   return (
     <Button
+      startIcon={fullWidth ? <WorkspaceIcon name="logout" /> : undefined}
       color="inherit"
       disabled={signingOut}
       onClick={signOut}
@@ -356,11 +352,12 @@ export function SidebarShell({
 }) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   return (
+    <ThemeProvider theme={workspaceTheme}><WorkspacePresentationContext.Provider value={true}>
     <Box
       sx={{
         minHeight: "100vh",
         background:
-          "linear-gradient(160deg, #10181B 0%, #162427 52%, #10181B 100%)",
+          "radial-gradient(ellipse at top right, #1B2B2D 0%, #10181B 65%)",
       }}
     >
       <Box
@@ -382,7 +379,7 @@ export function SidebarShell({
             aria-label="Abrir navegação"
             onClick={() => setMobileNavigationOpen(true)}
           >
-            <span aria-hidden="true">☰</span>
+            <WorkspaceIcon name="menu" />
           </IconButton>
           <Brand />
           <Box sx={{ flexGrow: 1 }} />
@@ -403,7 +400,7 @@ export function SidebarShell({
             flexDirection: "column",
             minHeight: "100%",
             p: 2,
-            width: "min(82vw, 300px)",
+            width: "min(90vw, 320px)",
           }}
         >
           <Stack
@@ -412,13 +409,14 @@ export function SidebarShell({
           >
             <Brand />
             <IconButton aria-label="Fechar navegação" onClick={() => setMobileNavigationOpen(false)}>
-              <span aria-hidden="true">×</span>
+              <WorkspaceIcon name="close" />
             </IconButton>
           </Stack>
-          <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="overline" color="text.secondary" sx={{ display: "block", px: 1.75, mb: 1.5 }}>{area === "client" ? "Área do cliente" : "Área do instrutor"}</Typography>
             {renderNavigation({ id: navigationId, onNavigate: () => setMobileNavigationOpen(false) })}
           </Box>
-          <Box sx={{ mt: "auto", pb: 1 }}>
+          <Box sx={{ mt: "auto", pt: 3, pb: 1 }}>
             <AreaSwitch area={area} onNavigate={() => setMobileNavigationOpen(false)} />
             {renderFooter?.(() => setMobileNavigationOpen(false))}
             <SignOutButton fullWidth onSignOut={onSignOut} />
@@ -428,13 +426,14 @@ export function SidebarShell({
       <Box
         sx={{
           display: { md: "grid" },
-          gridTemplateColumns: { md: "248px minmax(0, 1fr)" },
+          gridTemplateColumns: { md: "256px minmax(0, 1fr)" },
           minHeight: "100vh",
         }}
       >
         <Box
           component="aside"
           sx={{
+            bgcolor: "#111C20",
             borderRight: "1px solid",
             borderColor: "divider",
             display: { xs: "none", md: "flex" },
@@ -450,10 +449,11 @@ export function SidebarShell({
           <Box sx={{ px: 1.5, py: 1.25 }}>
             <Brand />
           </Box>
-          <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="overline" color="text.secondary" sx={{ display: "block", px: 1.75, mb: 1.5 }}>{area === "client" ? "Área do cliente" : "Área do instrutor"}</Typography>
             {renderNavigation({})}
           </Box>
-          <Box sx={{ mt: "auto", pb: 1 }}>
+          <Box sx={{ mt: "auto", pt: 3, pb: 1 }}>
             <AreaSwitch area={area} />
             {renderFooter?.()}
             <SignOutButton fullWidth onSignOut={onSignOut} />
@@ -465,13 +465,14 @@ export function SidebarShell({
           sx={{
             minWidth: 0,
             py: { xs: 3, sm: 4, md: 5 },
-            px: { xs: 2, sm: 3 },
+            px: { xs: 2, sm: 3, lg: 4 },
           }}
         >
           {children}
         </Container>
       </Box>
     </Box>
+    </WorkspacePresentationContext.Provider></ThemeProvider>
   );
 }
 
