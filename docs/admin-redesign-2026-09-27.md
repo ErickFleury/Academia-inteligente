@@ -38,3 +38,20 @@ retryable. Weekly bars use the already-returned counts and retain readable week
 labels and exact values; the bars are decorative and do not imply unique clients,
 occupancy or a new metric. Zero values are not shown as positive-height bars.
 Management tabs remain mounted when hidden so queries/local drafts are retained.
+
+Registration and editing now use a shared accessible dialog with a scrollable
+body and persistent action footer. Phones use the full screen. Identity/contact,
+address and account controls are grouped; directory rows separate names, email
+addresses and status. Account provisioning, onboarding invitation and confirmed
+client erasure retain their original service calls and permission rules.
+
+Closing a registration dialog retains ordinary field drafts for the current
+page, but clears the staged facial proof and unmounts the camera component.
+Reopening requires facial readiness verification again; the interface explains
+this. Closing is blocked during saves and postal-code lookup. Feedback appears
+inside the active dialog, within its focus boundary. Existing facial enrollment
+requirements and retry/duplicate-command protections remain in force.
+
+Checkpoint 2 validation: 19 targeted management/workspace tests passed, including
+registration, edit, provisioning, facial gating, directory searches and draft
+retention. Existing shell/dashboard tests also passed during implementation.

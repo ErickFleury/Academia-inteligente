@@ -354,3 +354,10 @@ The dashboard groups the existing overview, client directory and instructor
 directory into accessible tabs. Existing aggregate indicators stay independent
 on failure. Weekly attendance uses proportional decorative bars alongside exact
 counts and week labels, retaining the distinction between entries and people.
+
+Administrative person directories use focused create/edit dialogs through
+`ManagementDialog`: full-screen on phones, bounded width on larger screens,
+scrollable fields and persistent actions. Keep feedback inside the active dialog,
+group identity/contact, address and access controls, and preserve existing facial
+verification gates. Closing a registration retains ordinary local field drafts
+but resets the staged facial proof; explain the recheck in the form.
