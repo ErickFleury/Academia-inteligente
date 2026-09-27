@@ -10,13 +10,32 @@ from app.modules.biometrics.models import (
     BiometricCleanupJob,
     BiometricCommand,
     BiometricEnrollment,
+    ClientAccessState,
     EnrollmentSession,
+    RecognitionAttempt,
+    ReleaseRequest,
 )
+
+
+def erase_access_history(session, *, client_id=None, account_id=None):
+    criteria = (
+        RecognitionAttempt.client_id == client_id
+        if client_id is not None
+        else RecognitionAttempt.account_id == account_id
+    )
+    identifiers = list(session.scalars(select(RecognitionAttempt.id).where(criteria)))
+    for model in (BiometricAudit, BiometricCommand):
+        session.execute(delete(model).where(model.attempt_id.in_(identifiers)))
+    session.execute(delete(ReleaseRequest).where(ReleaseRequest.attempt_id.in_(identifiers)))
+    session.execute(delete(RecognitionAttempt).where(RecognitionAttempt.id.in_(identifiers)))
+    if client_id is not None:
+        session.execute(delete(ClientAccessState).where(ClientAccessState.client_id == client_id))
 
 
 def erase_person_biometrics(session, account):
     """Caller owns Account lock and commit; no identifying tombstone remains."""
     lock_biometrics(session)
+    erase_access_history(session, account_id=account.id)
     binding = (
         identity_binding(account.email, account.person_profile.cpf)
         if account.person_profile

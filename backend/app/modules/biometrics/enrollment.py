@@ -363,6 +363,9 @@ class EnrollmentService:
         if (current.revision if current else 0) != row.expected_revision:
             raise BiometricError("enrollment_stale", 409)
         if current:
+            from app.modules.biometrics.access import invalidate_enrollment_attempts
+
+            invalidate_enrollment_attempts(session, account_id)
             self._queue_delete(session, current.subject, account_id)
             current.subject = row.subject
             current.revision += 1
@@ -446,6 +449,9 @@ class EnrollmentService:
         if enrollment.revision != expected_revision:
             raise BiometricError("enrollment_stale", 409)
         enrollment.enabled = False
+        from app.modules.biometrics.access import invalidate_enrollment_attempts
+
+        invalidate_enrollment_attempts(session, account_id, "enrollment_revoked")
         enrollment.revision += 1
         enrollment.updated_at = utcnow()
         audit(session, actor, "enrollment_revoke", "disabled", account_id)
@@ -464,9 +470,12 @@ class EnrollmentService:
             )
 
     def cleanup(self, session: Session, limit: int = 20):
+        from app.modules.biometrics.access import recover_interrupted_attempts
+
         self.config.require_pilot()
         for _ in range(limit):
             lock_biometrics(session)
+            recover_interrupted_attempts(session)
             now = utcnow()
             for row in session.scalars(
                 select(EnrollmentSession).where(

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.database import get_database_session
+from app.modules.biometrics.access import AccessService, attempt_result, owned_attempt
 from app.modules.biometrics.config import BiometricConfig
 from app.modules.biometrics.enrollment import (
     EnrollmentService,
@@ -35,6 +36,13 @@ def get_enrollment_service():
 
 
 Service = Annotated[EnrollmentService, Depends(get_enrollment_service)]
+
+
+def get_access_service():
+    return AccessService(BiometricConfig.from_environment())
+
+
+Access = Annotated[AccessService, Depends(get_access_service)]
 
 
 class SessionRequest(BaseModel):
@@ -75,6 +83,66 @@ class IdentityRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     email: str = Field(max_length=320)
     cpf: str = Field(max_length=32)
+
+
+class CommandRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    command_id: UUID
+
+
+class AttemptRequest(CommandRequest):
+    direction: Literal["entry", "exit"]
+
+
+class AttemptResponse(BaseModel):
+    attempt_id: UUID
+    direction: Literal["entry", "exit"]
+    status: str
+    result_code: str
+    captures: int
+    expires_at: str
+    client_id: UUID | None
+    client_name: str | None
+    release_request_id: UUID | None
+    release_mode: Literal["simulated"] | None
+    can_retry: bool
+
+
+@router.post("/access-attempts", response_model=AttemptResponse)
+def start_attempt(
+    payload: AttemptRequest, administrator: Administrator, session: DatabaseSession, service: Access
+):
+    return service.create(session, administrator.subject, **payload.model_dump())
+
+
+@router.get("/access-attempts/{attempt_id}", response_model=AttemptResponse)
+def get_attempt(attempt_id: UUID, administrator: Administrator, session: DatabaseSession):
+    return attempt_result(session, owned_attempt(session, attempt_id, administrator.subject))
+
+
+@router.post("/access-attempts/{attempt_id}/capture", response_model=AttemptResponse)
+async def recognize(
+    attempt_id: UUID,
+    request: Request,
+    administrator: Administrator,
+    session: DatabaseSession,
+    service: Access,
+):
+    command_id, image = await read_capture(request)
+    return await run_in_threadpool(
+        service.capture, session, administrator.subject, attempt_id, command_id, image
+    )
+
+
+@router.post("/access-attempts/{attempt_id}/cancellation", response_model=AttemptResponse)
+def cancel_attempt(
+    attempt_id: UUID,
+    payload: CommandRequest,
+    administrator: Administrator,
+    session: DatabaseSession,
+    service: Access,
+):
+    return service.cancel(session, administrator.subject, attempt_id, payload.command_id)
 
 
 @router.post("/enrollment-readiness")

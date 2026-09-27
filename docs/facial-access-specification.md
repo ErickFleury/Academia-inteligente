@@ -1,9 +1,10 @@
 # Facial Access Pilot — Implementation Specification
 
-**Status:** FACE-IMPL-01/02/03 complete; recognition/release integration follows.
+**Status:** FACE-IMPL-01–04 complete; passage/count integration follows.
 See [Task 38 evidence](tasks/38-facial-provider-foundation.md) and
 [Task 39 evidence](tasks/39-facial-enrollment-and-cleanup.md) and
-[Task 40 evidence](tasks/40-mandatory-facial-registration.md).
+[Task 40 evidence](tasks/40-mandatory-facial-registration.md) and
+[Task 41 evidence](tasks/41-facial-recognition-release.md).
 **Scope:** a controlled local pilot involving only the project owner.
 **Authority:** `docs/requirements.md` remains the canonical implementation
 specification. This document records the user's approved feature decisions and
@@ -290,9 +291,16 @@ A successful scan does not start a loop or repeatedly emit requests.
 ### 6.2 TURNSTILE_RELEASE_REQUESTED — integration locator
 
 **Stable search marker:** `TURNSTILE_RELEASE_REQUESTED`.
-**Planned module:** `backend/app/modules/biometrics/release.py`.
-**Planned boundary:** `TurnstileReleaseAdapter.request_release(request)`.
-These are implementation targets, not claims that the files/functions exist.
+**Implemented module:** `backend/app/modules/biometrics/release.py`.
+**Boundary:** `TurnstileReleaseAdapter.request_release(request)`.
+**Request schema:** `TurnstileReleaseRequest` in that module.
+**Pilot adapter:** `SimulatedTurnstileReleaseAdapter`, with no network/hardware code.
+`AccessService.capture` in `biometrics/access.py` invokes the boundary after
+separate identification and eligibility checks and persists `ReleaseRequest` in
+the same authorization transaction. `biometric_release_request.attempt_id` is
+unique and its `mode` constraint accepts only `simulated` (migration 27).
+Configuration is `FACIAL_ACCESS_MODE=pilot`; no live mode exists. Verification:
+`backend/tests/test_biometric_access.py` and `test_biometric_access_postgres.py`.
 
 The authorization service reaches this boundary only after a successful match
 and positive policy decision. The pilot adapter persists/returns a simulated

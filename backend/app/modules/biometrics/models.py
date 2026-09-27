@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Uuid
+from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -74,6 +74,9 @@ class BiometricCommand(Base):
     session_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("biometric_enrollment_session.id")
     )
+    attempt_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("biometric_recognition_attempt.id")
+    )
     result: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
@@ -90,4 +93,55 @@ class BiometricAudit(Base):
     session_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("biometric_enrollment_session.id")
     )
+    attempt_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("biometric_recognition_attempt.id")
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ClientAccessState(Base):
+    __tablename__ = "biometric_client_access_state"
+    client_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("client.id"), primary_key=True)
+    inside: Mapped[bool] = mapped_column(Boolean)
+    revision: Mapped[int] = mapped_column(Integer)
+    changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RecognitionAttempt(Base):
+    __tablename__ = "biometric_recognition_attempt"
+    __table_args__ = (
+        CheckConstraint("captures >= 0 AND captures <= 2", name="ck_face_capture_budget"),
+        CheckConstraint("direction IN ('entry', 'exit')", name="ck_face_attempt_direction"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    actor: Mapped[str] = mapped_column(String(255), index=True)
+    direction: Mapped[str] = mapped_column(String(8))
+    checkpoint_id: Mapped[str] = mapped_column(String(80))
+    captures: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(24))
+    result_code: Mapped[str] = mapped_column(String(60))
+    account_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("person_profile.account_id"), index=True
+    )
+    client_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("client.id"), index=True)
+    enrollment_revision: Mapped[int | None] = mapped_column(Integer)
+    state_revision: Mapped[int | None] = mapped_column(Integer)
+    capture_command_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    capture_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ReleaseRequest(Base):
+    __tablename__ = "biometric_release_request"
+    __table_args__ = (CheckConstraint("mode = 'simulated'", name="ck_face_release_simulated"),)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    attempt_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("biometric_recognition_attempt.id"), unique=True
+    )
+    subject_reference: Mapped[str] = mapped_column(String(80))
+    checkpoint_id: Mapped[str] = mapped_column(String(80))
+    direction: Mapped[str] = mapped_column(String(8))
+    mode: Mapped[str] = mapped_column(String(16))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

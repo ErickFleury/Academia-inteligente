@@ -435,6 +435,11 @@ class ClientService:
             from app.modules.biometrics.erasure import erase_person_biometrics
 
             erase_person_biometrics(session, account)
+        from app.modules.biometrics.enrollment import lock_biometrics
+        from app.modules.biometrics.erasure import erase_access_history
+
+        lock_biometrics(session)
+        erase_access_history(session, client_id=client.id)
         conversation_ids = select(OnboardingAiConversation.id).where(
             OnboardingAiConversation.client_id == client.id
         )
