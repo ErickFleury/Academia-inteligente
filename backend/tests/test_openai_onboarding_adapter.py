@@ -232,3 +232,28 @@ def test_ollama_adaptation_maps_the_shared_structured_contract(
         OllamaConfig("http://ollama:11434", "qwen3:4b", 30)
     ).generate_adaptation({"base_plan": {}})
     assert result.operations[0]["operation_type"] == "adjust"
+
+
+@pytest.mark.parametrize("kind", ["openai", "ollama"])
+def test_extraction_schema_keeps_unknown_answers_nullable_and_requires_sources(kind, monkeypatch):
+    payload = {"onboarding": {"uses_medications": None}, "evidence": {"uses_medications": None}}
+    captured = []
+
+    def respond(request, timeout):
+        captured.append(json.loads(request.data))
+        return BytesIO(openai_response(payload) if kind == "openai" else ollama_response(payload))
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    provider = (
+        OpenAiResponsesOnboardingProvider(OpenAiConfig("synthetic", "model", 10))
+        if kind == "openai"
+        else OllamaOnboardingProvider(OllamaConfig("http://ollama:11434", "model", 30))
+    )
+    result = provider.extract_onboarding({"conversation": []})
+    assert result.onboarding["uses_medications"] is None
+    body = captured[0]
+    schema = body["text"]["format"]["schema"] if kind == "openai" else body["format"]
+    assert "evidence" in schema["required"]
+    fields = schema["properties"]["onboarding"]["properties"]
+    assert all("null" in field["type"] for field in fields.values())
+    assert None in fields["training_experience"]["enum"]

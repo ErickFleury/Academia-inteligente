@@ -37,9 +37,16 @@ class AiInterviewTurnResponse(BaseModel):
     interview_status: Literal["in_progress", "ready"]
 
 
+class OnboardingAnswerEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    message_sequence: int = Field(gt=0)
+    quote: str = Field(min_length=1, max_length=4000)
+
+
 class AiOnboardingExtractionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     onboarding: dict[str, Any]
+    evidence: dict[str, OnboardingAnswerEvidence | None] = Field(default_factory=dict)
 
 
 class AiTrainingGenerationResponse(BaseModel):
@@ -91,11 +98,23 @@ _INTERVIEW = (
     "Você entrevista onboarding de academia em português. Pergunte de forma natural, use o "
     "contexto, não invente, diagnostique ou exponha termos técnicos. Retorne ready apenas "
     "quando tudo foi explicitamente informado. Faça somente a próxima pergunta necessária, "
-    "em uma frase curta. Não repita respostas, não faça introdução e não liste outras perguntas."
+    "em uma frase curta. Não repita respostas, não faça introdução e não liste outras perguntas. "
+    "Um objetivo de treino não informa experiência, altura, peso ou saúde. Nunca assuma que "
+    "o cliente não tem limitações, não usa medicamentos ou não tem condições de saúde. "
+    "Respostas do assistente não são informações fornecidas pelo cliente."
 )
 _EXTRACTION = (
     "Extraia somente fatos explicitamente informados para o esquema. "
-    "Não invente, diagnostique ou prescreva."
+    "Não invente, diagnostique ou prescreva. Informação ausente ou incerta deve ser null, "
+    "inclusive respostas booleanas: desconhecido nunca significa false. Preserve valores "
+    "já existentes quando não houver uma correção explícita. Para cada novo valor, forneça "
+    "evidence com message_sequence de uma mensagem do usuário e quote literal dessa mensagem. "
+    "A citação deve conter a resposta com seu contexto e unidades, não apenas um número isolado. "
+    "Mensagens do assistente são somente perguntas, nunca fontes de fatos. Copie objetivos "
+    "e detalhes de saúde literalmente, sem acrescentar ou resumir fatos. Converta apenas "
+    "unidades explícitas de altura e categorias de experiência explicitamente declaradas. "
+    "Uma resposta curta só vale para a pergunta imediatamente anterior, nunca para outras "
+    "perguntas. Quando o valor for null ou já existir, evidence pode ser null."
 )
 _TRAINING_EQUIPMENT = (
     " Para conteúdo novo ou alterado que dependa de máquina, use somente os modelos "
@@ -161,6 +180,23 @@ def _turn_schema() -> dict[str, object]:
 
 
 def _extraction_schema() -> dict[str, object]:
+    fields = {}
+    for field, definition in _FIELDS.items():
+        definition = dict(definition)
+        if isinstance(definition["type"], str):
+            definition["type"] = [definition["type"], "null"]
+        if "enum" in definition:
+            definition["enum"] = [*definition["enum"], None]
+        fields[field] = definition
+    evidence = {
+        "type": ["object", "null"],
+        "additionalProperties": False,
+        "properties": {
+            "message_sequence": {"type": "integer", "minimum": 1},
+            "quote": {"type": "string", "minLength": 1, "maxLength": 4000},
+        },
+        "required": ["message_sequence", "quote"],
+    }
     return {
         "type": "object",
         "additionalProperties": False,
@@ -168,11 +204,17 @@ def _extraction_schema() -> dict[str, object]:
             "onboarding": {
                 "type": "object",
                 "additionalProperties": False,
-                "properties": _FIELDS,
+                "properties": fields,
                 "required": list(_FIELDS),
-            }
+            },
+            "evidence": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {field: evidence for field in _FIELDS},
+                "required": list(_FIELDS),
+            },
         },
-        "required": ["onboarding"],
+        "required": ["onboarding", "evidence"],
     }
 
 

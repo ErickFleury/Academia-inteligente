@@ -141,7 +141,7 @@ class OnboardingDraftService:
         return True
 
     @classmethod
-    def missing_required_fields(cls, onboarding: Onboarding) -> list[str]:
+    def missing_required_fields(cls, onboarding: Onboarding | OnboardingDraftUpdate) -> list[str]:
         """Report canonical completion gaps without exposing a sensitive value."""
         missing = [
             field
