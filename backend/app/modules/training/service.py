@@ -3,13 +3,20 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.modules.clients.models import Client
-from app.modules.training.models import TrainingPlan, TrainingPlanItem, TrainingPlanVersion
-from app.modules.training.schema import PlanOrigin, TrainingPlanVersionInput
+from app.modules.clients.models import Account, Client, Employee
+from app.modules.equipment.service import EquipmentService
+from app.modules.training.models import (
+    TrainingAdaptationProposal,
+    TrainingPlan,
+    TrainingPlanItem,
+    TrainingPlanVersion,
+)
+from app.modules.training.schema import PlanOrigin, TrainingPlanItemInput, TrainingPlanVersionInput
 
 
 class TrainingLifecycleError(Exception):
@@ -33,6 +40,10 @@ class InvalidTrainingTransitionError(TrainingLifecycleError):
 
 
 class ActiveTrainingProposalExistsError(TrainingLifecycleError):
+    pass
+
+
+class InvalidTrainingContentError(TrainingLifecycleError):
     pass
 
 
@@ -69,6 +80,9 @@ class TrainingLifecycleService:
             if self.find_proposal(session, client_id=client_id) is not None:
                 raise ActiveTrainingProposalExistsError from None
             raise
+        except Exception:
+            session.rollback()
+            raise
 
     def revise(
         self,
@@ -85,9 +99,15 @@ class TrainingLifecycleService:
             raise ImmutableTrainingVersionError
         if version.revision != expected_revision:
             raise ConcurrentTrainingUpdateError
-        self._replace_content(session, version, data)
-        version.revision += 1
-        session.commit()
+        self.validate_equipment(session, data, version)
+        try:
+            self._replace_content(session, version, data)
+            version.revision += 1
+            version.updated_at = datetime.now(UTC)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
         session.refresh(version)
         return version
 
@@ -99,10 +119,16 @@ class TrainingLifecycleService:
         version_number: int,
         data: TrainingPlanVersionInput,
         actor: str,
+        expected_revision: int | None = None,
+        origin: PlanOrigin = "instructor",
+        commit: bool = True,
+        retained_equipment: set[UUID] | None = None,
     ) -> TrainingPlanVersion:
         source = self._version(session, plan_id, version_number, lock=True)
-        if source.status == "proposal":
+        if source.status != "current":
             raise InvalidTrainingTransitionError
+        if expected_revision is not None and source.revision != expected_revision:
+            raise ConcurrentTrainingUpdateError
         self._lock_client(session, source.client_id)
         if self.find_proposal(session, client_id=source.client_id) is not None:
             raise ActiveTrainingProposalExistsError
@@ -115,7 +141,16 @@ class TrainingLifecycleService:
             or 0
         ) + 1
         return self._new_version(
-            session, plan_id, source.client_id, next_number, data, actor, "instructor"
+            session,
+            plan_id,
+            source.client_id,
+            next_number,
+            data,
+            actor,
+            origin,
+            commit=commit,
+            preserved=source,
+            retained_equipment=retained_equipment,
         )
 
     def approve(
@@ -132,23 +167,35 @@ class TrainingLifecycleService:
             raise InvalidTrainingTransitionError
         if version.revision != expected_revision:
             raise ConcurrentTrainingUpdateError
-        version.status, version.approved_by, version.approved_at = (
-            "approved",
-            actor,
-            datetime.now(UTC),
+        employee = session.scalar(
+            select(Employee)
+            .join(Account)
+            .where(
+                Account.keycloak_subject == actor,
+                Account.account_active,
+                Employee.active,
+                Employee.specialization == "instructor",
+            )
+            .with_for_update()
+            .execution_options(populate_existing=True)
         )
-        session.commit()
-        session.refresh(version)
-        return version
-
-    def activate(
-        self, session: Session, *, plan_id: UUID, version_number: int, expected_revision: int
-    ) -> TrainingPlanVersion:
-        version = self._version(session, plan_id, version_number, lock=True)
-        if version.status != "approved":
+        if employee is None or employee.account.person_profile is None:
             raise InvalidTrainingTransitionError
-        if version.revision != expected_revision:
-            raise ConcurrentTrainingUpdateError
+        # Validate the complete persisted draft, not only the last patch.
+        data = self.content(session, version)
+        self.validate_equipment(session, data, version)
+        source = session.scalar(
+            select(TrainingAdaptationProposal)
+            .where(
+                TrainingAdaptationProposal.resulting_version_id == version.id,
+                TrainingAdaptationProposal.status == "pending_instructor_review",
+            )
+            .with_for_update()
+        )
+        if source is not None:
+            base = session.get(TrainingPlanVersion, source.base_version_id)
+            if base is None or base.status != "current":
+                raise ConcurrentTrainingUpdateError
         plan = session.scalar(
             select(TrainingPlan).where(TrainingPlan.id == plan_id).with_for_update()
         )
@@ -162,23 +209,36 @@ class TrainingLifecycleService:
             .where(TrainingPlan.client_id == plan.client_id, TrainingPlan.is_current)
             .with_for_update()
         ).all()
-        for current in session.scalars(
+        current_versions = session.scalars(
             select(TrainingPlanVersion)
             .where(
                 TrainingPlanVersion.plan_id.in_([item.id for item in current_plans]),
                 TrainingPlanVersion.status == "current",
             )
             .with_for_update()
-        ):
-            current.status = "superseded"
-        for current_plan in current_plans:
-            current_plan.is_current = False
-        # Flush the old states first so the partial unique indexes never observe
-        # two current versions/plans, while retaining one transaction.
-        session.flush()
-        version.status = "current"
-        plan.is_current = True
-        session.commit()
+        ).all()
+        try:
+            for current in current_versions:
+                current.status = "superseded"
+            for current_plan in current_plans:
+                current_plan.is_current = False
+            session.flush()
+            version.status = "current"
+            version.approved_by = actor
+            version.responsible_employee_id = employee.id
+            version.responsible_name = employee.account.person_profile.full_name
+            version.approved_at = datetime.now(UTC)
+            version.revision += 1
+            version.updated_at = version.approved_at
+            plan.is_current = True
+            if source is not None:
+                source.status = "approved"
+                source.instructor_id = actor
+                source.instructor_reviewed_at = version.approved_at
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
         session.refresh(version)
         return version
 
@@ -191,7 +251,12 @@ class TrainingLifecycleService:
         data: TrainingPlanVersionInput,
         actor: str,
         origin: PlanOrigin,
+        *,
+        commit: bool = True,
+        preserved: TrainingPlanVersion | None = None,
+        retained_equipment: set[UUID] | None = None,
     ) -> TrainingPlanVersion:
+        self.validate_equipment(session, data, preserved, retained_equipment)
         version = TrainingPlanVersion(
             plan_id=plan_id,
             client_id=client_id,
@@ -205,8 +270,9 @@ class TrainingLifecycleService:
         session.add(version)
         session.flush()
         self._replace_content(session, version, data)
-        session.commit()
-        session.refresh(version)
+        if commit:
+            session.commit()
+            session.refresh(version)
         return version
 
     def _replace_content(
@@ -235,7 +301,13 @@ class TrainingLifecycleService:
             TrainingPlanVersion.plan_id == plan_id, TrainingPlanVersion.version_number == number
         )
         if lock:
-            statement = statement.with_for_update()
+            client_id = session.scalar(
+                select(TrainingPlan.client_id).where(TrainingPlan.id == plan_id)
+            )
+            if client_id is None:
+                raise TrainingVersionNotFoundError
+            TrainingLifecycleService._lock_client(session, client_id)
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         version = session.scalar(statement)
         if version is None:
             raise TrainingVersionNotFoundError
@@ -246,3 +318,49 @@ class TrainingLifecycleService:
         client = session.scalar(select(Client).where(Client.id == client_id).with_for_update())
         if client is None:
             raise TrainingVersionNotFoundError
+
+    @staticmethod
+    def content(session: Session, version: TrainingPlanVersion) -> TrainingPlanVersionInput:
+        try:
+            return TrainingPlanVersionInput(
+                name=version.name,
+                objective=version.objective,
+                items=[
+                    TrainingPlanItemInput.model_validate(item, from_attributes=True)
+                    for item in session.scalars(
+                        select(TrainingPlanItem)
+                        .where(TrainingPlanItem.version_id == version.id)
+                        .order_by(TrainingPlanItem.position)
+                    )
+                ],
+            )
+        except ValidationError as error:
+            raise InvalidTrainingContentError from error
+
+    @staticmethod
+    def validate_equipment(
+        session: Session,
+        data: TrainingPlanVersionInput,
+        preserved: TrainingPlanVersion | None = None,
+        retained_equipment: set[UUID] | None = None,
+    ) -> None:
+        active = {model.id for model in EquipmentService().active_models_with_units(session)}
+        retained = (
+            set(
+                session.scalars(
+                    select(TrainingPlanItem.equipment_model_id).where(
+                        TrainingPlanItem.version_id == preserved.id,
+                        TrainingPlanItem.equipment_model_id.is_not(None),
+                    )
+                )
+            )
+            if preserved
+            else set()
+        )
+        for item in data.items:
+            if bool(item.equipment_requirement) != bool(item.equipment_model_id):
+                raise InvalidTrainingContentError
+            if item.equipment_model_id and item.equipment_model_id not in active | retained | (
+                retained_equipment or set()
+            ):
+                raise InvalidTrainingContentError

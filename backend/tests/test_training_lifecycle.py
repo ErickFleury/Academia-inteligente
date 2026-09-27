@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from training_fixtures import instructor
 
 from app.database import Base
 from app.modules.clients.models import Account, Client
@@ -24,6 +25,8 @@ def session() -> Generator[Session, None, None]:
     )
     Base.metadata.create_all(engine)
     value = sessionmaker(bind=engine, expire_on_commit=False)()
+    instructor(value, "instructor-1")
+    instructor(value, "instructor-2", "Outra")
     try:
         yield value
     finally:
@@ -76,9 +79,7 @@ def test_initial_proposal_approval_activation_and_immutable_history(session: Ses
         actor="instructor-1",
         expected_revision=1,
     )
-    current = service.activate(
-        session, plan_id=initial.plan_id, version_number=1, expected_revision=approved.revision
-    )
+    current = approved
     assert current.status == "current" and current.approved_by == "instructor-1"
     with pytest.raises(ImmutableTrainingVersionError):
         service.revise(
@@ -126,9 +127,6 @@ def test_new_current_supersedes_previous_and_conflicts_are_rejected(session: Ses
     first = service.approve(
         session, plan_id=first.plan_id, version_number=1, actor="instructor-1", expected_revision=1
     )
-    service.activate(
-        session, plan_id=first.plan_id, version_number=1, expected_revision=first.revision
-    )
     second = service.create_revision(
         session,
         plan_id=first.plan_id,
@@ -147,9 +145,6 @@ def test_new_current_supersedes_previous_and_conflicts_are_rejected(session: Ses
         )
     second = service.approve(
         session, plan_id=second.plan_id, version_number=2, actor="instructor-2", expected_revision=1
-    )
-    service.activate(
-        session, plan_id=second.plan_id, version_number=2, expected_revision=second.revision
     )
     statuses = session.scalars(
         select(TrainingPlanVersion.status)
@@ -174,7 +169,6 @@ def test_activating_a_different_plan_supersedes_the_client_previous_current_plan
     first = service.approve(
         session, plan_id=first.plan_id, version_number=1, actor="instructor-1", expected_revision=1
     )
-    service.activate(session, plan_id=first.plan_id, version_number=1, expected_revision=1)
     second = service.create_proposal(
         session,
         client_id=client,
@@ -185,14 +179,7 @@ def test_activating_a_different_plan_supersedes_the_client_previous_current_plan
     second = service.approve(
         session, plan_id=second.plan_id, version_number=1, actor="instructor-1", expected_revision=1
     )
-    service.activate(session, plan_id=second.plan_id, version_number=1, expected_revision=1)
-
-    assert (
-        session.scalar(
-            select(TrainingPlanVersion.status).where(TrainingPlanVersion.plan_id == first.plan_id)
-        )
-        == "superseded"
-    )
+    assert first.status == "superseded"
     assert (
         session.scalar(
             select(TrainingPlanVersion.status).where(TrainingPlanVersion.plan_id == second.plan_id)

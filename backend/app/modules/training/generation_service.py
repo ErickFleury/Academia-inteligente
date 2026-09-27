@@ -17,7 +17,11 @@ from app.modules.onboarding.draft_service import (
 )
 from app.modules.onboarding.models import Onboarding
 from app.modules.training.schema import TrainingPlanVersionInput
-from app.modules.training.service import ActiveTrainingProposalExistsError, TrainingLifecycleService
+from app.modules.training.service import (
+    ActiveTrainingProposalExistsError,
+    InvalidTrainingContentError,
+    TrainingLifecycleService,
+)
 
 
 class CompletedOnboardingRequiredError(Exception):
@@ -97,6 +101,8 @@ class InitialTrainingGenerationService:
             if existing is not None:
                 return existing
             raise
+        except InvalidTrainingContentError:
+            raise InvalidTrainingGenerationError from None
 
     @staticmethod
     def _retry(operation: Callable[[], object]):

@@ -22,24 +22,10 @@ export type TrainingAdaptation = {
   }>
 }
 
-export type AdaptationOperationInput = {
-  operation_type: 'add' | 'remove' | 'replace' | 'adjust'
-  target_position: number | null
-  item: null | {
-    exercise_name: string
-    sets: number
-    repetitions: string
-    load_guidance: string
-    rest_seconds: number
-    equipment_requirement: string | null
-    equipment_model_id: string | null
-    is_existing_exercise: boolean
-  }
-}
-
 async function adaptationError(response: Response): Promise<never> {
   if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
   if (response.status === 403) throw new Error('Você não tem permissão para esta alteração.')
+  if (response.status === 409) throw new Error('Já existe um rascunho ou o treino mudou. Recarregue e revise antes de continuar.')
   if (response.status === 422) throw new Error('Você precisa ter um treino atual antes de solicitar uma alteração.')
   if (response.status === 503) throw new Error('A proposta de alteração está indisponível no momento. Tente novamente.')
   throw new Error('Não foi possível processar a proposta de alteração. Tente novamente.')
@@ -59,24 +45,6 @@ export async function createAdaptation(accessToken: string, reason: string, sour
 
 export async function decideAdaptation(accessToken: string, id: string, accept: boolean): Promise<TrainingAdaptation> {
   const response = await fetch(`${apiBaseUrl}/training/adaptations/${id}/client-decision`, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ accept }) })
-  if (!response.ok) return adaptationError(response)
-  return response.json() as Promise<TrainingAdaptation>
-}
-
-export async function getInstructorAdaptations(accessToken: string): Promise<TrainingAdaptation[]> {
-  const response = await fetch(`${apiBaseUrl}/training/adaptations/review`, { headers: { Authorization: `Bearer ${accessToken}` } })
-  if (!response.ok) return adaptationError(response)
-  return response.json() as Promise<TrainingAdaptation[]>
-}
-
-export async function updateInstructorAdaptation(accessToken: string, id: string, explanation: string, operations: AdaptationOperationInput[]): Promise<TrainingAdaptation> {
-  const response = await fetch(`${apiBaseUrl}/training/adaptations/${id}`, { method: 'PATCH', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ explanation, operations }) })
-  if (!response.ok) return adaptationError(response)
-  return response.json() as Promise<TrainingAdaptation>
-}
-
-export async function decideInstructorAdaptation(accessToken: string, id: string, approve: boolean): Promise<TrainingAdaptation> {
-  const response = await fetch(`${apiBaseUrl}/training/adaptations/${id}/instructor-decision`, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ approve }) })
   if (!response.ok) return adaptationError(response)
   return response.json() as Promise<TrainingAdaptation>
 }

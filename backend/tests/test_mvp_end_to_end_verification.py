@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from training_fixtures import instructor
 
 from app.database import Base, get_database_session
 from app.integrations.ai import (
@@ -182,6 +183,7 @@ def test_client_critical_path_is_scoped_and_preserves_history(
 ) -> None:
     create_client(database_session, "ada", "ada@example.test")
     create_client(database_session, "grace", "grace@example.test")
+    instructor(database_session, "instructor")
     app = create_app()
 
     def override_database_session() -> Generator[Session, None, None]:
@@ -233,14 +235,7 @@ def test_client_critical_path_is_scoped_and_preserves_history(
         {"expected_revision": 1},
     )
     assert approved.status_code == 200
-    assert (
-        api.request(
-            "POST",
-            f"/training/plans/{plan_id}/versions/{version_number}/activate",
-            {"expected_revision": approved.body["revision"]},
-        ).status_code
-        == 200
-    )
+    assert approved.body["status"] == "current"
 
     identity.identity = AuthenticatedIdentity("ada", "ada@example.test", ("client",))
     current = api.request("GET", "/training/current")
@@ -277,11 +272,15 @@ def test_client_critical_path_is_scoped_and_preserves_history(
     identity.identity = AuthenticatedIdentity(
         "instructor", "instructor@example.test", ("instructor",)
     )
+    pending = api.request("GET", "/training/pending")
+    assert pending.status_code == 200
+    assert len(pending.body["items"]) == 1
+    review = pending.body["items"][0]
     assert (
         api.request(
             "POST",
-            f"/training/adaptations/{proposal_id}/instructor-decision",
-            {"approve": True},
+            f"/training/plans/{review['plan_id']}/versions/{review['version_number']}/approve",
+            {"expected_revision": review["revision"]},
         ).status_code
         == 200
     )
@@ -298,9 +297,7 @@ def test_client_critical_path_is_scoped_and_preserves_history(
     assert api.request("GET", "/clients").status_code == 403
 
     identity.identity = AuthenticatedIdentity("ada", "ada@example.test", ("client",))
-    monkeypatch.setattr(
-        training_router, "chat_service", TrainingChatService(FailingChatProvider())
-    )
+    monkeypatch.setattr(training_router, "chat_service", TrainingChatService(FailingChatProvider()))
     failed_chat = api.request(
         "POST",
         "/training/chat/messages",

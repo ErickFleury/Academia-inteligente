@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from training_fixtures import instructor
 
 from app.database import Base, get_database_session
 from app.integrations.ai import AiProviderError, AiTrainingChatResponse
@@ -88,6 +89,7 @@ def create_client(session: Session, subject: str, email: str) -> Client:
 
 
 def create_current_plan(session: Session, client: Client) -> None:
+    instructor(session, "instrutor")
     lifecycle = TrainingLifecycleService()
     proposal = lifecycle.create_proposal(
         session,
@@ -109,18 +111,12 @@ def create_current_plan(session: Session, client: Client) -> None:
         created_by="instrutor",
         origin="instructor",
     )
-    approved = lifecycle.approve(
+    lifecycle.approve(
         session,
         plan_id=proposal.plan_id,
         version_number=proposal.version_number,
         actor="instrutor",
         expected_revision=proposal.revision,
-    )
-    lifecycle.activate(
-        session,
-        plan_id=approved.plan_id,
-        version_number=approved.version_number,
-        expected_revision=approved.revision,
     )
 
 
@@ -296,9 +292,12 @@ def test_chat_can_update_the_single_active_draft(session: Session) -> None:
     assert updated is not None
     assert updated.status == "proposal" and updated.origin == "ai" and updated.revision == 2
     assert updated.objective == "Ganhar força sem desconforto no joelho"
-    assert session.scalar(
-        select(TrainingPlanItem.exercise_name).where(TrainingPlanItem.version_id == draft.id)
-    ) == "Leg press"
+    assert (
+        session.scalar(
+            select(TrainingPlanItem.exercise_name).where(TrainingPlanItem.version_id == draft.id)
+        )
+        == "Leg press"
+    )
     assert provider.contexts[0]["editable_training_draft"] is not None
 
 
@@ -349,9 +348,7 @@ def test_chat_can_update_an_instructor_draft(session: Session) -> None:
         session, "ada", message="Altere meu treino", client_request_id=uuid4()
     )
 
-    updated = session.scalar(
-        select(TrainingPlanVersion).where(TrainingPlanVersion.id == manual.id)
-    )
+    updated = session.scalar(select(TrainingPlanVersion).where(TrainingPlanVersion.id == manual.id))
     assert updated is not None
     assert updated.name == "Rascunho ajustado" and updated.revision == 2
     assert provider.contexts[0]["editable_training_draft"] is not None
@@ -457,6 +454,7 @@ def test_raw_training_chat_endpoint_requires_the_client_role(
 
     create_client(session, "ada", "ada@example.test")
     app = create_app()
+    instructor(session, "instructor")
 
     def override_database_session() -> Generator[Session, None, None]:
         yield session

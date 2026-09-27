@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from training_fixtures import instructor
 
 from app.database import Base, get_database_session
 from app.main import create_app
@@ -52,6 +53,7 @@ def create_client(session: Session, subject: str, email: str) -> Client:
 
 
 def activate_current_plan(session: Session, client: Client, name: str) -> None:
+    instructor(session, "instructor-subject")
     lifecycle = TrainingLifecycleService()
     proposal = lifecycle.create_proposal(
         session,
@@ -72,18 +74,12 @@ def activate_current_plan(session: Session, client: Client, name: str) -> None:
         created_by="instructor-subject",
         origin="instructor",
     )
-    approved = lifecycle.approve(
+    lifecycle.approve(
         session,
         plan_id=proposal.plan_id,
         version_number=proposal.version_number,
         actor="instructor-subject",
         expected_revision=proposal.revision,
-    )
-    lifecycle.activate(
-        session,
-        plan_id=approved.plan_id,
-        version_number=approved.version_number,
-        expected_revision=approved.revision,
     )
 
 

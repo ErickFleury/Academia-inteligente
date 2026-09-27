@@ -186,18 +186,21 @@ def update(
             "state",
         )
     }
-    data = None
-    if any(value is not None for value in fields.values()):
-        existing = employee_service.get(session, employee_id)
-        if existing is None:
-            raise HTTPException(404, "Employee not found")
-        data = validate_client_data(
-            **{
-                key: fields[key] if fields[key] is not None else getattr(existing, key)
-                for key in fields
-            }
-        )
     try:
+        data = None
+        provided = payload.model_fields_set.intersection(fields)
+        if provided:
+            existing = employee_service.get(session, employee_id)
+            if existing is None:
+                raise HTTPException(404, "Employee not found")
+            if any(fields[key] is None for key in provided - {"complement"}):
+                raise ClientValidationError("Required personal fields cannot be null")
+            data = validate_client_data(
+                **{
+                    key: fields[key] if key in provided else getattr(existing, key)
+                    for key in fields
+                }
+            )
         item = employee_service.update(
             session,
             employee_id,

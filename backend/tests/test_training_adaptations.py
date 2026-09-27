@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from training_fixtures import instructor
 
 from app.database import Base
 from app.integrations.ai import AiProviderError, AiTrainingAdaptationResponse
@@ -87,6 +88,7 @@ def client(session: Session, subject: str, email: str) -> Client:
 
 
 def current_plan(session: Session, owner: Client) -> TrainingPlanVersion:
+    instructor(session, "instructor-1")
     lifecycle = TrainingLifecycleService()
     proposal = lifecycle.create_proposal(
         session,
@@ -122,12 +124,7 @@ def current_plan(session: Session, owner: Client) -> TrainingPlanVersion:
         actor="instructor-1",
         expected_revision=proposal.revision,
     )
-    return lifecycle.activate(
-        session,
-        plan_id=approved.plan_id,
-        version_number=approved.version_number,
-        expected_revision=approved.revision,
-    )
+    return approved
 
 
 def source_message(session: Session, owner: Client, request_id: UUID) -> None:
@@ -211,7 +208,16 @@ def test_client_confirmed_adaptation_creates_one_new_current_version(
     assert "grace@example.test" not in str(provider.contexts[0])
 
     service.client_decide(session, "ada", proposal.id, True)
-    approved = service.instructor_decide(session, proposal.id, "instructor-2", True)
+    instructor(session, "instructor-2", "Outra")
+    draft = session.get(TrainingPlanVersion, proposal.resulting_version_id)
+    TrainingLifecycleService().approve(
+        session,
+        plan_id=draft.plan_id,
+        version_number=draft.version_number,
+        actor="instructor-2",
+        expected_revision=draft.revision,
+    )
+    approved = proposal
     versions = list(
         session.scalars(
             select(TrainingPlanVersion)
@@ -233,7 +239,7 @@ def test_client_confirmed_adaptation_creates_one_new_current_version(
     assert items[0].sets == 2 and items[1].sets == 3
     assert versions[-1].approved_by == "instructor-2"
     with pytest.raises(AdaptationStateError):
-        service.instructor_decide(session, proposal.id, "instructor-2", True)
+        service.client_decide(session, "ada", proposal.id, True)
     assert len(versions) == 2
 
 
@@ -452,6 +458,14 @@ def test_renamed_or_deactivated_model_preserves_retained_proposal_history(
     assert operation is not None
     assert operation.equipment_model_id == model.id
     assert operation.equipment_requirement == "Leg Press 45°"
+    draft_item = session.scalar(
+        select(TrainingPlanItem).where(
+            TrainingPlanItem.version_id == proposal.resulting_version_id,
+            TrainingPlanItem.position == 1,
+        )
+    )
+    assert draft_item.equipment_model_id == model.id
+    assert draft_item.equipment_requirement == "Leg Press 45°"
 
 
 def test_wrong_client_and_provider_failure_create_no_proposal(session: Session) -> None:

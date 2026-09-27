@@ -199,8 +199,12 @@ class KeycloakAdminClient:
         )
         if not isinstance(current, list):
             raise KeycloakProvisioningError("Employee role reconciliation is unavailable", subject)
+        desired_names = roles.intersection(managed)
+        current_names = {role.get("name") for role in current if isinstance(role, dict)}
         removable = [
-            role for role in current if isinstance(role, dict) and role.get("name") in managed
+            role
+            for role in current
+            if isinstance(role, dict) and role.get("name") in managed - desired_names
         ]
         if removable:
             self._request(
@@ -211,7 +215,7 @@ class KeycloakAdminClient:
                 subject,
             )
         desired = []
-        for role_name in sorted(roles.intersection(managed)):
+        for role_name in sorted(desired_names - current_names):
             role = self._request(
                 "GET",
                 f"/admin/realms/{self._config.realm}/roles/{role_name}",
@@ -310,7 +314,9 @@ class KeycloakAdminClient:
         identifiers = (
             attributes.get("academia_provisioning_id", []) if isinstance(attributes, dict) else []
         )
-        if str(reconciliation_id) not in identifiers or payload.get("email") != email:
+        # The durable random provisioning marker proves ownership, not mutable e-mail.
+        # An administrator may edit e-mail while first-access delivery is pending.
+        if str(reconciliation_id) not in identifiers:
             raise KeycloakIdentityConflictError(
                 "A conflicting Keycloak identity already exists", subject
             )

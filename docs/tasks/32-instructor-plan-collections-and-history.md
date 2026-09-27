@@ -36,8 +36,10 @@ shared states.
   status.
 - Todos os planos supports combinable trimmed client-name search,
   responsible-instructor filtering, and inclusive approval date/date-range
-  filtering using established timezone/date conventions. Define deterministic
-  ordering and stable bounded pagination; avoid N+1 queries.
+  filtering using `America/Sao_Paulo` calendar dates, as approved in the
+  canonical requirements. Include the entire selected day/end date, excluding
+  the following local midnight. Define deterministic ordering and stable
+  bounded pagination; avoid N+1 queries.
 - Add detail APIs/UI shared by both lists. Show the immutable current content
   and the client's approved/superseded history in deterministic newest-first
   order with historical responsible attribution and approval date. Historical
@@ -66,7 +68,8 @@ shared states.
 ## Acceptance criteria and tests
 
 Test Meus planos responsibility scope; Todos os planos completeness, combined
-filters, date boundaries, pagination/order, and no N+1 behavior; current and
+filters, `America/Sao_Paulo` date boundaries (including UTC/local-day differences),
+pagination/order, and no N+1 behavior; current and
 history detail; immutable history direct denial; clean clone; existing-draft
 conflict; cancel; explicit exact-draft replacement; stale confirmation races;
 authorization; and responsive accessible lists/filter/dialog states at the

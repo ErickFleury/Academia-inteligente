@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -39,20 +39,24 @@ from app.modules.training.models import (
     TrainingPlanItem,
     TrainingPlanVersion,
 )
+from app.modules.training.review_service import (
+    pending_version,
+    pending_versions,
+    responsible_name,
+    review_metadata,
+)
 from app.modules.training.schema import (
     AdaptationClientDecision,
     AdaptationGenerationInput,
-    AdaptationInstructorDecision,
-    AdaptationInstructorUpdate,
     ManualPlanCreate,
     ProposalUpdate,
-    TrainingPlanVersionInput,
     VersionAction,
 )
 from app.modules.training.service import (
     ActiveTrainingProposalExistsError,
     ConcurrentTrainingUpdateError,
     ImmutableTrainingVersionError,
+    InvalidTrainingContentError,
     InvalidTrainingTransitionError,
     TrainingLifecycleService,
     TrainingVersionNotFoundError,
@@ -161,13 +165,16 @@ def adaptation_response(
         "instructor_reviewed_at": (
             proposal.instructor_reviewed_at.isoformat() if proposal.instructor_reviewed_at else None
         ),
-        "instructor_id": proposal.instructor_id,
         "resulting_version_id": str(proposal.resulting_version_id)
         if proposal.resulting_version_id
         else None,
         "base_items": [
             {
                 "position": item.position,
+                "equipment_requirement": item.equipment_requirement,
+                "equipment_model_id": str(item.equipment_model_id)
+                if item.equipment_model_id
+                else None,
                 "exercise_name": item.exercise_name,
                 "sets": item.sets,
                 "repetitions": item.repetitions,
@@ -215,9 +222,9 @@ def version_response(session: Session, version: TrainingPlanVersion) -> dict[str
         "name": version.name,
         "objective": version.objective,
         "origin": version.origin,
-        "created_by": version.created_by,
         "created_at": version.created_at.isoformat(),
-        "approved_by": version.approved_by,
+        "responsible_instructor_name": responsible_name(session, version),
+        "updated_at": version.updated_at.isoformat(),
         "approved_at": version.approved_at.isoformat() if version.approved_at else None,
         "revision": version.revision,
         "items": [
@@ -228,6 +235,10 @@ def version_response(session: Session, version: TrainingPlanVersion) -> dict[str
                 "load_guidance": item.load_guidance,
                 "rest_seconds": item.rest_seconds,
                 "position": item.position,
+                "equipment_requirement": item.equipment_requirement,
+                "equipment_model_id": str(item.equipment_model_id)
+                if item.equipment_model_id
+                else None,
             }
             for item in session.scalars(
                 select(TrainingPlanItem)
@@ -239,6 +250,8 @@ def version_response(session: Session, version: TrainingPlanVersion) -> dict[str
 
 
 def lifecycle_error(error: Exception) -> HTTPException:
+    if isinstance(error, InvalidTrainingContentError):
+        return HTTPException(422, "Training content or equipment reference is invalid")
     if isinstance(error, TrainingVersionNotFoundError):
         return HTTPException(404, "Training version not found")
     if isinstance(error, ConcurrentTrainingUpdateError):
@@ -248,6 +261,34 @@ def lifecycle_error(error: Exception) -> HTTPException:
     if isinstance(error, ImmutableTrainingVersionError):
         return HTTPException(409, "Approved, current, and historical versions are immutable")
     return HTTPException(409, "Invalid training version transition")
+
+
+@router.get("/pending")
+def get_pending_plans(
+    session: DatabaseSession,
+    instructor: Instructor,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> dict[str, object]:
+    versions = pending_versions(session, offset, limit + 1)
+    return {
+        "items": [
+            dict(version_response(session, version), **review_metadata(session, version))
+            for version in versions[:limit]
+        ],
+        "next_offset": offset + limit if len(versions) > limit else None,
+    }
+
+
+@router.get("/pending/{version_id}")
+def get_pending_plan(
+    version_id: UUID, session: DatabaseSession, instructor: Instructor
+) -> dict[str, object]:
+    try:
+        version = pending_version(session, version_id)
+        return dict(version_response(session, version), **review_metadata(session, version))
+    except TrainingVersionNotFoundError as error:
+        raise lifecycle_error(error) from None
 
 
 @router.get("/current")
@@ -317,6 +358,8 @@ def send_training_chat_message(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             "AI draft update could not be validated",
         ) from None
+    except ConcurrentTrainingUpdateError as error:
+        raise lifecycle_error(error) from None
 
 
 @router.get("/adaptations")
@@ -328,18 +371,6 @@ def get_own_adaptations(session: DatabaseSession, client_user: Client) -> list[d
         ]
     except AdaptationNotFoundError as error:
         raise adaptation_error(error) from None
-
-
-@router.get("/adaptations/review")
-def get_adaptations_for_instructor(
-    session: DatabaseSession, instructor: Instructor
-) -> list[dict[str, object]]:
-    """Expose only structured proposals to the authorized instructor role."""
-    del instructor
-    return [
-        adaptation_response(session, item)
-        for item in adaptation_service.pending_for_instructor(session)
-    ]
 
 
 @router.post("/adaptations", status_code=status.HTTP_201_CREATED)
@@ -375,40 +406,8 @@ def decide_adaptation_as_client(
                 session, client_user.subject, proposal_id, payload.accept
             ),
         )
-    except (AdaptationNotFoundError, AdaptationStateError) as error:
-        raise adaptation_error(error) from None
-
-
-@router.patch("/adaptations/{proposal_id}")
-def edit_adaptation_as_instructor(
-    proposal_id: UUID,
-    payload: AdaptationInstructorUpdate,
-    session: DatabaseSession,
-    instructor: Instructor,
-) -> dict[str, object]:
-    del instructor
-    try:
-        return adaptation_response(
-            session, adaptation_service.instructor_edit(session, proposal_id, payload)
-        )
-    except (AdaptationNotFoundError, AdaptationStateError) as error:
-        raise adaptation_error(error) from None
-
-
-@router.post("/adaptations/{proposal_id}/instructor-decision")
-def decide_adaptation_as_instructor(
-    proposal_id: UUID,
-    payload: AdaptationInstructorDecision,
-    session: DatabaseSession,
-    instructor: Instructor,
-) -> dict[str, object]:
-    try:
-        return adaptation_response(
-            session,
-            adaptation_service.instructor_decide(
-                session, proposal_id, instructor.subject, payload.approve
-            ),
-        )
+    except ActiveTrainingProposalExistsError as error:
+        raise lifecycle_error(error) from None
     except (AdaptationNotFoundError, AdaptationStateError) as error:
         raise adaptation_error(error) from None
 
@@ -456,7 +455,11 @@ def create_manual_proposal(
         return version_response(session, version)
     except ValueError:
         raise HTTPException(422, "Invalid client identifier") from None
-    except (ActiveTrainingProposalExistsError, TrainingVersionNotFoundError) as error:
+    except (
+        InvalidTrainingContentError,
+        ActiveTrainingProposalExistsError,
+        TrainingVersionNotFoundError,
+    ) as error:
         raise lifecycle_error(error) from None
 
 
@@ -481,6 +484,7 @@ def revise_proposal(
             ),
         )
     except (
+        InvalidTrainingContentError,
         TrainingVersionNotFoundError,
         ImmutableTrainingVersionError,
         ConcurrentTrainingUpdateError,
@@ -509,33 +513,7 @@ def approve_proposal(
             ),
         )
     except (
-        TrainingVersionNotFoundError,
-        ImmutableTrainingVersionError,
-        ConcurrentTrainingUpdateError,
-        InvalidTrainingTransitionError,
-    ) as error:
-        raise lifecycle_error(error) from None
-
-
-@router.post("/plans/{plan_id}/versions/{version_number}/activate")
-def activate_approved(
-    plan_id: UUID,
-    version_number: int,
-    payload: VersionAction,
-    session: DatabaseSession,
-    instructor: Instructor,
-) -> dict[str, object]:
-    try:
-        return version_response(
-            session,
-            service.activate(
-                session,
-                plan_id=plan_id,
-                version_number=version_number,
-                expected_revision=payload.expected_revision,
-            ),
-        )
-    except (
+        InvalidTrainingContentError,
         TrainingVersionNotFoundError,
         ImmutableTrainingVersionError,
         ConcurrentTrainingUpdateError,
@@ -550,7 +528,7 @@ def activate_approved(
 def create_revision(
     plan_id: UUID,
     version_number: int,
-    payload: TrainingPlanVersionInput,
+    payload: ProposalUpdate,
     session: DatabaseSession,
     instructor: Instructor,
 ) -> dict[str, object]:
@@ -563,9 +541,11 @@ def create_revision(
                 version_number=version_number,
                 data=payload,
                 actor=instructor.subject,
+                expected_revision=payload.expected_revision,
             ),
         )
     except (
+        InvalidTrainingContentError,
         TrainingVersionNotFoundError,
         ImmutableTrainingVersionError,
         ConcurrentTrainingUpdateError,

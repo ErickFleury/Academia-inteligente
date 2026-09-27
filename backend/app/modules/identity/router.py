@@ -41,6 +41,9 @@ def get_authenticated_identity(
         ) from None
 
     account = session.scalar(select(Account).where(Account.keycloak_subject == identity.subject))
+    if account is not None and not account.account_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
+    roles = set(identity.roles)
     if "client" in identity.roles and (
         account is None
         or not account.account_active
@@ -49,19 +52,29 @@ def get_authenticated_identity(
         )
         is None
     ):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
-    if "instructor" in identity.roles and (
+        roles.discard("client")
+    if "instructor" in roles and (
         account is None
         or not account.account_active
         or session.scalar(
-            select(Employee.id).where(Employee.account_id == account.id, Employee.active.is_(True))
+            select(Employee.id).where(
+                Employee.account_id == account.id,
+                Employee.active.is_(True),
+                Employee.specialization == "instructor",
+            )
         )
         is None
     ):
+        roles.difference_update({"instructor", "employee"})
+    if set(identity.roles).intersection(
+        {"client", "instructor", "employee"}
+    ) and not roles.intersection({"client", "instructor", "employee", "admin", "attendant"}):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
-    if account is not None and not account.account_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
-    return identity
+    return AuthenticatedIdentity(
+        subject=identity.subject,
+        username=identity.username,
+        roles=tuple(role for role in identity.roles if role in roles),
+    )
 
 
 @router.get("/me")

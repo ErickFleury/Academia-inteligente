@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { BrowserRouter, Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { AdminShell, ClientNavigationStateProvider, ClientShell, PublicShell } from './components/application-shell'
@@ -15,7 +15,7 @@ import { OnboardingForm } from './onboarding-form'
 import { getOwnOnboardingDraft } from './onboarding-draft'
 import { CurrentTrainingPage } from './current-training-page'
 import { TrainingChatPage } from './training-chat-page'
-import { InstructorAdaptationsPage } from './instructor-adaptations-page'
+import { InstructorPendingPlansPage } from './instructor-pending-plans-page'
 import { ProgressPage } from './progress-page'
 import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
@@ -25,18 +25,19 @@ import { PostDetailPage } from './post-detail-page'
 import { InstructorFeedPage } from './instructor-feed-page'
 import { InstructorPostDetailPage } from './instructor-post-detail-page'
 import { InstructorShell } from './instructor-shell'
+import { SessionContext } from './session-context'
 
 const oidcSessionClient = new OidcSessionClient()
 
 export function App() {
-  return <BrowserRouter><Application /></BrowserRouter>
+  const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
+  return <SessionContext.Provider value={session}><BrowserRouter><Application session={session} setSession={setSession} /></BrowserRouter></SessionContext.Provider>
 }
 
-function Application() {
+function Application({ session, setSession }: { session: Session | null; setSession: Dispatch<SetStateAction<Session | null>> }) {
   const location = useLocation()
   const navigate = useNavigate()
   const isEquipmentCatalogRoute = location.pathname === '/equipamentos'
-  const [session, setSession] = useState<Session | null>(() => oidcSessionClient.getSession())
   const [completingLogin, setCompletingLogin] = useState(false)
   const [authenticationError, setAuthenticationError] = useState<string | null>(null)
   const [loggedOut, setLoggedOut] = useState(() => oidcSessionClient.hasLoggedOut())
@@ -145,11 +146,11 @@ function Application() {
   const isProfileRoute = location.pathname === '/perfil'
   const viewedProfileId = location.pathname.match(/^\/perfis\/([^/]+)$/)?.[1]
   const viewedPostId = location.pathname.match(/^\/publicacoes\/([^/]+)$/)?.[1]
-  const isInstructorAdaptationsRoute = location.pathname === '/instrutor/adaptacoes'
   const isInstructorRoute = location.pathname.startsWith('/instrutor')
   const instructorPostId = location.pathname.match(/^\/instrutor\/publicacoes\/([^/]+)$/)?.[1]
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
-  const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
+  const isClientEntryRoute = location.pathname === '/cliente'
+  const isClientRoute = isClientEntryRoute || isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
   const isInstructor = session?.roles.includes('instructor') ?? false
 
   function clearSession() {
@@ -214,6 +215,8 @@ function Application() {
     return <ClientShell onSignOut={endSession}><StatusNotice severity="error">Você não tem permissão para acessar esta área.</StatusNotice></ClientShell>
   }
   if (isInstructorRoute && session) {
+    if (location.pathname === '/instrutor/adaptacoes') return <Navigate replace to="/instrutor/planos-pendentes" />
+    if (location.pathname === '/instrutor/planos-pendentes') return <InstructorPendingPlansPage accessToken={session.accessToken} onSignOut={endSession} />
     if (instructorPostId) return <InstructorPostDetailPage accessToken={session.accessToken} onSignOut={endSession} postId={instructorPostId} />
     if (location.pathname === '/instrutor/feed') return <InstructorFeedPage accessToken={session.accessToken} onSignOut={endSession} onOpenPost={(id) => navigate(`/instrutor/publicacoes/${id}`)} />
     const title = location.pathname === '/instrutor/perfil' ? 'Perfil do instrutor' : 'Em breve'
@@ -223,8 +226,7 @@ function Application() {
 
   if (
     session.roles.includes('client')
-    && !isAdministrator
-    && (location.pathname === '/' || location.pathname === '/dashboard')
+    && (isClientEntryRoute || (!isAdministrator && (location.pathname === '/' || location.pathname === '/dashboard')))
   ) {
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
@@ -244,21 +246,6 @@ function Application() {
         </ClientShell>
       </ClientNavigationStateProvider>
     )
-  }
-
-  if (isInstructorAdaptationsRoute && !isInstructor) {
-    return (
-      <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
-        <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
-          <PageHeader eyebrow="Acesso protegido" title="Área do instrutor indisponível" />
-          <Alert severity="error" variant="outlined">Você não tem permissão para acessar esta página.</Alert>
-        </ClientShell>
-      </ClientNavigationStateProvider>
-    )
-  }
-
-  if (isInstructorAdaptationsRoute && session) {
-    return <InstructorAdaptationsPage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
   if (isOnboardingConversationRoute && session) {

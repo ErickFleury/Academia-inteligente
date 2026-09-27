@@ -29,6 +29,7 @@ from app.modules.training.schema import TrainingPlanVersionInput
 from app.modules.training.service import (
     ConcurrentTrainingUpdateError,
     ImmutableTrainingVersionError,
+    InvalidTrainingContentError,
     TrainingLifecycleService,
 )
 
@@ -110,10 +111,11 @@ class TrainingChatService:
             session.commit()
 
         context = self._context(session, client_id, conversation, message, user.id)
-        response = self._retry(lambda: self._provider.training_chat(context))
         editable_draft = self._editable_ai_draft(session, client_id)
+        draft_revision = editable_draft.revision if editable_draft else None
+        response = self._retry(lambda: self._provider.training_chat(context))
         if response.draft_update is not None and editable_draft is not None:
-            self._apply_draft_update(session, editable_draft, response.draft_update)
+            self._apply_draft_update(session, editable_draft, response.draft_update, draft_revision)
         can_suggest_adaptation = context["current_training_plan"] is not None
         assistant = TrainingAiMessage(
             conversation_id=conversation.id,
@@ -210,6 +212,10 @@ class TrainingChatService:
                     "repetitions": item.repetitions,
                     "load_guidance": item.load_guidance,
                     "rest_seconds": item.rest_seconds,
+                    "equipment_requirement": item.equipment_requirement,
+                    "equipment_model_id": str(item.equipment_model_id)
+                    if item.equipment_model_id
+                    else None,
                 }
                 for item in session.scalars(
                     select(TrainingPlanItem)
@@ -220,7 +226,11 @@ class TrainingChatService:
         }
 
     def _apply_draft_update(
-        self, session: Session, version: TrainingPlanVersion, update: dict[str, object]
+        self,
+        session: Session,
+        version: TrainingPlanVersion,
+        update: dict[str, object],
+        expected_revision: int,
     ) -> None:
         try:
             data = TrainingPlanVersionInput.model_validate(update)
@@ -230,9 +240,11 @@ class TrainingChatService:
                 version_number=version.version_number,
                 data=data,
                 actor="ai",
-                expected_revision=version.revision,
+                expected_revision=expected_revision,
             )
-        except (ValidationError, ConcurrentTrainingUpdateError, ImmutableTrainingVersionError):
+        except ImmutableTrainingVersionError:
+            raise ConcurrentTrainingUpdateError from None
+        except (ValidationError, InvalidTrainingContentError):
             raise TrainingChatDraftUpdateError from None
 
     def _current_plan(self, session: Session, client_id: UUID) -> dict[str, object] | None:

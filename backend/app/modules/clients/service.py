@@ -16,6 +16,13 @@ from app.modules.identity.keycloak_admin import (
     KeycloakIdentityConflictError,
     KeycloakProvisioningError,
 )
+from app.modules.identity.reconciliation import (
+    identity_provisioned,
+    lock_account,
+    pending_records,
+    queue_reconciliation,
+    reconcile_account,
+)
 from app.modules.occupancy.models import AccessPassageEvent, ClientAccessReference
 from app.modules.onboarding.models import (
     Onboarding,
@@ -48,7 +55,7 @@ from app.modules.training.models import (
 )
 
 email_pattern = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-CREATE, LINK, EMAIL = "create", "link_existing", "email_update"
+CREATE, LINK = "create", "link_existing"
 
 
 class DuplicateEmailError(Exception):
@@ -209,7 +216,7 @@ def summary_from_client(client: Client) -> ClientSummary:
         state=profile.state,
         id=client.id,
         client_active=client.active,
-        identity_provisioned=client.account.keycloak_subject is not None,
+        identity_provisioned=identity_provisioned(client.account),
         created_at=client.created_at,
     )
 
@@ -233,14 +240,18 @@ class ClientService:
                 or email_account.client is not None
             ):
                 raise DuplicateEmailError
-            account = email_account
-            client = Client(name=data.name, active=True, account=account)
+            account = lock_account(session, email_account.id)
+            if (
+                account.client is not None
+                or account.email != data.email
+                or account.person_profile.cpf != data.cpf
+            ):
+                raise DuplicateEmailError
+            account.account_active = True
+            client = Client(name=account.person_profile.full_name, active=True, account=account)
             session.add(client)
             session.flush()
-            pending = ClientIdentityReconciliation(
-                operation=LINK, email=email, account_id=client.account.id
-            )
-            session.add(pending)
+            queue_reconciliation(session, account)
             try:
                 session.commit()
             except IntegrityError as error:
@@ -308,33 +319,17 @@ class ClientService:
         client = self._client(session, client_id)
         if client is None:
             return None
-        if client.account.keycloak_subject:
-            pending = session.scalar(
-                select(ClientIdentityReconciliation).where(
-                    ClientIdentityReconciliation.account_id == client.account.id
-                )
-            )
-            if pending:
-                session.delete(pending)
-            self._reconcile_roles(client)
-            self._commit_client(session)
-            return summary_from_client(client)
-        pending = session.scalar(
-            select(ClientIdentityReconciliation).where(
-                ClientIdentityReconciliation.account_id == client.account.id
-            )
-        )
-        if pending is None:
-            pending = ClientIdentityReconciliation(
-                operation=LINK, email=client.account.email, account_id=client.account.id
-            )
-            self._commit_pending(session, pending)
-        client.account.keycloak_subject = self._ensure_identity(
-            session, pending, client.account.person_profile
-        )
-        self._reconcile_roles(client)
-        session.delete(pending)
+        account = lock_account(session, client.account_id)
+        # Do not replace legacy pending email intent when merely retrying.
+        if not pending_records(session, account.id):
+            queue_reconciliation(session, account)
         self._commit_client(session)
+        try:
+            reconcile_account(session, account.id, self.provisioner)
+        except KeycloakIdentityConflictError as error:
+            raise ClientIdentityConflictError from error
+        except KeycloakProvisioningError as error:
+            raise ClientIdentityProvisioningError from error
         return summary_from_client(client)
 
     def update(
@@ -382,6 +377,7 @@ class ClientService:
             and not complement_provided
         ):
             raise ClientValidationError("At least one client field must be provided")
+        lock_account(session, client.account_id)
         profile = client.account.person_profile
         if profile is None:
             raise ClientValidationError("Client personal data is unavailable")
@@ -406,54 +402,10 @@ class ClientService:
         )
         if existing_profile is not None:
             raise DuplicateEmailError
-        if data.email != client.account.email and client.account.keycloak_subject:
-            pending = session.scalar(
-                select(ClientIdentityReconciliation).where(
-                    ClientIdentityReconciliation.account_id == client.account.id
-                )
-            )
-            if pending is None:
-                if session.scalar(select(Account).where(Account.email == data.email)):
-                    raise DuplicateEmailError
-                pending = ClientIdentityReconciliation(
-                    operation=EMAIL,
-                    email=data.email,
-                    account_id=client.account.id,
-                    keycloak_subject=client.account.keycloak_subject,
-                )
-                self._commit_pending(session, pending)
-            if pending.operation != EMAIL or pending.email != data.email:
-                raise ClientIdentityProvisioningError
-            try:
-                self.provisioner.update_client_identity(
-                    client.account.keycloak_subject, data.email, data.first_name, data.surname
-                )
-            except KeycloakIdentityConflictError as error:
-                raise ClientIdentityConflictError from error
-            except KeycloakProvisioningError as error:
-                raise ClientIdentityProvisioningError from error
-            session.delete(pending)
-        elif data.email != client.account.email:
-            if session.scalar(select(Account).where(Account.email == data.email)):
-                raise DuplicateEmailError
-            pending = session.scalar(
-                select(ClientIdentityReconciliation).where(
-                    ClientIdentityReconciliation.account_id == client.account.id
-                )
-            )
-            if pending is not None:
-                pending.email = data.email
-        elif client.account.keycloak_subject and (
-            data.first_name != profile.first_name or data.surname != profile.surname
+        if session.scalar(
+            select(Account).where(Account.email == data.email, Account.id != client.account_id)
         ):
-            try:
-                self.provisioner.update_client_identity(
-                    client.account.keycloak_subject, data.email, data.first_name, data.surname
-                )
-            except KeycloakIdentityConflictError as error:
-                raise ClientIdentityConflictError from error
-            except KeycloakProvisioningError as error:
-                raise ClientIdentityProvisioningError from error
+            raise DuplicateEmailError
         self._apply_person_profile(profile, data)
         client.name, client.account.email = data.name, data.email
         if client_active is not None:
@@ -461,8 +413,10 @@ class ClientService:
         client.account.account_active = bool(
             client.active or (client.account.employee and client.account.employee.active)
         )
-        self._reconcile_roles(client)
+        queue_reconciliation(session, client.account, refresh_intent=True)
         self._commit_client(session)
+        if client.account.keycloak_subject:
+            return self.provision_existing(session, client_id)
         return summary_from_client(client)
 
     def erase(self, session: Session, client_id: UUID) -> bool:
@@ -470,8 +424,10 @@ class ClientService:
         client = self._client(session, client_id)
         if client is None:
             return False
-        subject = client.account.keycloak_subject
-        if subject:
+        account = lock_account(session, client.account_id)
+        shared = account.employee is not None
+        subject = account.keycloak_subject
+        if subject and not shared:
             self.provisioner.delete_identity(subject)
         conversation_ids = select(OnboardingAiConversation.id).where(
             OnboardingAiConversation.client_id == client.id
@@ -585,47 +541,29 @@ class ClientService:
         session.execute(
             delete(ClientAccessReference).where(ClientAccessReference.client_id == client.id)
         )
-        session.execute(
-            delete(ClientIdentityReconciliation).where(
-                ClientIdentityReconciliation.account_id == client.account.id
+        if shared:
+            # Keep the provisioning marker even when it originated in client creation.
+            # The employee retry endpoint can finish the same Account operation.
+            queue_reconciliation(session, account, employee=True)
+            account.account_active = account.employee.active
+        else:
+            session.execute(
+                delete(ClientIdentityReconciliation).where(
+                    ClientIdentityReconciliation.account_id == account.id
+                )
             )
-        )
         session.delete(client)
-        session.delete(client.account)
+        if not shared:
+            session.delete(account)
         session.commit()
+        if shared:
+            session.expire(account, ["client"])
+            if subject:
+                try:
+                    reconcile_account(session, account.id, self.provisioner)
+                except KeycloakProvisioningError as error:
+                    raise ClientIdentityProvisioningError from error
         return True
-
-    def _ensure_identity(
-        self,
-        session: Session,
-        pending: ClientIdentityReconciliation,
-        profile: PersonProfile | None,
-    ) -> str:
-        if profile is None:
-            raise ClientValidationError("Client personal data is unavailable")
-        try:
-            subject = self.provisioner.ensure_client_identity(
-                pending.email,
-                profile.first_name,
-                profile.surname,
-                pending.id,
-                pending.keycloak_subject,
-            )
-        except KeycloakIdentityConflictError as error:
-            self._store_subject(session, pending, error.subject)
-            raise ClientIdentityConflictError from error
-        except KeycloakProvisioningError as error:
-            self._store_subject(session, pending, error.subject)
-            raise ClientIdentityProvisioningError from error
-        self._store_subject(session, pending, subject)
-        return subject
-
-    def _store_subject(
-        self, session: Session, pending: ClientIdentityReconciliation, subject: str | None
-    ) -> None:
-        if subject and pending.keycloak_subject != subject:
-            pending.keycloak_subject = subject
-            self._commit_pending(session, pending)
 
     @staticmethod
     def _client(session: Session, client_id: UUID) -> Client | None:
@@ -637,18 +575,6 @@ class ClientService:
             )
             .where(Client.id == client_id)
         )
-
-    def _reconcile_roles(self, client: Client) -> None:
-        subject = client.account.keycloak_subject
-        if not subject:
-            return
-        roles: set[str] = {"client"} if client.active else set()
-        if client.account.employee and client.account.employee.active:
-            roles.update({"employee", "instructor"})
-        try:
-            self.provisioner.reconcile_application_roles(subject, roles)
-        except KeycloakProvisioningError as error:
-            raise ClientIdentityProvisioningError from error
 
     @staticmethod
     def _person_profile(data: ClientData) -> PersonProfile:
@@ -679,15 +605,6 @@ class ClientService:
         profile.neighborhood = data.neighborhood
         profile.city = data.city
         profile.state = data.state
-
-    @staticmethod
-    def _commit_pending(session: Session, pending: ClientIdentityReconciliation) -> None:
-        try:
-            session.add(pending)
-            session.commit()
-        except IntegrityError as error:
-            session.rollback()
-            raise ClientIdentityProvisioningError from error
 
     @staticmethod
     def _commit_client(session: Session) -> None:

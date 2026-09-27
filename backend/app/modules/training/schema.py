@@ -8,16 +8,18 @@ PlanStatus = Literal["proposal", "approved", "current", "superseded"]
 
 
 class TrainingPlanItemInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     exercise_name: str = Field(min_length=1, max_length=200)
     sets: int = Field(gt=0, le=100)
     repetitions: str = Field(min_length=1, max_length=100)
     load_guidance: str = Field(min_length=1, max_length=500)
     rest_seconds: int = Field(ge=0, le=3600)
+    equipment_requirement: str | None = Field(default=None, max_length=200)
+    equipment_model_id: UUID | None = None
 
 
 class TrainingPlanVersionInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     name: str = Field(min_length=1, max_length=200)
     objective: str = Field(min_length=1, max_length=2000)
     items: list[TrainingPlanItemInput] = Field(min_length=1, max_length=100)
@@ -59,12 +61,3 @@ class AdaptationGenerationInput(BaseModel):
 
 class AdaptationClientDecision(BaseModel):
     accept: bool
-
-
-class AdaptationInstructorUpdate(BaseModel):
-    explanation: str = Field(min_length=1, max_length=2000)
-    operations: list[AdaptationOperationInput] = Field(min_length=1, max_length=100)
-
-
-class AdaptationInstructorDecision(BaseModel):
-    approve: bool

@@ -10,9 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.modules.clients.models import (
     Account,
-    ClientIdentityReconciliation,
     Employee,
-    EmployeeIdentityReconciliation,
     PersonProfile,
 )
 from app.modules.clients.service import ClientData, ClientValidationError
@@ -20,6 +18,13 @@ from app.modules.identity.keycloak_admin import (
     ClientIdentityProvisioner,
     KeycloakAdminClient,
     KeycloakProvisioningError,
+)
+from app.modules.identity.reconciliation import (
+    identity_provisioned,
+    lock_account,
+    pending_records,
+    queue_reconciliation,
+    reconcile_account,
 )
 
 
@@ -80,7 +85,7 @@ def _summary(employee: Employee) -> EmployeeSummary:
         cnpj=employee.cnpj,
         specialization=employee.specialization,
         employee_active=employee.active,
-        identity_provisioned=employee.account.keycloak_subject is not None,
+        identity_provisioned=identity_provisioned(employee.account),
         created_at=employee.created_at,
     )
 
@@ -94,6 +99,7 @@ class EmployeeService:
     ) -> EmployeeSummary:
         if specialization != "instructor":
             raise ClientValidationError("Only instructor specialization is allowed")
+        normalized_cnpj = normalize_cnpj(cnpj)
         email_account = session.scalar(select(Account).where(Account.email == data.email))
         cpf_profile = session.scalar(select(PersonProfile).where(PersonProfile.cpf == data.cpf))
         if email_account or cpf_profile:
@@ -103,8 +109,12 @@ class EmployeeService:
                 or email_account.id != cpf_profile.account_id
             ):
                 raise EmployeeConflictError
-            account = email_account
-            if account.employee is not None:
+            account = lock_account(session, email_account.id)
+            if (
+                account.employee is not None
+                or account.email != data.email
+                or account.person_profile.cpf != data.cpf
+            ):
                 raise EmployeeConflictError
             account.account_active = True
         else:
@@ -123,11 +133,11 @@ class EmployeeService:
                 state=data.state,
             )
         employee = Employee(
-            account=account, specialization="instructor", cnpj=normalize_cnpj(cnpj), active=True
+            account=account, specialization="instructor", cnpj=normalized_cnpj, active=True
         )
         session.add(employee)
         session.flush()
-        session.add(EmployeeIdentityReconciliation(email=data.email, account_id=account.id))
+        queue_reconciliation(session, account, employee=True)
         try:
             session.commit()
         except IntegrityError as error:
@@ -165,64 +175,14 @@ class EmployeeService:
         employee = self._employee(session, employee_id)
         if employee is None:
             return None
-        pending = session.scalar(
-            select(EmployeeIdentityReconciliation).where(
-                EmployeeIdentityReconciliation.account_id == employee.account_id
-            )
-        )
-        if pending is None:
-            pending = EmployeeIdentityReconciliation(
-                email=employee.account.email, account_id=employee.account_id
-            )
-            session.add(pending)
-            session.commit()
-        profile = employee.account.person_profile
-        client_pending = session.scalar(
-            select(ClientIdentityReconciliation).where(
-                ClientIdentityReconciliation.account_id == employee.account_id
-            )
-        )
-        if employee.account.keycloak_subject:
-            try:
-                self.provisioner.update_client_identity(
-                    employee.account.keycloak_subject,
-                    employee.account.email,
-                    profile.first_name,
-                    profile.surname,
-                )
-                self.provisioner.reconcile_application_roles(
-                    employee.account.keycloak_subject, self._roles(employee)
-                )
-            except KeycloakProvisioningError as error:
-                raise EmployeeProvisioningError from error
-            session.delete(pending)
-            if client_pending:
-                session.delete(client_pending)
-            session.commit()
-            return _summary(employee)
-        reconciliation_id = client_pending.id if client_pending else pending.id
-        try:
-            subject = self.provisioner.ensure_employee_identity(
-                employee.account.email,
-                profile.first_name,
-                profile.surname,
-                reconciliation_id,
-                pending.keycloak_subject
-                or (client_pending.keycloak_subject if client_pending else None),
-                self._roles(employee),
-                True,
-            )
-        except KeycloakProvisioningError as error:
-            pending.keycloak_subject = error.subject
-            if client_pending:
-                client_pending.keycloak_subject = error.subject
-            session.commit()
-            raise EmployeeProvisioningError from error
-        employee.account.keycloak_subject = subject
-        session.delete(pending)
-        if client_pending:
-            session.delete(client_pending)
+        account = lock_account(session, employee.account_id)
+        if not pending_records(session, account.id):
+            queue_reconciliation(session, account, employee=True)
         session.commit()
+        try:
+            reconcile_account(session, account.id, self.provisioner)
+        except KeycloakProvisioningError as error:
+            raise EmployeeProvisioningError from error
         return _summary(employee)
 
     def update(
@@ -240,6 +200,8 @@ class EmployeeService:
             return None
         if specialization is not None and specialization != "instructor":
             raise ClientValidationError("Only instructor specialization is allowed")
+        normalized_cnpj = normalize_cnpj(cnpj) if cnpj_provided else employee.cnpj
+        lock_account(session, employee.account_id)
         profile = employee.account.person_profile
         if data:
             other = session.scalar(
@@ -274,44 +236,22 @@ class EmployeeService:
             )
             if employee.account.client:
                 employee.account.client.name = data.name
-            if employee.account.keycloak_subject:
-                try:
-                    self.provisioner.update_client_identity(
-                        employee.account.keycloak_subject, data.email, data.first_name, data.surname
-                    )
-                except KeycloakProvisioningError as error:
-                    session.rollback()
-                    raise EmployeeProvisioningError from error
         if cnpj_provided:
-            employee.cnpj = normalize_cnpj(cnpj)
+            employee.cnpj = normalized_cnpj
         if active is not None:
             employee.active = active
-        if employee.account.keycloak_subject:
-            try:
-                self.provisioner.reconcile_application_roles(
-                    employee.account.keycloak_subject, self._roles(employee)
-                )
-            except KeycloakProvisioningError as error:
-                session.rollback()
-                raise EmployeeProvisioningError from error
         employee.account.account_active = bool(
             (employee.account.client and employee.account.client.active) or employee.active
         )
+        queue_reconciliation(session, employee.account, employee=True, refresh_intent=True)
         try:
             session.commit()
         except IntegrityError as error:
             session.rollback()
             raise EmployeeConflictError from error
+        if employee.account.keycloak_subject:
+            return self.provision_existing(session, employee_id)
         return _summary(employee)
-
-    @staticmethod
-    def _roles(employee: Employee) -> set[str]:
-        roles: set[str] = set()
-        if employee.account.client and employee.account.client.active:
-            roles.add("client")
-        if employee.active:
-            roles.update({"employee", "instructor"})
-        return roles
 
     @staticmethod
     def _employee(session: Session, employee_id: UUID) -> Employee | None:

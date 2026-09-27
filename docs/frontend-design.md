@@ -116,6 +116,14 @@ palette, or page composition.
   imagery. The read-only feed reuses social cards but omits every interaction
   composer/control. Perfil is a deliberate pt-BR future-feature state until an
   instructor social profile is separately specified.
+- **Dual-role area switch:** when the backend-verified session has both active
+  client and instructor roles, both sidebars show a compact current-area panel
+  above the account/sign-out controls, separate from the ordered menu. Reuse
+  theme surfaces, a subtle coral border/tint, and an outlined target-area link
+  with a decorative exchange icon. Keep the same control in the mobile drawer,
+  close the drawer on navigation, and retain keyboard focus styles and a
+  minimum 44 px target. Single-role sessions do not show it. Switching uses the
+  same session and does not combine menus or modify authorization.
 - **Administrative person forms:** Client and employee create/edit screens
   group identity, contact, and address fields. Keep first name and surname
   separate, allow a multiword surname, format CPF/CNPJ/phone/CEP for reading,

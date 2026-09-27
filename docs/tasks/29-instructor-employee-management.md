@@ -2,7 +2,9 @@
 
 ## Status
 
-Planned. Depends on Task 28.
+Implemented. Depends on Task 28. Employee editing/API feedback gaps verified
+on 2026-09-27: 47 targeted backend and 7 employee UI tests pass with fake
+external adapters. Browser viewport verification remains part of Task 37.
 
 ## Objective
 

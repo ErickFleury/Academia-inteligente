@@ -16,6 +16,7 @@ import { OidcSessionClient } from "../auth";
 import { getOccupancy } from "../occupancy";
 import { fetchProfileImage, getOwnSocialProfile } from "../social";
 import { RouterButtonLink } from "./router-button-link";
+import { AreaSwitch, type ApplicationArea } from "./area-switch";
 type ShellProps = { children: ReactNode; onSignOut?: () => void };
 type ContentMaxWidth = false | "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -273,7 +274,6 @@ function ClientNavigationShell({
   contentMaxWidth = "lg",
   onSignOut,
 }: ShellProps & { contentMaxWidth?: ContentMaxWidth }) {
-  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [profileName, setProfileName] = useState("Meu perfil");
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [occupancy, setOccupancy] = useState<number | null>(null);
@@ -318,6 +318,44 @@ function ClientNavigationShell({
   }, []);
 
   return (
+    <SidebarShell
+      area="client"
+      contentMaxWidth={contentMaxWidth}
+      navigationId="navegacao-cliente-movel"
+      onSignOut={onSignOut}
+      renderNavigation={({ id, onNavigate }) => (
+        <ClientNavigation compact id={id} onNavigate={onNavigate} />
+      )}
+      renderFooter={(onNavigate) => (
+        <>
+          <Box sx={{ mb: 1.5 }}><OccupancyIndicator count={occupancy} /></Box>
+          <ProfileNavigationLink imageUrl={profileImageUrl} name={profileName} onNavigate={onNavigate} />
+        </>
+      )}
+    >
+      {children}
+    </SidebarShell>
+  );
+}
+
+/** Shared responsive layout only; each area supplies its own authorized navigation. */
+export function SidebarShell({
+  area,
+  children,
+  contentMaxWidth = "lg",
+  navigationId,
+  onSignOut,
+  renderNavigation,
+  renderFooter,
+}: ShellProps & {
+  area: ApplicationArea;
+  contentMaxWidth?: ContentMaxWidth;
+  navigationId: string;
+  renderNavigation: (options: { id?: string; onNavigate?: () => void }) => ReactNode;
+  renderFooter?: (onNavigate?: () => void) => ReactNode;
+}) {
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  return (
     <Box
       sx={{
         minHeight: "100vh",
@@ -338,7 +376,7 @@ function ClientNavigationShell({
       >
         <Toolbar sx={{ gap: 2, minHeight: 64, px: 2 }}>
           <IconButton
-            aria-controls="navegacao-cliente-movel"
+            aria-controls={navigationId}
             aria-expanded={mobileNavigationOpen}
             aria-label="Abrir navegação"
             onClick={() => setMobileNavigationOpen(true)}
@@ -362,7 +400,7 @@ function ClientNavigationShell({
               "linear-gradient(160deg, #10181B 0%, #162427 52%, #10181B 100%)",
             display: "flex",
             flexDirection: "column",
-            height: "100%",
+            minHeight: "100%",
             p: 2,
             width: "min(82vw, 300px)",
           }}
@@ -377,11 +415,11 @@ function ClientNavigationShell({
             </IconButton>
           </Stack>
           <Box sx={{ mt: 3 }}>
-            <ClientNavigation compact id="navegacao-cliente-movel" onNavigate={() => setMobileNavigationOpen(false)} />
+            {renderNavigation({ id: navigationId, onNavigate: () => setMobileNavigationOpen(false) })}
           </Box>
           <Box sx={{ mt: "auto", pb: 1 }}>
-            <Box sx={{ mb: 1.5 }}><OccupancyIndicator count={occupancy} /></Box>
-            <ProfileNavigationLink imageUrl={profileImageUrl} name={profileName} onNavigate={() => setMobileNavigationOpen(false)} />
+            <AreaSwitch area={area} onNavigate={() => setMobileNavigationOpen(false)} />
+            {renderFooter?.(() => setMobileNavigationOpen(false))}
             <SignOutButton fullWidth onSignOut={onSignOut} />
           </Box>
         </Box>
@@ -400,22 +438,23 @@ function ClientNavigationShell({
             borderColor: "divider",
             display: { xs: "none", md: "flex" },
             flexDirection: "column",
-            minHeight: "100vh",
+            minHeight: 0,
+            overflowY: "auto",
             p: 2,
             position: "sticky",
             top: 0,
-            height: "100vh",
+            height: "100dvh",
           }}
         >
           <Box sx={{ px: 1.5, py: 1.25 }}>
             <Brand />
           </Box>
           <Box sx={{ mt: 3 }}>
-            <ClientNavigation compact />
+            {renderNavigation({})}
           </Box>
           <Box sx={{ mt: "auto", pb: 1 }}>
-            <Box sx={{ mb: 1.5 }}><OccupancyIndicator count={occupancy} /></Box>
-            <ProfileNavigationLink imageUrl={profileImageUrl} name={profileName} />
+            <AreaSwitch area={area} />
+            {renderFooter?.()}
             <SignOutButton fullWidth onSignOut={onSignOut} />
           </Box>
         </Box>

@@ -3,6 +3,8 @@ import { afterEach, expect, test, vi } from 'vitest'
 
 import { TrainingChatPage } from './training-chat-page'
 
+vi.mock('./occupancy', () => ({ getOccupancy: async () => ({ occupancy: 0 }) }))
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()

@@ -858,6 +858,16 @@ linkage, and pending identity reconciliation. No audit record is retained, so
 the account cannot be reidentified. This irreversible privacy erasure is
 distinct from reversible account deactivation.
 
+**Shared-account erasure amendment — 2026-09-27:** when the Client shares an
+Account with an Employee, this operation erases only the Client and its owned
+data. Preserve the Employee, its history, the shared PersonProfile, Account,
+and Keycloak identity. Reconcile away the client role while preserving the
+employee's independently active permissions; an inactive Employee is not
+reactivated. Pending shared-identity reconciliation remains retryable through
+employee management. The full-account erasure behavior above applies only
+when no Employee is linked. **Origin:** explicit user decision for the
+shared-account integration fixes.
+
 #### EXT-RF-SOC-02 — Social client profile and post interactions
 
 **Scope:** approved post-MVP extension; Task 26 is planned. **Related:**
@@ -1047,6 +1057,16 @@ Equipamentos, and Perfil. Feed is the post-login default and there is no
 dashboard/home destination. Perfil is a clearly bounded future-feature state,
 not an invented instructor social profile.
 
+**Dual-role navigation amendment — 2026-09-27:** a session with both active
+client and instructor roles exposes a switch in each area's sidebar and mobile
+drawer, outside the ordered destinations. It labels the current area and opens
+the other area without logging out or modifying permissions. Instructor entry
+remains Feed; explicit client entry uses the existing completed-onboarding
+Feed / unfinished-onboarding entry rule. Single-role sessions have no switch.
+This is navigation only: it does not change either area's social policies or
+grant access based on a browser-selected area. **Origin:** explicit user request
+for a design-system-consistent area switch.
+
 The instructor feed reuses the existing chronological social-feed projection
 and presentation. It contains only moderation-visible posts belonging to
 public client profiles. Private-profile posts remain unavailable because an
@@ -1113,6 +1133,12 @@ date/date-range filtering. Results identify client, responsible instructor,
 latest approval date, and current status. Any instructor may open and edit any
 current plan through the sole-draft workflow and may inspect immutable approved
 history.
+
+Approval date/date-range filters interpret calendar dates in
+`America/Sao_Paulo`, with both selected dates inclusive. A single-date filter
+covers that entire local day; a range covers the start date through the end
+date, excluding the following local midnight. **Origin:** explicit user
+timezone decision for Task 32.
 
 Editing current content never changes the current or historical version in
 place. If a draft already exists, the UI must identify it and obtain explicit
@@ -1685,7 +1711,7 @@ unchecked boxes or planned files.
 | RF-05 | Original MVP | Implemented | DEC-04 | Task 03; client-role denial reverified in Task 06. |
 | RF-01/RF-02 | Original MVP | **Partially implemented after contact-data amendment** | DEC-04/DEC-17; EXT-DEC-INST-01 | Original Task 04/06 behavior exists; structured name, CPF, phone, address, shared-person linkage, and CEP assistance are planned in Task 28. |
 | RF-03 | Original MVP | **Partially implemented** | DEC-05; EXT-DEC-INST-01 | CA-03.1–CA-03.3 implemented; CA-03.4 deferred; amended all-field editing, role-specific activation, and Keycloak reconciliation are planned in Task 28. |
-| RF-07/RF-08 | Original post-MVP | Planned | DEC-04/DEC-17; EXT-DEC-INST-01 | Task 29 will implement instructor employee registration, management, provisioning, and dual-role linkage. |
+| RF-07/RF-08 | Original post-MVP | Implemented | DEC-04/DEC-17; EXT-DEC-INST-01 | Task 29: instructor employee registration, management, provisioning, dual-role linkage, and independent activation; employee API validation/error regressions verified. Integrated viewport verification remains in Task 37. |
 | Client identity provisioning | Approved DEC integration | Implemented | DEC-03/04/05/17 | Task 06: client-only Keycloak identity, subject linkage, required action, and independent durable reconciliation. |
 | RF-09 | Original MVP | Implemented | DEC-03/DEC-04/DEC-06/DEC-17 | Task 07: provisioned active client, hashed 24-hour invitation, SMTP outcome persistence, resend invalidation. |
 | Frontend design system and existing UI restyle | Visual implementation enabler | Implemented | `docs/frontend-design.md` | Task 08: shared MUI theme, shells, and restyle; preserves Tasks 01–07 behavior. |
@@ -1708,7 +1734,7 @@ unchecked boxes or planned files.
 | RF-32/RF-33 + EXT-RF-EQP-01 | Original post-MVP + extension | Implemented | Resolved EXT-DEC-EQP-01 | Task 21: authorized two-level model/unit management and public active catalog with derived total. |
 | RF-23–RF-25 | Original post-MVP | Implemented | Resolved Task 22 DEC-10/DEC-11 boundary | Task 22: confirmed-passage/correction ledger, derived non-negative count, authenticated source heartbeats, and aggregate-only client view. |
 | EXT-RF-PRES-01 | Approved post-MVP extension | Implemented | Task 22/EXT-DEC-PRES-01 | Task 23. |
-| EXT-RF-INST-01–EXT-RF-INST-05 | Approved post-MVP extension | Planned | RF-07/RF-08; EXT-DEC-INST-01 | Tasks 30–36 plus Task 37 integrated verification. |
+| EXT-RF-INST-01–EXT-RF-INST-05 | Approved post-MVP extension | Partially implemented | RF-07/RF-08; EXT-DEC-INST-01 | Task 31 single-draft review and approval implemented; remaining scope tracked in Tasks 30–36 plus Task 37 integrated verification. |
 | Remaining RF-06, RF-14, RF-20–RF-22, RF-26–RF-31 | Original post-MVP | Not started | Applicable DEC items | Preserved; no implementation claim. |
 
 ## 10 Codex workflow

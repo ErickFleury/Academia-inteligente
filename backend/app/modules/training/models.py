@@ -76,6 +76,10 @@ class TrainingPlanVersion(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     approved_by: Mapped[str | None] = mapped_column(String(255))
+    responsible_employee_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("employee.id")
+    )
+    responsible_name: Mapped[str | None] = mapped_column(String(301))
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     updated_at: Mapped[datetime] = mapped_column(
@@ -99,6 +103,10 @@ class TrainingPlanItem(Base):
     repetitions: Mapped[str] = mapped_column(String(100), nullable=False)
     load_guidance: Mapped[str] = mapped_column(String(500), nullable=False)
     rest_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
+    equipment_requirement: Mapped[str | None] = mapped_column(String(200))
+    equipment_model_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("equipment_model.id")
+    )
 
 
 class TrainingAiConversation(Base):

@@ -21,19 +21,17 @@ function oidcConfig() {
   }
 }
 
-function rolesFromAccessToken(accessToken: string): string[] {
-  try {
-    const payload = accessToken.split('.')[1]
-    if (!payload) return []
-
-    const decoded = JSON.parse(
-      atob(payload.replaceAll('-', '+').replaceAll('_', '/')),
-    ) as { realm_access?: { roles?: unknown } }
-    const roles = decoded.realm_access?.roles
-    return Array.isArray(roles) ? roles.filter((role): role is string => typeof role === 'string') : []
-  } catch {
-    return []
+async function activeRoles(accessToken: string): Promise<string[]> {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+  const response = await fetch(`${apiBaseUrl}/identity/me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) throw new Error('Unable to verify active account roles')
+  const payload = await response.json() as { roles?: unknown }
+  if (!Array.isArray(payload.roles) || payload.roles.some((role) => typeof role !== 'string')) {
+    throw new Error('Invalid active account roles')
   }
+  return payload.roles
 }
 
 function encodeBase64Url(bytes: Uint8Array): string {
@@ -119,11 +117,18 @@ export class OidcSessionClient {
       this.clearSession()
       return null
     }
+    let roles: string[]
+    try {
+      roles = await activeRoles(payload.access_token)
+    } catch {
+      this.clearSession()
+      return null
+    }
     const refreshed = {
       accessToken: payload.access_token,
       expiresAt: Date.now() + payload.expires_in * 1000,
       lastActivityAt: session.lastActivityAt,
-      roles: rolesFromAccessToken(payload.access_token),
+      roles,
       idToken: payload.id_token ?? session.idToken,
       refreshToken: payload.refresh_token,
     }
@@ -180,11 +185,12 @@ export class OidcSessionClient {
     if (!payload.access_token || !payload.expires_in || !payload.refresh_token) {
       throw new Error('Invalid authentication response')
     }
+    const roles = await activeRoles(payload.access_token)
     this.storeSession({
       accessToken: payload.access_token,
       expiresAt: Date.now() + payload.expires_in * 1000,
       lastActivityAt: Date.now(),
-      roles: rolesFromAccessToken(payload.access_token),
+      roles,
       idToken: payload.id_token,
       refreshToken: payload.refresh_token,
     })

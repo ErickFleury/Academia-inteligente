@@ -2,7 +2,10 @@
 
 ## Status
 
-Planned. Depends on Tasks 29 and 30 and the existing Tasks 13–17/25.
+Implemented (2026-09-27). Single-draft review, atomic approval/current transition,
+stable Employee attribution, and client presentation are covered by targeted
+backend/frontend regressions and isolated PostgreSQL concurrency tests.
+Depends on Tasks 29 and 30 and the existing Tasks 13–17/25.
 
 ## Objective
 

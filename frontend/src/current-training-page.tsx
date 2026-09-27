@@ -89,6 +89,8 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                   <Typography color="primary.main" variant="overline">Plano atual</Typography>
                   <Typography component="h2" variant="h3" sx={{ overflowWrap: 'anywhere' }}>{plan.name}</Typography>
                   <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{plan.objective}</Typography>
+                  <Typography>Instrutor responsável: {plan.responsible_instructor_name ?? 'Não informado'}</Typography>
+                  <Typography color="text.secondary">Data de aprovação: {plan.approved_at ? new Date(plan.approved_at).toLocaleDateString('pt-BR') : 'Não informada'}</Typography>
                 </Stack>
                 <Divider />
                 <Stack divider={<Divider flexItem />} spacing={0}>

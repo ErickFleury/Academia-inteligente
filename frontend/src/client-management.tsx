@@ -36,7 +36,7 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
   const message = (reason: unknown, fallback: string) => {
     if (reason instanceof ApiRequestError && reason.status === 401) { onUnauthenticated(); return 'Sua sessão expirou. Entre novamente.' }
     if (reason instanceof ApiRequestError && reason.status === 404) return 'CEP não encontrado. Preencha o endereço manualmente.'
-    if (reason instanceof ApiRequestError && reason.status === 503) return 'Não foi possível consultar o CEP. Preencha o endereço manualmente.'
+    if (reason instanceof ApiRequestError && reason.status === 503) return fallback
     if (reason instanceof ApiRequestError && reason.status === 409) return 'Já existe uma conta com este e-mail ou CPF.'
     if (reason instanceof ApiRequestError && reason.status === 422) {
       const validationMessages: Record<string, string> = {
@@ -59,15 +59,49 @@ export function ClientManagement({ accessToken, onUnauthenticated }: Props) {
     try { const result = await lookupPostalCode(accessToken, form.postal_code); (kind === 'create' ? setCreateForm : setEditForm)((current) => ({ ...current, ...Object.fromEntries(Object.entries(result).filter(([, value]) => value)) })) } catch (reason) { setError(message(reason, 'Não foi possível consultar o CEP. Preencha o endereço manualmente.')) } finally { setLookupPending(null) }
   }
   async function create(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(null); try { const client = await createClient(accessToken, createForm); setCreateForm(blank); setSuccess(client.identity_provisioned ? 'Cliente cadastrado com sucesso.' : 'Cliente cadastrado. Provisionamento de acesso pendente.'); await load(query); select(client) } catch (reason) { setError(message(reason, 'Não foi possível cadastrar o cliente.')) } }
-  async function update(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!selected) return; setError(null); try { const updated = await updateClient(accessToken, selected.id, { ...editForm, client_active: clientActive }); setClients((items) => items.map((item) => item.id === updated.id ? updated : item)); select(updated); setSuccess('Cliente atualizado com sucesso.') } catch (reason) { setError(message(reason, 'Não foi possível atualizar o cliente.')) } }
-  async function provision() { if (!selected) return; try { const updated = await provisionClientIdentity(accessToken, selected.id); setClients((items) => items.map((item) => item.id === updated.id ? updated : item)); select(updated); setSuccess('Acesso do cliente provisionado. O cliente recebeu instruções para criar a senha.') } catch (reason) { setError(message(reason, 'Não foi possível provisionar o acesso do cliente.')) } }
+  async function update(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selected) return
+    setError(null)
+    setSuccess(null)
+    try {
+      const updated = await updateClient(accessToken, selected.id, { ...editForm, client_active: clientActive })
+      setClients((items) => items.map((item) => item.id === updated.id ? updated : item))
+      select(updated)
+      setSuccess(updated.identity_provisioned ? 'Cliente atualizado com sucesso.' : 'Dados salvos. Sincronização de acesso pendente. Use Provisionar acesso para tentar novamente.')
+    } catch (reason) {
+      if (reason instanceof ApiRequestError && [409, 503].includes(reason.status)) {
+        try { select(await getClient(accessToken, selected.id)); await load(query) } catch { /* Keep the original error visible. */ }
+      }
+      setError(message(reason, 'Não foi possível concluir a atualização. Consulte os dados salvos e use Provisionar acesso se houver sincronização pendente.'))
+    }
+  }
+  async function provision() { if (!selected) return; setError(null); setSuccess(null); try { const updated = await provisionClientIdentity(accessToken, selected.id); setClients((items) => items.map((item) => item.id === updated.id ? updated : item)); select(updated); setSuccess('Acesso do cliente sincronizado.') } catch (reason) { setError(message(reason, 'Não foi possível provisionar o acesso do cliente.')) } }
   async function invite() { if (!selected) return; try { await sendOnboardingInvitation(accessToken, selected.id); setSuccess('Convite de onboarding enviado. Expira em 24 horas.') } catch (reason) { setError(message(reason, 'Não foi possível enviar o convite de onboarding.')) } }
-  async function erase() { if (!selected || !window.confirm(`Excluir permanentemente ${selected.name} e todos os seus dados? Esta ação não pode ser desfeita.`)) return; try { await eraseClient(accessToken, selected.id); setClients((items) => items.filter((item) => item.id !== selected.id)); setSelected(null); setSuccess('Conta e dados do cliente excluídos permanentemente.') } catch (reason) { setError(message(reason, 'Não foi possível excluir a conta do cliente.')) } }
+  async function erase() {
+    if (!selected || !window.confirm(`Excluir permanentemente o cadastro de cliente de ${selected.name} e seus dados de cliente? Se houver vínculo como instrutor, ele e o acesso correspondente serão preservados. Esta ação não pode ser desfeita.`)) return
+    setError(null)
+    setSuccess(null)
+    try {
+      await eraseClient(accessToken, selected.id)
+      setClients((items) => items.filter((item) => item.id !== selected.id))
+      setSelected(null)
+      setSuccess('Cadastro e dados do cliente excluídos. Um eventual vínculo como instrutor foi preservado.')
+    } catch (reason) {
+      if (reason instanceof ApiRequestError && reason.message === 'Client data erased; shared identity reconciliation is pending') {
+        setSelected(null)
+        await load(query)
+        setError('Dados do cliente excluídos. O vínculo como instrutor foi preservado, mas a sincronização de acesso está pendente. Use Provisionar acesso no cadastro do instrutor.')
+      } else {
+        setError(message(reason, 'Não foi possível excluir o cadastro do cliente.'))
+      }
+    }
+  }
   return <Stack spacing={3} sx={{ width: '100%' }}>
     <Stack aria-live="polite" spacing={1}>{error && <StatusNotice severity="error">{error}</StatusNotice>}{success && <StatusNotice severity="success">{success}</StatusNotice>}</Stack>
     <Card component="section"><CardContent><Stack component="form" spacing={2.5} onSubmit={create}><Box><Typography color="primary.main" variant="overline">Novo cadastro</Typography><Typography component="h2" variant="h3">Cadastrar cliente</Typography><Typography color="text.secondary" sx={{ mt: 0.5 }}>Os dados de acesso serão provisionados separadamente.</Typography></Box><Details change={(field, value) => change('create', field, value)} form={createForm} id="create" lookup={() => void address('create')} pending={lookupPending === 'create'} /><Box><Button type="submit" variant="contained">Cadastrar cliente</Button></Box></Stack></CardContent></Card>
     <Card component="section"><CardContent><Stack component="form" direction={{ xs: 'column', sm: 'row' }} spacing={2} onSubmit={(event) => { event.preventDefault(); setSelected(null); void load(query) }}><TextField fullWidth label="Pesquisar por nome ou e-mail" onChange={(event) => setQuery(event.target.value)} value={query} /><Button type="submit" variant="outlined">Pesquisar</Button></Stack></CardContent></Card>
     <Stack aria-busy={loading} component="section" spacing={1.5} aria-label="Resultados de clientes"><Typography component="h2" variant="h3">Clientes cadastrados</Typography>{loading ? <LoadingState label="Carregando clientes" /> : <Stack component="ul" spacing={1.25} sx={{ listStyle: 'none', m: 0, p: 0 }}>{clients.map((client) => <Box component="li" key={client.id}><Card variant="outlined"><Button aria-label={`${client.name} — ${client.email} (${statusText(client)})`} color="inherit" onClick={() => void getClient(accessToken, client.id).then(select).catch((reason) => setError(message(reason, 'Não foi possível carregar o cliente.')))} sx={{ alignItems: 'center', gap: 1.5, justifyContent: 'space-between', px: 2, py: 1.5, textAlign: 'left', width: '100%' }} variant="text"><Typography sx={{ color: 'text.primary', fontWeight: 750 }}>{client.name} — {client.email}</Typography><Chip color={client.client_active ? 'success' : 'default'} label={statusText(client)} size="small" /></Button></Card></Box>)}{!clients.length && <EmptyState description="Ajuste a busca ou cadastre o primeiro cliente." title="Nenhum cliente encontrado." />}</Stack>}</Stack>
-    {selected && <Card component="section" sx={{ borderColor: 'primary.main' }}><CardContent><Stack component="form" spacing={2.5} onSubmit={update}><Box><Typography color="primary.main" variant="overline">Perfil e acesso</Typography><Typography component="h2" variant="h3">Editar cliente</Typography></Box><Divider /><Details change={(field, value) => change('edit', field, value)} form={editForm} id="edit" lookup={() => void address('edit')} pending={lookupPending === 'edit'} /><FormControlLabel control={<Switch checked={clientActive} onChange={(event) => setClientActive(event.target.checked)} />} label="Cliente ativo" /><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}><Button type="submit" variant="contained">Salvar alterações</Button>{selected.identity_provisioned === false && <Button onClick={() => void provision()} variant="outlined">Provisionar acesso</Button>}{selected.identity_provisioned === true && selected.client_active && <Button onClick={() => void invite()} variant="outlined">Enviar convite de onboarding</Button>}</Stack><Button color="error" onClick={() => void erase()} variant="outlined">Excluir conta permanentemente</Button></Stack></CardContent></Card>}
+    {selected && <Card component="section" sx={{ borderColor: 'primary.main' }}><CardContent><Stack component="form" spacing={2.5} onSubmit={update}><Box><Typography color="primary.main" variant="overline">Perfil e acesso</Typography><Typography component="h2" variant="h3">Editar cliente</Typography></Box><Divider /><Details change={(field, value) => change('edit', field, value)} form={editForm} id="edit" lookup={() => void address('edit')} pending={lookupPending === 'edit'} /><FormControlLabel control={<Switch checked={clientActive} onChange={(event) => setClientActive(event.target.checked)} />} label="Cliente ativo" /><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}><Button type="submit" variant="contained">Salvar alterações</Button>{selected.identity_provisioned === false && <Button onClick={() => void provision()} variant="outlined">Provisionar acesso</Button>}{selected.identity_provisioned === true && selected.client_active && <Button onClick={() => void invite()} variant="outlined">Enviar convite de onboarding</Button>}</Stack><Button color="error" onClick={() => void erase()} variant="outlined">Excluir cadastro de cliente</Button></Stack></CardContent></Card>}
   </Stack>
 }

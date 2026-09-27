@@ -69,10 +69,10 @@ test('stores a usable session after a valid OIDC callback', async () => {
   window.history.replaceState({}, '', '/dashboard?code=valid-code&state=state')
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
+    vi.fn().mockResolvedValueOnce({
       ok: true,
       json: async () => ({ access_token: 'access-token', refresh_token: 'refresh-token', expires_in: 300 }),
-    }),
+    }).mockResolvedValueOnce({ ok: true, json: async () => ({ roles: [] }) }),
   )
 
   render(<App />)
@@ -381,6 +381,61 @@ test('returns to the sign-in state when the client API rejects a stale session',
   expect(await screen.findByText('Redirecionando para o login')).toBeInTheDocument()
   expect(startLogin).toHaveBeenCalledOnce()
   expect(sessionStorage.getItem('academia.session')).toBeNull()
+})
+
+test.each(['completed', 'draft'])('switches both areas in the same session with %s onboarding', async (status) => {
+  const startLogin = vi.spyOn(OidcSessionClient.prototype, 'startLogin').mockResolvedValue()
+  const endSession = vi.spyOn(OidcSessionClient.prototype, 'endSession')
+  const roles = ['client', 'employee', 'instructor']
+  sessionStorage.setItem('academia.session', JSON.stringify({
+    accessToken: 'access-token', refreshToken: 'refresh-token',
+    expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles,
+  }))
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.endsWith('/onboarding/me')) return Promise.resolve({ ok: true, json: async () => ({
+      status, training_goal: null, training_experience: null, height_cm: null,
+      weight_kg: null, has_limitations_or_complaints: null, limitations_or_complaints: null,
+      uses_medications: null, medications: null, has_health_conditions: null, health_conditions: null,
+    }) })
+    if (url.includes('?limit=20')) return Promise.resolve({ ok: true, json: async () => ({ items: [], next_cursor: null, end_reached: true }) })
+    return Promise.resolve({ ok: true, json: async () => [] })
+  }))
+
+  render(<App />)
+
+  await screen.findByRole('navigation', { name: 'Navegação da área do instrutor' })
+  expect(window.location.pathname).toBe('/instrutor/feed')
+  fireEvent.click(screen.getByRole('link', { name: 'Mudar para a área do cliente' }))
+  await screen.findByRole('heading', { name: status === 'completed' ? 'Publicações' : 'Conte um pouco sobre você' })
+  expect(window.location.pathname).toBe(status === 'completed' ? '/feed' : '/onboarding')
+  expect(screen.getByRole('navigation', { name: 'Navegação da área do cliente' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('link', { name: 'Mudar para a área do instrutor' }))
+  await screen.findByRole('navigation', { name: 'Navegação da área do instrutor' })
+  expect(window.location.pathname).toBe('/instrutor/feed')
+  expect(JSON.parse(sessionStorage.getItem('academia.session')!)).toMatchObject({ accessToken: 'access-token', roles })
+  expect(startLogin).not.toHaveBeenCalled()
+  expect(endSession).not.toHaveBeenCalled()
+})
+
+test('denies the client entry route to an instructor without the client role', () => {
+  sessionStorage.setItem('academia.session', JSON.stringify({
+    accessToken: 'access-token', refreshToken: 'refresh-token',
+    expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['employee', 'instructor'],
+  }))
+  window.history.replaceState({}, '', '/cliente')
+  render(<App />)
+  expect(screen.getByText('Você não tem permissão para acessar esta área.')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /Mudar para a área/ })).not.toBeInTheDocument()
+})
+
+test('routes the former adaptation screen to the unified instructor pending plans', async () => {
+  sessionStorage.setItem('academia.session', JSON.stringify({ accessToken: 'token', refreshToken: 'refresh', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['instructor', 'employee'] }))
+  window.history.replaceState({}, '', '/instrutor/adaptacoes')
+  vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve({ ok: true, json: async () => url.includes('/training/pending') ? { items: [], next_offset: null } : [] })))
+  render(<App />)
+  expect(await screen.findByText('Nenhum plano pendente')).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/instrutor/planos-pendentes')
+  expect(screen.getByRole('link', { name: 'Planos pendentes' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('ends the provider session and clears the local session when signing out', async () => {

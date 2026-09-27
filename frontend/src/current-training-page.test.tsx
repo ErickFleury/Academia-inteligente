@@ -3,6 +3,8 @@ import { afterEach, expect, test, vi } from 'vitest'
 
 import { CurrentTrainingPage } from './current-training-page'
 
+vi.mock('./occupancy', () => ({ getOccupancy: async () => ({ occupancy: 0 }) }))
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -14,6 +16,8 @@ const currentPlan = {
   status: 'current' as const,
   name: 'Força inicial',
   objective: 'Ganhar força com consistência',
+  responsible_instructor_name: 'Maria Silva',
+  approved_at: '2026-09-27T12:00:00Z',
   items: [
     {
       exercise_name: 'Agachamento',
@@ -40,6 +44,8 @@ test('renders the current training plan in workout order', async () => {
   expect(screen.getByText('3 séries')).toBeInTheDocument()
   expect(screen.getByText('8 repetições')).toBeInTheDocument()
   expect(screen.getByText('Descanso: 90 s')).toBeInTheDocument()
+  expect(screen.getByText('Instrutor responsável: Maria Silva')).toBeInTheDocument()
+  expect(screen.getByText('Data de aprovação: 27/09/2026')).toBeInTheDocument()
   expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:8000/training/current')
   expect(fetchMock.mock.calls[0][1]).toMatchObject({ headers: { Authorization: 'Bearer access-token' } })
 })

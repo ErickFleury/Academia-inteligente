@@ -292,6 +292,11 @@ def erase_client(client_id: UUID, session: DatabaseSession, administrator: Admin
     del administrator
     try:
         erased = client_service.erase(session, client_id)
+    except ClientIdentityProvisioningError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Client data erased; shared identity reconciliation is pending",
+        ) from None
     except KeycloakProvisioningError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

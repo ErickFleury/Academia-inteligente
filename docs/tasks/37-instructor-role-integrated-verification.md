@@ -37,6 +37,9 @@ Exercise and automate, where practical, these end-to-end journeys:
 2. Admin links instructor and client roles to the same matching Account and
    verifies independent role activity, exact Keycloak synchronization, and
    backend denial despite stale tokens.
+   Verify both directions of the sidebar/mobile area switch without a new login,
+   correct client onboarding/default entry, unchanged permissions, and absence
+   of the switch when either active role is missing.
 3. Instructor login opens Feed, uses the exact navigation, reads only public-
    profile posts/detail, cannot use social mutations, and sees only the bounded
    Perfil future state.

@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from pydantic import ValidationError
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.integrations.ai import (
@@ -28,11 +28,11 @@ from app.modules.training.models import (
     TrainingPlanVersion,
 )
 from app.modules.training.schema import (
-    AdaptationInstructorUpdate,
     AdaptationOperationInput,
     TrainingPlanItemInput,
     TrainingPlanVersionInput,
 )
+from app.modules.training.service import ActiveTrainingProposalExistsError, TrainingLifecycleService
 
 
 class AdaptationError(Exception):
@@ -120,75 +120,70 @@ class TrainingAdaptationService:
     def client_decide(
         self, session: Session, subject: str, proposal_id: UUID, accept: bool
     ) -> TrainingAdaptationProposal:
-        proposal = self._owned(session, subject, proposal_id)
+        client_id = self._client_id(session, subject)
+        lifecycle = TrainingLifecycleService()
+        lifecycle._lock_client(session, client_id)
+        proposal = session.scalar(
+            select(TrainingAdaptationProposal)
+            .where(
+                TrainingAdaptationProposal.id == proposal_id,
+                TrainingAdaptationProposal.client_id == client_id,
+            )
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if proposal is None:
+            raise AdaptationNotFoundError
+        if (
+            accept
+            and proposal.status == "pending_instructor_review"
+            and proposal.resulting_version_id
+        ):
+            return proposal
         if proposal.status != "proposed":
             raise AdaptationStateError
+        if accept:
+            base = session.get(TrainingPlanVersion, proposal.base_version_id)
+            if base is None or not self._is_current(session, base):
+                proposal.status = "superseded"
+                session.commit()
+                raise AdaptationStateError
+            if lifecycle.find_proposal(session, client_id=client_id):
+                raise ActiveTrainingProposalExistsError
+            try:
+                data = self._apply(session, base, proposal)
+                retained = set(
+                    session.scalars(
+                        select(TrainingAdaptationOperation.equipment_model_id).where(
+                            TrainingAdaptationOperation.proposal_id == proposal.id,
+                            TrainingAdaptationOperation.equipment_model_id.is_not(None),
+                        )
+                    )
+                )
+                draft = lifecycle.create_revision(
+                    session,
+                    plan_id=base.plan_id,
+                    version_number=base.version_number,
+                    data=data,
+                    actor="ai",
+                    origin="ai",
+                    commit=False,
+                    retained_equipment=retained,
+                )
+                proposal.resulting_version_id = draft.id
+            except ValidationError:
+                session.rollback()
+                raise AdaptationStateError from None
+            except Exception:
+                session.rollback()
+                raise
         proposal.status = "pending_instructor_review" if accept else "client_rejected"
         proposal.client_reviewed_at = datetime.now(UTC)
-        session.commit()
-        session.refresh(proposal)
-        return proposal
-
-    def instructor_edit(
-        self, session: Session, proposal_id: UUID, update: AdaptationInstructorUpdate
-    ) -> TrainingAdaptationProposal:
-        proposal = self._proposal(session, proposal_id)
-        if proposal.status != "pending_instructor_review":
-            raise AdaptationStateError
-        base = session.get(TrainingPlanVersion, proposal.base_version_id)
-        if base is None:
-            raise AdaptationNotFoundError
-        preserved_equipment_model_ids = set(
-            session.scalars(
-                select(TrainingAdaptationOperation.equipment_model_id).where(
-                    TrainingAdaptationOperation.proposal_id == proposal.id,
-                    TrainingAdaptationOperation.equipment_model_id.is_not(None),
-                )
-            )
-        )
-        self._validate_operations(
-            session,
-            base,
-            update.operations,
-            preserved_equipment_model_ids=preserved_equipment_model_ids,
-        )
-        proposal.explanation = update.explanation.strip()
-        self._replace_operations(session, proposal, update.operations)
-        session.commit()
-        session.refresh(proposal)
-        return proposal
-
-    def instructor_decide(
-        self, session: Session, proposal_id: UUID, instructor: str, approve: bool
-    ) -> TrainingAdaptationProposal:
-        proposal = self._proposal(session, proposal_id)
-        if proposal.status != "pending_instructor_review":
-            raise AdaptationStateError
-
-        proposal.instructor_reviewed_at = datetime.now(UTC)
-        proposal.instructor_id = instructor
-        if not approve:
-            proposal.status = "instructor_rejected"
+        try:
             session.commit()
-            session.refresh(proposal)
-            return proposal
-
-        base = session.scalar(
-            select(TrainingPlanVersion)
-            .where(TrainingPlanVersion.id == proposal.base_version_id)
-            .with_for_update()
-        )
-        if base is None or not self._is_current(session, base):
-            proposal.status = "superseded"
-            session.commit()
-            raise AdaptationStateError
-
-        data = self._apply(session, base, proposal)
-        current = self._create_current_version(session, base, data, instructor)
-        proposal.status = "approved"
-        proposal.resulting_version_id = current.id
-        # One commit prevents partial plan/version activation on a failure.
-        session.commit()
+        except Exception:
+            session.rollback()
+            raise
         session.refresh(proposal)
         return proposal
 
@@ -199,15 +194,6 @@ class TrainingAdaptationService:
                 select(TrainingAdaptationProposal)
                 .where(TrainingAdaptationProposal.client_id == client_id)
                 .order_by(TrainingAdaptationProposal.created_at.desc())
-            )
-        )
-
-    def pending_for_instructor(self, session: Session) -> list[TrainingAdaptationProposal]:
-        return list(
-            session.scalars(
-                select(TrainingAdaptationProposal)
-                .where(TrainingAdaptationProposal.status == "pending_instructor_review")
-                .order_by(TrainingAdaptationProposal.created_at.asc())
             )
         )
 
@@ -440,6 +426,8 @@ class TrainingAdaptationService:
                 repetitions=item.repetitions,
                 load_guidance=item.load_guidance,
                 rest_seconds=item.rest_seconds,
+                equipment_requirement=item.equipment_requirement,
+                equipment_model_id=item.equipment_model_id,
             )
             for item in session.scalars(
                 select(TrainingPlanItem).where(TrainingPlanItem.version_id == base.id)
@@ -460,6 +448,8 @@ class TrainingAdaptationService:
                 repetitions=operation.repetitions or "",
                 load_guidance=operation.load_guidance or "",
                 rest_seconds=(operation.rest_seconds if operation.rest_seconds is not None else -1),
+                equipment_requirement=operation.equipment_requirement,
+                equipment_model_id=operation.equipment_model_id,
             )
             if operation.operation_type == "add":
                 items[max(items, default=0) + 1] = item
@@ -470,70 +460,6 @@ class TrainingAdaptationService:
             objective=base.objective,
             items=[items[position] for position in sorted(items)],
         )
-
-    @staticmethod
-    def _create_current_version(
-        session: Session,
-        base: TrainingPlanVersion,
-        data: TrainingPlanVersionInput,
-        instructor: str,
-    ) -> TrainingPlanVersion:
-        plan = session.scalar(
-            select(TrainingPlan).where(TrainingPlan.id == base.plan_id).with_for_update()
-        )
-        if plan is None:
-            raise AdaptationStateError
-        session.scalar(select(Client).where(Client.id == plan.client_id).with_for_update())
-        current_plans = list(
-            session.scalars(
-                select(TrainingPlan)
-                .where(TrainingPlan.client_id == plan.client_id, TrainingPlan.is_current)
-                .with_for_update()
-            )
-        )
-        for version in session.scalars(
-            select(TrainingPlanVersion)
-            .where(
-                TrainingPlanVersion.plan_id.in_([item.id for item in current_plans]),
-                TrainingPlanVersion.status == "current",
-            )
-            .with_for_update()
-        ):
-            version.status = "superseded"
-        for current_plan in current_plans:
-            current_plan.is_current = False
-        session.flush()
-
-        next_number = (
-            session.scalar(
-                select(func.max(TrainingPlanVersion.version_number)).where(
-                    TrainingPlanVersion.plan_id == plan.id
-                )
-            )
-            or 0
-        ) + 1
-        now = datetime.now(UTC)
-        version = TrainingPlanVersion(
-            plan_id=plan.id,
-            client_id=plan.client_id,
-            version_number=next_number,
-            status="current",
-            name=data.name.strip(),
-            objective=data.objective.strip(),
-            origin="instructor",
-            created_by=instructor,
-            approved_by=instructor,
-            approved_at=now,
-        )
-        session.add(version)
-        session.flush()
-        for position, item in enumerate(data.items, 1):
-            session.add(
-                TrainingPlanItem(version_id=version.id, position=position, **item.model_dump())
-            )
-        plan.is_current = True
-        session.flush()
-        return version
 
     @staticmethod
     def _retry(operation):

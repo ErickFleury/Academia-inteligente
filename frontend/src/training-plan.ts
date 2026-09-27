@@ -15,6 +15,8 @@ export type CurrentTrainingPlan = {
   status: 'current'
   name: string
   objective: string
+  responsible_instructor_name: string | null
+  approved_at: string | null
   items: CurrentTrainingItem[]
 }
 

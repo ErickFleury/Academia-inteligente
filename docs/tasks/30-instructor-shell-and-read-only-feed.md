@@ -34,6 +34,10 @@ social feed, responsiveness, and accessibility guidance.
   Todos os planos, Clientes, Equipamentos, Perfil. Do not add Início or a
   dashboard. An authenticated active instructor landing at `/` or the
   instructor area root is redirected to Feed.
+- Preserve the dual-role sidebar/mobile area switch outside the ordered menu.
+  Show it only for sessions with both active roles; switching keeps the session
+  and permissions unchanged. Instructor entry is Feed; client entry respects
+  the existing onboarding-completion default. Do not fuse the two menus.
 - Add stable instructor routes for all destinations. Unimplemented destinations
   in this task may use explicit pt-BR “not yet available” states so later tasks
   can replace them; Perfil must remain only a future instructor-profile state.
