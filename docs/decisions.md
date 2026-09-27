@@ -1184,3 +1184,16 @@ and AI projections retain their existing data scope. The canonical amendment
 under EXT-RF-EQP-01 governs the implementation. Task 21's earlier exclusion of
 serial-number metadata is superseded only for this optional internal field;
 maintenance, telemetry, live availability and reservations remain unapproved.
+
+## Deployment hardening — 2026-09-27
+
+The owner approved Nginx as the production gateway, preparation of optional MFA
+without changing current login, and retaining Keycloak 26.6.3. The canonical
+production deployment amendment in `requirements.md` governs this work. Separate
+production Compose configuration, private database/identity services, mounted
+secrets, TLS SMTP, bounded ingress, Docker-aware firewall preparation and tested
+backup/restore tooling implement that scope. Local development and the controlled
+facial pilot retain their existing behavior. No host policy, public deployment,
+account migration, mandatory OTP enrollment or Keycloak upgrade is authorized or
+performed by preparing these files. Operator choices for hosting, certificates,
+SMTP, encrypted off-host backup and alert delivery remain rollout prerequisites.

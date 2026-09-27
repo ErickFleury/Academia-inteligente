@@ -22,3 +22,23 @@ read-only filesystem, no capabilities and no pytest/Ruff installed. Local SMTP
 continues to default to the existing unauthenticated Mailpit connection. TLS
 options verify certificates and never fall back to sending credentials in clear.
 Secret-file failures report variable names without secret contents.
+
+Checkpoint 2: production gateway and Keycloak images built; Keycloak remains
+26.6.3. Fresh isolated PostgreSQL and realm imports started successfully, with all
+application migrations applied. The production backend, identity, database and
+gateway became healthy. Rendered Compose configuration confirms that only the
+gateway publishes ports in the default profile. Nginx configuration validation
+passed under its unprivileged, read-only runtime.
+
+HTTPS integration checks passed for SPA deep links, security headers, API
+health/authorization, restricted identity administration (including spoofed
+forwarding headers), hidden API documentation/identity health, body-size limits,
+AI request throttling, fixed-host HTTP redirects and unknown-host rejection.
+A synthetic administrator completed themed Keycloak login with S256 PKCE,
+authenticated against the backend, revoked its refresh token, completed the logout
+redirect and received `login_required` on a subsequent silent SSO attempt.
+No OTP challenge or new business functionality was introduced. Production
+preparation exposes optional Configure OTP with no default/user assignment.
+
+All verification uses separate `academia-hardening-review` projects and synthetic
+credentials under `/tmp`; no existing development accounts or volumes are reset.
