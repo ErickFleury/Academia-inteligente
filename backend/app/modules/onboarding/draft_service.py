@@ -49,7 +49,9 @@ class OnboardingDraftService:
         row = session.execute(
             select(Client.id, Account.id)
             .join(Account, Client.account_id == Account.id)
-            .where(Account.keycloak_subject == subject)
+            .where(
+                Account.keycloak_subject == subject, Account.account_active, Client.active.is_(True)
+            )
         ).one_or_none()
         if row is None:
             raise OnboardingNotFoundError

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_database_session
-from app.modules.clients.models import Account
+from app.modules.clients.models import Account, Client, Employee
 from app.modules.identity.authorization import require_roles
 from app.modules.identity.service import (
     AuthenticatedIdentity,
@@ -41,7 +41,23 @@ def get_authenticated_identity(
         ) from None
 
     account = session.scalar(select(Account).where(Account.keycloak_subject == identity.subject))
-    if "client" in identity.roles and account is None:
+    if "client" in identity.roles and (
+        account is None
+        or not account.account_active
+        or session.scalar(
+            select(Client.id).where(Client.account_id == account.id, Client.active.is_(True))
+        )
+        is None
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
+    if "instructor" in identity.roles and (
+        account is None
+        or not account.account_active
+        or session.scalar(
+            select(Employee.id).where(Employee.account_id == account.id, Employee.active.is_(True))
+        )
+        is None
+    ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")
     if account is not None and not account.account_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated")

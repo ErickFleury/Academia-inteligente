@@ -30,7 +30,9 @@ class ProfilePresenceService:
         client = session.scalar(
             select(Client)
             .join(Account)
-            .where(Account.keycloak_subject == subject, Account.account_active)
+            .where(
+                Account.keycloak_subject == subject, Account.account_active, Client.active.is_(True)
+            )
         )
         if client is None:
             raise PresenceClientNotFoundError

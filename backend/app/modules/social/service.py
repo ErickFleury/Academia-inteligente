@@ -12,15 +12,15 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.modules.clients.models import Account, Client
+from app.modules.clients.models import Account, Client, Employee
 from app.modules.presence.models import ProfilePresencePreference
 from app.modules.presence.service import ProfilePresenceService
 from app.modules.progress.models import ProgressUpdate
 from app.modules.social.models import (
     ClientFollow,
     ClientFollowRequest,
-    PostComment,
     CommentImage,
+    PostComment,
     PostImage,
     PostLike,
     ProfileImage,
@@ -76,18 +76,45 @@ class SocialService:
         client = session.scalar(
             select(Client)
             .join(Account)
-            .where(Account.keycloak_subject == subject, Account.account_active)
+            .where(
+                Account.keycloak_subject == subject, Account.account_active, Client.active.is_(True)
+            )
         )
         if client is None:
             raise SocialNotFoundError
         return client
+
+    def instructor_for_subject(self, session: Session, subject: str) -> Employee:
+        employee = session.scalar(
+            select(Employee)
+            .join(Account)
+            .where(
+                Account.keycloak_subject == subject,
+                Account.account_active,
+                Employee.active.is_(True),
+                Employee.specialization == "instructor",
+            )
+        )
+        if employee is None:
+            raise SocialForbiddenError
+        return employee
 
     def profile_for_client(self, session: Session, client_id: UUID) -> SocialProfile:
         profile = session.scalar(select(SocialProfile).where(SocialProfile.client_id == client_id))
         if profile is None:
             profile = SocialProfile(client_id=client_id)
             session.add(profile)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError:
+                # Concurrent initial reads may both attempt the lazy profile
+                # creation. The unique client key is the authority; reload it.
+                session.rollback()
+                profile = session.scalar(
+                    select(SocialProfile).where(SocialProfile.client_id == client_id)
+                )
+                if profile is None:
+                    raise
             session.refresh(profile)
         return profile
 
@@ -108,12 +135,15 @@ class SocialService:
             raise SocialForbiddenError
         return self._view(session, profile, target, viewer)
 
-    def profile_shell(self, session: Session, subject: str, profile_id: UUID) -> tuple[ProfileView, bool]:
+    def profile_shell(
+        self, session: Session, subject: str, profile_id: UUID
+    ) -> tuple[ProfileView, bool]:
         """Return the deliberately minimal shell for a hidden profile."""
         viewer = self.client_for_subject(session, subject)
         profile = session.get(SocialProfile, profile_id)
         target = session.get(Client, profile.client_id) if profile else None
-        if profile is None or target is None: raise SocialNotFoundError
+        if profile is None or target is None:
+            raise SocialNotFoundError
         follows = session.get(ClientFollow, (viewer.id, target.id)) is not None
         if target.id != viewer.id and not profile.visible_to_clients and not follows:
             requested = session.get(ClientFollowRequest, (viewer.id, target.id)) is not None
@@ -236,35 +266,143 @@ class SocialService:
 
     @staticmethod
     def _encode_cursor(item: ProgressUpdate) -> str:
-        payload = json.dumps({"t": item.created_at.isoformat(), "i": str(item.id)}, separators=(",", ":"))
+        payload = json.dumps(
+            {"t": item.created_at.isoformat(), "i": str(item.id)}, separators=(",", ":")
+        )
         return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
 
-    def feed_page(self, session: Session, subject: str, cursor: str | None, limit: int) -> CursorPage:
+    def feed_page(
+        self, session: Session, subject: str, cursor: str | None, limit: int
+    ) -> CursorPage:
         viewer = self.client_for_subject(session, subject)
         marker = self._cursor(cursor)
-        statement = select(ProgressUpdate).join(SocialProfile, SocialProfile.client_id == ProgressUpdate.client_id).outerjoin(
-            ClientFollow,
-            and_(ClientFollow.followed_client_id == ProgressUpdate.client_id, ClientFollow.follower_client_id == viewer.id),
-        ).where(
-            ProgressUpdate.deleted_at.is_(None),
-            or_(ProgressUpdate.client_id == viewer.id, ProgressUpdate.moderation_status == "visible"),
-            or_(ProgressUpdate.client_id == viewer.id, SocialProfile.visible_to_clients, ClientFollow.follower_client_id.is_not(None)),
+        statement = (
+            select(ProgressUpdate)
+            .join(SocialProfile, SocialProfile.client_id == ProgressUpdate.client_id)
+            .outerjoin(
+                ClientFollow,
+                and_(
+                    ClientFollow.followed_client_id == ProgressUpdate.client_id,
+                    ClientFollow.follower_client_id == viewer.id,
+                ),
+            )
+            .where(
+                ProgressUpdate.deleted_at.is_(None),
+                or_(
+                    ProgressUpdate.client_id == viewer.id,
+                    ProgressUpdate.moderation_status == "visible",
+                ),
+                or_(
+                    ProgressUpdate.client_id == viewer.id,
+                    SocialProfile.visible_to_clients,
+                    ClientFollow.follower_client_id.is_not(None),
+                ),
+            )
         )
         if marker:
             timestamp, identifier = marker
-            statement = statement.where(or_(ProgressUpdate.created_at < timestamp, and_(ProgressUpdate.created_at == timestamp, ProgressUpdate.id < identifier)))
-        items = list(session.scalars(statement.order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc()).limit(self._limit(limit) + 1)).all())
+            statement = statement.where(
+                or_(
+                    ProgressUpdate.created_at < timestamp,
+                    and_(ProgressUpdate.created_at == timestamp, ProgressUpdate.id < identifier),
+                )
+            )
+        items = list(
+            session.scalars(
+                statement.order_by(
+                    ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc()
+                ).limit(self._limit(limit) + 1)
+            ).all()
+        )
         has_more = len(items) > self._limit(limit)
         items = items[: self._limit(limit)]
-        return CursorPage(items, self._encode_cursor(items[-1]) if has_more and items else None, not has_more)
+        return CursorPage(
+            items, self._encode_cursor(items[-1]) if has_more and items else None, not has_more
+        )
+
+    def instructor_feed_page(
+        self, session: Session, subject: str, cursor: str | None, limit: int
+    ) -> CursorPage:
+        self.instructor_for_subject(session, subject)
+        marker = self._cursor(cursor)
+        statement = select(ProgressUpdate).where(
+            ProgressUpdate.deleted_at.is_(None), ProgressUpdate.moderation_status == "visible"
+        )
+        if marker:
+            timestamp, identifier = marker
+            statement = statement.where(
+                or_(
+                    ProgressUpdate.created_at < timestamp,
+                    and_(ProgressUpdate.created_at == timestamp, ProgressUpdate.id < identifier),
+                )
+            )
+        items = [
+            item
+            for item in (
+                session.scalars(
+                    statement.order_by(
+                        ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc()
+                    ).limit(self._limit(limit) + 1)
+                ).all()
+            )
+            if self.profile_for_client(session, item.client_id).visible_to_clients
+        ]
+        has_more = len(items) > self._limit(limit)
+        items = items[: self._limit(limit)]
+        return CursorPage(
+            items, self._encode_cursor(items[-1]) if has_more and items else None, not has_more
+        )
+
+    def instructor_post_detail(
+        self, session: Session, subject: str, update_id: UUID
+    ) -> tuple[ProgressUpdate, SocialProfile, Client]:
+        self.instructor_for_subject(session, subject)
+        update = session.get(ProgressUpdate, update_id)
+        if update is None or update.deleted_at is not None:
+            raise SocialNotFoundError
+        profile = self.profile_for_client(session, update.client_id)
+        author = session.get(Client, update.client_id)
+        if (
+            author is None
+            or not profile.visible_to_clients
+            or update.moderation_status != "visible"
+        ):
+            raise SocialNotFoundError
+        return update, profile, author
+
+    def instructor_comments(
+        self, session: Session, subject: str, update_id: UUID, limit: int
+    ) -> list[tuple[PostComment, Client]]:
+        update, _, _ = self.instructor_post_detail(session, subject, update_id)
+        return list(
+            session.execute(
+                select(PostComment, Client)
+                .join(Client)
+                .where(
+                    PostComment.progress_update_id == update.id,
+                    PostComment.deleted_at.is_(None),
+                    PostComment.moderation_status == "visible",
+                )
+                .order_by(PostComment.created_at.desc(), PostComment.id.desc())
+                .limit(self._limit(limit))
+            ).all()
+        )
 
     def post_images(self, session: Session, update_id: UUID) -> list[PostImage]:
-        return list(session.scalars(select(PostImage).where(PostImage.progress_update_id == update_id).order_by(PostImage.position)).all())
+        return list(
+            session.scalars(
+                select(PostImage)
+                .where(PostImage.progress_update_id == update_id)
+                .order_by(PostImage.position)
+            ).all()
+        )
 
     def comment_image(self, session: Session, comment_id: UUID) -> CommentImage | None:
         return session.get(CommentImage, comment_id)
 
-    def replace_post_images(self, session: Session, subject: str, update_id: UUID, raw_images: list[bytes]) -> ProgressUpdate:
+    def replace_post_images(
+        self, session: Session, subject: str, update_id: UUID, raw_images: list[bytes]
+    ) -> ProgressUpdate:
         update, view = self.post_detail(session, subject, update_id)
         if not view.is_owner:
             raise SocialForbiddenError
@@ -275,9 +413,19 @@ class SocialService:
             raise SocialValidationError("Post requires content or image")
         session.query(PostImage).filter(PostImage.progress_update_id == update.id).delete()
         for position, (content, media_type, width, height) in enumerate(normalized):
-            session.add(PostImage(progress_update_id=update.id, position=position, content=content, media_type=media_type, width=width, height=height))
+            session.add(
+                PostImage(
+                    progress_update_id=update.id,
+                    position=position,
+                    content=content,
+                    media_type=media_type,
+                    width=width,
+                    height=height,
+                )
+            )
         update.edited_at = datetime.now(UTC)
-        session.commit(); session.refresh(update)
+        session.commit()
+        session.refresh(update)
         return update
 
     def remove_post_image(
@@ -301,19 +449,42 @@ class SocialService:
         session.refresh(update)
         return update
 
-    def replace_comment_image(self, session: Session, subject: str, comment_id: UUID, raw: bytes | None) -> PostComment:
+    def replace_comment_image(
+        self, session: Session, subject: str, comment_id: UUID, raw: bytes | None
+    ) -> PostComment:
         comment = session.get(PostComment, comment_id)
-        if comment is None: raise SocialNotFoundError
-        if comment.client_id != self.client_for_subject(session, subject).id: raise SocialForbiddenError
+        if comment is None:
+            raise SocialNotFoundError
+        if comment.client_id != self.client_for_subject(session, subject).id:
+            raise SocialForbiddenError
         image = self.comment_image(session, comment.id)
         if raw is None:
-            if image: session.delete(image)
-            if not comment.content: raise SocialValidationError("Comment requires content or image")
+            if image:
+                session.delete(image)
+            if not comment.content:
+                raise SocialValidationError("Comment requires content or image")
         else:
             content, media_type, width, height = self.normalize_image(raw)
-            if image: image.content, image.media_type, image.width, image.height = content, media_type, width, height
-            else: session.add(CommentImage(comment_id=comment.id, content=content, media_type=media_type, width=width, height=height))
-        comment.edited_at = datetime.now(UTC); session.commit(); session.refresh(comment)
+            if image:
+                image.content, image.media_type, image.width, image.height = (
+                    content,
+                    media_type,
+                    width,
+                    height,
+                )
+            else:
+                session.add(
+                    CommentImage(
+                        comment_id=comment.id,
+                        content=content,
+                        media_type=media_type,
+                        width=width,
+                        height=height,
+                    )
+                )
+        comment.edited_at = datetime.now(UTC)
+        session.commit()
+        session.refresh(comment)
         return comment
 
     def follow(
@@ -328,8 +499,15 @@ class SocialService:
             raise SocialStateError
         if following:
             if not profile.visible_to_clients:
-                if session.get(ClientFollow, (viewer.id, target.id)) is None and session.get(ClientFollowRequest, (viewer.id, target.id)) is None:
-                    session.add(ClientFollowRequest(requester_client_id=viewer.id, requested_client_id=target.id))
+                if (
+                    session.get(ClientFollow, (viewer.id, target.id)) is None
+                    and session.get(ClientFollowRequest, (viewer.id, target.id)) is None
+                ):
+                    session.add(
+                        ClientFollowRequest(
+                            requester_client_id=viewer.id, requested_client_id=target.id
+                        )
+                    )
                     session.commit()
             elif session.get(ClientFollow, (viewer.id, target.id)) is None:
                 session.add(
@@ -355,13 +533,21 @@ class SocialService:
         return [
             self._view(session, self.profile_for_client(session, requester.id), requester, owner)
             for requester in session.scalars(
-                select(Client).join(Account).join(ClientFollowRequest, ClientFollowRequest.requester_client_id == Client.id)
-                .where(ClientFollowRequest.requested_client_id == owner.id, Account.account_active)
+                select(Client)
+                .join(Account)
+                .join(ClientFollowRequest, ClientFollowRequest.requester_client_id == Client.id)
+                .where(
+                    ClientFollowRequest.requested_client_id == owner.id,
+                    Account.account_active,
+                    Client.active.is_(True),
+                )
                 .order_by(ClientFollowRequest.created_at.desc())
             ).all()
         ]
 
-    def decide_follow_request(self, session: Session, subject: str, requester_profile_id: UUID, accept: bool) -> ProfileView:
+    def decide_follow_request(
+        self, session: Session, subject: str, requester_profile_id: UUID, accept: bool
+    ) -> ProfileView:
         owner = self.client_for_subject(session, subject)
         requester_profile = session.get(SocialProfile, requester_profile_id)
         if requester_profile is None:
@@ -371,9 +557,15 @@ class SocialService:
             raise SocialNotFoundError
         session.delete(request)
         if accept and session.get(ClientFollow, (requester_profile.client_id, owner.id)) is None:
-            session.add(ClientFollow(follower_client_id=requester_profile.client_id, followed_client_id=owner.id))
+            session.add(
+                ClientFollow(
+                    follower_client_id=requester_profile.client_id, followed_client_id=owner.id
+                )
+            )
         session.commit()
-        return self._view(session, requester_profile, session.get(Client, requester_profile.client_id), owner)
+        return self._view(
+            session, requester_profile, session.get(Client, requester_profile.client_id), owner
+        )
 
     def profiles(
         self,
@@ -399,7 +591,11 @@ class SocialService:
             self._view(session, profile, client, viewer)
             for profile, client in session.execute(
                 statement.join(Account)
-                .where(Account.account_active, SocialProfile.visible_to_clients)
+                .where(
+                    Account.account_active,
+                    Client.active.is_(True),
+                    SocialProfile.visible_to_clients,
+                )
                 .order_by(Client.name)
                 .offset(offset)
                 .limit(self._limit(limit))
@@ -414,9 +610,7 @@ class SocialService:
             ProgressUpdate.client_id == view.client.id, ProgressUpdate.deleted_at.is_(None)
         )
         if not view.is_owner:
-            statement = statement.where(
-                ProgressUpdate.moderation_status == "visible"
-            )
+            statement = statement.where(ProgressUpdate.moderation_status == "visible")
         return list(
             session.scalars(
                 statement.order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc())
@@ -438,7 +632,10 @@ class SocialService:
             raise SocialNotFoundError
         allowed = update.client_id == viewer.id or (
             update.moderation_status == "visible"
-            and (profile.visible_to_clients or session.get(ClientFollow, (viewer.id, author.id)) is not None)
+            and (
+                profile.visible_to_clients
+                or session.get(ClientFollow, (viewer.id, author.id)) is not None
+            )
         )
         if not allowed:
             raise SocialForbiddenError
@@ -476,12 +673,19 @@ class SocialService:
             statement = statement.where(PostComment.moderation_status == "visible")
         return list(
             session.execute(
-                statement.order_by(PostComment.created_at.desc(), PostComment.id.desc()).offset(offset).limit(self._limit(limit))
+                statement.order_by(PostComment.created_at.desc(), PostComment.id.desc())
+                .offset(offset)
+                .limit(self._limit(limit))
             ).all()
         )
 
     def add_comment(
-        self, session: Session, subject: str, update_id: UUID, content: str | None, raw_image: bytes | None = None
+        self,
+        session: Session,
+        subject: str,
+        update_id: UUID,
+        content: str | None,
+        raw_image: bytes | None = None,
     ) -> PostComment:
         update, _ = self.post_detail(session, subject, update_id)
         if update.visibility != "shared" or update.moderation_status != "visible":
@@ -498,21 +702,34 @@ class SocialService:
         if raw_image is not None:
             media, media_type, width, height = self.normalize_image(raw_image)
             session.flush()
-            session.add(CommentImage(comment_id=comment.id, content=media, media_type=media_type, width=width, height=height))
+            session.add(
+                CommentImage(
+                    comment_id=comment.id,
+                    content=media,
+                    media_type=media_type,
+                    width=width,
+                    height=height,
+                )
+            )
         session.commit()
         session.refresh(comment)
         return comment
 
-    def edit_comment(self, session: Session, subject: str, comment_id: UUID, content: str | None) -> PostComment:
+    def edit_comment(
+        self, session: Session, subject: str, comment_id: UUID, content: str | None
+    ) -> PostComment:
         comment = session.get(PostComment, comment_id)
-        if comment is None: raise SocialNotFoundError
-        if comment.client_id != self.client_for_subject(session, subject).id: raise SocialForbiddenError
+        if comment is None:
+            raise SocialNotFoundError
+        if comment.client_id != self.client_for_subject(session, subject).id:
+            raise SocialForbiddenError
         text = self._plain(content or "", 2000, "Comment")
         if text is None and self.comment_image(session, comment.id) is None:
             raise SocialValidationError("Comment requires content or image")
         if comment.content != text:
             comment.content, comment.edited_at = text, datetime.now(UTC)
-            session.commit(); session.refresh(comment)
+            session.commit()
+            session.refresh(comment)
         return comment
 
     def delete_comment(self, session: Session, subject: str, comment_id: UUID) -> None:
@@ -523,7 +740,8 @@ class SocialService:
             raise SocialForbiddenError
         comment.content = None
         image = self.comment_image(session, comment.id)
-        if image is not None: session.delete(image)
+        if image is not None:
+            session.delete(image)
         comment.deleted_at = datetime.now(UTC)
         session.commit()
 
@@ -544,7 +762,11 @@ class SocialService:
             else (
                 session.get(SocialProfile, target_id)
                 if target_type == "biography"
-                else (session.get(ProgressUpdate, target_id) if target_type == "post" else session.get(ProfileImage, target_id))
+                else (
+                    session.get(ProgressUpdate, target_id)
+                    if target_type == "post"
+                    else session.get(ProfileImage, target_id)
+                )
             )
         )
         if target is None:
@@ -560,7 +782,8 @@ class SocialService:
             else:
                 target.content = None
                 image = self.comment_image(session, target.id)
-                if image is not None: session.delete(image)
+                if image is not None:
+                    session.delete(image)
                 target.deleted_at = datetime.now(UTC)
         else:
             target.moderation_status = "hidden" if action == "hide" else "visible"
@@ -579,10 +802,18 @@ class SocialService:
     def delete_post_aggregate(self, session: Session, update: ProgressUpdate) -> None:
         """Remove child content while retaining only the approved post tombstone."""
         comment_ids = select(PostComment.id).where(PostComment.progress_update_id == update.id)
-        session.query(CommentImage).filter(CommentImage.comment_id.in_(comment_ids)).delete(synchronize_session=False)
-        session.query(PostComment).filter(PostComment.progress_update_id == update.id).delete(synchronize_session=False)
-        session.query(PostImage).filter(PostImage.progress_update_id == update.id).delete(synchronize_session=False)
-        session.query(PostLike).filter(PostLike.progress_update_id == update.id).delete(synchronize_session=False)
+        session.query(CommentImage).filter(CommentImage.comment_id.in_(comment_ids)).delete(
+            synchronize_session=False
+        )
+        session.query(PostComment).filter(PostComment.progress_update_id == update.id).delete(
+            synchronize_session=False
+        )
+        session.query(PostImage).filter(PostImage.progress_update_id == update.id).delete(
+            synchronize_session=False
+        )
+        session.query(PostLike).filter(PostLike.progress_update_id == update.id).delete(
+            synchronize_session=False
+        )
         update.content = None
         update.deleted_at = datetime.now(UTC)
 
@@ -635,6 +866,11 @@ class SocialService:
             following_count,
             session.get(ClientFollow, (viewer.id, client.id)) is not None,
             session.get(ClientFollowRequest, (viewer.id, client.id)) is not None,
-            session.scalar(select(func.count()).select_from(ClientFollowRequest).where(ClientFollowRequest.requested_client_id == client.id)) or 0,
+            session.scalar(
+                select(func.count())
+                .select_from(ClientFollowRequest)
+                .where(ClientFollowRequest.requested_client_id == client.id)
+            )
+            or 0,
             present,
         )

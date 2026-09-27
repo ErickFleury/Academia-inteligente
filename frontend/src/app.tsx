@@ -7,6 +7,7 @@ import { RouterButtonLink } from './components/router-button-link'
 import { LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { OidcSessionClient, sessionIdleTimeoutMs, type Session } from './auth'
 import { ClientManagement } from './client-management'
+import { EmployeeManagement } from './employee-management'
 import { AdminDashboard } from './admin-dashboard-page'
 import { OnboardingAccessPage } from './onboarding-access-page'
 import { OnboardingConversationPage } from './onboarding-conversation-page'
@@ -21,6 +22,9 @@ import { EquipmentCatalogPage } from './equipment-catalog-page'
 import { EquipmentManagementPage } from './equipment-management-page'
 import { SocialProfilePage } from './social-profile-page'
 import { PostDetailPage } from './post-detail-page'
+import { InstructorFeedPage } from './instructor-feed-page'
+import { InstructorPostDetailPage } from './instructor-post-detail-page'
+import { InstructorShell } from './instructor-shell'
 
 const oidcSessionClient = new OidcSessionClient()
 
@@ -142,6 +146,8 @@ function Application() {
   const viewedProfileId = location.pathname.match(/^\/perfis\/([^/]+)$/)?.[1]
   const viewedPostId = location.pathname.match(/^\/publicacoes\/([^/]+)$/)?.[1]
   const isInstructorAdaptationsRoute = location.pathname === '/instrutor/adaptacoes'
+  const isInstructorRoute = location.pathname.startsWith('/instrutor')
+  const instructorPostId = location.pathname.match(/^\/instrutor\/publicacoes\/([^/]+)$/)?.[1]
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
   const isClientRoute = isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
   const isInstructor = session?.roles.includes('instructor') ?? false
@@ -200,6 +206,19 @@ function Application() {
       )
     }
     return <PublicShell><LoadingState label="Redirecionando para o login" /></PublicShell>
+  }
+
+  if (isInstructor && (location.pathname === '/' || location.pathname === '/dashboard' || location.pathname === '/instrutor')) return <Navigate replace to="/instrutor/feed" />
+
+  if (isInstructorRoute && !isInstructor) {
+    return <ClientShell onSignOut={endSession}><StatusNotice severity="error">Você não tem permissão para acessar esta área.</StatusNotice></ClientShell>
+  }
+  if (isInstructorRoute && session) {
+    if (instructorPostId) return <InstructorPostDetailPage accessToken={session.accessToken} onSignOut={endSession} postId={instructorPostId} />
+    if (location.pathname === '/instrutor/feed') return <InstructorFeedPage accessToken={session.accessToken} onSignOut={endSession} onOpenPost={(id) => navigate(`/instrutor/publicacoes/${id}`)} />
+    const title = location.pathname === '/instrutor/perfil' ? 'Perfil do instrutor' : 'Em breve'
+    const description = location.pathname === '/instrutor/perfil' ? 'O perfil profissional do instrutor será disponibilizado em uma etapa futura.' : 'Esta funcionalidade ainda não está disponível.'
+    return <InstructorShell onSignOut={endSession}><PageHeader eyebrow="Área do instrutor" title={title} description={description} /></InstructorShell>
   }
 
   if (
@@ -311,12 +330,13 @@ function Application() {
         <Stack spacing={3}>
           <PageHeader
             action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><RouterButtonLink to="/admin/equipamentos" variant="outlined">Gerenciar equipamentos</RouterButtonLink><RouterButtonLink to="/admin/publicacoes" variant="outlined">Moderar publicações</RouterButtonLink></Stack>}
-            description="Acompanhe indicadores agregados e gerencie os clientes da academia."
+            description="Acompanhe indicadores agregados e gerencie clientes e instrutores da academia."
             eyebrow="Operação"
             title="Painel administrativo"
           />
           <AdminDashboard accessToken={session.accessToken} onUnauthenticated={clearSession} />
           <ClientManagement accessToken={session.accessToken} onUnauthenticated={clearSession} />
+          <EmployeeManagement accessToken={session.accessToken} onUnauthenticated={clearSession} />
         </Stack>
       </AdminShell>
     )

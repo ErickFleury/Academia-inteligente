@@ -286,11 +286,11 @@ export function PostDetailPage({
                   <Stack spacing={1.5}>
                     <TextField
                       fullWidth
-                      inputProps={{ maxLength: 2000 }}
                       label="Adicionar comentário"
                       multiline
                       minRows={2}
                       onChange={(event) => setComment(event.target.value)}
+                      slotProps={{ htmlInput: { maxLength: 2000 } }}
                       value={comment}
                     />
                     <Button

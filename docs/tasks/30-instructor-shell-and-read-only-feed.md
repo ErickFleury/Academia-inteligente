@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned. Depends on Tasks 27 and 29.
+Implemented. Depends on Tasks 27 and 29.
 
 ## Objective
 

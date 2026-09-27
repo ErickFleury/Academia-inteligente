@@ -216,7 +216,9 @@ class TrainingAdaptationService:
         client_id = session.scalar(
             select(Client.id)
             .join(Account, Client.account_id == Account.id)
-            .where(Account.keycloak_subject == subject, Account.account_active)
+            .where(
+                Account.keycloak_subject == subject, Account.account_active, Client.active.is_(True)
+            )
         )
         if client_id is None:
             raise AdaptationNotFoundError
@@ -343,8 +345,7 @@ class TrainingAdaptationService:
                 key: value for key, value in health.items() if value is not None
             },
             "active_equipment_models": [
-                {"id": str(model.id), "name": model.name}
-                for model in active_equipment_models
+                {"id": str(model.id), "name": model.name} for model in active_equipment_models
             ],
         }
 
@@ -379,9 +380,7 @@ class TrainingAdaptationService:
         operations: list[AdaptationOperationInput],
         preserved_equipment_model_ids: set[UUID],
     ) -> None:
-        active_model_ids = {
-            model.id for model in self._equipment.active_models_with_units(session)
-        }
+        active_model_ids = {model.id for model in self._equipment.active_models_with_units(session)}
         allowed_model_ids = active_model_ids | preserved_equipment_model_ids
         for operation in operations:
             item = operation.item

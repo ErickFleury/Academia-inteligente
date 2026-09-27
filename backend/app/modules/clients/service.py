@@ -9,7 +9,7 @@ from sqlalchemy import Select, delete, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
-from app.modules.clients.models import Account, Client, ClientIdentityReconciliation
+from app.modules.clients.models import Account, Client, ClientIdentityReconciliation, PersonProfile
 from app.modules.identity.keycloak_admin import (
     ClientIdentityProvisioner,
     KeycloakAdminClient,
@@ -68,11 +68,29 @@ class ClientIdentityConflictError(Exception):
 
 
 @dataclass(frozen=True)
-class ClientSummary:
-    id: UUID
-    name: str
+class ClientData:
+    first_name: str
+    surname: str
     email: str
-    account_active: bool
+    cpf: str
+    phone: str
+    postal_code: str
+    street: str
+    number: str
+    complement: str | None
+    neighborhood: str
+    city: str
+    state: str
+
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.surname}"
+
+
+@dataclass(frozen=True)
+class ClientSummary(ClientData):
+    id: UUID
+    client_active: bool
     identity_provisioned: bool
     created_at: datetime
 
@@ -81,27 +99,118 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-def validate_client_data(name: str, email: str) -> tuple[str, str]:
-    normalized_name, normalized_email = " ".join(name.split()), normalize_email(email)
-    if not normalized_name:
-        raise ClientValidationError("Name is required")
-    if len(normalized_name) > 200:
-        raise ClientValidationError("Name must contain at most 200 characters")
+def _required_text(value: str, field: str, maximum: int) -> str:
+    normalized = " ".join(value.split())
+    if not normalized:
+        raise ClientValidationError(f"{field} is required")
+    if len(normalized) > maximum:
+        raise ClientValidationError(f"{field} must contain at most {maximum} characters")
+    return normalized
+
+
+def _optional_text(value: str | None, field: str, maximum: int) -> str | None:
+    if value is None:
+        return None
+    normalized = " ".join(value.split())
+    if len(normalized) > maximum:
+        raise ClientValidationError(f"{field} must contain at most {maximum} characters")
+    return normalized or None
+
+
+def _digits(value: str) -> str:
+    return "".join(character for character in value if character.isdigit())
+
+
+def normalize_cpf(value: str) -> str:
+    cpf = _digits(value)
+    if len(cpf) != 11 or len(set(cpf)) == 1:
+        raise ClientValidationError("A valid CPF is required")
+    for length in (9, 10):
+        total = sum(
+            int(digit) * weight for digit, weight in zip(cpf[:length], range(length + 1, 1, -1))
+        )
+        digit = (total * 10) % 11
+        if digit == 10:
+            digit = 0
+        if digit != int(cpf[length]):
+            raise ClientValidationError("A valid CPF is required")
+    return cpf
+
+
+def normalize_phone(value: str) -> str:
+    phone = _digits(value)
+    if len(phone) not in {10, 11}:
+        raise ClientValidationError("A valid phone number is required")
+    return phone
+
+
+def normalize_postal_code(value: str) -> str:
+    postal_code = _digits(value)
+    if len(postal_code) != 8:
+        raise ClientValidationError("A valid CEP is required")
+    return postal_code
+
+
+def validate_client_data(
+    *,
+    first_name: str,
+    surname: str,
+    email: str,
+    cpf: str,
+    phone: str,
+    postal_code: str,
+    street: str,
+    number: str,
+    complement: str | None,
+    neighborhood: str,
+    city: str,
+    state: str,
+) -> ClientData:
+    normalized_email = normalize_email(email)
     if not email_pattern.fullmatch(normalized_email):
         raise ClientValidationError("A valid e-mail address is required")
     if len(normalized_email) > 320:
         raise ClientValidationError("E-mail must contain at most 320 characters")
-    return normalized_name, normalized_email
+    normalized_state = state.strip().upper()
+    if len(normalized_state) != 2 or not normalized_state.isalpha():
+        raise ClientValidationError("A valid state is required")
+    return ClientData(
+        first_name=_required_text(first_name, "First name", 100),
+        surname=_required_text(surname, "Surname", 200),
+        email=normalized_email,
+        cpf=normalize_cpf(cpf),
+        phone=normalize_phone(phone),
+        postal_code=normalize_postal_code(postal_code),
+        street=_required_text(street, "Street", 200),
+        number=_required_text(number, "Number", 40),
+        complement=_optional_text(complement, "Complement", 200),
+        neighborhood=_required_text(neighborhood, "Neighborhood", 150),
+        city=_required_text(city, "City", 120),
+        state=normalized_state,
+    )
 
 
 def summary_from_client(client: Client) -> ClientSummary:
+    profile = client.account.person_profile
+    if profile is None:
+        raise ClientValidationError("Client personal data is unavailable")
     return ClientSummary(
-        client.id,
-        client.name,
-        client.account.email,
-        client.account.account_active,
-        client.account.keycloak_subject is not None,
-        client.created_at,
+        first_name=profile.first_name,
+        surname=profile.surname,
+        email=client.account.email,
+        cpf=profile.cpf,
+        phone=profile.phone,
+        postal_code=profile.postal_code,
+        street=profile.street,
+        number=profile.number,
+        complement=profile.complement,
+        neighborhood=profile.neighborhood,
+        city=profile.city,
+        state=profile.state,
+        id=client.id,
+        client_active=client.active,
+        identity_provisioned=client.account.keycloak_subject is not None,
+        created_at=client.created_at,
     )
 
 
@@ -109,20 +218,44 @@ class ClientService:
     def __init__(self, provisioner: ClientIdentityProvisioner | None = None) -> None:
         self.provisioner = provisioner or KeycloakAdminClient()
 
-    def create(self, session: Session, name: str, email: str) -> ClientSummary:
-        name, email = validate_client_data(name, email)
+    def create(self, session: Session, data: ClientData) -> ClientSummary:
+        email = data.email
         pending = session.scalar(
             select(ClientIdentityReconciliation).where(ClientIdentityReconciliation.email == email)
         )
-        if session.scalar(select(Account).where(Account.email == email)):
-            raise DuplicateEmailError
+        email_account = session.scalar(select(Account).where(Account.email == email))
+        cpf_profile = session.scalar(select(PersonProfile).where(PersonProfile.cpf == data.cpf))
+        if email_account is not None or cpf_profile is not None:
+            if (
+                email_account is None
+                or cpf_profile is None
+                or email_account.id != cpf_profile.account_id
+                or email_account.client is not None
+            ):
+                raise DuplicateEmailError
+            account = email_account
+            client = Client(name=data.name, active=True, account=account)
+            session.add(client)
+            session.flush()
+            pending = ClientIdentityReconciliation(
+                operation=LINK, email=email, account_id=client.account.id
+            )
+            session.add(pending)
+            try:
+                session.commit()
+            except IntegrityError as error:
+                session.rollback()
+                raise ClientIdentityProvisioningError from error
+            return summary_from_client(client)
         if pending is not None:
             if pending.operation != CREATE:
                 raise ClientIdentityProvisioningError
             # Registrations attempted before the non-blocking flow have a
             # CREATE record but no local account/client. Preserve their
             # reconciliation identifier and convert them to the LINK path.
-            client = Client(name=name, account=Account(email=email, account_active=True))
+            account = Account(email=email, account_active=True)
+            account.person_profile = self._person_profile(data)
+            client = Client(name=data.name, active=True, account=account)
             session.add(client)
             session.flush()
             pending.operation = LINK
@@ -136,7 +269,9 @@ class ClientService:
             session.refresh(client, attribute_names=["account"])
             return summary_from_client(client)
 
-        client = Client(name=name, account=Account(email=email, account_active=True))
+        account = Account(email=email, account_active=True)
+        account.person_profile = self._person_profile(data)
+        client = Client(name=data.name, active=True, account=account)
         session.add(client)
         session.flush()
         pending = ClientIdentityReconciliation(
@@ -152,7 +287,9 @@ class ClientService:
         return summary_from_client(client)
 
     def list(self, session: Session, query: str | None = None) -> list[ClientSummary]:
-        statement: Select[tuple[Client]] = select(Client).options(joinedload(Client.account))
+        statement: Select[tuple[Client]] = select(Client).options(
+            joinedload(Client.account).joinedload(Account.person_profile)
+        )
         if query and (needle := query.strip()):
             pattern = f"%{needle}%"
             statement = statement.join(Client.account).where(
@@ -169,8 +306,19 @@ class ClientService:
 
     def provision_existing(self, session: Session, client_id: UUID) -> ClientSummary | None:
         client = self._client(session, client_id)
-        if client is None or client.account.keycloak_subject:
-            return summary_from_client(client) if client else None
+        if client is None:
+            return None
+        if client.account.keycloak_subject:
+            pending = session.scalar(
+                select(ClientIdentityReconciliation).where(
+                    ClientIdentityReconciliation.account_id == client.account.id
+                )
+            )
+            if pending:
+                session.delete(pending)
+            self._reconcile_roles(client)
+            self._commit_client(session)
+            return summary_from_client(client)
         pending = session.scalar(
             select(ClientIdentityReconciliation).where(
                 ClientIdentityReconciliation.account_id == client.account.id
@@ -181,7 +329,10 @@ class ClientService:
                 operation=LINK, email=client.account.email, account_id=client.account.id
             )
             self._commit_pending(session, pending)
-        client.account.keycloak_subject = self._ensure_identity(session, pending)
+        client.account.keycloak_subject = self._ensure_identity(
+            session, pending, client.account.person_profile
+        )
+        self._reconcile_roles(client)
         session.delete(pending)
         self._commit_client(session)
         return summary_from_client(client)
@@ -191,46 +342,99 @@ class ClientService:
         session: Session,
         client_id: UUID,
         *,
-        name: str | None,
+        first_name: str | None,
+        surname: str | None,
         email: str | None,
-        account_active: bool | None,
+        cpf: str | None,
+        phone: str | None,
+        postal_code: str | None,
+        street: str | None,
+        number: str | None,
+        complement: str | None,
+        complement_provided: bool,
+        neighborhood: str | None,
+        city: str | None,
+        state: str | None,
+        client_active: bool | None,
     ) -> ClientSummary | None:
         client = self._client(session, client_id)
         if client is None:
             return None
-        if name is None and email is None and account_active is None:
+        if (
+            all(
+                value is None
+                for value in (
+                    first_name,
+                    surname,
+                    email,
+                    cpf,
+                    phone,
+                    postal_code,
+                    street,
+                    number,
+                    complement,
+                    neighborhood,
+                    city,
+                    state,
+                    client_active,
+                )
+            )
+            and not complement_provided
+        ):
             raise ClientValidationError("At least one client field must be provided")
-        name = (
-            validate_client_data(name, client.account.email)[0] if name is not None else client.name
+        profile = client.account.person_profile
+        if profile is None:
+            raise ClientValidationError("Client personal data is unavailable")
+        data = validate_client_data(
+            first_name=first_name if first_name is not None else profile.first_name,
+            surname=surname if surname is not None else profile.surname,
+            email=email if email is not None else client.account.email,
+            cpf=cpf if cpf is not None else profile.cpf,
+            phone=phone if phone is not None else profile.phone,
+            postal_code=postal_code if postal_code is not None else profile.postal_code,
+            street=street if street is not None else profile.street,
+            number=number if number is not None else profile.number,
+            complement=complement if complement_provided else profile.complement,
+            neighborhood=neighborhood if neighborhood is not None else profile.neighborhood,
+            city=city if city is not None else profile.city,
+            state=state if state is not None else profile.state,
         )
-        email = validate_client_data(name, email)[1] if email is not None else client.account.email
-        if email != client.account.email and client.account.keycloak_subject:
+        existing_profile = session.scalar(
+            select(PersonProfile).where(
+                PersonProfile.cpf == data.cpf, PersonProfile.account_id != client.account_id
+            )
+        )
+        if existing_profile is not None:
+            raise DuplicateEmailError
+        if data.email != client.account.email and client.account.keycloak_subject:
             pending = session.scalar(
                 select(ClientIdentityReconciliation).where(
                     ClientIdentityReconciliation.account_id == client.account.id
                 )
             )
             if pending is None:
-                if session.scalar(select(Account).where(Account.email == email)):
+                if session.scalar(select(Account).where(Account.email == data.email)):
                     raise DuplicateEmailError
                 pending = ClientIdentityReconciliation(
                     operation=EMAIL,
-                    email=email,
+                    email=data.email,
                     account_id=client.account.id,
                     keycloak_subject=client.account.keycloak_subject,
                 )
                 self._commit_pending(session, pending)
-            if pending.operation != EMAIL or pending.email != email:
+            if pending.operation != EMAIL or pending.email != data.email:
                 raise ClientIdentityProvisioningError
             try:
-                self.provisioner.update_email(client.account.keycloak_subject, email)
+                self.provisioner.update_client_identity(
+                    client.account.keycloak_subject, data.email, data.first_name, data.surname
+                )
             except KeycloakIdentityConflictError as error:
                 raise ClientIdentityConflictError from error
             except KeycloakProvisioningError as error:
                 raise ClientIdentityProvisioningError from error
             session.delete(pending)
-        elif email != client.account.email:
-            if session.scalar(select(Account).where(Account.email == email)):
+        elif data.email != client.account.email:
+            if session.scalar(select(Account).where(Account.email == data.email)):
                 raise DuplicateEmailError
             pending = session.scalar(
                 select(ClientIdentityReconciliation).where(
@@ -238,10 +442,26 @@ class ClientService:
                 )
             )
             if pending is not None:
-                pending.email = email
-        client.name, client.account.email = name, email
-        if account_active is not None:
-            client.account.account_active = account_active
+                pending.email = data.email
+        elif client.account.keycloak_subject and (
+            data.first_name != profile.first_name or data.surname != profile.surname
+        ):
+            try:
+                self.provisioner.update_client_identity(
+                    client.account.keycloak_subject, data.email, data.first_name, data.surname
+                )
+            except KeycloakIdentityConflictError as error:
+                raise ClientIdentityConflictError from error
+            except KeycloakProvisioningError as error:
+                raise ClientIdentityProvisioningError from error
+        self._apply_person_profile(profile, data)
+        client.name, client.account.email = data.name, data.email
+        if client_active is not None:
+            client.active = client_active
+        client.account.account_active = bool(
+            client.active or (client.account.employee and client.account.employee.active)
+        )
+        self._reconcile_roles(client)
         self._commit_client(session)
         return summary_from_client(client)
 
@@ -307,9 +527,14 @@ class ClientService:
         session.execute(delete(TrainingPlan).where(TrainingPlan.client_id == client.id))
         erased_post_ids = select(ProgressUpdate.id).where(ProgressUpdate.client_id == client.id)
         erased_comment_ids = select(PostComment.id).where(
-            (PostComment.client_id == client.id) | (PostComment.progress_update_id.in_(erased_post_ids))
+            (PostComment.client_id == client.id)
+            | (PostComment.progress_update_id.in_(erased_post_ids))
         )
-        session.execute(delete(SocialModerationAudit).where(SocialModerationAudit.target_id.in_(erased_comment_ids)))
+        session.execute(
+            delete(SocialModerationAudit).where(
+                SocialModerationAudit.target_id.in_(erased_comment_ids)
+            )
+        )
         session.execute(delete(PostLike).where(PostLike.client_id == client.id))
         session.execute(delete(PostLike).where(PostLike.progress_update_id.in_(erased_post_ids)))
         session.execute(delete(CommentImage).where(CommentImage.comment_id.in_(erased_comment_ids)))
@@ -326,7 +551,11 @@ class ClientService:
                 SocialModerationAudit.target_id.in_(erased_post_ids)
             )
         )
-        session.execute(delete(SocialModerationAudit).where(SocialModerationAudit.target_id.in_(erased_comment_ids)))
+        session.execute(
+            delete(SocialModerationAudit).where(
+                SocialModerationAudit.target_id.in_(erased_comment_ids)
+            )
+        )
         session.execute(
             delete(ClientFollow).where(
                 (ClientFollow.follower_client_id == client.id)
@@ -366,10 +595,21 @@ class ClientService:
         session.commit()
         return True
 
-    def _ensure_identity(self, session: Session, pending: ClientIdentityReconciliation) -> str:
+    def _ensure_identity(
+        self,
+        session: Session,
+        pending: ClientIdentityReconciliation,
+        profile: PersonProfile | None,
+    ) -> str:
+        if profile is None:
+            raise ClientValidationError("Client personal data is unavailable")
         try:
             subject = self.provisioner.ensure_client_identity(
-                pending.email, pending.id, pending.keycloak_subject
+                pending.email,
+                profile.first_name,
+                profile.surname,
+                pending.id,
+                pending.keycloak_subject,
             )
         except KeycloakIdentityConflictError as error:
             self._store_subject(session, pending, error.subject)
@@ -390,8 +630,55 @@ class ClientService:
     @staticmethod
     def _client(session: Session, client_id: UUID) -> Client | None:
         return session.scalar(
-            select(Client).options(joinedload(Client.account)).where(Client.id == client_id)
+            select(Client)
+            .options(
+                joinedload(Client.account).joinedload(Account.person_profile),
+                joinedload(Client.account).joinedload(Account.employee),
+            )
+            .where(Client.id == client_id)
         )
+
+    def _reconcile_roles(self, client: Client) -> None:
+        subject = client.account.keycloak_subject
+        if not subject:
+            return
+        roles: set[str] = {"client"} if client.active else set()
+        if client.account.employee and client.account.employee.active:
+            roles.update({"employee", "instructor"})
+        try:
+            self.provisioner.reconcile_application_roles(subject, roles)
+        except KeycloakProvisioningError as error:
+            raise ClientIdentityProvisioningError from error
+
+    @staticmethod
+    def _person_profile(data: ClientData) -> PersonProfile:
+        return PersonProfile(
+            first_name=data.first_name,
+            surname=data.surname,
+            cpf=data.cpf,
+            phone=data.phone,
+            postal_code=data.postal_code,
+            street=data.street,
+            number=data.number,
+            complement=data.complement,
+            neighborhood=data.neighborhood,
+            city=data.city,
+            state=data.state,
+        )
+
+    @staticmethod
+    def _apply_person_profile(profile: PersonProfile, data: ClientData) -> None:
+        profile.first_name = data.first_name
+        profile.surname = data.surname
+        profile.cpf = data.cpf
+        profile.phone = data.phone
+        profile.postal_code = data.postal_code
+        profile.street = data.street
+        profile.number = data.number
+        profile.complement = data.complement
+        profile.neighborhood = data.neighborhood
+        profile.city = data.city
+        profile.state = data.state
 
     @staticmethod
     def _commit_pending(session: Session, pending: ClientIdentityReconciliation) -> None:

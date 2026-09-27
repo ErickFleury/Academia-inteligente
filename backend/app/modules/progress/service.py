@@ -25,7 +25,13 @@ class ProgressStateError(Exception):
 class ProgressService:
     def client_for_subject(self, session: Session, subject: str) -> Client:
         client = session.scalar(
-            select(Client).join(Account).where(Account.keycloak_subject == subject)
+            select(Client)
+            .join(Account)
+            .where(
+                Account.keycloak_subject == subject,
+                Account.account_active,
+                Client.active.is_(True),
+            )
         )
         if client is None:
             raise ProgressNotFoundError
@@ -38,7 +44,12 @@ class ProgressService:
         ]
 
     def create(
-        self, session: Session, subject: str, content: str | None, visibility: str, images: list[bytes] | None = None
+        self,
+        session: Session,
+        subject: str,
+        content: str | None,
+        visibility: str,
+        images: list[bytes] | None = None,
     ) -> ProgressUpdate:
         text, images = (content or "").strip() or None, images or []
         if not text and not images or len(images) > 4:
@@ -54,7 +65,16 @@ class ProgressService:
         session.flush()
         for position, raw in enumerate(images):
             media, media_type, width, height = SocialService().normalize_image(raw)
-            session.add(PostImage(progress_update_id=update.id, position=position, content=media, media_type=media_type, width=width, height=height))
+            session.add(
+                PostImage(
+                    progress_update_id=update.id,
+                    position=position,
+                    content=media,
+                    media_type=media_type,
+                    width=width,
+                    height=height,
+                )
+            )
         session.commit()
         session.refresh(update)
         return update
@@ -81,7 +101,9 @@ class ProgressService:
         else:
             if content is not None:
                 text = content.strip() or None
-                if not text and not session.scalar(select(PostImage.id).where(PostImage.progress_update_id == update.id)):
+                if not text and not session.scalar(
+                    select(PostImage.id).where(PostImage.progress_update_id == update.id)
+                ):
                     raise ProgressStateError
                 if update.content != text:
                     update.content = text
@@ -97,7 +119,8 @@ class ProgressService:
         return list(
             session.execute(
                 select(ProgressUpdate, Client)
-                .join(Client).join(SocialProfile, SocialProfile.client_id == Client.id)
+                .join(Client)
+                .join(SocialProfile, SocialProfile.client_id == Client.id)
                 .where(SocialProfile.visible_to_clients, ProgressUpdate.deleted_at.is_(None))
                 .order_by(ProgressUpdate.created_at.desc(), ProgressUpdate.id.desc())
             ).all()

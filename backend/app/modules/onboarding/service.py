@@ -86,7 +86,11 @@ class OnboardingInvitationService:
         )
         if client is None:
             raise LookupError
-        if not client.account.keycloak_subject or not client.account.account_active:
+        if (
+            not client.account.keycloak_subject
+            or not client.account.account_active
+            or not client.active
+        ):
             raise ClientInvitationUnavailableError
 
         now = self._clock()

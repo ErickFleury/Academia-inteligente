@@ -9,6 +9,14 @@
   "defaultLocale": "pt-BR",
   "requiredActions": [
     {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 50
+    },
+    {
       "alias": "VERIFY_PROFILE",
       "name": "Verify Profile",
       "providerId": "VERIFY_PROFILE",
@@ -56,10 +64,10 @@
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:5173/"],
-      "webOrigins": ["http://localhost:5173"],
+      "redirectUris": ["http://localhost:5173/", "https://192.168.15.64:5173/"],
+      "webOrigins": ["http://localhost:5173", "https://192.168.15.64:5173"],
       "attributes": {
-        "post.logout.redirect.uris": "http://localhost:5173/"
+        "post.logout.redirect.uris": "http://localhost:5173/##https://192.168.15.64:5173/"
       },
       "protocolMappers": [
         {

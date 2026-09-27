@@ -35,7 +35,7 @@ class DashboardService:
             session.scalar(
                 select(func.count(Client.id))
                 .join(Account, Client.account_id == Account.id)
-                .where(Account.account_active.is_(True))
+                .where(Account.account_active.is_(True), Client.active.is_(True))
             )
             or 0
         )
@@ -73,8 +73,7 @@ class DashboardService:
             if key in counts:
                 counts[key] = int(count)
         return [
-            AttendanceWeek(week_start, counts[week_start.isoformat()])
-            for week_start in week_starts
+            AttendanceWeek(week_start, counts[week_start.isoformat()]) for week_start in week_starts
         ]
 
     def occupancy(self, session: Session, now: datetime | None = None) -> OccupancySnapshot:

@@ -480,7 +480,6 @@ export function SocialProfilePage({
                       <TextField
                         fullWidth
                         label="Apelido"
-                        inputProps={{ maxLength: 40 }}
                         value={profile.nickname ?? ""}
                         onBlur={(event) =>
                           void save({ nickname: event.target.value })
@@ -491,11 +490,11 @@ export function SocialProfilePage({
                             nickname: event.target.value || null,
                           })
                         }
+                        slotProps={{ htmlInput: { maxLength: 40 } }}
                       />
                       <TextField
                         fullWidth
                         label="Biografia"
-                        inputProps={{ maxLength: 160 }}
                         multiline
                         minRows={2}
                         value={profile.biography ?? ""}
@@ -508,6 +507,7 @@ export function SocialProfilePage({
                             biography: event.target.value || null,
                           })
                         }
+                        slotProps={{ htmlInput: { maxLength: 160 } }}
                       />
                       {profile.biography_moderation_status === "hidden" && (
                         <StatusNotice severity="error">
@@ -533,7 +533,7 @@ export function SocialProfilePage({
                       </Typography>
                     )
                   )}
-                  <Stack alignItems="center" direction="row" spacing={2}>
+                  <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
                     <Typography>{profile.follower_count} seguidores</Typography>
                     {isOwner && profile.pending_follow_request_count > 0 && (
                       <IconButton
@@ -652,11 +652,10 @@ export function SocialProfilePage({
                     {requests.length ? (
                       requests.map((request) => (
                         <Stack
-                          alignItems="center"
                           direction="row"
-                          justifyContent="space-between"
                           key={request.id}
                           spacing={2}
+                          sx={{ alignItems: "center", justifyContent: "space-between" }}
                         >
                           <Typography>
                             {request.nickname || request.name}

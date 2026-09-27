@@ -18,6 +18,8 @@ class CurrentTrainingPlanService:
             .join(Account, Client.account_id == Account.id)
             .where(
                 Account.keycloak_subject == subject,
+                Account.account_active,
+                Client.active.is_(True),
                 TrainingPlan.is_current,
                 TrainingPlanVersion.status == "current",
             )
@@ -33,6 +35,8 @@ class CurrentTrainingPlanService:
                 .join(Account, Client.account_id == Account.id)
                 .where(
                     Account.keycloak_subject == subject,
+                    Account.account_active,
+                    Client.active.is_(True),
                     TrainingPlanVersion.status == "proposal",
                 )
                 .order_by(TrainingPlanVersion.created_at.desc())

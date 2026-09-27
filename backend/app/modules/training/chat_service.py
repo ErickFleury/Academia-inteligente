@@ -199,9 +199,7 @@ class TrainingChatService:
         return drafts[0] if len(drafts) == 1 else None
 
     @staticmethod
-    def _draft_context(
-        session: Session, version: TrainingPlanVersion
-    ) -> dict[str, object]:
+    def _draft_context(session: Session, version: TrainingPlanVersion) -> dict[str, object]:
         return {
             "name": version.name,
             "objective": version.objective,
@@ -301,7 +299,9 @@ class TrainingChatService:
         client_id = session.scalar(
             select(Client.id)
             .join(Account, Client.account_id == Account.id)
-            .where(Account.keycloak_subject == subject, Account.account_active)
+            .where(
+                Account.keycloak_subject == subject, Account.account_active, Client.active.is_(True)
+            )
         )
         if client_id is None:
             raise TrainingChatNotFoundError

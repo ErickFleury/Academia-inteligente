@@ -30,12 +30,32 @@ class KeycloakIdentityMissingError(KeycloakProvisioningError):
 
 class ClientIdentityProvisioner(Protocol):
     def ensure_client_identity(
-        self, email: str, reconciliation_id: UUID, subject: str | None
+        self,
+        email: str,
+        first_name: str,
+        surname: str,
+        reconciliation_id: UUID,
+        subject: str | None,
     ) -> str: ...
 
-    def update_email(self, subject: str, email: str) -> None: ...
+    def update_client_identity(
+        self, subject: str, email: str, first_name: str, surname: str
+    ) -> None: ...
 
     def delete_identity(self, subject: str) -> None: ...
+
+    def ensure_employee_identity(
+        self,
+        email: str,
+        first_name: str,
+        surname: str,
+        reconciliation_id: UUID,
+        subject: str | None,
+        roles: set[str],
+        send_first_access: bool,
+    ) -> str: ...
+
+    def reconcile_application_roles(self, subject: str, roles: set[str]) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -70,7 +90,12 @@ class KeycloakAdminClient:
         self._config = config or KeycloakAdminConfig.from_environment()
 
     def ensure_client_identity(
-        self, email: str, reconciliation_id: UUID, subject: str | None
+        self,
+        email: str,
+        first_name: str,
+        surname: str,
+        reconciliation_id: UUID,
+        subject: str | None,
     ) -> str:
         if not self._config.client_secret:
             raise KeycloakProvisioningError("Client identity provisioning is unavailable")
@@ -78,11 +103,14 @@ class KeycloakAdminClient:
         token = self._access_token()
         current_subject = subject or self._find_subject_for_reconciliation(token, reconciliation_id)
         if current_subject is None:
-            current_subject = self._create_user(token, email, reconciliation_id)
+            current_subject = self._create_user(
+                token, email, first_name, surname, reconciliation_id
+            )
         else:
             self._verify_reconciliation_user(token, current_subject, email, reconciliation_id)
 
         try:
+            self._update_client_identity(token, current_subject, email, first_name, surname)
             self._assign_client_role(token, current_subject)
             self._send_first_access_email(token, current_subject)
         except KeycloakProvisioningError as error:
@@ -91,13 +119,25 @@ class KeycloakAdminClient:
             raise
         return current_subject
 
-    def update_email(self, subject: str, email: str) -> None:
+    def update_client_identity(
+        self, subject: str, email: str, first_name: str, surname: str
+    ) -> None:
         token = self._access_token()
+        self._update_client_identity(token, subject, email, first_name, surname)
+
+    def _update_client_identity(
+        self, token: str, subject: str, email: str, first_name: str, surname: str
+    ) -> None:
         self._request(
             "PUT",
             f"/admin/realms/{self._config.realm}/users/{subject}",
             token,
-            {"username": email, "email": email},
+            {
+                "username": email,
+                "email": email,
+                "firstName": first_name,
+                "lastName": surname,
+            },
             subject,
         )
 
@@ -114,6 +154,83 @@ class KeycloakAdminClient:
         except KeycloakIdentityMissingError:
             # A stale external reference cannot retain access and is already erased.
             return
+
+    def ensure_employee_identity(
+        self,
+        email: str,
+        first_name: str,
+        surname: str,
+        reconciliation_id: UUID,
+        subject: str | None,
+        roles: set[str],
+        send_first_access: bool,
+    ) -> str:
+        if not self._config.client_secret:
+            raise KeycloakProvisioningError("Employee identity provisioning is unavailable")
+        token = self._access_token()
+        current_subject = subject or self._find_subject_for_reconciliation(token, reconciliation_id)
+        if current_subject is None:
+            current_subject = self._create_user(
+                token, email, first_name, surname, reconciliation_id
+            )
+        else:
+            self._verify_reconciliation_user(token, current_subject, email, reconciliation_id)
+        try:
+            self._update_client_identity(token, current_subject, email, first_name, surname)
+            self._reconcile_roles(token, current_subject, roles)
+            if send_first_access:
+                self._send_first_access_email(token, current_subject)
+        except KeycloakProvisioningError as error:
+            if error.subject is None:
+                error.subject = current_subject
+            raise
+        return current_subject
+
+    def reconcile_application_roles(self, subject: str, roles: set[str]) -> None:
+        self._reconcile_roles(self._access_token(), subject, roles)
+
+    def _reconcile_roles(self, token: str, subject: str, roles: set[str]) -> None:
+        managed = {"client", "employee", "instructor"}
+        current = self._request(
+            "GET",
+            f"/admin/realms/{self._config.realm}/users/{subject}/role-mappings/realm",
+            token,
+            subject=subject,
+        )
+        if not isinstance(current, list):
+            raise KeycloakProvisioningError("Employee role reconciliation is unavailable", subject)
+        removable = [
+            role for role in current if isinstance(role, dict) and role.get("name") in managed
+        ]
+        if removable:
+            self._request(
+                "DELETE",
+                f"/admin/realms/{self._config.realm}/users/{subject}/role-mappings/realm",
+                token,
+                removable,
+                subject,
+            )
+        desired = []
+        for role_name in sorted(roles.intersection(managed)):
+            role = self._request(
+                "GET",
+                f"/admin/realms/{self._config.realm}/roles/{role_name}",
+                token,
+                subject=subject,
+            )
+            if not isinstance(role, dict):
+                raise KeycloakProvisioningError(
+                    "Employee role reconciliation is unavailable", subject
+                )
+            desired.append(role)
+        if desired:
+            self._request(
+                "POST",
+                f"/admin/realms/{self._config.realm}/users/{subject}/role-mappings/realm",
+                token,
+                desired,
+                subject,
+            )
 
     def _access_token(self) -> str:
         body = urlencode(
@@ -151,10 +268,19 @@ class KeycloakAdminClient:
             raise KeycloakIdentityConflictError("A conflicting Keycloak identity already exists")
         return matches[0]["id"] if matches else None
 
-    def _create_user(self, token: str, email: str, reconciliation_id: UUID) -> str:
+    def _create_user(
+        self,
+        token: str,
+        email: str,
+        first_name: str,
+        surname: str,
+        reconciliation_id: UUID,
+    ) -> str:
         payload = {
             "username": email,
             "email": email,
+            "firstName": first_name,
+            "lastName": surname,
             "enabled": True,
             "emailVerified": False,
             "attributes": {
