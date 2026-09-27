@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -183,14 +183,20 @@ def issue_onboarding_invitation(
 
 
 @router.get("/access", response_model=InvitationAccessResponse)
-def validate_onboarding_access(token: str, session: DatabaseSession) -> InvitationAccessResponse:
+def validate_onboarding_access(
+    session: DatabaseSession,
+    token: Annotated[str, Header(alias="X-Onboarding-Token", min_length=1, max_length=512)],
+) -> InvitationAccessResponse:
     """Validate a mailed token passively; a GET request never consumes it."""
     access = invitation_service.validate_access(session, token)
     return InvitationAccessResponse(status=access.status)
 
 
 @router.post("/access/redemptions", response_model=InvitationAccessResponse)
-def redeem_onboarding_access(token: str, session: DatabaseSession) -> InvitationAccessResponse:
+def redeem_onboarding_access(
+    session: DatabaseSession,
+    token: Annotated[str, Header(alias="X-Onboarding-Token", min_length=1, max_length=512)],
+) -> InvitationAccessResponse:
     """Consume a valid token only after the recipient intentionally starts onboarding."""
     if invitation_service.consume_access_after_redemption(session, token):
         return InvitationAccessResponse(status="redeemed")

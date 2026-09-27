@@ -469,3 +469,15 @@ test('ends the provider session and clears the local session when signing out', 
     'http://localhost:8080/realms/academia/protocol/openid-connect/logout?client_id=academia-web&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&id_token_hint=id-token',
   )
 })
+
+
+test('failed callback can retry with a fresh sign-in after removing the code', async () => {
+  window.history.replaceState({}, '', '/?code=invalid&state=wrong')
+  const startLogin = vi.spyOn(OidcSessionClient.prototype, 'startLogin').mockResolvedValue()
+  render(<App />)
+  const retry = await screen.findByRole('button', { name: 'Tentar novamente' })
+  expect(window.location.search).toBe('')
+  expect(startLogin).not.toHaveBeenCalled()
+  fireEvent.click(retry)
+  expect(startLogin).toHaveBeenCalledTimes(1)
+})

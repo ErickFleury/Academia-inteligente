@@ -25,7 +25,10 @@ container configuration, tests and lint/build scripts.
 | Social upload byte limits ran after framework buffering | Oversized/chunked uploads could allocate unbounded request memory before validation | Enforce existing 5 MiB limit before framework buffering; reject unsupported decoders and oversized decoded dimensions, convert bomb warnings/errors to controlled failures. |
 | Comment-image endpoint checked the parent post but not comment moderation/deletion | A known image URL could expose a hidden comment's attachment | Media now follows the same parent/comment policy as the comment list, including its existing owner exception. |
 | Protected API responses lacked explicit cache restrictions | Private media/results could remain in ordinary response caches after visibility changes | API responses use `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. |
-| Browser token refresh can finish after logout/timeout | Cleared session can be restored by late network responses | Fix in progress. |
+| Browser token refresh can finish after logout/timeout | Cleared session can be restored by late network responses | Generation/session checks reject late responses, refreshes are deduplicated and current activity is preserved. |
+| Invitation tokens included in API query strings | Tokens could enter API request logs and referrers | Use a bounded request header; browser referrers suppressed. E-mail links and intentional redemption remain unchanged. |
+| Malformed identity-provider responses | Unexpected JSON types could produce errors or misinterpret roles | Bounded reads and strict payload validation fail closed. |
+| Frontend lint checked an empty root project | The lint command could pass without checking application files | Run TypeScript project references; document language corrected to pt-BR. |
 | Keycloak pinned at 26.6.3 | Upstream security fixes exist after this release | Separate canonical-version decision; proposal below. |
 
 The social decoder input allocation limit is 4096×4096 pixels in total; accepted
@@ -77,3 +80,9 @@ capture, live hardware release or additional test-account reset is performed.
   decoder allowlist, decompression limits, streaming byte limits and private/hidden
   comment-image regressions. Full Ruff and Git whitespace review passed.
   Backend rebuilt with Pillow 12.3.0; installed Python audit returned no findings.
+
+- Session/invitation checkpoint: full frontend suite **146 passed**, plus the
+  callback retry regression verified separately; **23 targeted backend tests**
+  passed. Production frontend build and full Ruff passed. Existing large-bundle
+  warning remains; no new dependency was introduced. Callback codes are removed
+  from the browser URL even when authentication fails.

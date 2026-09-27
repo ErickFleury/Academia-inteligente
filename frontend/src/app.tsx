@@ -81,6 +81,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
     if (
       session
       || completingLogin
+      || loginCompletionStarted.current
       || authenticationError
       || isEquipmentCatalogRoute
       || new URL(window.location.href).searchParams.has('code')
@@ -106,7 +107,8 @@ function Application({ session, setSession }: { session: Session | null; setSess
       if (current.expiresAt - Date.now() > 60_000 || refreshing) return
       refreshing = true
       try {
-        setSession(await oidcSessionClient.refreshSession())
+        await oidcSessionClient.refreshSession()
+        setSession(oidcSessionClient.getSession())
       } finally {
         refreshing = false
       }
@@ -193,7 +195,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
         <Stack spacing={3} sx={{ maxWidth: 650, py: { xs: 2, sm: 5 } }}>
           <Typography component="h1" variant="h2">Não foi possível entrar</Typography>
           <Alert severity="error" variant="outlined">{authenticationError}</Alert>
-          <Box><Button onClick={() => setAuthenticationError(null)} variant="contained">Tentar novamente</Button></Box>
+          <Box><Button onClick={() => { loginCompletionStarted.current = false; loginRedirectStarted.current = false; setAuthenticationError(null) }} variant="contained">Tentar novamente</Button></Box>
         </Stack>
       </PublicShell>
     )

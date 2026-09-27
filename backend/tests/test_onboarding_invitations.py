@@ -49,13 +49,15 @@ class AsgiClient:
     def __init__(self, app: FastAPI) -> None:
         self.app = app
 
-    def post(self, path: str) -> tuple[int, dict[str, object]]:
-        return self.request("POST", path)
+    def post(self, path: str, token: str | None = None) -> tuple[int, dict[str, object]]:
+        return self.request("POST", path, token)
 
-    def get(self, path: str) -> tuple[int, dict[str, object]]:
-        return self.request("GET", path)
+    def get(self, path: str, token: str | None = None) -> tuple[int, dict[str, object]]:
+        return self.request("GET", path, token)
 
-    def request(self, method: str, path: str) -> tuple[int, dict[str, object]]:
+    def request(
+        self, method: str, path: str, token: str | None = None
+    ) -> tuple[int, dict[str, object]]:
         sent: list[dict[str, object]] = []
         parsed = urlsplit(path)
         scope = {
@@ -67,7 +69,8 @@ class AsgiClient:
             "path": parsed.path,
             "raw_path": parsed.path.encode(),
             "query_string": parsed.query.encode(),
-            "headers": [(b"authorization", b"Bearer admin-token")],
+            "headers": [(b"authorization", b"Bearer admin-token")]
+            + ([(b"x-onboarding-token", token.encode())] if token else []),
             "client": ("testclient", 50000),
             "server": ("testserver", 80),
         }
@@ -212,24 +215,24 @@ def test_access_api_passively_validates_and_only_explicit_redemption_consumes(
     token = raw_token(sender)
     api_client = AsgiClient(app)
 
-    status_code, body = api_client.get(f"/onboarding/access?token={token}")
+    status_code, body = api_client.get("/onboarding/access", token)
     assert status_code == 200
     assert body == {"status": "valid"}
     assert database_session.scalar(select(OnboardingInvitation)).redeemed_at is None
 
-    redeemed_status, redeemed_body = api_client.post(
-        f"/onboarding/access/redemptions?token={token}"
-    )
+    redeemed_status, redeemed_body = api_client.post("/onboarding/access/redemptions", token)
     assert redeemed_status == 200
     assert redeemed_body == {"status": "redeemed"}
     assert database_session.scalar(select(OnboardingInvitation)).redeemed_at is not None
 
-    reused_status, reused_body = api_client.get(f"/onboarding/access?token={token}")
+    reused_status, reused_body = api_client.get("/onboarding/access", token)
     assert reused_status == 200
     assert reused_body == {"status": "invalid"}
-    invalid_status, invalid_body = api_client.get("/onboarding/access?token=wrong-token")
+    invalid_status, invalid_body = api_client.get("/onboarding/access", "wrong-token")
     assert invalid_status == 200
     assert invalid_body == {"status": "invalid"}
+    assert api_client.get("/onboarding/access?token=web-access-token")[0] == 422
+    assert api_client.get("/onboarding/access", "x" * 513)[0] == 422
     app.dependency_overrides.clear()
 
 

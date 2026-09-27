@@ -53,6 +53,9 @@ async function sha256(value: string): Promise<string> {
 }
 
 export class OidcSessionClient {
+  private generation = 0
+  private refreshPending: Promise<Session | null> | null = null
+
   getSession(): Session | null {
     const serialized = sessionStorage.getItem(sessionKey)
     if (!serialized) return null
@@ -60,9 +63,11 @@ export class OidcSessionClient {
     try {
       const session = JSON.parse(serialized) as Session
       if (
-        !session.accessToken
-        || !session.refreshToken
-        || !session.lastActivityAt
+        !session
+        || typeof session.accessToken !== 'string' || !session.accessToken
+        || typeof session.refreshToken !== 'string' || !session.refreshToken
+        || !Number.isFinite(session.expiresAt)
+        || !Number.isFinite(session.lastActivityAt)
         || session.lastActivityAt + sessionIdleTimeoutMs <= Date.now()
       ) {
         this.clearSession()
@@ -88,56 +93,59 @@ export class OidcSessionClient {
     return activeSession
   }
 
-  async refreshSession(): Promise<Session | null> {
+  refreshSession(): Promise<Session | null> {
+    if (this.refreshPending) return this.refreshPending
+    const pending = this.performRefresh().finally(() => {
+      if (this.refreshPending === pending) this.refreshPending = null
+    })
+    this.refreshPending = pending
+    return pending
+  }
+
+  private async performRefresh(): Promise<Session | null> {
     const session = this.getSession()
     if (!session?.refreshToken) return null
-
+    const generation = this.generation
+    const currentSession = () => {
+      const current = this.getSession()
+      return generation === this.generation
+        && current?.accessToken === session.accessToken
+        && current?.refreshToken === session.refreshToken ? current : null
+    }
     const { issuer, clientId } = oidcConfig()
-    let response: Response
     try {
-      response = await fetch(`${issuer}/protocol/openid-connect/token`, {
+      const response = await fetch(`${issuer}/protocol/openid-connect/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          client_id: clientId,
-          refresh_token: session.refreshToken,
+          grant_type: 'refresh_token', client_id: clientId, refresh_token: session.refreshToken,
         }),
       })
+      if (!response.ok) throw new Error('Unable to renew session')
+      const payload = await this.tokenPayload(response)
+      const roles = await activeRoles(payload.access_token)
+      const current = currentSession()
+      if (!current) return null
+      const refreshed: Session = {
+        accessToken: payload.access_token,
+        expiresAt: Date.now() + payload.expires_in * 1000,
+        lastActivityAt: current.lastActivityAt,
+        roles,
+        idToken: payload.id_token ?? current.idToken,
+        refreshToken: payload.refresh_token,
+      }
+      this.storeSession(refreshed)
+      return refreshed
     } catch {
-      this.clearSession()
+      if (currentSession()) this.clearSession()
       return null
     }
-    if (!response.ok) {
-      this.clearSession()
-      return null
-    }
-    const payload = await this.tokenPayload(response)
-    if (!payload.access_token || !payload.expires_in || !payload.refresh_token) {
-      this.clearSession()
-      return null
-    }
-    let roles: string[]
-    try {
-      roles = await activeRoles(payload.access_token)
-    } catch {
-      this.clearSession()
-      return null
-    }
-    const refreshed = {
-      accessToken: payload.access_token,
-      expiresAt: Date.now() + payload.expires_in * 1000,
-      lastActivityAt: session.lastActivityAt,
-      roles,
-      idToken: payload.id_token ?? session.idToken,
-      refreshToken: payload.refresh_token,
-    }
-    this.storeSession(refreshed)
-    return refreshed
   }
 
   async startLogin(): Promise<void> {
     const { issuer, clientId, redirectUri } = oidcConfig()
+    this.generation += 1
+    this.refreshPending = null
     const verifier = randomValue()
     const state = randomValue()
     sessionStorage.setItem(verifierKey, verifier)
@@ -153,17 +161,20 @@ export class OidcSessionClient {
       code_challenge: await sha256(verifier),
       code_challenge_method: 'S256',
     }).toString()
-    window.location.assign(authorizationUrl)
+    if (sessionStorage.getItem(stateKey) === state) window.location.assign(authorizationUrl)
   }
 
   async completeLogin(): Promise<string> {
     const currentUrl = new URL(window.location.href)
     const code = currentUrl.searchParams.get('code')
     if (!code) return currentUrl.pathname
+    const responseState = currentUrl.searchParams.get('state')
+    for (const key of ['code', 'state', 'session_state', 'iss']) currentUrl.searchParams.delete(key)
+    window.history.replaceState(window.history.state, '', currentUrl)
 
     const expectedState = sessionStorage.getItem(stateKey)
     const verifier = sessionStorage.getItem(verifierKey)
-    if (!verifier || currentUrl.searchParams.get('state') !== expectedState) {
+    if (!verifier || !expectedState || responseState !== expectedState) {
       throw new Error('Unable to verify the sign-in response')
     }
 
@@ -186,6 +197,8 @@ export class OidcSessionClient {
       throw new Error('Invalid authentication response')
     }
     const roles = await activeRoles(payload.access_token)
+    if (sessionStorage.getItem(stateKey) !== expectedState
+      || sessionStorage.getItem(verifierKey) !== verifier) throw new Error('Sign-in was cancelled')
     this.storeSession({
       accessToken: payload.access_token,
       expiresAt: Date.now() + payload.expires_in * 1000,
@@ -200,6 +213,8 @@ export class OidcSessionClient {
   }
 
   clearSession(): void {
+    this.generation += 1
+    this.refreshPending = null
     sessionStorage.removeItem(sessionKey)
     sessionStorage.removeItem(verifierKey)
     sessionStorage.removeItem(stateKey)
@@ -251,16 +266,20 @@ export class OidcSessionClient {
   }
 
   private async tokenPayload(response: Response): Promise<{
-    access_token?: string
-    expires_in?: number
+    access_token: string
+    expires_in: number
     id_token?: string
-    refresh_token?: string
+    refresh_token: string
   }> {
-    return response.json() as Promise<{
-      access_token?: string
-      expires_in?: number
-      id_token?: string
-      refresh_token?: string
-    }>
+    const payload = await response.json()
+    if (!payload || typeof payload !== 'object'
+      || typeof payload.access_token !== 'string' || !payload.access_token
+      || typeof payload.refresh_token !== 'string' || !payload.refresh_token
+      || typeof payload.expires_in !== 'number' || !Number.isFinite(payload.expires_in)
+      || payload.expires_in <= 0
+      || (payload.id_token !== undefined && typeof payload.id_token !== 'string')) {
+      throw new Error('Invalid authentication response')
+    }
+    return payload
   }
 }

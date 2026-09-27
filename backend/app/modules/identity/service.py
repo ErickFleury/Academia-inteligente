@@ -45,21 +45,36 @@ class OidcUserInfoProvider:
         )
         try:
             with urlopen(request, timeout=2) as response:  # noqa: S310 - configured OIDC endpoint
-                payload = json.load(response)
+                body = response.read(65_537)
+                if len(body) > 65_536:
+                    raise IdentityProviderUnavailableError
+                payload = json.loads(body)
         except HTTPError as error:
             if error.code in {400, 401, 403}:
                 raise InvalidSessionError from error
             raise IdentityProviderUnavailableError from error
-        except (URLError, TimeoutError, json.JSONDecodeError):
+        except (URLError, TimeoutError, UnicodeDecodeError, json.JSONDecodeError):
             raise IdentityProviderUnavailableError from None
 
+        if not isinstance(payload, dict):
+            raise IdentityProviderUnavailableError
         subject = payload.get("sub")
         if not isinstance(subject, str) or not subject:
             raise InvalidSessionError
 
-        roles = payload.get("realm_access", {}).get("roles", [])
+        realm_access = payload.get("realm_access", {})
+        if not isinstance(realm_access, dict):
+            raise IdentityProviderUnavailableError
+        roles = realm_access.get("roles", [])
+        username = payload.get("preferred_username")
+        if (
+            not isinstance(roles, list)
+            or any(not isinstance(role, str) for role in roles)
+            or (username is not None and not isinstance(username, str))
+        ):
+            raise IdentityProviderUnavailableError
         return AuthenticatedIdentity(
             subject=subject,
-            username=payload.get("preferred_username"),
-            roles=tuple(role for role in roles if isinstance(role, str)),
+            username=username,
+            roles=tuple(roles),
         )

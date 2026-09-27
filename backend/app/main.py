@@ -50,7 +50,12 @@ def create_app() -> FastAPI:
         allow_origins=allowed_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type", "X-Access-Integration-Secret"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-Access-Integration-Secret",
+            "X-Onboarding-Token",
+        ],
     )
     app.include_router(health_router)
     app.include_router(biometrics_router)

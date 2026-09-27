@@ -18,14 +18,14 @@ test('opens a valid token-bound onboarding entry without consuming it passively'
   render(<OnboardingAccessPage token="invitation-token" />)
 
   expect(await screen.findByRole('heading', { name: 'Seu onboarding começa aqui' })).toBeInTheDocument()
-  expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:8000/onboarding/access?token=invitation-token')
-  expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'GET' })
+  expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:8000/onboarding/access')
+  expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'GET', headers: { 'X-Onboarding-Token': 'invitation-token' } })
   expect(screen.queryByText('invitation-token')).not.toBeInTheDocument()
 
   fireEvent.click(screen.getByRole('button', { name: 'Iniciar onboarding' }))
   expect(await screen.findByText(/Seu convite foi usado com segurança/i)).toBeInTheDocument()
-  expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8000/onboarding/access/redemptions?token=invitation-token')
-  expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST' })
+  expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8000/onboarding/access/redemptions')
+  expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST', headers: { 'X-Onboarding-Token': 'invitation-token' } })
 })
 
 test.each([
