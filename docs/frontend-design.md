@@ -140,6 +140,20 @@ palette, or page composition.
   session → exercise → sets/repetitions/time/load/rest → instructions. Group
   related values rather than giving every value a separate card. Review,
   proposal, approved, and history states remain distinct where approved.
+- **Instructor plan browsing:** Pending, own, and all-plan collections use a
+  compact selectable list beside a focused reading pane on larger desktops,
+  within the shared shell's wider content option. Phone and tablet show the
+  list or selected plan with an explicit return action and restored focus.
+  Reuse the shared training content view: objective, numbered exercises, grouped
+  sets/repetitions/rest, load guidance, and retained equipment labels. Keep
+  approved/current/history states explicit, with a separate approval-history
+  tab. All-plan search keeps the client name prominent and groups optional
+  instructor/date filters behind “Mais filtros”, with a clear reset action.
+  Pending review opens in preview mode; editing reuses the authoritative draft
+  fields and preserves unsaved changes when returning to preview. Within the
+  review workspace, changing selection, reloading, or closing asks before
+  discarding unsaved edits. Saving and approval remain distinct actions, and
+  approval uses the revision corresponding to the displayed content.
 - **AI chat:** Shared client-shell language with clear sender distinction,
   readable message width, persistent input, generating/error/retry states, and
   structured message content when required. Context cues should help without

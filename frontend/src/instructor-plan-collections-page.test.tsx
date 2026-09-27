@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
 
@@ -27,6 +27,7 @@ test('combines filters and opens immutable history with original responsibility'
   const fetchMock = mockFetch()
   mount()
   await screen.findByText('Ana Silva')
+  fireEvent.click(screen.getByRole('button', { name: 'Mais filtros' }))
   fireEvent.change(screen.getByLabelText('Nome do cliente'), { target: { value: ' Ana ' } })
   fireEvent.change(screen.getByLabelText('Aprovação a partir de'), { target: { value: '2026-09-27' } })
   fireEvent.change(screen.getByLabelText('Aprovação até'), { target: { value: '2026-09-27' } })
@@ -34,8 +35,9 @@ test('combines filters and opens immutable history with original responsibility'
   fireEvent.click(await screen.findByRole('option', { name: 'Maria Silva' }))
   fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
   await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url.includes('search=Ana&responsible=current&start=2026-09-27&end=2026-09-27'))).toBe(true))
-  fireEvent.click(screen.getByRole('button', { name: 'Ver plano e histórico' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Ver plano e histórico de Ana Silva' }))
   await screen.findByRole('button', { name: 'Editar' })
+  fireEvent.click(screen.getByRole('tab', { name: 'Histórico' }))
   fireEvent.click(screen.getByRole('button', { name: /Treino anterior/ }))
   await screen.findByText('Histórico — somente leitura')
   expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
@@ -49,7 +51,7 @@ test('cancel preserves draft and explicit confirmation sends the exact revision'
     return payload.discard_id ? { ok: false, status: 409, json: async () => ({ detail: 'stale' }) } : { ok: false, status: 409, json: async () => ({ detail: { code: 'existing_draft', draft: { id: 'existing', name: 'Rascunho de IA', revision: 4 } } }) }
   })
   mount()
-  fireEvent.click(await screen.findByRole('button', { name: 'Ver plano e histórico' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Ver plano e histórico de Ana Silva' }))
   fireEvent.click(await screen.findByRole('button', { name: 'Editar' }))
   await screen.findByRole('dialog', { name: 'Substituir rascunho existente?' })
   fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -73,4 +75,33 @@ test('my plans requests only own responsibility and supports empty and retry sta
   await screen.findByText('Nenhum plano encontrado')
   expect(fetchMock.mock.calls.some(([url]) => url.includes('mine=true'))).toBe(true)
   expect(screen.queryByLabelText('Nome do cliente')).not.toBeInTheDocument()
+})
+
+
+test('focused reading view groups exercise details and restores the selected list button', async () => {
+  mockFetch()
+  mount(true)
+  const open = await screen.findByRole('button', { name: 'Ver plano e histórico de Ana Silva' })
+  fireEvent.click(open)
+  const detail = await screen.findByRole('region', { name: 'Detalhes do plano' })
+  expect(within(detail).getByRole('heading', { name: 'Força — Ana Silva' })).toHaveFocus()
+  expect(within(detail).getByRole('heading', { name: 'Agachamento' })).toBeInTheDocument()
+  for (const label of ['Séries', 'Repetições', 'Descanso', 'Orientação de carga', 'Confortável']) expect(within(detail).getByText(label)).toBeInTheDocument()
+  expect(open).toHaveAttribute('aria-pressed', 'true')
+  fireEvent.click(within(detail).getByRole('button', { name: /Voltar à lista/ }))
+  await waitFor(() => expect(open).toHaveFocus())
+  expect(screen.queryByRole('region', { name: 'Detalhes do plano' })).not.toBeInTheDocument()
+})
+
+test('clears every applied filter and returns to the complete collection', async () => {
+  const fetchMock = mockFetch()
+  mount()
+  await screen.findByText('Ana Silva')
+  fireEvent.change(screen.getByLabelText('Nome do cliente'), { target: { value: 'Ana' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
+  await screen.findByText('Consulta filtrada')
+  fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }))
+  await waitFor(() => expect(screen.queryByText('Consulta filtrada')).not.toBeInTheDocument())
+  expect(screen.getByLabelText('Nome do cliente')).toHaveValue('')
+  expect(fetchMock.mock.calls.filter(([url]) => url.includes('/collections?')).at(-1)?.[0]).toMatch(/mine=false&limit=20$/)
 })

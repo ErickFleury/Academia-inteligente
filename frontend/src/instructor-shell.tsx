@@ -40,11 +40,11 @@ function Navigation({ id, onNavigate }: { id?: string; onNavigate?: () => void }
   )
 }
 
-export function InstructorShell({ children, onSignOut }: { children: ReactNode; onSignOut: () => void }) {
+export function InstructorShell({ children, onSignOut, contentMaxWidth = 'md' }: { children: ReactNode; onSignOut: () => void; contentMaxWidth?: 'md' | 'lg' }) {
   return (
     <SidebarShell
       area="instructor"
-      contentMaxWidth="md"
+      contentMaxWidth={contentMaxWidth}
       navigationId="navegacao-instrutor-movel"
       onSignOut={onSignOut}
       renderNavigation={(props) => <Navigation {...props} />}
