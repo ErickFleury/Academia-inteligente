@@ -33,6 +33,8 @@ class InterviewState:
     pending: list[str] = field(default_factory=list)
     needs_target: bool = False
     last_sequence: int = 0
+    failed_answers: dict[str, int] = field(default_factory=dict)
+    confirmation: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def load(cls, raw: str | None, onboarding: Onboarding):
@@ -52,12 +54,27 @@ class InterviewState:
                 if getattr(current, name) != getattr(baseline, name):
                     values[name] = getattr(current, name)
                     pending = [item for item in pending if item != name]
+            confirmation = data.get("confirmation", {})
+            if (
+                not isinstance(confirmation, dict)
+                or len(confirmation) != 1
+                or not set(confirmation) <= {"height_cm", "weight_kg"}
+            ):
+                confirmation = {}
+            if confirmation:
+                OnboardingDraftUpdate(**confirmation)
             return cls(
                 OnboardingDraftUpdate(**values),
                 current,
                 pending,
                 bool(data.get("needs_target")),
                 int(data.get("last_sequence", 0)),
+                {
+                    name: min(2, max(0, int(count)))
+                    for name, count in data.get("failed_answers", {}).items()
+                    if name in FIELDS
+                },
+                confirmation,
             )
         except (ValueError, TypeError, KeyError, ValidationError):
             return cls(current, current)
@@ -71,6 +88,8 @@ class InterviewState:
                 "pending": self.pending,
                 "needs_target": self.needs_target,
                 "last_sequence": self.last_sequence,
+                "failed_answers": self.failed_answers,
+                "confirmation": self.confirmation,
             },
             ensure_ascii=False,
         )

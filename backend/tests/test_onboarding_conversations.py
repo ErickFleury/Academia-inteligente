@@ -397,13 +397,16 @@ def test_failed_provider_and_expiry_preserve_authoritative_form(database_session
 
     drafts, scope = scope_for(database_session)
     drafts.save_draft(database_session, scope, OnboardingDraftUpdate(training_goal="Força"))
-    provider = CurrentMessageProvider(
-        [], [{"height_cm": 180}, AiProviderError("invalid", retryable=False)]
-    )
+    provider = CurrentMessageProvider([], [AiProviderError("invalid", retryable=False)])
     service = OnboardingConversationService(provider, drafts)
     service.submit(database_session, scope, message="Tenho 180 cm", client_request_id=uuid4())
     with pytest.raises(AiConversationUnavailableError):
-        service.submit(database_session, scope, message="Peso 80 kg", client_request_id=uuid4())
+        service.submit(
+            database_session,
+            scope,
+            message="Quero explicar melhor minha experiência",
+            client_request_id=uuid4(),
+        )
     state = service.state(database_session, scope)
     assert state.known_answers.height_cm == 180 and state.known_answers.weight_kg is None
     conversation = database_session.scalar(select(OnboardingAiConversation))

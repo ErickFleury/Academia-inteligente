@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -18,12 +19,14 @@ from app.integrations.ai import (
     onboarding_ai_provider_from_environment,
 )
 from app.modules.onboarding.answer_evidence import grounded_answers
+from app.modules.onboarding.direct_answers import direct_extraction, measurement_suggestion
 from app.modules.onboarding.draft_service import (
     ClientOnboardingScope,
     OnboardingDraftService,
     OnboardingNotEditableError,
 )
 from app.modules.onboarding.interview_state import InterviewState, draft_values
+from app.modules.onboarding.measurements import normalized
 from app.modules.onboarding.models import OnboardingAiConversation, OnboardingAiMessage
 from app.modules.onboarding.schema import OnboardingCompletionData, OnboardingDraftUpdate
 
@@ -47,6 +50,7 @@ class ConversationState:
     known_answers: OnboardingDraftUpdate = field(default_factory=OnboardingDraftUpdate)
     clarification_fields: list[str] = field(default_factory=list)
     needs_clarification: bool = False
+    fallback_field: str | None = None
 
 
 @dataclass(frozen=True)
@@ -56,6 +60,7 @@ class ConversationTurn:
     known_answers: OnboardingDraftUpdate = field(default_factory=OnboardingDraftUpdate)
     clarification_fields: list[str] = field(default_factory=list)
     needs_clarification: bool = False
+    fallback_field: str | None = None
 
 
 _LABELS = {
@@ -123,6 +128,7 @@ class OnboardingConversationService:
             memory.answers,
             memory.pending,
             memory.needs_target or bool(memory.pending),
+            self._fallback_field(memory, missing),
         )
 
     def submit(
@@ -155,6 +161,7 @@ class OnboardingConversationService:
                 state.known_answers,
                 state.clarification_fields,
                 state.needs_clarification,
+                state.fallback_field,
             )
         user = session.scalar(
             select(OnboardingAiMessage).where(
@@ -185,23 +192,56 @@ class OnboardingConversationService:
             pending_clarifications=memory.pending,
             needs_correction_target=memory.needs_target,
         )
+        previous = next((item for item in sources if item.sequence == user.sequence - 1), None)
+        question = previous.content if previous and previous.role == "assistant" else ""
+        expected = next((name for name, prompt in _QUESTIONS.items() if prompt in question), None)
+        if question and memory.confirmation:
+            expected = next(iter(memory.confirmation))
+        accepted: set[str] = set()
+        answer = normalized(message).strip(" .!")
+        confirmation = memory.confirmation.copy()
+        direct = direct_extraction(message, user.sequence, question)
         try:
-            extracted = self._retry(lambda: self._provider.extract_onboarding(context))
-            accepted: set[str] = set()
-            candidate = grounded_answers(
-                extracted,
-                memory.answers,
-                sources,
-                latest_sequence=user.sequence,
-                accepted_fields=accepted,
-            )
+            if confirmation and answer in {"sim", "confirmo", "isso", "correto"}:
+                candidate = OnboardingDraftUpdate(**(memory.answers.model_dump() | confirmation))
+                accepted.update(confirmation)
+            elif confirmation and answer in {"nao", "incorreto"}:
+                candidate = memory.answers
+            else:
+                extracted = (
+                    direct
+                    if direct is not None
+                    else self._retry(lambda: self._provider.extract_onboarding(context))
+                )
+                candidate = grounded_answers(
+                    extracted,
+                    memory.answers,
+                    sources,
+                    latest_sequence=user.sequence,
+                    accepted_fields=accepted,
+                )
         except (AiConversationUnavailableError, ValidationError):
-            # Keep the original message for an idempotent retry, but no proposed
-            # state, reply or draft change from a failed operation.
             conversation.raw_expires_at = self._expiry()
             session.commit()
             raise AiConversationUnavailableError from None
+        memory.confirmation = {}
         changed = memory.merge(candidate, message, user.sequence, accepted)
+        for name in accepted:
+            if name not in memory.pending:
+                memory.failed_answers.pop(name, None)
+        if expected and expected not in accepted and not changed:
+            memory.failed_answers[expected] = min(2, memory.failed_answers.get(expected, 0) + 1)
+            if expected in {"height_cm", "weight_kg"}:
+                memory.needs_target = False
+                memory.pending = list(dict.fromkeys([*memory.pending, expected]))
+        # Offer a proposed measurement only in this client's expiring state. An
+        # explicit confirmation or restated value is required before applying it.
+        for name in memory.pending[:1] if not memory.needs_target else []:
+            if name in {"height_cm", "weight_kg"}:
+                proposed = measurement_suggestion(message, name)
+                if proposed is not None:
+                    memory.confirmation = {name: proposed}
+                    break
         missing = self._drafts.missing_required_fields(memory.answers)
         ready = not missing and not memory.pending and not memory.needs_target
         if ready:
@@ -225,7 +265,21 @@ class OnboardingConversationService:
                 else ""
             )
             text = acknowledgment + ("Vamos confirmar esse dado. " if memory.pending else "")
-            text += _QUESTIONS[target]
+            if memory.confirmation and target in memory.confirmation:
+                value = memory.confirmation[target].replace(".", ",")
+                unit = "kg" if target == "weight_kg" else "cm"
+                label = "esse peso" if target == "weight_kg" else "essa altura"
+                text += f"Você quis dizer {value} {unit}? "
+                text += f"Confirme {label} com “sim” ou informe o valor correto."
+            else:
+                if memory.failed_answers.get(target, 0):
+                    text += self._clarification(target, message)
+                text += _QUESTIONS[target]
+            if memory.failed_answers.get(target, 0) >= 2:
+                text += (
+                    " Você também pode preencher esse dado diretamente abaixo ou usar o formulário."
+                )
+
         session.add(
             OnboardingAiMessage(
                 conversation_id=conversation.id,
@@ -246,7 +300,32 @@ class OnboardingConversationService:
             memory.answers,
             memory.pending,
             memory.needs_target or bool(memory.pending),
+            self._fallback_field(memory, missing),
         )
+
+    @staticmethod
+    def _fallback_field(memory: InterviewState, missing: list[str]) -> str | None:
+        return next(
+            (
+                name
+                for name in [*memory.pending, *missing]
+                if memory.failed_answers.get(name, 0) >= 2
+            ),
+            None,
+        )
+
+    @staticmethod
+    def _clarification(target: str, message: str) -> str:
+        if target in {"height_cm", "weight_kg"}:
+            if len(re.findall(r"\d+(?:[.,]\d+)?", message)) > 1:
+                return "Encontrei mais de um número e preciso saber qual é o valor atual. "
+            unit = (
+                "kg (por exemplo, 82 kg)"
+                if target == "weight_kg"
+                else "cm ou m (por exemplo, 180 cm)"
+            )
+            return f"Não consegui validar a medida. Informe um valor atual em {unit}. "
+        return "Não consegui confirmar essa resposta. As outras informações foram mantidas. "
 
     def _retry(self, operation):
         for attempt in range(2):

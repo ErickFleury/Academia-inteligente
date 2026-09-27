@@ -49,4 +49,4 @@ def test_parallel_turns_keep_both_facts_without_duplicate_replies(sessions, dupl
         assert state.known_answers.height_cm == 180
         assert state.known_answers.weight_kg == (None if duplicate else 80)
         assert len(session.scalars(select(OnboardingAiMessage)).all()) == (2 if duplicate else 4)
-        assert sum(calls) == (1 if duplicate else 2)
+        assert sum(calls) == 0  # Both clear measurements bypass the provider.

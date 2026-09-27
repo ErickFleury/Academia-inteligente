@@ -2000,3 +2000,25 @@ Client isolation, existing five-/30-day conversation retention, backend validati
 manual fallback, single-draft revision protection and instructor approval remain
 mandatory. No model replacement, new dependency or new health schema is approved
 by this amendment.
+
+### Conversational answer recovery amendment — 2026-09-27
+
+The owner approved natural numeric answers, explicit rejection feedback,
+repeated-question recovery, deterministic shortcuts and privacy-safe AI diagnostics
+for EXT-RF-AI-01/RF-11–13 and the existing RF-18 integration. A preceding physical
+question may provide the unit for an otherwise unambiguous personal answer such
+as “estou com 82”. Explicit units, targets, negation, uncertainty and third-party
+references must not be discarded to manufacture an answer. Clear measurements,
+short categorical answers and supported explicit corrections may bypass the
+provider only when the entire message is understood; additional free text keeps
+the provider path. Existing schema validation and explicit completion remain.
+
+Acceptance: uncertain/conflicting measurements can be proposed but require an
+explicit confirmation before persistence; rejections explain what needs
+clarification; two failed answers to the same field offer direct measurement
+entry or the existing form without discarding other answers. Retry replay cannot
+increase this counter or reapply a suggestion. Suggestions/counters expire with
+interview state and are superseded by manual edits. Diagnostics report operation,
+path, elapsed time and controlled outcome/rejection categories, without message
+text, answer values, identities, tokens or raw provider errors. No model,
+retention policy, dependency, schema migration or plan-approval change is approved.

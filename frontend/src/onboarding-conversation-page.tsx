@@ -47,6 +47,7 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
   const [conversation, setConversation] = useState<OnboardingConversation | null>(null)
   const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [message, setMessage] = useState('')
+  const [directValue, setDirectValue] = useState('')
   const [pending, setPending] = useState<{ message: string; requestId: string } | null>(null)
   const [retry, setRetry] = useState<{ message: string; requestId: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -72,6 +73,7 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
     try {
       setConversation(await sendOnboardingConversationMessage(accessToken, nextMessage, requestId))
       setMessage('')
+      setDirectValue('')
       setRetry(null)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível continuar a conversa.')
@@ -121,6 +123,21 @@ export function OnboardingConversationPage({ accessToken, onSignOut }: Onboardin
             </Box>)}
           </Box>
           <Typography color="text.secondary" variant="body2">Para corrigir, diga por exemplo: “Na verdade, meu peso é 82 kg”. A conversa é mantida por cinco dias; revise o formulário para concluir.</Typography>
+        </Stack></CardContent></Card>}
+        {conversation.fallback_field && <Card component="section"><CardContent><Stack spacing={1.5}>
+          <Typography component="h2" variant="h3">Vamos preencher este dado diretamente</Typography>
+          <Typography color="text.secondary">Suas outras respostas continuam salvas na conversa.</Typography>
+          {['height_cm', 'weight_kg'].includes(conversation.fallback_field) && <Box component="form" onSubmit={(event) => {
+            event.preventDefault()
+            const value = directValue.trim().replace(',', '.')
+            if (!/^\d+(?:\.\d+)?$/.test(value) || Number(value) <= 0) return
+            const isWeight = conversation.fallback_field === 'weight_kg'
+            void submit(`Na verdade, ${isWeight ? 'meu peso é' : 'minha altura é'} ${value} ${isWeight ? 'kg' : 'cm'}`)
+          }}><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <TextField label={conversation.fallback_field === 'weight_kg' ? 'Peso em kg' : 'Altura em cm'} value={directValue} onChange={(event) => setDirectValue(event.target.value)} disabled={pending !== null} slotProps={{ htmlInput: { inputMode: 'decimal', maxLength: 10 } }} />
+            <Button type="submit" variant="contained" disabled={pending !== null || !/^\d+(?:[.,]\d+)?$/.test(directValue.trim()) || Number(directValue.replace(',', '.')) <= 0}>Confirmar medida</Button>
+          </Stack></Box>}
+          <Box><RouterButtonLink to="/onboarding" variant="outlined">Usar formulário de onboarding</RouterButtonLink></Box>
         </Stack></CardContent></Card>}
         {error && <Stack spacing={1}><StatusNotice severity="error">{error}</StatusNotice>{retry && <Box><Button onClick={() => void submit(retry.message, retry.requestId)} variant="outlined">Tentar novamente</Button></Box>}</Stack>}
         <Stack aria-live="polite" spacing={1.5} sx={{ minHeight: 240, p: { xs: 1, sm: 2 }, borderRadius: 3, bgcolor: 'rgba(16,24,27,0.35)' }}>

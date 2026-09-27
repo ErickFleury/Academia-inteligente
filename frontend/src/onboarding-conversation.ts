@@ -11,6 +11,7 @@ export type OnboardingConversation = {
   known_answers?: Record<string, string | number | boolean | null>
   clarification_fields?: string[]
   needs_clarification?: boolean
+  fallback_field?: string | null
 }
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'

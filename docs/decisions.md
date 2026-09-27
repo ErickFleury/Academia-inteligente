@@ -1207,3 +1207,11 @@ in `requirements.md` supersedes DEC-08's final-extraction-only timing. It retain
 final structured validation, explicit client completion, immutable completed
 onboarding and instructor approval. RF-18 memory improvements keep client reports
 separate from model-generated suggestions within the existing 30-day lifecycle.
+
+### Conversational answer recovery follow-up — 2026-09-27
+
+The owner approved context-aware personal measurements, meaningful clarification,
+confirmation of uncertain values, direct-entry/form fallback after two unsuccessful
+answers, provider bypass for fully understood simple replies, and privacy-safe
+operation timing/outcome diagnostics. See the canonical conversational answer
+recovery amendment in requirements.md. No model or dependency change is needed.

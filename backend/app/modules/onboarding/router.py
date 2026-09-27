@@ -92,6 +92,7 @@ class ConversationResponse(BaseModel):
     known_answers: OnboardingDraftUpdate = Field(default_factory=OnboardingDraftUpdate)
     clarification_fields: list[str] = Field(default_factory=list)
     needs_clarification: bool = False
+    fallback_field: str | None = None
 
 
 class ConversationMessageRequest(BaseModel):
@@ -140,6 +141,7 @@ def response_from_conversation(state: ConversationState) -> ConversationResponse
         known_answers=state.known_answers,
         clarification_fields=state.clarification_fields,
         needs_clarification=state.needs_clarification,
+        fallback_field=state.fallback_field,
     )
 
 
@@ -151,6 +153,7 @@ def response_from_turn(turn: ConversationTurn) -> ConversationResponse:
         known_answers=turn.known_answers,
         clarification_fields=turn.clarification_fields,
         needs_clarification=turn.needs_clarification,
+        fallback_field=turn.fallback_field,
     )
 
 
@@ -313,6 +316,7 @@ def submit_own_onboarding_conversation_message(
             known_answers=turn.known_answers,
             clarification_fields=turn.clarification_fields,
             needs_clarification=turn.needs_clarification,
+            fallback_field=turn.fallback_field,
         )
     except OnboardingNotFoundError:
         raise HTTPException(

@@ -117,6 +117,16 @@ class OnboardingDraftService:
                 memory.answers = OnboardingDraftUpdate(**known)
                 memory.baseline = draft_values(onboarding)
                 memory.pending = [name for name in memory.pending if name not in changes]
+                memory.failed_answers = {
+                    name: count
+                    for name, count in memory.failed_answers.items()
+                    if name not in changes
+                }
+                memory.confirmation = {
+                    name: value
+                    for name, value in memory.confirmation.items()
+                    if name not in changes
+                }
                 if changes:
                     memory.needs_target = False
                 conversation.summary = memory.dump()

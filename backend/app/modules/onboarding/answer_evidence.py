@@ -10,6 +10,7 @@ import unicodedata
 from decimal import Decimal
 
 from app.integrations.ai import AiOnboardingExtractionResponse
+from app.modules.onboarding.measurements import measurement_values
 from app.modules.onboarding.models import Onboarding, OnboardingAiMessage
 from app.modules.onboarding.schema import OnboardingDraftUpdate
 
@@ -19,7 +20,7 @@ _TOPICS = {
         r"\b(experiencia|nivel|iniciante|intermediari\w*|avancad\w*|treinou|treinei)\b"
     ),
     "height_cm": r"\b(altura|alto|alta|centimetros?)\b",
-    "weight_kg": r"\b(peso|pesa|quilos?|kg)\b",
+    "weight_kg": r"\b(peso|pesa|quilos?|kilos?|kg|kgs|quilogramas?|kilogramas?)\b",
     "has_limitations_or_complaints": (
         r"\b(limitac\w*|queixa\w*|dor|dores|lesao|lesoes|desconforto\w*)\b"
     ),
@@ -56,31 +57,6 @@ def _topic_fields(text: str) -> set[str]:
     return {field for field, pattern in _TOPICS.items() if re.search(pattern, text)}
 
 
-def measurement_values(field: str, text: str, *, focused: bool = False) -> set[Decimal]:
-    """Ignore negated/target measurements, preserve ambiguous alternatives for clarification."""
-    text = _normalize(text)
-    unit = (
-        r"(?:cm|centimetros?|m|metros?)" if field == "height_cm" else r"(?:kg|quilos?|quilogramas?)"
-    )
-    values = set()
-    for clause in re.split(r",(?!\d)|;|\s+(?:e|mas)\s+", text):
-        if re.search(r"\b(nao|meta|quero|queria|pretendo|objetivo|chegar|pesava|media)\b", clause):
-            continue
-        matches = list(re.finditer(rf"(?<![\w.,])([0-9]+(?:[.,][0-9]+)?)\s*({unit})\b", clause))
-        if not matches and focused:
-            bare = re.fullmatch(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*[.!]?", clause)
-            matches = [bare] if bare else []
-        for match in matches:
-            number = Decimal(match[1].replace(",", "."))
-            units = match[2] if match.lastindex == 2 else None
-            if field == "height_cm" and (
-                units in {"m", "metro", "metros"} or (units is None and number < 3)
-            ):
-                number *= 100
-            values.add(number)
-    return values
-
-
 def _supports(field: str, value: object, quote: str, question: str, answer: str) -> bool:
     quote, question, answer = map(_normalize, (quote, question, answer))
     # Include the surrounding client sentence, so citing "uso remédios" from
@@ -90,6 +66,8 @@ def _supports(field: str, value: object, quote: str, question: str, answer: str)
         quote = surrounding[0]
     # Acknowledgments may mention other fields; only the final question sets focus.
     question = re.split(r"[.!]\s+", question)[-1]
+    if field in {"height_cm", "weight_kg"}:
+        quote = re.sub(r"\b(peso|altura) e (?=\d)", r"\1 ", quote)
     topic = _DETAILS.get(field, field)
     clauses = re.split(r",(?!\d)|;|\s+(?:e|mas|porem)\s+", quote)
     relevant = [clause for clause in clauses if topic in _topic_fields(clause)]
