@@ -18,6 +18,7 @@ import { TrainingChatPage } from './training-chat-page'
 import { InstructorPendingPlansPage } from './instructor-pending-plans-page'
 import { InstructorPlanCollectionsPage } from './instructor-plan-collections-page'
 import { InstructorClientsPage } from './instructor-clients-page'
+import { InstructorEquipmentPage } from './instructor-equipment-page'
 import { ProgressPage } from './progress-page'
 import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
@@ -217,6 +218,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return <ClientShell onSignOut={endSession}><StatusNotice severity="error">Você não tem permissão para acessar esta área.</StatusNotice></ClientShell>
   }
   if (isInstructorRoute && session) {
+    if (location.pathname === '/instrutor/equipamentos') return <InstructorEquipmentPage accessToken={session.accessToken} onSignOut={endSession} />
     if (location.pathname === '/instrutor/clientes') return <InstructorClientsPage accessToken={session.accessToken} onSignOut={endSession} />
     if (location.pathname === '/instrutor/adaptacoes') return <Navigate replace to="/instrutor/planos-pendentes" />
     if (location.pathname === '/instrutor/planos-pendentes') return <InstructorPendingPlansPage accessToken={session.accessToken} onSignOut={endSession} />

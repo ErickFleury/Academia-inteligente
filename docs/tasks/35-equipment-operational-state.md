@@ -2,7 +2,18 @@
 
 ## Status
 
-Planned. Depends on Tasks 21, 29, and 30.
+Implemented (2026-09-27). Depends on Tasks 21, 29, and 30.
+
+Verification: eleven equipment backend tests, two PostgreSQL migration/concurrency
+tests, and four frontend tests pass. Production build, Ruff, and Git whitespace
+checks pass. Synthetic Firefox checks cover 360×800, 768×1024, and 1366×768
+without horizontal overflow. Migration 20260927_25 applied successfully.
+
+Operational state is independent of inventory activation and quantity. Instructor
+APIs expose bounded model/unit reads and a revision-checked state mutation only;
+existing inventory administration authorization remains unchanged. The reusable
+usable-model query is ready for Task 36. No live-use semantics or new dependencies
+were introduced. No unresolved Task 35 issues.
 
 ## Objective
 

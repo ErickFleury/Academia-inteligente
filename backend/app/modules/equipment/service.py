@@ -15,6 +15,10 @@ class EquipmentValidationError(Exception):
     pass
 
 
+class EquipmentStateConflictError(Exception):
+    pass
+
+
 @dataclass(frozen=True)
 class ModelSummary:
     id: UUID
@@ -26,6 +30,104 @@ class ModelSummary:
 
 
 class EquipmentService:
+    def usable_models_with_units(self, session: Session) -> list[EquipmentModel]:
+        """Training usability only; operational never means currently free."""
+        return list(
+            session.scalars(
+                select(EquipmentModel)
+                .where(
+                    EquipmentModel.active,
+                    select(EquipmentUnit.id)
+                    .where(
+                        EquipmentUnit.equipment_model_id == EquipmentModel.id,
+                        EquipmentUnit.active,
+                        EquipmentUnit.operational_state == "operational",
+                    )
+                    .exists(),
+                )
+                .order_by(EquipmentModel.name, EquipmentModel.id)
+            )
+        )
+
+    def instructor_models(self, session: Session, cursor: UUID | None, limit: int):
+        statement = (
+            select(
+                EquipmentModel.id,
+                EquipmentModel.name,
+                func.count(EquipmentUnit.id).label("active_quantity"),
+            )
+            .outerjoin(
+                EquipmentUnit,
+                and_(EquipmentUnit.equipment_model_id == EquipmentModel.id, EquipmentUnit.active),
+            )
+            .where(EquipmentModel.active)
+            .group_by(EquipmentModel.id, EquipmentModel.name)
+        )
+        if cursor:
+            statement = statement.where(EquipmentModel.id > cursor)
+        rows = session.execute(statement.order_by(EquipmentModel.id).limit(limit + 1)).all()
+        return {
+            "items": [
+                {"id": str(row.id), "name": row.name, "active_quantity": row.active_quantity}
+                for row in rows[:limit]
+            ],
+            "next_cursor": str(rows[limit - 1].id) if len(rows) > limit else None,
+        }
+
+    def instructor_units(self, session: Session, model_id: UUID, cursor: UUID | None, limit: int):
+        model = session.get(EquipmentModel, model_id)
+        if model is None or not model.active:
+            raise EquipmentNotFoundError
+        statement = select(EquipmentUnit).where(EquipmentUnit.equipment_model_id == model_id)
+        if cursor:
+            statement = statement.where(EquipmentUnit.id > cursor)
+        rows = list(session.scalars(statement.order_by(EquipmentUnit.id).limit(limit + 1)))
+        return {
+            "items": [self.operational_projection(row) for row in rows[:limit]],
+            "next_cursor": str(rows[limit - 1].id) if len(rows) > limit else None,
+        }
+
+    @staticmethod
+    def operational_projection(unit):
+        return {
+            "id": str(unit.id),
+            "label": unit.label,
+            "active": unit.active,
+            "operational_state": unit.operational_state,
+            "revision": unit.operational_revision,
+        }
+
+    def set_operational_state(
+        self, session: Session, unit_id: UUID, state: str, expected_revision: int
+    ):
+        if state not in {"operational", "out_of_order"}:
+            raise EquipmentValidationError
+        model_id = session.scalar(
+            select(EquipmentUnit.equipment_model_id).where(EquipmentUnit.id == unit_id)
+        )
+        model = session.scalar(
+            select(EquipmentModel)
+            .where(EquipmentModel.id == model_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        unit = session.scalar(
+            select(EquipmentUnit)
+            .where(EquipmentUnit.id == unit_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if model is None or unit is None or not model.active:
+            raise EquipmentNotFoundError
+        if not unit.active or unit.operational_revision != expected_revision:
+            raise EquipmentStateConflictError
+        if unit.operational_state != state:
+            unit.operational_state = state
+            unit.operational_revision += 1
+        session.commit()
+        session.refresh(unit)
+        return self.operational_projection(unit)
+
     def catalog(self, session: Session) -> list[ModelSummary]:
         return self._models_with_counts(session, active_only=True)
 
