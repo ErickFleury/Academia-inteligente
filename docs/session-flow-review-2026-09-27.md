@@ -65,3 +65,47 @@ No adapter migration or Keycloak upgrade is part of this work.
 Changed files: `frontend/src/auth.ts`, `app.tsx`, `browser-navigation.ts`,
 `auth-redirects.test.ts`, `app-session.test.tsx`, `app.test.tsx`, and this report.
 Final browser/regression/build evidence follows in the verification checkpoint.
+
+## Final verification
+
+Implementation checkpoint: `064f34c` on `redesign/admin-dashboard-ui`.
+The prior admin redesign is `d9b1cec`; revert the session-review commits newest
+first to undo this task independently. Nothing was pushed.
+
+Full frontend regression: **202 tests passed in 33 files** using:
+
+```sh
+docker compose run --rm --no-deps \
+  -e VITE_API_BASE_URL=http://localhost:8000 \
+  -e VITE_OIDC_ISSUER=http://localhost:8080/realms/academia \
+  -e VITE_OIDC_CLIENT_ID=academia-web \
+  -e VITE_OIDC_REDIRECT_URI=http://localhost:5173/ \
+  frontend npm test
+```
+
+The configured local HTTPS application reached the real Keycloak login form.
+An isolated Firefox then exercised the actual React application and shared
+sign-out handlers for client, instructor and administrator at desktop and
+mobile-drawer widths (1366 and 500 px). All six sign-outs returned from the
+local provider to `/`, with no stored session and the explicit re-entry button.
+Re-entry reached the real Keycloak login form with `prompt=login`.
+
+Browser sessions and API responses were synthetic; no real credentials,
+biometric captures, account writes or data changes were used. Since the
+provider had no authenticated SSO session, these checks verify real redirect
+acceptance/return behavior rather than authenticated-cookie invalidation.
+ID-token hints, revocation, renewal, stale responses and failure paths are
+covered by automated tests. A credentialed end-to-end SSO invalidation check
+was not performed. The development certificate was accepted only in the
+isolated automation session; no system trust or browser settings were changed.
+The application settings and repository realm permit the configured callback
+and post-logout URL; no provider configuration changes were needed.
+
+Local ephemeral evidence: `/tmp/session-review-tests.log` and
+`/tmp/session-browser-results.json`. Temporary repository fixtures were removed.
+`git diff --check` passed. Remaining limitation: the browser check does not
+claim a real-user credentialed login/logout certification.
+
+Final `npm run build` passed TypeScript and production bundling after fixture
+removal: 795.67 kB, gzip 228.50 kB. The existing non-blocking bundle-size warning
+remains; no new build errors or unresolved implementation failures were found.
