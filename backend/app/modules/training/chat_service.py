@@ -1,8 +1,11 @@
-"""Read-only, client-scoped AI training chat orchestration."""
+"""Client-scoped conversational support and explicitly requested proposal edits."""
 
 from __future__ import annotations
 
+import json
 import os
+import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -13,12 +16,21 @@ from sqlalchemy.orm import Session
 
 from app.integrations.ai import (
     AiProviderError,
+    AiTrainingChatResponse,
     TrainingChatProvider,
     training_chat_provider_from_environment,
 )
+from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
+from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import Onboarding
+from app.modules.training.generation_service import (
+    CompletedOnboardingRequiredError,
+    InitialTrainingGenerationService,
+    InvalidTrainingGenerationError,
+    TrainingGenerationUnavailableError,
+)
 from app.modules.training.models import (
     TrainingAiConversation,
     TrainingAiMessage,
@@ -66,8 +78,14 @@ class TrainingChatState:
 class TrainingChatService:
     """Client-scoped chat; the sole active proposal may be revised by the AI."""
 
-    def __init__(self, provider: TrainingChatProvider | None = None) -> None:
+    def __init__(
+        self,
+        provider: TrainingChatProvider | None = None,
+        *,
+        generation_service: InitialTrainingGenerationService | None = None,
+    ) -> None:
         self._provider = provider or training_chat_provider_from_environment()
+        self._generation = generation_service or InitialTrainingGenerationService()
         self._lifecycle = TrainingLifecycleService()
         self._recent_message_limit = int(os.environ.get("AI_RECENT_MESSAGE_LIMIT", "6"))
         self._summary_limit = int(os.environ.get("AI_TRAINING_CHAT_SUMMARY_LIMIT", "2000"))
@@ -78,12 +96,14 @@ class TrainingChatService:
         conversation = self._conversation(session, client_id)
         return TrainingChatState(self._messages(session, conversation.id))
 
+    @observe_turn("training_chat")
     def submit_for_subject(
         self, session: Session, subject: str, *, message: str, client_request_id: UUID
     ) -> TrainingChatState:
         client_id = self._client_id(session, subject)
         self.purge_expired_content(session)
-        conversation = self._conversation(session, client_id)
+        session.scalar(select(Client.id).where(Client.id == client_id).with_for_update())
+        conversation = self._conversation(session, client_id, commit=False)
         reply = session.scalar(
             select(TrainingAiMessage).where(
                 TrainingAiMessage.conversation_id == conversation.id,
@@ -91,6 +111,7 @@ class TrainingChatService:
             )
         )
         if reply is not None:
+            record_turn(outcome="cached", path="cached")
             return TrainingChatState(self._messages(session, conversation.id))
 
         user = session.scalar(
@@ -109,19 +130,77 @@ class TrainingChatService:
             )
             session.add(user)
             conversation.raw_expires_at = self._expiry()
-            session.commit()
+            session.flush()
 
+        newer = session.scalar(
+            select(TrainingAiMessage.id)
+            .where(
+                TrainingAiMessage.conversation_id == conversation.id,
+                TrainingAiMessage.role == "user",
+                TrainingAiMessage.sequence > user.sequence,
+            )
+            .limit(1)
+        )
+        if newer:
+            raise ConcurrentTrainingUpdateError
+        message = user.content
         context = self._context(session, client_id, conversation, message, user.id)
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
-        response = self._retry(lambda: self._provider.training_chat(context))
-        if response.draft_update is not None and editable_draft is not None:
-            self._apply_draft_update(session, editable_draft, response.draft_update, draft_revision)
+        try:
+            initial_reply = self._initial_plan_reply(session, subject, client_id, context)
+            if initial_reply is not None:
+                response = AiTrainingChatResponse(assistant_message=initial_reply)
+            else:
+                record_turn(path="model")
+                response = self._retry(lambda: self._provider.training_chat(context))
+        except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
+            session.commit()  # Preserve only the original client message for retry.
+            raise
+        content = response.assistant_message
+        if response.draft_update is not None:
+            if editable_draft is not None and context["rules"]["may_update_ai_draft"]:
+                self._apply_draft_update(
+                    session, editable_draft, response.draft_update, draft_revision
+                )
+                record_turn(outcome="draft_saved")
+                content = (
+                    "Atualizei o rascunho conforme solicitado. "
+                    "Confira as alterações em Meu treino; "
+                    "elas ainda dependem da aprovação do instrutor. "
+                    "Seu plano atual não foi alterado."
+                )
+            else:
+                record_turn(
+                    outcome="draft_blocked",
+                    reason="request_not_authorized" if editable_draft else "no_editable_draft",
+                )
+                content = (
+                    "Não alterei nenhum plano. Diga qual mudança deseja fazer no rascunho."
+                    if editable_draft
+                    else "Não alterei nenhum plano: "
+                    "não há um único rascunho disponível para edição. "
+                    "Seu plano atual só pode mudar após revisão profissional."
+                )
+        elif initial_reply is None and self._claims_saved_change(content):
+            record_turn(outcome="draft_blocked", reason="unsupported_save_claim")
+            content = (
+                "Nenhuma alteração foi salva no treino nesta mensagem. "
+                "Diga qual mudança deseja fazer no rascunho para eu ajudar."
+            )
+        elif (
+            initial_reply is None
+            and context["current_training_plan"] is None
+            and self._offers_initial_plan(content)
+        ):
+            # Ground an offer in real capabilities; the next confirmation is
+            # handled by the backend, never sent back to the model to ask again.
+            content = self._initial_plan_guidance(context)
         can_suggest_adaptation = context["current_training_plan"] is not None
         assistant = TrainingAiMessage(
             conversation_id=conversation.id,
             role="assistant",
-            content=response.assistant_message,
+            content=content,
             sequence=self._next(session, conversation.id),
             reply_to_client_request_id=client_request_id,
             adaptation_suggested=response.adaptation_suggested and can_suggest_adaptation,
@@ -131,12 +210,24 @@ class TrainingChatService:
         )
         session.add(assistant)
         conversation.raw_expires_at = self._expiry()
+        session.flush()
         conversation.summary = self._bounded_summary(session, conversation.id)
         session.commit()
         return TrainingChatState(self._messages(session, conversation.id))
 
     def purge_expired_content(self, session: Session, now: datetime | None = None) -> int:
         current_time = now or datetime.now(UTC)
+        affected = session.scalars(
+            select(TrainingAiMessage.conversation_id)
+            .where(TrainingAiMessage.created_at <= current_time - timedelta(days=30))
+            .distinct()
+        ).all()
+        if affected:
+            session.execute(
+                update(TrainingAiConversation)
+                .where(TrainingAiConversation.id.in_(affected))
+                .values(summary=None)
+            )
         deleted = session.execute(
             delete(TrainingAiMessage).where(
                 TrainingAiMessage.created_at <= current_time - timedelta(days=30)
@@ -172,24 +263,126 @@ class TrainingChatService:
         ]
         current_plan = self._current_plan(session, client_id)
         draft = self._editable_ai_draft(session, client_id)
+        draft_content = self._draft_context(session, draft) if draft else None
+        may_update = draft_content is not None and self._requests_draft_change(
+            message, history, [item["exercise_name"] for item in draft_content["items"]]
+        )
+        health_context = " ".join(
+            [*(item.content for item in history if item.role == "user"), message]
+        )
         return {
             "current_user_message": message,
-            "conversation_summary": conversation.summary,
+            "conversation_summary": self._bounded_summary(session, conversation.id, message_id),
             "recent_messages": [{"role": item.role, "content": item.content} for item in history],
             "current_training_plan": current_plan,
             "active_equipment_models": EquipmentService().training_context(session)
             if draft
             else [],
-            "editable_training_draft": self._draft_context(session, draft) if draft else None,
-            "relevant_onboarding": self._onboarding_context(session, client_id, message),
+            "editable_training_draft": draft_content,
+            "relevant_onboarding": self._onboarding_context(session, client_id, health_context),
+            "onboarding_completed": OnboardingDraftService().has_valid_completed_onboarding(
+                session, client_id
+            ),
             "rules": {
                 "language": "pt-BR",
                 "must_not_diagnose": True,
                 "must_not_mutate_current_or_approved_training_plan": True,
                 "may_suggest_adaptation": current_plan is not None,
-                "may_update_ai_draft": draft is not None,
+                "may_update_ai_draft": may_update,
+                "client_reports_are_not_completed_onboarding_edits": True,
+                "summary_contains_only_client_statements": True,
+                "initial_generation_requires_explicit_request": True,
             },
         }
+
+    def _initial_plan_reply(
+        self, session: Session, subject: str, client_id: UUID, context: dict
+    ) -> str | None:
+        if context["current_training_plan"] is not None:
+            return None  # Existing-plan changes keep the adaptation/review flow.
+        if not self._requests_initial_plan(
+            context["current_user_message"], context["recent_messages"]
+        ):
+            return None
+        record_turn(path="direct")
+        if self._lifecycle.find_proposal(session, client_id=client_id) is not None:
+            return (
+                "Seu rascunho já está disponível em Meu treino e aguarda revisão do instrutor. "
+                "Não criei outro plano. Você pode pedir uma alteração nesse rascunho."
+            )
+        if not context["onboarding_completed"]:
+            return self._initial_plan_guidance(context)
+        try:
+            # Keep the proposal, reply and request UUID atomic. A failed
+            # generation rolls back only its savepoint, preserving the message.
+            with session.begin_nested():
+                self._generation.generate_for_subject(session, subject, commit=False)
+        except CompletedOnboardingRequiredError:
+            return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
+        except TrainingGenerationUnavailableError:
+            raise TrainingChatUnavailableError from None
+        except InvalidTrainingGenerationError:
+            raise TrainingChatDraftUpdateError from None
+        record_turn(outcome="draft_saved")
+        return (
+            "Criei seu rascunho de treino com base no onboarding concluído. "
+            "Abra Meu treino para conferir. Ele ainda precisa da revisão e aprovação "
+            "do instrutor antes de se tornar seu plano atual."
+        )
+
+    @staticmethod
+    def _initial_plan_guidance(context: dict) -> str:
+        if context["editable_training_draft"] is not None:
+            return (
+                "Seu rascunho já está disponível em Meu treino e aguarda revisão do instrutor. "
+                "Você pode pedir uma alteração nesse rascunho."
+            )
+        if not context["onboarding_completed"]:
+            return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
+        return (
+            "Posso gerar seu rascunho inicial com base no onboarding concluído, "
+            "para revisão do instrutor. Quer que eu prepare seu rascunho de treino?"
+        )
+
+    @classmethod
+    def _offers_initial_plan(cls, message: str) -> bool:
+        text = cls._normalized(message)
+        return bool(
+            re.search(r"\b(?:prepar\w*|gerar|gere|montar|monte|criar|crie|elabor\w*)\b", text)
+            and re.search(r"\b(?:plano|treino|rascunho|ficha|proposta)\b", text)
+            and re.search(r"\b(?:quer|quero|deseja|gostaria|posso|vou|vamos)\b", text)
+        )
+
+    @classmethod
+    def _requests_initial_plan(cls, message: str, history: list[dict]) -> bool:
+        text = cls._normalized(message).strip()
+        # Full matches intentionally exclude conditions, negation, health
+        # corrections and ambiguous compound answers from consent.
+        if re.fullmatch(
+            r"(?:sim(?:[,!]\s*|\s+))?(?:sim|quero|pode|pode sim|confirmo|"
+            r"pode fazer|pode preparar|pode gerar|pode criar|pode montar)"
+            r"(?:[, ]+por favor)?[.!]*",
+            text,
+        ):
+            questions = re.findall(r"[^.!?]*\?", history[-1]["content"]) if history else []
+            return bool(
+                history
+                and history[-1]["role"] == "assistant"
+                and len(questions) == 1
+                and cls._offers_initial_plan(questions[0])
+                and not re.search(r"\bnao\b", cls._normalized(questions[0]))
+            )
+        return bool(
+            re.fullmatch(
+                r"(?:por favor[, ]+)?(?:quero que (?:voce )?|"
+                r"(?:pode|poderia|quero|gostaria de) )?"
+                r"(?:prepare|preparar|gere|gerar|monte|montar|crie|criar|elabore|elaborar) "
+                r"(?:(?:um|o|meu|novo|primeiro|seu) )*"
+                r"(?:plano(?: de treino)?|treino|rascunho(?: de treino)?|ficha)"
+                r"(?: inicial)?(?: para mim)?(?:[, ]+por favor)?[.!?]*",
+                text,
+            )
+        )
 
     @staticmethod
     def _editable_ai_draft(session: Session, client_id: UUID) -> TrainingPlanVersion | None:
@@ -245,6 +438,7 @@ class TrainingChatService:
                 data=data,
                 actor="ai",
                 expected_revision=expected_revision,
+                commit=False,
             )
         except ImmutableTrainingVersionError:
             raise ConcurrentTrainingUpdateError from None
@@ -291,8 +485,19 @@ class TrainingChatService:
             "training_goal": onboarding.training_goal,
             "training_experience": onboarding.training_experience,
         }
-        health_terms = ("dor", "lesão", "limit", "queixa", "medica", "remédio", "saúde", "condiç")
-        if any(term in message.lower() for term in health_terms):
+        health_terms = (
+            "dor",
+            "lesao",
+            "limit",
+            "queixa",
+            "medica",
+            "remedio",
+            "saude",
+            "condic",
+            "desconfort",
+            "incomoda",
+        )
+        if any(term in TrainingChatService._normalized(message) for term in health_terms):
             context.update(
                 {
                     "limitations_or_complaints": onboarding.limitations_or_complaints,
@@ -302,13 +507,89 @@ class TrainingChatService:
             )
         return {key: value for key, value in context.items() if value is not None}
 
-    def _bounded_summary(self, session: Session, conversation_id: UUID) -> str | None:
-        messages = self._messages(session, conversation_id)
-        older = messages[: -self._recent_message_limit]
-        if not older:
-            return None
-        content = "\n".join(f"{item.role}: {item.content}" for item in older)
-        return content[-self._summary_limit :]
+    def _bounded_summary(
+        self, session: Session, conversation_id: UUID, exclude: UUID | None = None
+    ) -> str | None:
+        # Rebuild from retained sources, never from the previous generated summary.
+        older = self._messages(session, conversation_id, exclude)[: -self._recent_message_limit]
+        statements = []
+        for item in reversed(older):
+            if item.role != "user":
+                continue
+            entry = {"reported_at": item.created_at.isoformat(), "client_statement": item.content}
+            candidate = [entry, *statements]
+            if len(json.dumps(candidate, ensure_ascii=False)) > self._summary_limit:
+                break  # Never cut a correction/negation midway or restore older stale facts.
+            statements = candidate
+        return json.dumps(statements, ensure_ascii=False) if statements else None
+
+    @staticmethod
+    def _normalized(text: str) -> str:
+        return "".join(
+            char
+            for char in unicodedata.normalize("NFKD", text.lower())
+            if not unicodedata.combining(char)
+        )
+
+    @classmethod
+    def _requests_draft_change(
+        cls, message: str, history: list[TrainingChatMessage], exercise_names: list[str]
+    ) -> bool:
+        text = cls._normalized(message).strip()
+        if re.search(r"\bnao (?:quero|precisa|altere|mude|troque|atualize|modifique)\b", text):
+            return False
+        if re.match(
+            r"(?:como|por que|qual|o que|sera que|vale a pena|explique|devo|posso|seria)\b", text
+        ):
+            return False
+        action = (
+            r"\b(?:alter(?:e|ar)|mud(?:e|ar)|tro(?:que|car)|substitu(?:a|ir)|"
+            r"atualiz(?:e|ar)|ajust(?:e|ar)|reduz(?:a|ir)|aument(?:e|ar)|"
+            r"remov(?:a|er)|inclu(?:a|ir)|adicion(?:e|ar))\b"
+        )
+        target = r"\b(?:rascunho|treino|plano|ficha|exercicio|series?|repeticoes|carga|descanso)\b"
+        names_targeted = any(cls._normalized(name) in text for name in exercise_names)
+        request = re.search(r"\b(?:quero|gostaria de|preciso que|pode|poderia)\b", text)
+        imperative = re.search(
+            r"(?:^|[,;.!]\s*)(?:por favor[,]?\s+)?"
+            r"(?:altere|mude|troque|substitua|atualize|ajuste|reduza|aumente|remova|inclua|adicione)\b",
+            text,
+        )
+        informational = re.search(r"\b(?:saber|entender|explicar|opiniao)\b", text)
+        if (
+            re.search(action, text)
+            and (re.search(target, text) or names_targeted)
+            and (request or imperative)
+            and not informational
+        ):
+            return True
+        if re.fullmatch(r"(?:sim|pode|pode sim|confirmo|pode fazer)[.!]?", text) and history:
+            previous = history[-1]
+            proposal = cls._normalized(previous.content)
+            return (
+                previous.role == "assistant"
+                and "?" in proposal
+                and "rascunho" in proposal
+                and bool(re.search(action, proposal))
+            )
+        return False
+
+    @classmethod
+    def _claims_saved_change(cls, message: str) -> bool:
+        text = cls._normalized(message)
+        return bool(
+            re.search(
+                r"\b(?:atualizei|alterei|salvei|modifiquei|troquei|substitui|aprovei|ativei|"
+                r"criei|gerei|preparei|montei)\b",
+                text,
+            )
+        ) or bool(
+            re.search(
+                r"\b(?:plano|treino|rascunho|ficha)\b.{0,60}\b(?:foi|esta) "
+                r"(?:atualizad|alterad|aprovad|ativad|salv)",
+                text,
+            )
+        )
 
     @staticmethod
     def _client_id(session: Session, subject: str) -> UUID:
@@ -324,14 +605,18 @@ class TrainingChatService:
         return client_id
 
     @staticmethod
-    def _conversation(session: Session, client_id: UUID) -> TrainingAiConversation:
+    def _conversation(
+        session: Session, client_id: UUID, *, commit: bool = True
+    ) -> TrainingAiConversation:
         conversation = session.scalar(
             select(TrainingAiConversation).where(TrainingAiConversation.client_id == client_id)
         )
         if conversation is None:
             conversation = TrainingAiConversation(client_id=client_id)
             session.add(conversation)
-            session.commit()
+            session.flush()
+            if commit:
+                session.commit()
         return conversation
 
     @staticmethod
@@ -340,6 +625,7 @@ class TrainingChatService:
             try:
                 return operation()
             except AiProviderError as error:
+                record_retry(error.category, not attempt and error.retryable)
                 if attempt or not error.retryable:
                     raise TrainingChatUnavailableError from None
         raise TrainingChatUnavailableError

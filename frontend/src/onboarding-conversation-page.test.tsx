@@ -80,7 +80,7 @@ test('reuses the same client request id when a conversation submission is retrie
   )
 })
 
-test('ends the interview composer once the structured onboarding is ready', async () => {
+test('keeps corrections available until explicit onboarding completion', async () => {
   const fetchMock = vi
     .fn()
     .mockResolvedValueOnce({
@@ -97,7 +97,48 @@ test('ends the interview composer once the structured onboarding is ready', asyn
   render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
 
   expect(await screen.findByText('Já reuni todas as informações necessárias.')).toBeInTheDocument()
-  expect(screen.queryByLabelText('Escreva sua resposta')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Escreva sua resposta')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Revisar e confirmar informações' })).toHaveAttribute('href', '/onboarding')
   expect(screen.queryByText('Revisar e concluir')).not.toBeInTheDocument()
+})
+
+test('shows collected facts and clarification without submitting Shift+Enter', async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ ...emptyConversation, known_answers: { height_cm: 180, weight_kg: 82 }, clarification_fields: ['weight_kg'], needs_clarification: true }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyDraft })
+  vi.stubGlobal('fetch', fetchMock)
+  render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
+  expect(await screen.findByText('180 cm')).toBeInTheDocument()
+  expect(screen.getByText('82 kg')).toBeInTheDocument()
+  expect(screen.getByText('Precisamos confirmar: peso. As outras respostas foram mantidas.')).toBeInTheDocument()
+  const input = screen.getByLabelText('Escreva sua resposta')
+  fireEvent.change(input, { target: { value: 'Na verdade, 83 kg' } })
+  fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+})
+
+test('shows an initial loading failure instead of remaining on the spinner', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Falha de conexão')))
+  render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
+  expect(await screen.findByText('Falha de conexão')).toBeInTheDocument()
+  expect(screen.queryByText('Carregando conversa de onboarding')).not.toBeInTheDocument()
+})
+
+test('offers direct measurement entry after repeated failures without clearing other answers', async () => {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ ...emptyConversation, fallback_field: 'weight_kg', known_answers: { height_cm: 180 } }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => emptyDraft })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ ...emptyConversation, fallback_field: null, known_answers: { height_cm: 180, weight_kg: 82.5 } }) })
+  vi.stubGlobal('fetch', fetchMock)
+  vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000099' })
+  render(<OnboardingConversationPage accessToken="access-token" onSignOut={vi.fn()} />)
+  const input = await screen.findByLabelText('Peso em kg')
+  expect(screen.getByText('180 cm')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Confirmar medida' })).toBeDisabled()
+  fireEvent.change(input, { target: { value: '82,5' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar medida' }))
+  expect(await screen.findByText('82,5 kg')).toBeInTheDocument()
+  expect(screen.getByText('180 cm')).toBeInTheDocument()
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body).message).toBe('Na verdade, meu peso é 82.5 kg')
+  expect(screen.queryByLabelText('Peso em kg')).not.toBeInTheDocument()
 })

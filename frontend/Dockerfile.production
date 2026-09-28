@@ -1,0 +1,19 @@
+FROM node:24.21.0-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+ARG APP_DOMAIN
+ENV VITE_API_BASE_URL=/api \
+    VITE_OIDC_CLIENT_ID=academia-web
+RUN test -n "$APP_DOMAIN" && \
+    VITE_OIDC_ISSUER="https://${APP_DOMAIN}/auth/realms/academia" \
+    VITE_OIDC_REDIRECT_URI="https://${APP_DOMAIN}/" npm run build
+
+FROM nginx:1.30.5-alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY production/security-headers.conf /etc/nginx/security-headers.conf
+USER 101:101
+EXPOSE 8080 8443
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]

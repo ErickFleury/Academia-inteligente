@@ -25,7 +25,6 @@ export type Client = ClientInput & {
 }
 
 export type CepAddress = Pick<ClientInput, 'street' | 'neighborhood' | 'city' | 'state'>
-export type OnboardingInvitation = { id: string; delivery_status: 'sent'; expires_at: string; sent_at: string }
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -54,6 +53,5 @@ export function lookupPostalCode(accessToken: string, postalCode: string): Promi
   return request(accessToken, `/clients/address-lookup?${new URLSearchParams({ postal_code: postalCode })}`)
 }
 export function provisionClientIdentity(accessToken: string, clientId: string): Promise<Client> { return request(accessToken, `/clients/${clientId}/provision-identity`, { method: 'POST' }) }
-export function sendOnboardingInvitation(accessToken: string, clientId: string): Promise<OnboardingInvitation> { return request(accessToken, `/onboarding/clients/${clientId}/invitations`, { method: 'POST' }) }
 export function updateClient(accessToken: string, clientId: string, updates: Partial<ClientInput> & { client_active?: boolean }): Promise<Client> { return request(accessToken, `/clients/${clientId}`, { method: 'PATCH', body: JSON.stringify(updates) }) }
 export function eraseClient(accessToken: string, clientId: string): Promise<void> { return request(accessToken, `/clients/${clientId}`, { method: 'DELETE' }) }

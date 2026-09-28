@@ -38,7 +38,7 @@ class FakeConversationProvider:
 
     def extract_onboarding(self, context: dict[str, object]) -> AiOnboardingExtractionResponse:
         del context
-        raise AssertionError("final extraction should not be called")
+        return AiOnboardingExtractionResponse(onboarding={})
 
 
 @pytest.fixture
@@ -252,7 +252,7 @@ def test_client_conversation_is_own_scoped_and_admin_cannot_read_raw_history(
         },
     )
     assert sent_status == 200
-    assert sent["messages"][-1]["content"] == "Qual é o seu objetivo de treino?"
+    assert sent["messages"][-1]["content"] == "Qual é o seu principal objetivo de treino?"
 
     monkeypatch.setattr(
         identity_router,
@@ -275,4 +275,53 @@ def test_client_conversation_is_own_scoped_and_admin_cannot_read_raw_history(
     denied_status, denied = request(app, "GET", "/onboarding/conversation")
     assert denied_status == 403
     assert denied == {"detail": "Forbidden"}
+    app.dependency_overrides.clear()
+
+
+def test_ai_cannot_unlock_completion_with_invented_answers(database_session, monkeypatch):
+    class FabricatingProvider(FakeConversationProvider):
+        def interview_turn(self, context):
+            return AiInterviewTurnResponse(
+                assistant_message="Tudo pronto!", interview_status="ready"
+            )
+
+        def extract_onboarding(self, context):
+            return AiOnboardingExtractionResponse(
+                onboarding={
+                    "training_goal": "Ganhar força",
+                    "training_experience": "beginner",
+                    "height_cm": 170,
+                    "weight_kg": 70,
+                    "has_limitations_or_complaints": False,
+                    "uses_medications": False,
+                    "has_health_conditions": False,
+                }
+            )
+
+    create_client(database_session, "ada-subject", "ada@example.test")
+    app = app_for(database_session)
+    monkeypatch.setattr(
+        identity_router,
+        "identity_provider",
+        FakeIdentityProvider(AuthenticatedIdentity("ada-subject", "ada@example.test", ("client",))),
+    )
+    monkeypatch.setattr(
+        onboarding_router,
+        "conversation_service",
+        OnboardingConversationService(provider=FabricatingProvider()),
+    )
+    status, response = request(
+        app,
+        "POST",
+        "/onboarding/conversation/messages",
+        {
+            "message": "Ganhar força",
+            "client_request_id": "00000000-0000-4000-8000-000000000002",
+        },
+    )
+    assert status == 200 and not response["completion_ready"]
+    assert request(app, "POST", "/onboarding/me/completion")[0] == 422
+    _, draft = request(app, "GET", "/onboarding/me")
+    assert draft["height_cm"] is None and draft["uses_medications"] is None
+    assert draft["status"] == "draft" and draft["completed_at"] is None
     app.dependency_overrides.clear()

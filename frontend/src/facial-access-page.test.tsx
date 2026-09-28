@@ -7,7 +7,7 @@ import { FacialAccessPage } from './facial-access-page'
 import type { AccessAttempt } from './facial-access'
 import { theme } from './theme'
 
-vi.mock('./components/webcam-capture', () => ({ WebcamCapture: ({ open, onCapture, onClose }: { open: boolean; onCapture: (image: Blob) => Promise<void>; onClose: () => void }) => open ? <button onClick={() => { void onCapture(new Blob(['synthetic'])).then(onClose) }}>Captura de teste</button> : null }))
+vi.mock('./components/webcam-capture', () => ({ WebcamCapture: ({ open, onCapture, onClose }: { open: boolean; onCapture: (image: Blob) => Promise<void>; onClose: () => void }) => open ? <><button onClick={() => { void onCapture(new Blob(['synthetic'])).then(onClose) }}>Captura de teste</button><button onClick={onClose}>Fechar câmera</button></> : null }))
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 function setup(options: { uncertain?: boolean; denied?: boolean; offline?: boolean; correctionConflict?: boolean } = {}) {
@@ -42,7 +42,7 @@ function setup(options: { uncertain?: boolean; denied?: boolean; offline?: boole
       if (options.uncertain && !confirmationLost) { confirmationLost = true; throw new TypeError('network unavailable') }
       return response({ status: 'confirmed', attempt_id: 'attempt', state: { ...state, inside: true }, occupancy: count })
     }
-    if (url.endsWith('/cancel')) { attempt = { ...attempt, status: 'canceled', result_code: 'attempt_canceled' }; return response(attempt) }
+    if (url.endsWith('/cancellation')) { attempt = { ...attempt, status: 'canceled', result_code: 'attempt_canceled' }; return response(attempt) }
     if (url.endsWith('/access-attempts/attempt')) return response(attempt)
     throw new Error(`Unexpected test URL: ${url}`)
   })
@@ -95,8 +95,31 @@ test('failed matching offers only one further capture and changing direction can
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Tentar outra captura' })).not.toBeInTheDocument())
   expect(screen.queryByRole('button', { name: 'Confirmar passagem' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Saída' }))
-  await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url.endsWith('/cancel'))).toBe(true))
+  await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url.endsWith('/cancellation'))).toBe(true))
   expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/capture'))).toHaveLength(2)
+})
+
+test('closing the camera allows switching both directions without scanning or confirming passage', async () => {
+  const { fetchMock } = setup()
+  await screen.findByText('Reconhecimento disponível')
+  for (const [label, direction] of [['Saída', 'exit'], ['Entrada', 'entry']]) {
+    fireEvent.click(screen.getByRole('button', { name: 'Reconhecer rosto' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Fechar câmera' }))
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    await waitFor(() => expect(screen.getByRole('button', { name: label })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.queryByText(/Não foi possível concluir a operação facial/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Consultar resultado' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reconhecer rosto' })).toBeEnabled()
+    const cancellations = fetchMock.mock.calls.filter(([url]) => url.endsWith('/cancellation'))
+    expect(cancellations).toHaveLength(direction === 'exit' ? 1 : 2)
+    expect(cancellations.at(-1)?.[1]?.method).toBe('POST')
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Reconhecer rosto' }))
+  await screen.findByRole('button', { name: 'Captura de teste' })
+  const starts = fetchMock.mock.calls.filter(([url]) => url.endsWith('/access-attempts'))
+  expect(starts.map(([, init]) => JSON.parse(init!.body as string).direction)).toEqual(['entry', 'exit', 'entry'])
+  expect(fetchMock.mock.calls.some(([url]) => url.endsWith('/capture') || url.endsWith('/passage'))).toBe(false)
+  expect(screen.getByText('0 pessoas na academia')).toBeInTheDocument()
 })
 
 test('correction requires a reason and sends the displayed client revision', async () => {

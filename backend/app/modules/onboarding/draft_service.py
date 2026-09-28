@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Account, Client
-from app.modules.onboarding.models import Onboarding, OnboardingAuditEvent
+from app.modules.onboarding.models import Onboarding, OnboardingAiConversation, OnboardingAuditEvent
 from app.modules.onboarding.schema import OnboardingCompletionData, OnboardingDraftUpdate
 
 
@@ -83,8 +83,9 @@ class OnboardingDraftService:
         update: OnboardingDraftUpdate,
         *,
         commit: bool = True,
+        sync_interview: bool = True,
     ) -> Onboarding:
-        onboarding = self.get_or_create_draft(session, scope, commit=commit)
+        onboarding = self.get_or_create_draft(session, scope, commit=False)
         if onboarding.status != "draft":
             raise OnboardingNotEditableError
 
@@ -97,6 +98,38 @@ class OnboardingDraftService:
                 setattr(onboarding, field, value)
 
         self._audit(session, onboarding, scope, "onboarding_draft_saved", tuple(sorted(changes)))
+        if sync_interview:
+            from app.modules.onboarding.interview_state import InterviewState, draft_values
+
+            conversation = session.scalar(
+                select(OnboardingAiConversation).where(
+                    OnboardingAiConversation.client_id == scope.client_id
+                )
+            )
+            if conversation and conversation.summary:
+                memory = InterviewState.load(conversation.summary, onboarding)
+                known = memory.answers.model_dump()
+                for name in changes:
+                    known[name] = getattr(onboarding, name)
+                for flag, detail in self._conditional_fields:
+                    if known[flag] is False:
+                        known[detail] = None
+                memory.answers = OnboardingDraftUpdate(**known)
+                memory.baseline = draft_values(onboarding)
+                memory.pending = [name for name in memory.pending if name not in changes]
+                memory.failed_answers = {
+                    name: count
+                    for name, count in memory.failed_answers.items()
+                    if name not in changes
+                }
+                memory.confirmation = {
+                    name: value
+                    for name, value in memory.confirmation.items()
+                    if name not in changes
+                }
+                if changes:
+                    memory.needs_target = False
+                conversation.summary = memory.dump()
         if commit:
             session.commit()
             session.refresh(onboarding)
@@ -108,9 +141,26 @@ class OnboardingDraftService:
         self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
     ) -> Onboarding:
         """Atomically validate and complete the client's own structured onboarding."""
-        onboarding = self.get_or_create_draft(session, scope, commit=commit)
+        onboarding = self.get_or_create_draft(session, scope, commit=False)
         if onboarding.status == "completed":
             raise OnboardingAlreadyCompletedError
+
+        from app.modules.onboarding.interview_state import InterviewState
+
+        conversation = session.scalar(
+            select(OnboardingAiConversation).where(
+                OnboardingAiConversation.client_id == scope.client_id
+            )
+        )
+        if (
+            conversation
+            and conversation.summary
+            and conversation.raw_expires_at
+            and conversation.raw_expires_at.replace(tzinfo=UTC) > datetime.now(UTC)
+        ):
+            memory = InterviewState.load(conversation.summary, onboarding)
+            if memory.pending or memory.needs_target:
+                raise OnboardingDraftValidationError("Onboarding needs clarification")
 
         # Validate before any state mutation.  `completion_data` is also the
         # downstream contract used by training generation.
@@ -141,7 +191,7 @@ class OnboardingDraftService:
         return True
 
     @classmethod
-    def missing_required_fields(cls, onboarding: Onboarding) -> list[str]:
+    def missing_required_fields(cls, onboarding: Onboarding | OnboardingDraftUpdate) -> list[str]:
         """Report canonical completion gaps without exposing a sensitive value."""
         missing = [
             field

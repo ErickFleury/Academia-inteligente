@@ -18,8 +18,11 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import { WorkspaceIcon } from "./components/workspace-presentation";
 import { ClientShell } from "./components/application-shell";
 import { RouterButtonLink } from "./components/router-button-link";
+import { PasswordRecoveryAction } from "./components/password-recovery-action";
+import { ProfileConnectionsDialog } from "./components/profile-connections-dialog";
 import {
   EmptyState,
   LoadingState,
@@ -45,6 +48,7 @@ import {
   updateOwnSocialProfile,
   uploadProfileImage,
   type ProfileSummary,
+  type ProfileConnectionDirection,
   type SocialPost,
   type SocialProfile,
 } from "./social";
@@ -191,8 +195,10 @@ function PostCards({
                     onLike(post);
                   }}
                   variant="text"
+                  aria-pressed={post.liked_by_viewer}
+                  sx={{ gap: 1, '& path': { fill: post.liked_by_viewer ? 'currentColor' : 'none' } }}
                 >
-                  {post.liked_by_viewer ? "♥" : "♡"} {post.like_count}
+                  <WorkspaceIcon name="heart" /> {post.like_count}
                 </Button>
                 <Button
                   aria-label="Abrir comentários"
@@ -201,8 +207,9 @@ function PostCards({
                     openPost(post.id);
                   }}
                   variant="text"
+                  sx={{ gap: 1 }}
                 >
-                  💬 {post.comment_count}
+                  <WorkspaceIcon name="comment" /> {post.comment_count}
                 </Button>
               </Stack>
             </Stack>
@@ -226,6 +233,8 @@ export function SocialProfilePage({
   const [profile, setProfile] = useState<SocialProfile | null>(null);
   const [posts, setPosts] = useState<SocialPost[] | null>(null);
   const [presence, setPresence] = useState<ProfilePresence | null>(null);
+  const [presenceSaving, setPresenceSaving] = useState(false);
+  const [presenceError, setPresenceError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -234,6 +243,7 @@ export function SocialProfilePage({
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [requestsDialogOpen, setRequestsDialogOpen] = useState(false);
   const [requests, setRequests] = useState<ProfileSummary[]>([]);
+  const [connections, setConnections] = useState<ProfileConnectionDirection | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const isOwner = ownProfileRoute || profile?.is_owner === true;
   const load = () => {
@@ -254,11 +264,27 @@ export function SocialProfilePage({
   };
   useEffect(load, [accessToken, profileId]);
   useEffect(() => {
+    let active = true;
+    setPresence(null);
+    setPresenceError(null);
     if (isOwner)
       void getOwnProfilePresence(accessToken)
-        .then(setPresence)
-        .catch(() => undefined);
+        .then((value) => { if (active) setPresence(value); })
+        .catch(() => { if (active) setPresenceError("Não foi possível carregar a preferência de presença. Atualize a página para tentar novamente."); });
+    return () => { active = false; };
   }, [accessToken, isOwner]);
+  async function updatePresence(enabled: boolean) {
+    if (presenceSaving) return;
+    setPresenceSaving(true);
+    setPresenceError(null);
+    try {
+      setPresence(await updateOwnProfilePresence(accessToken, enabled));
+    } catch {
+      setPresenceError("Não foi possível salvar a preferência de presença. Tente novamente.");
+    } finally {
+      setPresenceSaving(false);
+    }
+  }
   useEffect(() => {
     if (!profile?.has_image) {
       setImageUrl(null);
@@ -341,6 +367,7 @@ export function SocialProfilePage({
                 0,
                 current.pending_follow_request_count - 1,
               ),
+              follower_count: current.follower_count + (accept ? 1 : 0),
             }
           : current,
       );
@@ -386,7 +413,7 @@ export function SocialProfilePage({
   }
   return (
     <ClientShell onSignOut={onSignOut} showClientNavigation>
-      <Stack spacing={3} sx={{ maxWidth: 800, minWidth: 0 }}>
+      <Stack spacing={3} sx={{ maxWidth: 800, minWidth: 0, mx: "auto" }}>
         <PageHeader
           eyebrow={isOwner ? "Meu perfil" : "Perfil"}
           title={profile ? profile.nickname || profile.name : "Perfil"}
@@ -401,25 +428,26 @@ export function SocialProfilePage({
           <LoadingState label="Carregando perfil" />
         ) : (
           <>
-            <Card component="section">
+            <Card component="section" sx={{ borderTop: "3px solid", borderTopColor: "primary.main" }}>
               <CardContent>
                 <Stack spacing={2.5}>
                   <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    sx={{ alignItems: { sm: "center" } }}
+                    direction="row"
+                    spacing={1.5}
+                    useFlexGap
+                    sx={{ alignItems: "center", flexWrap: "wrap" }}
                   >
                     {isOwner ? (
                       <ButtonBase
                         aria-label="Gerenciar foto de perfil"
                         disabled={saving}
                         onClick={() => setImageDialogOpen(true)}
-                        sx={{ borderRadius: "50%", height: 96, width: 96 }}
+                        sx={{ borderRadius: "50%", height: { xs: 64, sm: 96 }, width: { xs: 64, sm: 96 }, flexShrink: 0 }}
                       >
                         <Avatar
                           alt={`Foto de ${profile.name}`}
                           src={imageUrl ?? undefined}
-                          sx={{ height: 96, width: 96 }}
+                          sx={{ height: { xs: 64, sm: 96 }, width: { xs: 64, sm: 96 }, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
                         >
                           {profile.name.slice(0, 1)}
                         </Avatar>
@@ -428,12 +456,12 @@ export function SocialProfilePage({
                       <Avatar
                         alt={`Foto de ${profile.name}`}
                         src={imageUrl ?? undefined}
-                        sx={{ height: 96, width: 96 }}
+                        sx={{ height: { xs: 64, sm: 96 }, width: { xs: 64, sm: 96 }, bgcolor: "rgba(255,133,100,0.12)", color: "primary.main", fontSize: "2rem", border: "3px solid", borderColor: "divider" }}
                       >
                         {profile.name.slice(0, 1)}
                       </Avatar>
                     )}
-                    <Stack spacing={0.5} sx={{ minWidth: 0, flexGrow: 1 }}>
+                    <Stack spacing={0.5} sx={{ minWidth: 90, flex: 1, overflowWrap: "anywhere" }}>
                       <Typography component="h2" variant="h3">
                         {profile.name}
                       </Typography>
@@ -442,7 +470,7 @@ export function SocialProfilePage({
                           {profile.nickname}
                         </Typography>
                       )}
-                      {profile.currently_present && (
+                      {(isOwner && presence ? presence.currently_present : profile.currently_present) && (
                         <Chip
                           color="success"
                           label="Na academia"
@@ -456,11 +484,12 @@ export function SocialProfilePage({
                           aria-label="Configurações do perfil"
                           onClick={() => setSettingsDialogOpen(true)}
                         >
-                          <span aria-hidden="true">⚙</span>
+                          <WorkspaceIcon name="settings" />
                         </IconButton>
                       </Stack>
                     ) : (
                       <Button
+                        sx={{ flexBasis: { xs: "100%", sm: "auto" } }}
                         disabled={profile.follow_requested}
                         onClick={() => void toggleFollow()}
                         variant={
@@ -533,8 +562,8 @@ export function SocialProfilePage({
                       </Typography>
                     )
                   )}
-                  <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
-                    <Typography>{profile.follower_count} seguidores</Typography>
+                  <Stack direction="row" spacing={2} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap", borderTop: "1px solid", borderColor: "divider", pt: 2 }}>
+                    <Button disabled={profile.private_shell === true} onClick={() => setConnections('followers')} aria-haspopup="dialog">{profile.follower_count} seguidores</Button>
                     {isOwner && profile.pending_follow_request_count > 0 && (
                       <IconButton
                         aria-label={`${profile.pending_follow_request_count} solicitações para seguir`}
@@ -545,11 +574,12 @@ export function SocialProfilePage({
                         <span aria-hidden="true">!</span>
                       </IconButton>
                     )}
-                    <Typography>{profile.following_count} seguindo</Typography>
+                    <Button disabled={profile.private_shell === true} onClick={() => setConnections('following')} aria-haspopup="dialog">{profile.following_count} seguindo</Button>
                   </Stack>
                 </Stack>
               </CardContent>
             </Card>
+            {connections && <ProfileConnectionsDialog key={`${profile.id}-${connections}`} accessToken={accessToken} profileId={profile.id} direction={connections} onClose={() => setConnections(null)} />}
             <Dialog
               aria-labelledby="foto-perfil-titulo"
               onClose={() => setImageDialogOpen(false)}
@@ -613,13 +643,8 @@ export function SocialProfilePage({
                         control={
                           <Switch
                             checked={presence.sharing_enabled}
-                            disabled={saving}
-                            onChange={(event) =>
-                              void updateOwnProfilePresence(
-                                accessToken,
-                                event.target.checked,
-                              ).then(setPresence)
-                            }
+                            disabled={saving || presenceSaving}
+                            onChange={(event) => void updatePresence(event.target.checked)}
                           />
                         }
                         label="Mostrar no meu perfil quando eu estiver na academia"
@@ -627,8 +652,11 @@ export function SocialProfilePage({
                     )}
                     <Typography color="text.secondary" variant="body2">
                       A presença começa desativada e é independente da
-                      visibilidade do perfil.
+                      visibilidade do perfil. A indicação aparece apenas com uma
+                      entrada confirmada e válida, até a saída.
                     </Typography>
+                    {presenceError && <StatusNotice severity="error">{presenceError}</StatusNotice>}
+                    <PasswordRecoveryAction accessToken={accessToken} />
                   </Stack>
                 </DialogContent>
                 <DialogActions>
@@ -655,7 +683,7 @@ export function SocialProfilePage({
                           direction="row"
                           key={request.id}
                           spacing={2}
-                          sx={{ alignItems: "center", justifyContent: "space-between" }}
+                          sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}
                         >
                           <Typography>
                             {request.nickname || request.name}

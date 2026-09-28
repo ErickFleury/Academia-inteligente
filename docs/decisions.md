@@ -228,6 +228,20 @@ explicitly implemented and approved.
 
 **Status:** partially approved — 2026-09-20
 
+**Password recovery amendment — approved 2026-09-27:** the user requested
+recovery from the admin client panel and the client's profile settings and
+selected a 15-minute link lifetime. RF-06 in requirements.md governs the
+implementation: reuse Keycloak `UPDATE_PASSWORD` emails, keep credentials and
+single-use/expiry validation in Keycloak, enforce backend ownership/admin
+permissions, and prevent repeat sends with a shared account cooldown. This
+resolves the previously open recovery policy without upgrading Keycloak.
+
+**Login recovery follow-up — 2026-09-27:** the user additionally authorized
+email entry from the login screen. Enable native Keycloak forgot-password with
+the same 900-second lifetime and generic account-existence-safe feedback. The
+repository theme provides the visible action; existing realms are updated using
+`keycloak/enable-password-recovery.sh`, preserving unrelated realm settings.
+
 This approval resolves only the onboarding invitation-token portion needed by
 RF-09 and Tasks 07 and 09. The onboarding schema, required fields, editability, and
 other DEC-06 matters remain unresolved.
@@ -1184,3 +1198,34 @@ and AI projections retain their existing data scope. The canonical amendment
 under EXT-RF-EQP-01 governs the implementation. Task 21's earlier exclusion of
 serial-number metadata is superseded only for this optional internal field;
 maintenance, telemetry, live availability and reservations remain unapproved.
+
+## Deployment hardening — 2026-09-27
+
+The owner approved Nginx as the production gateway, preparation of optional MFA
+without changing current login, and retaining Keycloak 26.6.3. The canonical
+production deployment amendment in `requirements.md` governs this work. Separate
+production Compose configuration, private database/identity services, mounted
+secrets, TLS SMTP, bounded ingress, Docker-aware firewall preparation and tested
+backup/restore tooling implement that scope. Local development and the controlled
+facial pilot retain their existing behavior. No host policy, public deployment,
+account migration, mandatory OTP enrollment or Keycloak upgrade is authorized or
+performed by preparing these files. Operator choices for hosting, certificates,
+SMTP, encrypted off-host backup and alert delivery remain rollout prerequisites.
+
+## Fluid assistant amendment — 2026-09-27
+
+The owner's later request to implement fluid, trustworthy multi-answer and
+correction-aware conversations approves per-message source-validated extraction
+into five-day onboarding interview state. The canonical fluid assistant amendment
+in `requirements.md` supersedes DEC-08's final-extraction-only timing. It retains
+final structured validation, explicit client completion, immutable completed
+onboarding and instructor approval. RF-18 memory improvements keep client reports
+separate from model-generated suggestions within the existing 30-day lifecycle.
+
+### Conversational answer recovery follow-up — 2026-09-27
+
+The owner approved context-aware personal measurements, meaningful clarification,
+confirmation of uncertain values, direct-entry/form fallback after two unsuccessful
+answers, provider bypass for fully understood simple replies, and privacy-safe
+operation timing/outcome diagnostics. See the canonical conversational answer
+recovery amendment in requirements.md. No model or dependency change is needed.

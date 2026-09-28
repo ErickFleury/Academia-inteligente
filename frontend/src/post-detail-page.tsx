@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { WorkspaceIcon } from "./components/workspace-presentation";
 import { ClientShell } from "./components/application-shell";
 import { LoadingState, PageHeader, StatusNotice } from "./components/ui";
 import { fetchProgressImage } from "./progress";
@@ -227,7 +228,7 @@ export function PostDetailPage({
               onClick={() => navigate(-1)}
               variant="text"
             >
-              ←
+              ← Voltar
             </Button>
           }
           eyebrow="Publicação"
@@ -260,10 +261,13 @@ export function PostDetailPage({
                   <PostImages accessToken={accessToken} detail={detail} />
                   <Button
                     onClick={() => void like()}
-                    sx={{ alignSelf: "flex-start" }}
+                    aria-pressed={detail.liked_by_viewer}
+                    sx={{ alignSelf: "flex-start", "& path": { fill: detail.liked_by_viewer ? "currentColor" : "none" } }}
+                    startIcon={<WorkspaceIcon name="heart" />}
+                    aria-label={detail.liked_by_viewer ? "Descurtir publicação" : "Curtir publicação"}
                     variant="outlined"
                   >
-                    {detail.liked_by_viewer ? "♥" : "♡"} {detail.like_count}
+                    {detail.like_count}
                   </Button>
                 </Stack>
               </CardContent>
@@ -305,7 +309,7 @@ export function PostDetailPage({
               </Card>
               <Stack spacing={2}>
                 {detail.comments.map((item) => (
-                  <Card component="article" key={item.id}>
+                  <Card component="article" key={item.id} sx={{ bgcolor: "rgba(245,247,244,0.025)" }}>
                     <CardContent>
                       <Stack spacing={1}>
                         <AuthorIdentity
@@ -314,7 +318,7 @@ export function PostDetailPage({
                           timestamp={item.created_at}
                         />
                         {item.content && (
-                          <Typography sx={{ whiteSpace: "pre-wrap" }}>
+                          <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
                             {item.content}
                           </Typography>
                         )}

@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { Avatar, Box, Button, Card, CardContent, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiRequestError } from './clients'
@@ -13,7 +13,15 @@ import type { ReviewContent } from './training-review'
 
 const firstDraft = (): ReviewContent => ({ name: '', objective: '', items: [{ exercise_name: '', sets: 3, repetitions: '', load_guidance: '', rest_seconds: 60, equipment_model_id: null, equipment_requirement: null }] })
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Não foi possível carregar os clientes. Tente novamente.'
-function State({ client }: { client: InstructorClient }) { return <Stack spacing={.5}><Typography>Onboarding: {client.onboarding_status === 'completed' ? 'Concluído' : 'Não concluído'}</Typography><Typography>Treino: {[client.current_id && 'Plano ativo', client.draft_id && 'Pendente de aprovação'].filter(Boolean).join(' · ') || 'Sem plano'}</Typography><Typography>Instrutor responsável: {client.responsible_instructor_name ?? 'Sem instrutor'}</Typography></Stack> }
+function State({ client }: { client: InstructorClient }) {
+  return <Stack spacing={1}>
+    <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+      <Chip size="small" variant="outlined" color={client.onboarding_status === 'completed' ? 'success' : 'default'} label={`Onboarding: ${client.onboarding_status === 'completed' ? 'Concluído' : 'Não concluído'}`} />
+      <Chip size="small" variant="outlined" color={client.draft_id ? 'warning' : client.current_id ? 'success' : 'default'} label={`Treino: ${[client.current_id && 'Plano ativo', client.draft_id && 'Pendente de aprovação'].filter(Boolean).join(' · ') || 'Sem plano'}`} />
+    </Stack>
+    <Typography variant="body2" color="text.secondary">Instrutor responsável: {client.responsible_instructor_name ?? 'Sem instrutor'}</Typography>
+  </Stack>
+}
 
 export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken: string; onSignOut: () => void }) {
   const navigate = useNavigate()
@@ -59,9 +67,9 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
   }
   const change = (key: keyof ClientFilters, value: string) => setFilters({ ...filters, [key]: value })
   if (onboardingClient) return <OnboardingForm accessToken={accessToken} onSignOut={onSignOut} instructorClient={onboardingClient} onBack={() => { setOnboardingClient(null); void open(onboardingClient.id); void load() }} />
-  return <InstructorShell onSignOut={onSignOut}><Stack spacing={3}>
+  return <InstructorShell onSignOut={onSignOut} contentMaxWidth="lg"><Stack spacing={3}>
     <PageHeader title="Clientes" eyebrow="Preparação de treinos" description="Encontre clientes pelo nome e acompanhe o onboarding e os planos." />
-    <Stack component="form" spacing={2} onSubmit={(event) => { event.preventDefault(); setSelected(null); setDraft(null); void load(filters) }}>
+    <Stack component="form" spacing={2} sx={{ bgcolor: 'background.paper', p: { xs: 2, sm: 3 }, border: '1px solid', borderColor: 'divider', borderRadius: 3 }} onSubmit={(event) => { event.preventDefault(); setSelected(null); setDraft(null); void load(filters) }}>
       <TextField label="Nome do cliente" value={filters.search} onChange={(event) => change('search', event.target.value)} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField fullWidth select label="Onboarding" value={filters.onboarding} onChange={(event) => change('onboarding', event.target.value)}>{[['all', 'Todos'], ['completed', 'Concluído'], ['incomplete', 'Não concluído']].map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField>
@@ -69,17 +77,32 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
         <TextField fullWidth select label="Responsabilidade" value={filters.responsibility} onChange={(event) => change('responsibility', event.target.value)}>{[['all', 'Todos'], ['none', 'Sem instrutor'], ['me', 'Eu'], ['specific', 'Instrutor específico']].map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField>
       </Stack>
       {filters.responsibility === 'specific' && <><TextField required select label="Instrutor específico" value={filters.responsible} onChange={(event) => change('responsible', event.target.value)}>{options.map((option) => <MenuItem key={option.reference} value={option.reference}>{option.name}</MenuItem>)}</TextField>{optionsCursor && <Button onClick={() => void loadOptions(optionsCursor)}>Carregar mais instrutores</Button>}</>}
-      <Button type="submit" variant="contained" disabled={loading || busy}>Pesquisar clientes</Button>
+      <Button type="submit" variant="contained" sx={{ alignSelf: { sm: 'flex-start' } }} disabled={loading || busy}>Pesquisar clientes</Button>
     </Stack>
     {error && <StatusNotice severity="error">{error}</StatusNotice>}
-    <Button disabled={loading || busy} onClick={() => void load()}>Recarregar lista</Button>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(300px, 0.9fr) minmax(0, 1.3fr)' }, gap: 3, alignItems: 'start' }}>
+    <Stack component="section" aria-label="Lista de clientes" spacing={2} sx={{ minWidth: 0 }}>
+    <Stack direction="row" sx={{ flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+      <Typography component="h2" variant="h3">Clientes encontrados</Typography>
+      <Button disabled={loading || busy} onClick={() => void load()}>Recarregar lista</Button>
+    </Stack>
     {loading && <LoadingState label="Carregando clientes" />}
     {!loading && !error && !items.length && <EmptyState title="Nenhum cliente encontrado" description="Ajuste o nome ou os filtros e tente novamente." />}
-    {items.map((client) => <Card key={client.id} component="article"><CardContent><Stack spacing={1.5}><Typography component="h2" variant="h3" sx={{ overflowWrap: 'anywhere' }}>{client.name}</Typography><State client={client} /><Button disabled={busy} onClick={() => void open(client.id)}>Abrir cliente</Button></Stack></CardContent></Card>)}
+    {items.map((client) => <Card key={client.id} component="article" sx={{ borderColor: selected?.id === client.id ? 'primary.main' : 'divider' }}><CardContent><Stack spacing={2}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <Avatar aria-hidden="true" sx={{ bgcolor: 'rgba(255,133,100,0.10)', color: 'primary.main' }}>{client.name.slice(0, 1)}</Avatar>
+        <Typography component="h3" variant="h3" sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>{client.name}</Typography>
+      </Stack>
+      <State client={client} />
+      <Button disabled={busy} variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={() => void open(client.id)}>Abrir cliente</Button>
+    </Stack></CardContent></Card>)}
     {cursor && <Button disabled={loading || busy} onClick={() => void load(applied, cursor)}>Carregar mais clientes</Button>}
+    </Stack>
+    <Stack spacing={2} sx={{ minWidth: 0, position: { lg: 'sticky' }, top: 24 }}>
+    {!selected && !busy && <Box sx={{ display: { xs: 'none', lg: 'block' } }}><EmptyState title="Selecione um cliente" description="Consulte o onboarding e acesse os treinos no espaço ao lado da lista." /></Box>}
     {busy && <LoadingState label="Processando dados de treino" />}
-    {selected && <Card component="section"><CardContent><Stack spacing={2}>
-      <Typography component="h2" tabIndex={-1} ref={heading} variant="h3">Treinos de {selected.name}</Typography><State client={selected} />
+    {selected && <Card component="section" sx={{ borderTop: '3px solid', borderTopColor: 'primary.main' }}><CardContent><Stack spacing={2}>
+      <Typography component="h2" tabIndex={-1} ref={heading} variant="h3" sx={{ scrollMarginTop: 88, overflowWrap: 'anywhere' }}>Treinos de {selected.name}</Typography><State client={selected} />
       <Button disabled={busy} onClick={() => setOnboardingClient(selected)}>{selected.onboarding_status === 'completed' ? 'Editar onboarding concluído' : 'Preencher ou continuar onboarding'}</Button>
       <Button disabled={busy} onClick={() => void open(selected.id)}>Recarregar cadastro</Button>
       {selected.draft_id && <RouterButtonLink to={`/instrutor/planos-pendentes?rascunho=${selected.draft_id}`}>Abrir rascunho</RouterButtonLink>}
@@ -87,5 +110,7 @@ export function InstructorClientsPage({ accessToken, onSignOut }: { accessToken:
       {!selected.current_id && !selected.draft_id && !draft && <Button variant="contained" disabled={busy || stale} onClick={() => setDraft(firstDraft())}>Criar primeiro rascunho</Button>}
       {draft && <Box component="form" onSubmit={(event) => { event.preventDefault(); void create() }}><Stack component="fieldset" disabled={busy || stale} spacing={2} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Typography>O rascunho será salvo para revisão. A aprovação é uma ação separada.</Typography><TrainingDraftFields accessToken={accessToken} draft={draft} onChange={setDraft} /><Button type="submit" variant="contained">Salvar primeiro rascunho</Button><Button onClick={() => setDraft(null)}>Cancelar criação</Button></Stack></Box>}
     </Stack></CardContent></Card>}
+    </Stack>
+    </Box>
   </Stack></InstructorShell>
 }

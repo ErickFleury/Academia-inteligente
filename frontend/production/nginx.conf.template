@@ -1,0 +1,132 @@
+worker_processes auto;
+pid /tmp/nginx.pid;
+# Nginx error logs can include complete request URIs. Access logs below are minimized.
+error_log /dev/stderr crit;
+events { worker_connections 1024; }
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    server_tokens off;
+    client_body_temp_path /tmp/client_body;
+    proxy_temp_path /tmp/proxy;
+    fastcgi_temp_path /tmp/fastcgi;
+    uwsgi_temp_path /tmp/uwsgi;
+    scgi_temp_path /tmp/scgi;
+    client_max_body_size 10m;
+    client_body_timeout 20s;
+    client_header_timeout 10s;
+    keepalive_timeout 30s;
+    send_timeout 30s;
+    reset_timedout_connection on;
+    # No IP, account/resource IDs, query strings, tokens, referrers or request bodies.
+    map $request_uri $route_group {
+        ~^/api/ api;
+        ~^/auth/ identity;
+        default frontend;
+    }
+    log_format safe escape=json '{"time":"$time_iso8601","route":"$route_group","status":$status,"seconds":$request_time,"limited":"$limit_req_status"}';
+    access_log /dev/stdout safe;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=20r/s;
+    limit_req_zone $binary_remote_addr zone=login:10m rate=10r/s;
+    map "$request_method:$request_uri" $ai_key {
+        default "";
+        ~^POST:/api/(training/(chat/messages|initial-proposal|adaptations)|onboarding/conversation/messages)(\?|$) $binary_remote_addr;
+    }
+    limit_req_zone $ai_key zone=ai:10m rate=12r/m;
+    limit_conn_zone $binary_remote_addr zone=connections:10m;
+    limit_req_status 429;
+    limit_conn_status 429;
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    proxy_connect_timeout 5s;
+    proxy_send_timeout 30s;
+    # Preserve the approved optional 120s local-AI timeout.
+    proxy_read_timeout 135s;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    # Always overwrite untrusted client forwarding headers.
+    proxy_set_header Host __DOMAIN__;
+    proxy_set_header X-Forwarded-Host __DOMAIN__;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Port 443;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header Forwarded "";
+    proxy_set_header X-Real-IP $remote_addr;
+
+    server {
+        listen 8080 default_server;
+        listen [::]:8080 default_server;
+        server_name _;
+        return 444;
+    }
+    server {
+        listen 8080;
+        listen [::]:8080;
+        server_name __DOMAIN__;
+        location ^~ /.well-known/acme-challenge/ {
+            root /var/www/acme;
+            try_files $uri =404;
+        }
+        location / { return 308 https://__DOMAIN__$request_uri; }
+    }
+    server {
+        listen 8443 ssl default_server;
+        listen [::]:8443 ssl default_server;
+        ssl_reject_handshake on;
+        return 444;
+    }
+    server {
+        listen 8443 ssl;
+        listen [::]:8443 ssl;
+        server_name __DOMAIN__;
+        ssl_certificate /run/tls/fullchain.pem;
+        ssl_certificate_key /run/tls/privkey.pem;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_session_cache shared:TLS:10m;
+        ssl_session_tickets off;
+        include /etc/nginx/security-headers.conf;
+        limit_conn connections 40;
+        error_page 429 = @limited;
+        error_page 413 = @too_large;
+        location @limited {
+            include /etc/nginx/security-headers.conf;
+            add_header Retry-After 10 always;
+            default_type application/json;
+            return 429 '{"detail":"Muitas solicitações. Aguarde alguns segundos e tente novamente."}';
+        }
+        location @too_large {
+            default_type application/json;
+            return 413 '{"detail":"O arquivo ou solicitação excede o tamanho permitido."}';
+        }
+        location ~ /\. { return 404; }
+        location ~ ^/api/(docs|redoc|openapi\.json)(/|$) { return 404; }
+        location /api/ {
+            limit_req zone=api burst=80 nodelay;
+            limit_req zone=ai burst=6 nodelay;
+            set $api_upstream backend:8000;
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass http://$api_upstream;
+            proxy_cache off;
+        }
+        # Administrative identity operations remain internal or network-restricted.
+        location ~ "^/auth/(admin|realms/master)(/|;|$)" {
+            allow __ADMIN_NETWORK__;
+            deny all;
+            set $identity_upstream keycloak:8080;
+            proxy_pass http://$identity_upstream;
+        }
+        location ~ ^/auth/(health|metrics)(/|$) { return 404; }
+        location /auth/ {
+            limit_req zone=login burst=40 nodelay;
+            set $identity_upstream keycloak:8080;
+            proxy_pass http://$identity_upstream;
+        }
+        location / {
+            include /etc/nginx/security-headers.conf;
+            add_header Cache-Control no-store always;
+            # MUI uses dynamic style tags; scripts remain self-only without unsafe-eval.
+            add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'" always;
+            root /usr/share/nginx/html;
+            try_files $uri $uri/ /index.html;
+        }
+    }
+}

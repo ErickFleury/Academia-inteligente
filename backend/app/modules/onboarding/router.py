@@ -89,6 +89,10 @@ class ConversationResponse(BaseModel):
     messages: list[ConversationMessageResponse]
     missing_required_fields: list[str]
     completion_ready: bool
+    known_answers: OnboardingDraftUpdate = Field(default_factory=OnboardingDraftUpdate)
+    clarification_fields: list[str] = Field(default_factory=list)
+    needs_clarification: bool = False
+    fallback_field: str | None = None
 
 
 class ConversationMessageRequest(BaseModel):
@@ -134,6 +138,10 @@ def response_from_conversation(state: ConversationState) -> ConversationResponse
         messages=[response_from_message(message) for message in state.messages],
         missing_required_fields=state.missing_required_fields,
         completion_ready=state.completion_ready,
+        known_answers=state.known_answers,
+        clarification_fields=state.clarification_fields,
+        needs_clarification=state.needs_clarification,
+        fallback_field=state.fallback_field,
     )
 
 
@@ -142,6 +150,10 @@ def response_from_turn(turn: ConversationTurn) -> ConversationResponse:
         messages=[],
         missing_required_fields=turn.missing_required_fields,
         completion_ready=turn.completion_ready,
+        known_answers=turn.known_answers,
+        clarification_fields=turn.clarification_fields,
+        needs_clarification=turn.needs_clarification,
+        fallback_field=turn.fallback_field,
     )
 
 
@@ -301,6 +313,10 @@ def submit_own_onboarding_conversation_message(
             messages=[response_from_message(message) for message in state.messages],
             missing_required_fields=turn.missing_required_fields,
             completion_ready=turn.completion_ready,
+            known_answers=turn.known_answers,
+            clarification_fields=turn.clarification_fields,
+            needs_clarification=turn.needs_clarification,
+            fallback_field=turn.fallback_field,
         )
     except OnboardingNotFoundError:
         raise HTTPException(
@@ -310,4 +326,9 @@ def submit_own_onboarding_conversation_message(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI onboarding is temporarily unavailable",
+        ) from None
+    except OnboardingNotEditableError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Onboarding conversation changed or was completed; reload before retrying",
         ) from None

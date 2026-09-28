@@ -222,6 +222,30 @@ def test_provider_failure_is_a_controlled_rejection_without_release(access, data
     assert not access.release.requests
 
 
+def test_cancellation_endpoint_closes_uncaptured_attempt_idempotently(access, database_session):
+    app = create_app()
+    app.dependency_overrides[get_database_session] = lambda: database_session
+    app.dependency_overrides[get_access_service] = lambda: access
+    app.dependency_overrides[get_authenticated_identity] = lambda: AuthenticatedIdentity(
+        "admin", None, ("admin",)
+    )
+    http = AsgiClient(app)
+    created = http.post(
+        "/biometrics/access-attempts", {"command_id": str(uuid4()), "direction": "entry"}
+    )
+    assert created.status_code == 200
+    identifier = created.json()["attempt_id"]
+    command = {"command_id": str(uuid4())}
+    for _ in range(2):
+        response = http.post(f"/biometrics/access-attempts/{identifier}/cancellation", command)
+        assert response.status_code == 200
+        assert response.json()["status"] == "canceled"
+        assert response.json()["captures"] == 0
+        assert response.json()["release_request_id"] is None
+    assert not access.release.requests
+    assert database_session.scalar(select(AccessPassageEvent)) is None
+
+
 def test_attempts_are_owned_and_api_is_admin_only(access, database_session):
     app = create_app()
     app.dependency_overrides[get_database_session] = lambda: database_session

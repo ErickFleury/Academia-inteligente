@@ -119,10 +119,10 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
             ref={(element) => { if (element) listButtons.current.set(plan.id, element); else listButtons.current.delete(plan.id) }}
             aria-label={`Revisar plano de ${plan.client_name}`} aria-pressed={selected?.id === plan.id}
             onClick={() => afterDiscard(() => void open(plan))}
-            sx={{ display: 'block', flexShrink: 0, textAlign: 'left', p: 2, width: '100%', border: '1px solid', borderColor: selected?.id === plan.id ? 'primary.main' : 'divider', bgcolor: selected?.id === plan.id ? 'action.selected' : 'background.paper' }}>
+            sx={{ display: 'block', flexShrink: 0, textAlign: 'left', p: 2.5, borderRadius: 3, width: '100%', border: '1px solid', borderColor: selected?.id === plan.id ? 'primary.main' : 'divider', bgcolor: selected?.id === plan.id ? 'rgba(255,133,100,0.08)' : 'background.paper' }}>
             <Stack spacing={1}>
               <Typography component="span" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{plan.name}</Typography>
-              <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {plan.client_name}</Typography>
+              <Typography component="span" variant="body2" sx={{ fontWeight: 700, overflowWrap: 'anywhere', color: 'primary.main' }}>Cliente: {plan.client_name}</Typography>
               <Box component="span" sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                 <Chip component="span" size="small" variant="outlined" color="warning" label={sources[plan.source]} sx={{ height: 'auto', minHeight: 24, '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }} />
                 <Chip component="span" size="small" label={`${plan.items.length} ${plan.items.length === 1 ? 'exercício' : 'exercícios'}`} />
@@ -138,12 +138,12 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
       </Stack>
       <Box sx={{ minWidth: 0, display: { xs: selected || busy ? 'block' : 'none', lg: 'block' } }}>
         {busy && <LoadingState label="Processando revisão" />}
-        {!selected && !busy && <Card variant="outlined"><CardContent sx={{ py: 7 }}><Stack spacing={1.5} sx={{ maxWidth: 380, mx: 'auto' }}>
+        {!selected && !busy && <Card variant="outlined" sx={{ bgcolor: 'rgba(245,247,244,0.025)' }}><CardContent sx={{ py: 7 }}><Stack spacing={1.5} sx={{ maxWidth: 380, mx: 'auto' }}>
           <Typography variant="overline" color="primary.main">Revisão do treino</Typography>
           <Typography component="h2" variant="h3">Escolha um rascunho para revisar</Typography>
           <Typography color="text.secondary">Leia o treino completo, ajuste o que for necessário e aprove quando estiver pronto. Salvar um rascunho não altera o treino atual.</Typography>
         </Stack></CardContent></Card>}
-        {selected && draft && <Card component="section" ref={detailSection} aria-label="Revisão do plano" sx={{ scrollMarginTop: { xs: 80, md: 24 } }}><CardContent sx={{ p: { xs: 2, sm: 3 } }}><Stack spacing={3}>
+        {selected && draft && <Card component="section" ref={detailSection} aria-label="Revisão do plano" sx={{ scrollMarginTop: { xs: 80, md: 24 }, borderTop: '3px solid', borderTopColor: 'primary.main' }}><CardContent sx={{ p: { xs: 2, sm: 3 } }}><Stack spacing={3}>
           <Box><Button disabled={busy} onClick={() => afterDiscard(closeReview)}>← Voltar à lista</Button></Box>
           <Stack spacing={1.5}>
             <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
@@ -151,7 +151,7 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
               <Chip size="small" label={`Origem: ${sources[selected.source]}`} sx={{ height: 'auto', minHeight: 24, '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }} />
             </Stack>
             <Typography component="h2" ref={editorHeading} tabIndex={-1} variant="h3" sx={{ fontSize: { xs: '1.35rem', sm: '1.6rem' }, overflowWrap: 'anywhere', scrollMarginTop: { xs: 88, md: 24 } }}>{draft.name}</Typography>
-            <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>Cliente: {selected.client_name}</Typography>
+            <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere', color: 'primary.main', bgcolor: 'rgba(255,133,100,0.06)', p: 1.5, borderRadius: 2 }}>Cliente: {selected.client_name}</Typography>
             <Typography variant="body2" color="text.secondary">Atualizado em {date(selected.updated_at)} · Revisão {selected.revision}</Typography>
             {dirty && <Typography role="status" variant="body2" color="warning.main">Alterações não salvas</Typography>}
             {stale && <Button disabled={busy} onClick={() => afterDiscard(() => void open(selected))}>Recarregar rascunho</Button>}

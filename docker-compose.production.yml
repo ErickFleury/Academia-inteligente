@@ -1,0 +1,212 @@
+# Standalone production stack. Do not merge with the development Compose files.
+name: academia-production
+x-backend: &backend
+  build:
+    context: ./backend
+    dockerfile: Dockerfile.production
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 256
+  mem_limit: 1g
+  networks: [application, identity, database, biometrics, outbound]
+  environment: &backend-environment
+    DATABASE_URL_FILE: /run/secrets/database_url
+    OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/academia
+    KEYCLOAK_ADMIN_URL: http://keycloak:8080/auth
+    KEYCLOAK_REALM: academia
+    KEYCLOAK_PROVISIONING_CLIENT_ID: academia-provisioner
+    KEYCLOAK_PROVISIONING_CLIENT_SECRET_FILE: /run/secrets/provisioning_secret
+    KEYCLOAK_FIRST_ACCESS_CLIENT_ID: academia-web
+    KEYCLOAK_FIRST_ACCESS_REDIRECT_URI: https://${APP_DOMAIN:?Set APP_DOMAIN}/
+    CORS_ALLOWED_ORIGINS: https://${APP_DOMAIN}
+    SMTP_HOST: ${SMTP_HOST:?Set the production SMTP relay}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+    SMTP_USERNAME: ${SMTP_USERNAME:?Set SMTP_USERNAME}
+    SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+    SMTP_FROM: ${SMTP_FROM:?Set SMTP_FROM}
+    ONBOARDING_INVITATION_URL: https://${APP_DOMAIN}/onboarding
+    AI_PROVIDER: ${AI_PROVIDER:-openai}
+    OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6-luna}
+    OPENAI_API_KEY_FILE: /run/secrets/openai_key
+    AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-10}
+    AI_RECENT_MESSAGE_LIMIT: ${AI_RECENT_MESSAGE_LIMIT:-6}
+    AI_TRAINING_CHAT_SUMMARY_LIMIT: ${AI_TRAINING_CHAT_SUMMARY_LIMIT:-2000}
+    OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+    OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
+    OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-120}
+    FACIAL_ACCESS_MODE: ${FACIAL_ACCESS_MODE:-disabled}
+    COMPREFACE_URL: http://compreface-api:8080
+    COMPREFACE_API_KEY_FILE: /run/secrets/compreface_key
+    BIOMETRIC_DETECTION_THRESHOLD: ${BIOMETRIC_DETECTION_THRESHOLD:-0.90}
+    BIOMETRIC_MATCH_THRESHOLD: ${BIOMETRIC_MATCH_THRESHOLD:-0.80}
+    BIOMETRIC_AMBIGUITY_MARGIN: ${BIOMETRIC_AMBIGUITY_MARGIN:-0.10}
+    BIOMETRIC_TIMEOUT_SECONDS: ${BIOMETRIC_TIMEOUT_SECONDS:-10}
+    BIOMETRIC_MODEL: facenet-20180402-114759
+    ACCESS_EVENT_INTEGRATION_SECRET_FILE: /run/secrets/access_secret
+  secrets: [database_url, provisioning_secret, smtp_password, openai_key, compreface_key, access_secret]
+  logging: &logging
+    driver: json-file
+    options: {max-size: 10m, max-file: '3'}
+
+services:
+  gateway:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+      args: {APP_DOMAIN: '${APP_DOMAIN}'}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    ports:
+      - '${GATEWAY_BIND_ADDRESS:-0.0.0.0}:${HTTP_PORT:-80}:8080'
+      - '${GATEWAY_BIND_ADDRESS:-0.0.0.0}:${HTTPS_PORT:-443}:8443'
+    volumes:
+      - ${PRODUCTION_STATE_DIR:-./.deployment}/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${PRODUCTION_STATE_DIR:-./.deployment}/tls:/run/tls:ro
+      - ${PRODUCTION_STATE_DIR:-./.deployment}/acme:/var/www/acme:ro
+    networks: [edge, application, identity]
+    depends_on:
+      backend: {condition: service_healthy}
+      keycloak: {condition: service_healthy}
+    healthcheck:
+      test: [CMD-SHELL, 'kill -0 $$(cat /tmp/nginx.pid)']
+      interval: 20s
+      timeout: 3s
+      retries: 3
+    logging: *logging
+
+  backend:
+    <<: *backend
+    depends_on:
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  migrate:
+    <<: *backend
+    profiles: [ops]
+    restart: 'no'
+    command: [alembic, upgrade, head]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  postgres:
+    image: postgres:18.6-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets: [postgres_password, app_db_password, keycloak_db_password]
+    volumes:
+      - production_postgres:/var/lib/postgresql
+      - ./docs/deployment/init-databases.sh:/docker-entrypoint-initdb.d/01-databases.sh:ro
+    networks: [database]
+    shm_size: 256m
+    mem_limit: 1g
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d postgres']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  keycloak:
+    build:
+      context: ./keycloak
+      dockerfile: production/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /opt/keycloak/data:uid=1000,gid=0,mode=0750
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 512
+    mem_limit: 2g
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: academia_identity
+      KC_HOSTNAME: https://${APP_DOMAIN}/auth
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_ENABLED: 'true'
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: 'true'
+      KC_HTTP_MANAGEMENT_RELATIVE_PATH: /
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-identity-admin}
+      KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
+      KC_HTTP_ACCESS_LOG_ENABLED: 'false'
+      KC_LOG_LEVEL: WARN
+    secrets:
+      - keycloak_db_password
+      - keycloak_admin_password
+      - source: realm_import
+        target: /opt/keycloak/data/import/academia-realm.json
+    networks: [identity, database, outbound]
+    depends_on:
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD-SHELL, "{ printf 'GET /health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&0; cat; } 0<>/dev/tcp/127.0.0.1/9000 | grep -q '200 OK'"]
+      interval: 20s
+      timeout: 5s
+      start_period: 90s
+      retries: 5
+    logging: *logging
+
+  # Existing optional local providers: no changes to biometric algorithms or workflows.
+  compreface-postgres-db:
+    extends: {file: docs/deployment/providers.yml, service: compreface-postgres-db}
+  compreface-core:
+    extends: {file: docs/deployment/providers.yml, service: compreface-core}
+  compreface-api:
+    extends: {file: docs/deployment/providers.yml, service: compreface-api}
+  compreface-admin:
+    extends: {file: docs/deployment/providers.yml, service: compreface-admin}
+  compreface-fe:
+    extends: {file: docs/deployment/providers.yml, service: compreface-fe}
+  ollama:
+    extends: {file: docs/deployment/providers.yml, service: ollama}
+    networks: [outbound]
+  ollama-model:
+    extends: {file: docs/deployment/providers.yml, service: ollama-model}
+    networks: [outbound]
+
+networks:
+  edge: {}
+  outbound: {}
+  application: {internal: true}
+  identity: {internal: true}
+  database: {internal: true}
+  biometrics: {internal: true}
+  biometrics_management: {}
+volumes:
+  production_postgres: {}
+  biometrics_data: {}
+  ollama_data: {}
+secrets:
+  database_url: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/database_url'}
+  provisioning_secret: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/provisioning_secret'}
+  postgres_password: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/postgres_password'}
+  app_db_password: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/app_db_password'}
+  keycloak_db_password: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/keycloak_db_password'}
+  keycloak_admin_password: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/keycloak_admin_password'}
+  realm_import: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/academia-realm.json'}
+  smtp_password: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/smtp_password'}
+  openai_key: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/openai_key'}
+  compreface_key: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/compreface_key'}
+  access_secret: {file: '${PRODUCTION_STATE_DIR:-./.deployment}/secrets/access_secret'}

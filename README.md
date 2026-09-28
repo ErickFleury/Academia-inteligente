@@ -44,11 +44,34 @@ client's password, and then sign in as that client. The password and action
 token never enter PostgreSQL. A local client created before provisioning can be
 selected under **Clientes** and retried with **Provisionar acesso**.
 
-For onboarding, select a provisioned active client under **Clientes** and use
-**Enviar convite de onboarding**. The SMTP message appears in Mailpit and the
-link expires after 24 hours. A newer invitation invalidates unused prior links.
-The link is validated/redeemed by the later secure-onboarding flow; opening it
-must not consume it by itself.
+Clients reach pending onboarding after signing in; the admin panel no longer
+requires an onboarding invitation. Existing secure invitation links remain valid
+under their separate 24-hour policy.
+
+For password recovery, open **Clientes → client details → Redefinir senha** as
+an administrator, or **Meu perfil → settings cog → Redefinir senha** as the
+client. On the login screen, use **Esqueceu sua senha?** and enter the registered
+email. These flows send a Keycloak password-setup link valid for **15 minutes** to
+the registered email. In local Docker, retrieve that email in Mailpit at
+`http://localhost:8025`; it is not delivered to an external inbox. The password
+changes only when the user completes Keycloak's form. Admin/profile requests
+share a one-minute cooldown. Inactive/unlinked accounts or pending identity updates
+must be resolved before sending from admin/profile actions. The Keycloak version
+is unchanged. Existing installations need `alembic upgrade head` (migration
+`20260927_31`) before restarting the backend.
+
+Fresh realms include login recovery automatically. Existing local realms need
+the targeted update below; it preserves users and other realm settings and uses
+the running container's configured bootstrap administrator credentials:
+
+```bash
+docker compose exec -T keycloak bash -s < keycloak/enable-password-recovery.sh
+```
+
+For an existing production deployment, execute the same script in that
+deployment's Keycloak container with its configured realm-administrator
+credentials. It also supports the deployment's mounted administrator-password
+secret. The script removes its temporary administrator session file on exit.
 
 ### Local facial-access pilot
 
@@ -105,9 +128,11 @@ service account and SMTP settings through the Keycloak admin console before
 using this flow.
 
 Only the UI, API, Keycloak, and Mailpit are bound to loopback addresses.
-PostgreSQL is available exclusively on the internal Compose network. Configure
-UFW on the Linux host to permit only the intended public reverse-proxy/UI/API
-ports; never publish PostgreSQL.
+PostgreSQL is available exclusively on the internal Compose network. For Internet
+deployment, use the separate [production deployment guide](docs/deployment/README.md)
+and `docker-compose.production.yml`. Only its HTTPS/redirect gateway is public;
+Docker forwarding requires firewall rules in addition to UFW. Do not expose the
+development stack directly.
 
 ## Quality checks
 

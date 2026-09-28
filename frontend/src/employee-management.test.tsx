@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { EmployeeManagement } from './employee-management'
@@ -23,6 +23,7 @@ test.each([404, 503])('CEP failure %s preserves manual values and does not claim
     .mockResolvedValueOnce({ ok: false, status, json: async () => ({ detail: 'Lookup failed' }) }))
   render(<EmployeeManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   await screen.findByText('Nenhum instrutor encontrado.')
+  fireEvent.click(screen.getByRole('button', { name: 'Novo instrutor' }))
   fireEvent.change(screen.getByRole('textbox', { name: 'CEP' }), { target: { value: '01001000' } })
   fireEvent.change(screen.getByRole('textbox', { name: 'Logradouro' }), { target: { value: 'Rua manual' } })
   fireEvent.click(screen.getByRole('button', { name: 'Buscar CEP' }))
@@ -39,10 +40,10 @@ test('invalid edits retain inputs and show Portuguese validation feedback', asyn
   render(<EmployeeManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   fireEvent.click(await screen.findByRole('button', { name: /Maria Silva/ }))
   await screen.findByRole('heading', { name: 'Editar instrutor' })
-  fireEvent.change(screen.getAllByRole('textbox', { name: 'CPF' })[1], { target: { value: '00000000000' } })
+  fireEvent.change(screen.getByRole('textbox', { name: 'CPF' }), { target: { value: '00000000000' } })
   fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
   expect(await screen.findByText(/Verifique os dados informados/)).toBeInTheDocument()
-  expect(screen.getAllByRole('textbox', { name: 'CPF' })[1]).toHaveValue('00000000000')
+  expect(screen.getByRole('textbox', { name: 'CPF' })).toHaveValue('00000000000')
   expect(screen.queryByText('A valid CPF is required')).not.toBeInTheDocument()
 })
 
@@ -59,6 +60,7 @@ test('registers an instructor with complete personal data', async () => {
   vi.stubGlobal('fetch', fetchMock)
   render(<EmployeeManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   await screen.findByText('Nenhum instrutor encontrado.')
+  fireEvent.click(screen.getByRole('button', { name: 'Novo instrutor' }))
   for (const [label, value] of [['Nome', 'Maria'], ['Sobrenome', 'Silva'], ['E-mail', 'maria@example.test'], ['CPF', '529.982.247-25'], ['Telefone', '(11) 99876-5432'], ['CEP', '01001-000'], ['Logradouro', 'Praça da Sé'], ['Número', '1'], ['Bairro', 'Sé'], ['Cidade', 'São Paulo'], ['UF', 'SP']] as const) fireEvent.change(screen.getByRole('textbox', { name: label }), { target: { value } })
   fireEvent.click(screen.getByRole('button', { name: 'Verificar cadastro facial' }))
   await screen.findByText(/será reutilizado/)
@@ -106,4 +108,22 @@ test('shows immediate processing and prevents duplicate provisioning while the a
   expect(fetchMock).toHaveBeenCalledTimes(3)
   resolve({ok:true,json:async()=>({...employee,identity_provisioned:true})})
   await screen.findByText('Acesso do instrutor sincronizado.')
+})
+
+test('new-instructor dialog exposes all groups, preserves typed fields on close and never registers implicitly', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+  vi.stubGlobal('fetch', fetchMock)
+  render(<EmployeeManagement accessToken="token" onUnauthenticated={vi.fn()} />)
+  await screen.findByText('Nenhum instrutor encontrado.')
+  fireEvent.click(screen.getByRole('button', { name: 'Novo instrutor' }))
+  expect(screen.getByRole('heading', { name: 'Identificação e contato' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Endereço' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Dados profissionais' })).toBeInTheDocument()
+  fireEvent.change(screen.getByRole('textbox', { name: 'Nome' }), { target: { value: 'Rafael' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Fechar formulário' }))
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  fireEvent.click(screen.getByRole('button', { name: 'Novo instrutor' }))
+  expect(screen.getByRole('textbox', { name: 'Nome' })).toHaveValue('Rafael')
+  expect(screen.getByRole('button', { name: 'Cadastrar instrutor' })).toBeDisabled()
+  expect(fetchMock).toHaveBeenCalledOnce()
 })

@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { ClientShell } from "./components/application-shell";
+import { WorkspaceIcon } from "./components/workspace-presentation";
 import { PostCard } from "./post-card";
 import { PostMedia } from "./post-media";
 import {
@@ -249,6 +250,7 @@ export function ProgressPage({
         />
         <Box ref={composer}>
           <Card
+            sx={{ borderColor: "rgba(255,133,100,0.3)" }}
             component="form"
             onSubmit={(event) => {
               event.preventDefault();
@@ -256,7 +258,8 @@ export function ProgressPage({
             }}
           >
             <CardContent>
-              <Stack spacing={1.25}>
+              <Stack spacing={2}>
+                <Typography component="h2" variant="h3">Compartilhe seu progresso</Typography>
                 <Stack
                   direction="row"
                   spacing={0.5}
@@ -280,7 +283,7 @@ export function ProgressPage({
                               component="label"
                               edge="end"
                             >
-                              <span aria-hidden="true">+</span>
+                              <WorkspaceIcon name="image" />
                               <input
                                 accept="image/jpeg,image/png,image/webp"
                                 hidden
@@ -302,8 +305,9 @@ export function ProgressPage({
                     aria-label="Publicar atualização"
                     disabled={!content.trim() && !files.length}
                     type="submit"
+                    sx={{ bgcolor: "primary.main", color: "primary.contrastText", "&:hover": { bgcolor: "primary.light" } }}
                   >
-                    <span aria-hidden="true">➤</span>
+                    <WorkspaceIcon name="send" />
                   </IconButton>
                 </Stack>
                 {files.map((file) => (
@@ -401,7 +405,7 @@ export function ProgressPage({
                   disabled={savingEdit}
                   sx={{ alignSelf: "flex-start" }}
                 >
-                  <span aria-hidden="true">+</span>
+                  <WorkspaceIcon name="image" />
                   <input
                     accept="image/jpeg,image/png,image/webp"
                     hidden

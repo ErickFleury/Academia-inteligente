@@ -336,10 +336,32 @@ class KeycloakAdminClient:
         )
 
     def _send_first_access_email(self, token: str, subject: str) -> None:
+        self._send_password_action_email(token, subject)
+
+    def send_password_recovery_email(self, subject: str, email: str) -> None:
+        """Send only to the linked, enabled identity with a synchronized email."""
+        token = self._access_token()
+        user = self._request(
+            "GET", f"/admin/realms/{self._config.realm}/users/{subject}", token, subject=subject
+        )
+        if (
+            not isinstance(user, dict)
+            or user.get("id") != subject
+            or user.get("enabled") is not True
+            or not isinstance(user.get("email"), str)
+            or user["email"].strip().lower() != email.strip().lower()
+        ):
+            raise KeycloakIdentityConflictError("Recovery identity is not synchronized")
+        self._send_password_action_email(token, subject, lifespan=900)
+
+    def _send_password_action_email(
+        self, token: str, subject: str, *, lifespan: int | None = None
+    ) -> None:
         query = urlencode(
             {
                 "client_id": self._config.first_access_client_id,
                 "redirect_uri": self._config.first_access_redirect_uri,
+                **({"lifespan": lifespan} if lifespan is not None else {}),
             }
         )
         self._request(

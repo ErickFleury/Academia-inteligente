@@ -193,6 +193,18 @@ a:focus-visible {
   color: #c0e6f7;
 }
 
+/* Keep the native Keycloak recovery link as a visible secondary action. */
+.pf-v5-c-login a[href*="/login-actions/reset-credentials"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--academia-border);
+  border-radius: 0.75rem;
+  text-decoration: none;
+}
+
 .pf-v5-c-check__label,
 .pf-v5-c-helper-text,
 .pf-v5-c-login__main-footer,

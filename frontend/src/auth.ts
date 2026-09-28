@@ -1,3 +1,5 @@
+import { replaceLocation } from './browser-navigation'
+
 export type Session = {
   accessToken: string
   expiresAt: number
@@ -11,7 +13,31 @@ const sessionKey = 'academia.session'
 const verifierKey = 'academia.pkce.verifier'
 const stateKey = 'academia.oidc.state'
 const loggedOutKey = 'academia.logged-out'
+const reauthenticateKey = 'academia.reauthenticate'
+const returnPathKey = 'academia.login-return-path'
 export const sessionIdleTimeoutMs = 5 * 60 * 1000
+
+// Bound both network and body parsing; abort the request on timeout.
+async function authRequest<T>(url: string, init: RequestInit, read: (response: Response) => Promise<T>, timeoutMs = 15_000): Promise<T> {
+  const controller = new AbortController()
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      fetch(url, { ...init, signal: controller.signal }).then(read),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => { controller.abort(); reject(new Error('Authentication request timed out')) }, timeoutMs)
+      }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+function localReturnPath(path: string | null): string {
+  // Restore only an application pathname, never an external URL or credentials.
+  if (!path?.startsWith('/') || path.startsWith('//') || path.includes('\\') || /[?#\s]/.test(path)) return '/'
+  return path
+}
 
 function oidcConfig() {
   return {
@@ -23,15 +49,16 @@ function oidcConfig() {
 
 async function activeRoles(accessToken: string): Promise<string[]> {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-  const response = await fetch(`${apiBaseUrl}/identity/me`, {
+  return authRequest(`${apiBaseUrl}/identity/me`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+  }, async (response) => {
+    if (!response.ok) throw new Error('Unable to verify active account roles')
+    const payload = await response.json() as { roles?: unknown }
+    if (!Array.isArray(payload.roles) || payload.roles.some((role) => typeof role !== 'string')) {
+      throw new Error('Invalid active account roles')
+    }
+    return payload.roles
   })
-  if (!response.ok) throw new Error('Unable to verify active account roles')
-  const payload = await response.json() as { roles?: unknown }
-  if (!Array.isArray(payload.roles) || payload.roles.some((role) => typeof role !== 'string')) {
-    throw new Error('Invalid active account roles')
-  }
-  return payload.roles
 }
 
 function encodeBase64Url(bytes: Uint8Array): string {
@@ -114,15 +141,17 @@ export class OidcSessionClient {
     }
     const { issuer, clientId } = oidcConfig()
     try {
-      const response = await fetch(`${issuer}/protocol/openid-connect/token`, {
+      const payload = await authRequest(`${issuer}/protocol/openid-connect/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           grant_type: 'refresh_token', client_id: clientId, refresh_token: session.refreshToken,
         }),
+      }, async (response) => {
+        if (!response.ok) throw new Error('Unable to renew session')
+        return this.tokenPayload(response)
       })
-      if (!response.ok) throw new Error('Unable to renew session')
-      const payload = await this.tokenPayload(response)
+      if (!currentSession()) return null
       const roles = await activeRoles(payload.access_token)
       const current = currentSession()
       if (!current) return null
@@ -150,6 +179,7 @@ export class OidcSessionClient {
     const state = randomValue()
     sessionStorage.setItem(verifierKey, verifier)
     sessionStorage.setItem(stateKey, state)
+    sessionStorage.setItem(returnPathKey, localReturnPath(window.location.pathname))
 
     const authorizationUrl = new URL(`${issuer}/protocol/openid-connect/auth`)
     authorizationUrl.search = new URLSearchParams({
@@ -161,55 +191,67 @@ export class OidcSessionClient {
       code_challenge: await sha256(verifier),
       code_challenge_method: 'S256',
     }).toString()
-    if (sessionStorage.getItem(stateKey) === state) window.location.assign(authorizationUrl)
+    if (sessionStorage.getItem(reauthenticateKey) || this.hasLoggedOut()) authorizationUrl.searchParams.set('prompt', 'login')
+    if (sessionStorage.getItem(stateKey) === state) replaceLocation(authorizationUrl)
   }
 
   async completeLogin(): Promise<string> {
     const currentUrl = new URL(window.location.href)
     const code = currentUrl.searchParams.get('code')
-    if (!code) return currentUrl.pathname
+    const providerError = currentUrl.searchParams.get('error')
+    if (!code && !providerError) return currentUrl.pathname
     const responseState = currentUrl.searchParams.get('state')
-    for (const key of ['code', 'state', 'session_state', 'iss']) currentUrl.searchParams.delete(key)
+    const responseIssuer = currentUrl.searchParams.get('iss')
+    for (const key of ['code', 'state', 'session_state', 'iss', 'error', 'error_description', 'error_uri']) currentUrl.searchParams.delete(key)
     window.history.replaceState(window.history.state, '', currentUrl)
 
     const expectedState = sessionStorage.getItem(stateKey)
     const verifier = sessionStorage.getItem(verifierKey)
-    if (!verifier || !expectedState || responseState !== expectedState) {
-      throw new Error('Unable to verify the sign-in response')
-    }
+    const returnPath = sessionStorage.getItem(returnPathKey)
+    try {
+      if (!verifier || !expectedState || responseState !== expectedState) {
+        throw new Error('Unable to verify the sign-in response')
+      }
+      if (providerError || !code) throw new Error('Sign-in was not completed')
+      if (responseIssuer && responseIssuer !== oidcConfig().issuer) throw new Error('Unexpected sign-in issuer')
 
-    const { issuer, clientId, redirectUri } = oidcConfig()
-    const tokenResponse = await fetch(`${issuer}/protocol/openid-connect/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: clientId,
-        code,
-        redirect_uri: redirectUri,
-        code_verifier: verifier,
-      }),
-    })
-    if (!tokenResponse.ok) throw new Error('Unable to start the authenticated session')
-
-    const payload = await this.tokenPayload(tokenResponse)
-    if (!payload.access_token || !payload.expires_in || !payload.refresh_token) {
-      throw new Error('Invalid authentication response')
+      const { issuer, clientId, redirectUri } = oidcConfig()
+      const payload = await authRequest(`${issuer}/protocol/openid-connect/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: clientId,
+          code,
+          redirect_uri: redirectUri,
+          code_verifier: verifier,
+        }),
+      }, async (response) => {
+        if (!response.ok) throw new Error('Unable to start the authenticated session')
+        return this.tokenPayload(response)
+      })
+      if (sessionStorage.getItem(stateKey) !== expectedState) throw new Error('Sign-in was cancelled')
+      const roles = await activeRoles(payload.access_token)
+      if (sessionStorage.getItem(stateKey) !== expectedState
+        || sessionStorage.getItem(verifierKey) !== verifier) throw new Error('Sign-in was cancelled')
+      this.storeSession({
+        accessToken: payload.access_token,
+        expiresAt: Date.now() + payload.expires_in * 1000,
+        lastActivityAt: Date.now(),
+        roles,
+        idToken: payload.id_token,
+        refreshToken: payload.refresh_token,
+      })
+      sessionStorage.removeItem(loggedOutKey)
+      sessionStorage.removeItem(reauthenticateKey)
+      return localReturnPath(returnPath ?? currentUrl.pathname)
+    } finally {
+      if (sessionStorage.getItem(stateKey) === expectedState) {
+        sessionStorage.removeItem(verifierKey)
+        sessionStorage.removeItem(stateKey)
+        sessionStorage.removeItem(returnPathKey)
+      }
     }
-    const roles = await activeRoles(payload.access_token)
-    if (sessionStorage.getItem(stateKey) !== expectedState
-      || sessionStorage.getItem(verifierKey) !== verifier) throw new Error('Sign-in was cancelled')
-    this.storeSession({
-      accessToken: payload.access_token,
-      expiresAt: Date.now() + payload.expires_in * 1000,
-      lastActivityAt: Date.now(),
-      roles,
-      idToken: payload.id_token,
-      refreshToken: payload.refresh_token,
-    })
-    sessionStorage.removeItem(verifierKey)
-    sessionStorage.removeItem(stateKey)
-    return currentUrl.pathname
   }
 
   clearSession(): void {
@@ -218,6 +260,9 @@ export class OidcSessionClient {
     sessionStorage.removeItem(sessionKey)
     sessionStorage.removeItem(verifierKey)
     sessionStorage.removeItem(stateKey)
+    sessionStorage.removeItem(returnPathKey)
+    sessionStorage.setItem(loggedOutKey, 'true')
+    sessionStorage.setItem(reauthenticateKey, 'true')
   }
 
   async endSession(): Promise<URL> {
@@ -228,7 +273,7 @@ export class OidcSessionClient {
 
     if (session?.refreshToken) {
       try {
-        await fetch(`${issuer}/protocol/openid-connect/revoke`, {
+        await authRequest(`${issuer}/protocol/openid-connect/revoke`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
@@ -236,7 +281,7 @@ export class OidcSessionClient {
             token: session.refreshToken,
             token_type_hint: 'refresh_token',
           }),
-        })
+        }, async () => undefined, 1_500)
       } catch {
         // Navigation to the provider logout endpoint remains the authoritative SSO cleanup.
       }

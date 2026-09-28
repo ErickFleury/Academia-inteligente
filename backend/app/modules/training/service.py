@@ -68,6 +68,7 @@ class TrainingLifecycleService:
         created_by: str,
         origin: PlanOrigin,
         created_employee_id: UUID | None = None,
+        commit: bool = True,
     ) -> TrainingPlanVersion:
         self._lock_client(session, client_id)
         if self.find_proposal(session, client_id=client_id) is not None:
@@ -85,14 +86,18 @@ class TrainingLifecycleService:
                 created_by,
                 origin,
                 created_employee_id=created_employee_id,
+                commit=commit,
             )
         except IntegrityError:
+            if not commit:
+                raise  # The caller owns the transaction/savepoint.
             session.rollback()
             if self.find_proposal(session, client_id=client_id) is not None:
                 raise ActiveTrainingProposalExistsError from None
             raise
         except Exception:
-            session.rollback()
+            if commit:
+                session.rollback()
             raise
 
     def revise(
@@ -104,6 +109,7 @@ class TrainingLifecycleService:
         data: TrainingPlanVersionInput,
         actor: str,
         expected_revision: int,
+        commit: bool = True,
     ) -> TrainingPlanVersion:
         version = self._version(session, plan_id, version_number, lock=True)
         if version.status != "proposal":
@@ -115,7 +121,10 @@ class TrainingLifecycleService:
             self._replace_content(session, version, data)
             version.revision += 1
             version.updated_at = datetime.now(UTC)
-            session.commit()
+            if commit:
+                session.commit()
+            else:
+                session.flush()
         except Exception:
             session.rollback()
             raise

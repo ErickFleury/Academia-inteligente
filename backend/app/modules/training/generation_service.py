@@ -11,6 +11,7 @@ from app.integrations.ai import (
     TrainingGenerationProvider,
     training_generation_provider_from_environment,
 )
+from app.integrations.ai_diagnostics import record_retry
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.draft_service import (
     ClientOnboardingScope,
@@ -51,11 +52,13 @@ class InitialTrainingGenerationService:
         self._drafts = draft_service or OnboardingDraftService()
         self._lifecycle = lifecycle_service or TrainingLifecycleService()
 
-    def generate_for_subject(self, session: Session, subject: str):
+    def generate_for_subject(self, session: Session, subject: str, *, commit: bool = True):
         scope = self._drafts.resolve_client_scope(session, subject)
-        return self.generate_for_scope(session, scope)
+        return self.generate_for_scope(session, scope, commit=commit)
 
-    def generate_for_scope(self, session: Session, scope: ClientOnboardingScope):
+    def generate_for_scope(
+        self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
+    ):
         onboarding = session.scalar(
             select(Onboarding).where(Onboarding.client_id == scope.client_id)
         )
@@ -96,6 +99,7 @@ class InitialTrainingGenerationService:
                 data=proposal,
                 created_by="ai",
                 origin="ai",
+                commit=commit,
             )
         except ActiveTrainingProposalExistsError:
             # Another request created the sole draft while the provider was running.
@@ -112,6 +116,7 @@ class InitialTrainingGenerationService:
             try:
                 return operation()
             except AiProviderError as error:
+                record_retry(error.category, will_retry=not attempt and error.retryable)
                 if attempt or not error.retryable:
                     raise TrainingGenerationUnavailableError from None
         raise TrainingGenerationUnavailableError

@@ -86,6 +86,10 @@ palette, or page composition.
   clean deployment without an admin-console change. Verify it on phone,
   tablet, and desktop; decorative backgrounds may not obscure forms or cause
   horizontal scrolling.
+- **Login recovery:** expose Keycloak's native "Esqueceu sua senha?" link as an
+  outlined secondary action using the existing theme. Its email-entry page
+  explains the 15-minute lifetime and uses generic confirmation for all account
+  lookups. Password entry stays on Keycloak-hosted forms.
 - **ClientShell:** Reusable authenticated navigation, page header, main action,
   content width, responsive sections, and feedback. On medium and larger
   screens, client navigation is a persistent left sidebar so the active page
@@ -212,7 +216,12 @@ palette, or page composition.
   language and open into an accessible detail presentation for like count and
   comments. Clearly distinguish owner-only editing/moderation states from what
   another authenticated client may see. The existing green presence tag remains
-  visually and semantically separate from social-profile visibility. On phone,
+  visually and semantically separate from social-profile visibility and updates
+  from the saved presence response when consent changes. Follower/following
+  counts open an accessible dialog with permitted profile names, avatars and
+  profile links, bounded pagination, and loading/empty/error/retry states.
+  Private profile graphs remain restricted to their owner and accepted followers;
+  list entries respect each viewer's profile access. On phone,
   keep the picture, identity, visibility, follow action, and post navigation
   usable without dense desktop columns. Task 26 must not add a global feed or
   imitate another social network's visual identity.
@@ -314,3 +323,50 @@ The Keycloak `academia` theme is a later, cross-cutting authentication
 presentation integration. It does not retroactively change Task 08 or the
 authentication/provisioning task scopes, and it must preserve the existing OIDC
 and Keycloak security behavior.
+
+## Client/instructor visual refinement (2026-09-27)
+
+The client and instructor sidebar shells scope a presentation theme derived
+from the existing MUI theme. Preserve ink/chalk/coral, system fonts, original
+menus and area-switch behavior. Use consistent outline SVG icons, quiet tinted
+active navigation with a visible edge, a labeled area, a separated account
+footer, and a stable reading canvas. Scope typography/card/tab refinements to
+these areas so administrative and Keycloak surfaces retain their design.
+Page headers use a compact eyebrow, readable title, description and a divider;
+empty states use a quiet bordered surface. No decorative photographic assets,
+new destinations or application capabilities are introduced by this redesign.
+
+Client content keeps the existing actions in place: current and draft plans
+have distinct accent borders, exercise blocks keep sets/repetitions/rest
+together, and health forms use numbered section headers without changing
+completion gates. Chats use quiet sender-specific bubbles and a bordered
+sticky composer. Social cards group identity and time above content, with
+persistent actions below a divider; use shared outline icons instead of emoji.
+
+Instructor client search uses a bordered filter area followed by the client
+list and focused workspace on wide screens; they stack on smaller screens,
+retaining the existing focus-on-selection behavior. Show onboarding and training
+states as named chips and keep the responsible instructor visible. Plan lists
+retain their existing preview/edit/history controls with clearer selected
+surfaces, client identity, objective and grouped exercise details.
+
+## Administrative dashboard refinement (2026-09-27)
+
+AdminShell now reuses the same authenticated sidebar, typography, cards, icons
+and mobile drawer as the client/instructor areas. Its navigation contains the
+existing dashboard, facial access, equipment and moderation destinations. The
+administrative role has its own menu and does not inherit a client/instructor
+area switch. This extends the earlier visual refinement to administration;
+Keycloak presentation is unchanged.
+
+The dashboard groups the existing overview, client directory and instructor
+directory into accessible tabs. Existing aggregate indicators stay independent
+on failure. Weekly attendance uses proportional decorative bars alongside exact
+counts and week labels, retaining the distinction between entries and people.
+
+Administrative person directories use focused create/edit dialogs through
+`ManagementDialog`: full-screen on phones, bounded width on larger screens,
+scrollable fields and persistent actions. Keep feedback inside the active dialog,
+group identity/contact, address and access controls, and preserve existing facial
+verification gates. Closing a registration retains ordinary local field drafts
+but resets the staged facial proof; explain the recheck in the form.
