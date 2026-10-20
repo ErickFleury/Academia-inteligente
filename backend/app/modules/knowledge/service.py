@@ -149,6 +149,18 @@ def section_match(content, query):
     return len(section_terms(heading) & section_terms(query))
 
 
+def measurement_terms(query):
+    """Recall measurement-bearing passages when repeated headings dominate overlap."""
+    terms = section_terms(query)
+    if terms & {"minuto", "hora", "tempo", "duracao", "segundo"}:
+        return "minuto hora segundo"
+    if terms & {"frequencia", "freq", "dia", "semana", "vez", "veze"}:
+        return "dia semana vez"
+    if terms & {"carga", "quilo", "kg", "quilograma"}:
+        return "quilo kg quilograma"
+    return ""
+
+
 class KnowledgeService:
     def __init__(self, provider: EmbeddingProvider | None = None):
         self.provider = provider or HttpEmbeddingProvider()
@@ -365,6 +377,7 @@ class KnowledgeService:
             .join(ReferenceVersion)
             .where(ReferenceVersion.active.is_(True), ReferenceVersion.status == "active")
         )
+        focused = []
         if session.bind.dialect.name == "postgresql":
             document = func.to_tsvector(
                 text("'portuguese'::regconfig"), searchable_text(ReferencePassage.content)
@@ -381,6 +394,14 @@ class KnowledgeService:
                 .order_by(func.ts_rank_cd(document, terms).desc(), ReferencePassage.id)
                 .limit(20)
             ).all()
+            if units := measurement_terms(query):
+                unit_query = func.plainto_tsquery(text("'portuguese'::regconfig"), units)
+                unit_terms = func.replace(unit_query.cast(Text), " & ", " | ").cast(TSQUERY)
+                focused = session.scalars(
+                    base.where(document.op("@@")(terms), document.op("@@")(unit_terms))
+                    .order_by(func.ts_rank_cd(document, terms).desc(), ReferencePassage.id)
+                    .limit(20)
+                ).all()
         else:
             # SQLite is only the deterministic unit-test dialect; production uses PostgreSQL.
             terms = set(re.findall(r"\w+", query.casefold()))
@@ -426,10 +447,10 @@ class KnowledgeService:
         except AiProviderError:
             pass  # Explicit lexical-only degradation; never switch provider.
         scores, candidates = {}, {}
-        for ranking in (lexical, semantic):
+        for ranking, weight in ((lexical, 1), (semantic, 1), (focused, 2)):
             for rank, passage in enumerate(ranking, 1):
                 candidates[passage.id] = passage
-                scores[passage.id] = scores.get(passage.id, 0) + 1 / (60 + rank)
+                scores[passage.id] = scores.get(passage.id, 0) + weight / (60 + rank)
         # Heading matches boost applicability without filtering out conflicting
         # evidence from other sources or relying on inferred personal attributes.
         ranked = sorted(

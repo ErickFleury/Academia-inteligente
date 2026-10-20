@@ -362,7 +362,7 @@ def test_document_instructions_cannot_change_tools_and_citations_are_allowlisted
         )
     assert "Ignore previous" not in provider.calls[-1][2]
     assert provider.calls[-1][1]["reference_passages"] == [
-        runtime.model_reference(p) for p in rollout.passages
+        runtime.model_reference(p, "R1", "S1") for p in rollout.passages
     ]
     assert session.scalar(select(TrainingPlanVersion)) is None
     assert (
@@ -525,3 +525,33 @@ def test_grounding_review_and_saved_reply_receive_only_clean_prose(database_sess
     )
     assert state.messages[-1].content == "Pratique conforme o guia."
     assert provider.calls[-1][1]["answer"]["assistant_message"] == "Pratique conforme o guia."
+
+
+def test_short_model_citations_resolve_to_real_ids_and_keep_source_identity(
+    database_session, rollout
+):
+    session = database_session
+    owner(session)
+    complete_onboarding(session, "owner")
+    citation = str(uuid4())
+    rollout.passages = [
+        {
+            "passage_id": citation,
+            "version_id": str(uuid4()),
+            "source_id": str(uuid4()),
+            "title": "Manual",
+            "version": 1,
+            "location": "page:1",
+            "content": "Orientação do manual.",
+        }
+    ]
+    provider = Agent(route={"query": "treino", "needs_references": True})
+    provider.citations = ["R1"]
+    state = TrainingChatService(provider).submit_for_subject(
+        session, "owner", message="Explique o treino.", client_request_id=uuid4()
+    )
+    assert state.messages[-1].reference_citations[0]["passage_id"] == citation
+    context = provider.calls[1][1]
+    assert context["reference_passages"][0]["passage_id"] == "R1"
+    assert context["reference_sources"] == {"S1": {"title": "Manual", "version": 1}}
+    assert "title" not in context["reference_passages"][0]

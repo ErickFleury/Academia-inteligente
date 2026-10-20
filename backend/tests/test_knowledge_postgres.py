@@ -135,3 +135,26 @@ def test_requested_section_outranks_other_populations(postgres_sessions):
         refs = service.search(session, "minutos moderada vigorosa adultos semana")
         assert refs[0]["content"].startswith("Seção: Adultos\n")
         assert "Gestantes" not in refs[0]["content"]
+
+
+def test_duration_query_retrieves_measurements_not_repeated_population_headers(postgres_sessions):
+    provider = FakeEmbedding()
+    provider.fail = True  # Real PostgreSQL lexical behavior, without semantic luck.
+    service = KnowledgeService(provider)
+    # Import with embeddings first, then exercise lexical fallback.
+    provider.fail = False
+    body = (
+        "# Jovens de 6 a 17 anos\n"
+        + "".join(
+            f"## Nota {i}\nJovens de 6 a 17 anos: atividade física para jovens de 6 a 17 anos.\n"
+            for i in range(25)
+        )
+        + "## Duração\nPratique 60 minutos ou mais por dia."
+    )
+    version = upload(postgres_sessions, service, body=body)
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    provider.fail = True
+    with postgres_sessions() as session:
+        refs = service.search(session, "minutos atividade física por dia jovens 6 a 17 anos")
+        assert any("60 minutos" in r["content"] for r in refs)
