@@ -154,6 +154,45 @@ comma-separated `AI_ORCHESTRATION_CLIENT_IDS` allowlist of local Client UUIDs.
 Only a deliberate broader rollout should use `*`. Disabling the flag restores
 existing conversational workflows and preserves reference data and memory controls.
 
+For a per-client RAG test, activate a reference at `/admin/referencias`, then set
+these values in the ignored local `.env`:
+
+```dotenv
+AI_ORCHESTRATION_ENABLED=true
+AI_ORCHESTRATION_CLIENT_IDS=<test-client-uuid>
+```
+
+Use the Client `id` returned by the authenticated administrator `/clients` API,
+not its Account, Person or Keycloak identifier. Multiple Client IDs are comma
+separated. Recreate only the backend with the same Compose configuration:
+
+```bash
+docker compose up -d --no-deps --force-recreate backend
+```
+
+Sign in as the selected client and ask `/assistente` a training/equipment question
+covered by an active reference. Substantive reference-based answers display
+supporting sources; ordinary conversation and onboarding collection need not
+retrieve documents. To stop the test, set `AI_ORCHESTRATION_ENABLED=false` and
+recreate the backend again. This opt-in does not establish quality acceptance.
+
+When using the LAN HTTPS/GPU setup, persist its file selection in `.env` so later
+commands preserve the same configuration:
+
+```dotenv
+COMPOSE_FILE=docker-compose.yml:docker-compose.lan-https.yml:docker-compose.gpu.yml
+COMPOSE_PROFILES=biometrics
+KEYCLOAK_HTTP_PORT=18080
+```
+
+The HTTP port override avoids another application's port 8080; Keycloak's HTTPS
+port remains 8443 and its Docker-internal HTTP port remains 8080. Keep LAN origins,
+Keycloak redirect/logout URLs and certificate IP names aligned with the host's
+current address. `DEV_CERT_DIR` can point to ignored `.deployment/lan-certificates`
+for persistence across reboots. A locally generated certificate must be trusted
+on each test browser/device for both the frontend (5173) and login service (8443).
+Enable the biometrics profile only where the existing facial-access pilot is used.
+
 For provisioned offline verification, add `-f docker-compose.offline.yml` after
 the base Compose file and optional GPU override. It removes the paid credential,
 forces local adapters, blocks outbound routing, disables ViaCEP and suppresses
