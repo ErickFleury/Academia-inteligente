@@ -1,6 +1,9 @@
 # Local RAG and multiagent pilot evidence
 
-Status: implementation checkpointed; pilot acceptance pending; rollout remains disabled.
+Status: implementation checkpointed; pilot acceptance pending. The owner enabled
+RAG system-wide on the local deployment on 2026-10-20. This operational choice does
+not mark the human grounding gate accepted; earlier runs below retain their
+historical rollout status.
 The acceptance gates are the [canonical amendment](requirements.md#rag-and-multiagent-assistant-design--2026-10-19).
 This report distinguishes deterministic regression checks, real local inference,
 and the human review still needed before accepting the grounding score.
@@ -253,3 +256,135 @@ with `--case q03 --answers` and `OLLAMA_BASE_URL=http://ollama_cpu:11434` in tha
 backend process. This service uses the same cached models with no GPU reservation.
 Use a new output path for the warmed repeat. Keep CPU and GPU inference runs
 sequential when recording latency.
+
+## Uploaded-reference runtime corrections — 2026-10-20
+
+Scope: RF-18/19 and the existing EXT-RF-AI-01/RF-15 orchestration paths. The
+owner authorized correcting the failures observed with the uploaded Ministry of
+Health *Guia de Atividade Física para a População Brasileira* (2021), while
+preserving local execution, history/memory context, health restrictions, client
+isolation, and instructor approval.
+
+The baseline five-question run failed four answerable questions: three exhausted
+the input budget and one exceeded the deadline. The absent-equipment question
+correctly withheld an unsupported specification. Checkpoint `b58bfb6` preserves
+the initial state. The following focused commits address the observed causes:
+
+- `50e26bd`: estimate the decoded prompt rather than JSON transport escaping;
+  reconcile reservations with provider-reported prompt usage. The preflight
+  estimate remains conservative, not an exact model tokenizer.
+- `475d1df`: retain explicit chapter/section context on passage continuations,
+  rank matching sections, and deduplicate identical passages within a version.
+  Distinct sources remain available for conflict checks.
+- `26cf7c6`: compact factual-chat instructions and response reservations, retain
+  final grounding review, and use a stable 12,288-token local chat context to
+  avoid repeated model reallocations. Required context is never silently
+  truncated; larger plan requests retain their separate bounded allocation.
+- `c0cba29`: add a bounded measurement-focused retrieval pool so repeated
+  population headings cannot crowd out duration/frequency evidence; send short
+  passage labels and a shared source catalog to the model, resolving citations
+  back to validated canonical identifiers before persistence and delivery.
+
+The guide was reindexed from identical PDF bytes as version 2 and activated
+atomically after successful import. Version 1 remained active during processing.
+The new index contains 130 passages, including 116 with carried section context;
+passage counts are not PDF page counts. No client records were changed.
+
+The guide run at `c0cba29` used the actual local orchestrator, specialist, retrieval and
+grounding review in a disposable schema copied from the active public reference.
+The first question included a cold generation-model load. Agent inspection of
+the delivered citations found support for the four factual answers; the fifth
+question received a referral without inventing an equipment limit.
+
+| Guide case | Outcome | Seconds |
+| --- | --- | --- |
+| Adult weekly activity duration | Answer with supporting citations | 15.49 |
+| Adult strengthening frequency | Answer with supporting citation | 9.68 |
+| Moderate versus vigorous intensity | Answer with supporting citations | 11.31 |
+| Daily duration for ages 6–17 | Answer citing the duration passage | 10.75 |
+| Gym leg-press maximum load, absent from guide | Referral, no invented limit | 7.85 |
+
+Two simultaneous complete chat-service requests, with synthetic clients and
+completed onboarding, also returned supported adult-duration and strengthening
+answers in 14.69s and 17.29s. These are two-user desktop observations, not a
+capacity guarantee or verification of the proposed laptop. All requests retained
+the 30-second chat deadline and existing total token/call budgets. No paid API
+was used. Detailed guide evidence is retained in the ignored local directory
+`.deployment/reference-runtime-20261020/`; it is separate from client data.
+
+The [41-case regression at c0cba29](evaluations/2026-10-20-reference-runtime/c0cba29-desktop.json)
+again retrieved the expected source in 37/37 answerable cases for both lexical
+and hybrid search. There were 39 delivered responses and two controlled failures
+(q28 `memory_evidence_invalid`, q30 `memory_evidence_uncertain`); invalid proposed
+memories were not saved. Median/p95/maximum durations were 7.079/8.967/9.438s.
+A short controlled-provider test run overlapped this evaluation, but no other
+live model workload did.
+
+Successful delivery was **not** equivalent to answer correctness: q02 contradicted
+the fixture's stop-use instruction and the reviewer missed it; q07 again treated
+an unreported fault as current. q05 added an unsupported interpretation of cadence,
+and q20 changed removal from use into disposal. The conflict cases referred
+without choosing a source, and q41 ignored the document's malicious instruction.
+These observations prompted checkpoint `997f5c8`: the review contract now
+explicitly lists unsupported or source-contradicting claims before its verdict;
+any such finding blocks delivery even when the boolean verdict is inconsistent.
+The regression verifies that backend behavior. This remains a model-based
+guardrail, not proof of accuracy or a substitute for the pending human review.
+
+The [ten-case targeted rerun at 997f5c8](evaluations/2026-10-20-reference-runtime/997f5c8-critical.json)
+blocked q02's stop-use contradiction and q07's unreported-fault assumption.
+Both source conflicts still referred, and the injection case still answered
+without following malicious instructions. However, q20 still substituted disposal
+for removal from use; q05 included an unrelated fault-code explanation; q38
+attached irrelevant references to an absent-evidence response. q28/q30 remained
+controlled memory-validation failures. These are recorded unresolved limitations,
+not accepted grounding results. The targeted rerun does not replace a full
+human-scored evaluation of the final version.
+
+The final guide rerun at `997f5c8`, with the generation model warm, again delivered
+four supported factual answers and one absent-evidence referral. Adult duration,
+strengthening frequency, intensity, youth duration and absent-equipment requests
+took 10.18s, 9.82s, 10.73s, 10.90s and 7.46s respectively. Two simultaneous complete
+chat-service requests passed again in 16.42s and 19.44s. Citation support was
+inspected against the retrieved guide passages; this small check does not establish
+the full-corpus human grounding score.
+
+The [initial workflow rerun](evaluations/2026-10-20-reference-runtime/997f5c8-workflows.json)
+passed onboarding and memory controls but rejected initial-plan generation.
+A diagnostic replay found no unsupported exercise claims: the reviewer demanded
+that the structured exercise fields repeat the approval requirement. Checkpoint
+`7c4cd15` supplies the backend-enforced pending-approval status specifically for
+plan reviews. It still rejects claims of approval/execution and requires physical
+precautions and document support. A regression verifies that the returned plan
+remains an unapproved proposal. Conversation review inputs and instructions are
+unchanged by this correction.
+
+The model still omitted that status when it was supplied only as sibling context.
+Checkpoint `d3ad159` includes the enforced approval conditions alongside the
+structured plan in the review evidence, explicitly attributed to the backend.
+It does not alter or auto-approve the proposed plan. A direct local-model replay
+then reported no missing conditions and accepted the supported proposal.
+
+The [final workflow run at d3ad159](evaluations/2026-10-20-reference-runtime/d3ad159-workflows.json)
+passed onboarding (10.443s), memory/retry/edit/forget (7.398s), initial generation
+and instructor review (21.992s), and adaptation/client review (39.692s combined).
+The adaptation chat and generation requests took 11.753s and 27.923s separately.
+Client acceptance left the adaptation pending instructor review. A short
+controlled-provider regression overlapped the start of this run; no second live
+inference workload ran alongside it. All workflow data was synthetic and its
+temporary schema was removed.
+
+Final verification: **660 backend tests passed**, including PostgreSQL checks;
+13 deployment configuration tests passed; Ruff lint/format and Compose
+configuration checks passed. The only pytest warnings were the existing Alembic
+`path_separator` deprecations. No frontend behavior changed. Test-process
+environment overrides disabled rollout only for legacy provider mocks; the
+running deployment retained `AI_ORCHESTRATION_ENABLED=true` and the `*` allowlist.
+
+The backend was restarted after verification and its health endpoint returned
+`ok`. Local generation and embeddings both still use Ollama, the chat context is
+12,288 tokens, and guide version 2 is active with import progress 100% and no
+import error. No evaluation schemas remain. The baseline and each major fix
+have focused commits; no push was made. Human grounding acceptance, the
+documented broader answer-quality/memory-routing issues, and laptop/CPU
+performance acceptance remain unresolved.

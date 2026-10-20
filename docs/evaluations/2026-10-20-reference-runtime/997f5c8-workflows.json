@@ -1,0 +1,33 @@
+{
+  "started_at": "2026-10-20T04:22:51.206331+00:00",
+  "synthetic_only": true,
+  "steps": [
+    {
+      "step": "onboarding",
+      "status": "success",
+      "result": {
+        "reply": "Atualizei objetivo de treino. Como você descreve sua experiência: nenhuma, iniciante, intermediária ou avançada?",
+        "completion_ready": false
+      },
+      "seconds": 9.66
+    },
+    {
+      "step": "training_chat_memory_retry_forget",
+      "status": "success",
+      "result": {
+        "reply": "Entendi, você prefere treinar de manhã. Isso é ótimo para manter a rotina.",
+        "retry_and_memory_controls": "passed"
+      },
+      "seconds": 6.42
+    },
+    {
+      "step": "initial_plan_and_instructor_review",
+      "status": "failure",
+      "error_type": "AssistantError",
+      "error": "assistant_clarification_required",
+      "seconds": 22.358
+    }
+  ],
+  "retained_synthetic_messages": 2,
+  "completed_at": "2026-10-20T04:23:30.020572+00:00"
+}

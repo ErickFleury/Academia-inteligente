@@ -1,0 +1,56 @@
+{
+  "started_at": "2026-10-20T04:28:54.956953+00:00",
+  "synthetic_only": true,
+  "steps": [
+    {
+      "step": "onboarding",
+      "status": "success",
+      "result": {
+        "reply": "Atualizei objetivo de treino. Como você descreve sua experiência: nenhuma, iniciante, intermediária ou avançada?",
+        "completion_ready": false
+      },
+      "seconds": 10.443
+    },
+    {
+      "step": "training_chat_memory_retry_forget",
+      "status": "success",
+      "result": {
+        "reply": "Entendi, você prefere treinar de manhã. Qual é a duração do seu treino preferido?",
+        "retry_and_memory_controls": "passed"
+      },
+      "seconds": 7.398
+    },
+    {
+      "step": "initial_plan_and_instructor_review",
+      "status": "success",
+      "result": {
+        "name": "Plano Inicial de Treino para Ganho de Força",
+        "status": "proposal",
+        "citations": [
+          {
+            "passage_id": "720d5fba-6069-4c8a-9a3d-a5681cd00339",
+            "version_id": "23f5f6a5-a288-4b32-9a40-c61f2befa3cf",
+            "source_id": "9611ead3-2f96-4d34-b6b7-89f4dca85dff",
+            "title": "Protocolo sintético do piloto de software",
+            "version": 1,
+            "location": "text;passage:1"
+          }
+        ]
+      },
+      "seconds": 21.992
+    },
+    {
+      "step": "adaptation_and_client_review",
+      "status": "success",
+      "result": {
+        "explanation": "A solicitação do cliente foi para aumentar o descanso entre as séries para 90 segundos. Com base no plano inicial de treino para ganho de força, que inclui agachamento sem carga e remada com elástico, a proposta de ajuste do descanso foi formulada. A alteração foi comunicada ao instrutor para aprovação, conforme exigido.",
+        "status": "pending_instructor_review",
+        "chat_request_seconds": 11.753,
+        "adaptation_request_seconds": 27.923
+      },
+      "seconds": 39.692
+    }
+  ],
+  "retained_synthetic_messages": 4,
+  "completed_at": "2026-10-20T04:30:15.896499+00:00"
+}
