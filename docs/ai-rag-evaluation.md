@@ -419,3 +419,51 @@ deprecation warnings remained. After restart the backend health endpoint returne
 `ok`, RAG remained enabled system-wide, and no replay schemas remained. The
 diagnostic harness, containing no captured client values, is retained only under
 the ignored `.deployment/debug/onboarding-memory-20261020/` directory.
+
+## Post-onboarding chat capacity and first-open race — 2026-10-20
+
+The reported training-chat HTTP 503 was reproduced from the test account in a
+database transaction explicitly marked read-only. The router succeeded, but
+the specialist was rejected before inference with `context_capacity`. Its
+UTF-8 byte reservation plus overhead and output allowance was 12,359 against
+the fixed 12,288-token window. A byte upper bound was incorrectly being treated
+as the actual model token count. No private message or health values are
+included in this report.
+
+Baseline `c83380b` precedes both fixes. Adapter correction `2c6ca6d` retains
+conservative aggregate usage reservations, actual-usage reconciliation, output
+ceilings and deadlines. It delegates context admission to the pinned Ollama
+0.34.1 tokenizer, explicitly disabling both prompt truncation and context
+shifting. The chat window stays fixed; required context is sent intact. Known
+capacity errors become non-retryable controlled failures, and incomplete output
+is rejected. Error bodies are bounded and never logged. These controls are
+defined in the pinned [Ollama request types](https://github.com/ollama/ollama/blob/v0.34.1/api/types.go)
+and [runner implementation](https://github.com/ollama/ollama/blob/v0.34.1/llm/llama_server.go).
+This behavior depends on the pinned supported runtime; older versions that
+ignore these flags are not validated.
+
+A live synthetic overflow probe was rejected with HTTP 400: 15,017 actual
+prompt tokens against the 12,288-token window. The original read-only replay
+then completed retrieval, generation and review in 14.23s. A second replay
+reported 3,054 specialist prompt tokens. A further replay added six synthetic
+recent turns with timestamps after the memory cutoff: all six survived context
+preparation, the specialist used 3,419 prompt tokens, and the run completed in
+12.25s with one citation. These checks saved no replies, memories or plans.
+The diagnostic harness is retained under the ignored
+`.deployment/debug/chat-capacity-20261020/` directory.
+
+The nearby first-open HTTP 500 had a separate cause: concurrent readers both
+attempted to insert the unique client conversation. A PostgreSQL regression
+observed the competing transaction blocked before releasing the first insert,
+and reproduced the unique-constraint failure. Correction `6111c22` acquires
+the existing client lock before looking up or creating the conversation.
+Both requests now resolve to the same row.
+
+Verification: all **677 backend tests passed**, including PostgreSQL checks;
+Ruff lint, format and Git whitespace checks passed. Only the existing Alembic
+deprecation warnings remained. Runtime replays used the local provider and
+the account's full required health context. Broader human grounding acceptance
+and laptop/CPU performance acceptance remain outside this correction.
+After restart the backend health endpoint returned `ok`;
+`AI_ORCHESTRATION_ENABLED=true`, the client allowlist `*`, provider `ollama`
+and the 12,288-token chat window were verified in the running container.
