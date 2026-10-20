@@ -209,3 +209,49 @@ def test_reference_management_requires_admin(setup, role, expected):
             "test", "test@example.test", (role,)
         )
         assert request(app, "GET", "/ai/references")[0] == expected
+
+
+def test_pdf_chapter_context_survives_page_and_passage_boundaries():
+    pages = [
+        {"location": "page:1", "text": "ATIVIDADE FÍSICA PARA ADULTOS\n4\nCAPÍTULO\nIntrodução."},
+        {
+            "location": "page:2",
+            "text": "Quanto tempo?\n" + "Pratique ao menos duas vezes por semana. " * 80,
+        },
+        {
+            "location": "page:3",
+            "text": "ATIVIDADE FÍSICA PARA IDOSOS\n5\nCAPÍTULO\nOutra orientação.",
+        },
+    ]
+    chunks = list(passages(pages))
+    continuation = [p[2] for p in chunks if p[1].startswith("page:2;")]
+    assert len(continuation) > 1
+    assert all(p.startswith("Seção: ATIVIDADE FÍSICA PARA ADULTOS\n") for p in continuation)
+    assert chunks[-1][2].startswith("Seção: ATIVIDADE FÍSICA PARA IDOSOS\n")
+    assert all(len(p[2]) <= 1000 for p in chunks)
+
+
+def test_markdown_sections_are_not_carried_into_the_next_section():
+    chunks = list(
+        passages([{"location": "text", "text": "# Adultos\nDuas vezes.\n# Idosos\nEquilíbrio."}])
+    )
+    assert any(p[2].startswith("Seção: Adultos\n") and "Duas vezes." in p[2] for p in chunks)
+    assert any(p[2].startswith("Seção: Idosos\n") and "Equilíbrio." in p[2] for p in chunks)
+    assert not any("Duas vezes." in p[2] and "Equilíbrio." in p[2] for p in chunks)
+
+
+def test_nested_markdown_retains_population_and_repeated_text_keeps_conflicts(setup):
+    sessions, service, _ = setup
+    body = "# Adultos\n## Frequência\nDuas vezes por semana."
+    chunks = list(passages([{"location": "text", "text": body}]))
+    assert chunks[-1][2].startswith("Seção: Adultos / Frequência\n")
+    first = upload(sessions, service, body="# Adultos\nDuas vezes.\n# Adultos\nDuas vezes.")
+    service.import_next(sessions)
+    activate(sessions, service, first)
+    other = upload(sessions, service, body="# Adultos\nTrês vezes.")
+    service.import_next(sessions)
+    activate(sessions, service, other)
+    with sessions() as session:
+        refs = service.search(session, "adultos vezes")
+        assert len(refs) == 2
+        assert len({r["source_id"] for r in refs}) == 2

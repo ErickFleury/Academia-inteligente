@@ -117,3 +117,21 @@ def test_migration_upgrade_and_downgrade_preserve_base_database(monkeypatch):
         with admin.begin() as connection:
             connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
         admin.dispose()
+
+
+def test_requested_section_outranks_other_populations(postgres_sessions):
+    provider = FakeEmbedding()
+    service = KnowledgeService(provider)
+    # Identical vocabulary makes the heading the deciding evidence of applicability.
+    body = (
+        "# Gestantes\nMinutos moderada vigorosa semana. Consulte orientação específica.\n"
+        "# Adultos\nMinutos moderada vigorosa semana. Orientação para a população solicitada.\n"
+        "# Idosos\nMinutos moderada vigorosa semana. Consulte orientação específica."
+    )
+    version = upload(postgres_sessions, service, body=body)
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    with postgres_sessions() as session:
+        refs = service.search(session, "minutos moderada vigorosa adultos semana")
+        assert refs[0]["content"].startswith("Seção: Adultos\n")
+        assert "Gestantes" not in refs[0]["content"]

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
+from collections import Counter
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -44,14 +46,55 @@ def catalog_lock(session: Session):
         session.execute(text("SELECT pg_advisory_xact_lock(1421407001)"))
 
 
-def passages(pages: list[dict[str, str]]):
-    """Bound UTF-8 bytes below the embedding limit, retaining text without truncation."""
-    position = 0
+def section_blocks(pages):
+    """Carry explicit chapter/Markdown headings, never infer client applicability."""
+    repeated = Counter(line.strip() for page in pages for line in set(page["text"].splitlines()))
+    section = ""
+    markdown_headings = {}
     for page in pages:
-        remaining = page["text"].strip()
+        lines = page["text"].splitlines()
+        # PDF chapters often put the chapter marker below the heading. Ignore
+        # tables of contents and repeating running headers.
+        chapter = any(
+            re.fullmatch(r"\s*(?:\d+\s*)?CAP[IÍ]TULO(?:\s+\d+)?\s*", line) for line in lines
+        )
+        if chapter and not any("___" in line for line in lines):
+            candidates = [
+                line.strip()
+                for line in lines
+                if line.strip().isupper()
+                and 12 <= len(line.strip()) <= 140
+                and repeated[line.strip()] == 1
+                and not line.strip().endswith(("?", ":"))
+                and len(line.split()) >= 3
+            ]
+            # Include a wrapped heading such as "E MULHERES NO PÓS-PARTO".
+            section = " ".join(candidates[:2])[:280] if candidates else ""
+        block = []
+        for line in lines:
+            heading = re.match(r"^(#{1,6})\s+(.+?)\s*#*\s*$", line)
+            if heading:
+                if block:
+                    yield page["location"], section, "\n".join(block)
+                level = len(heading[1])
+                markdown_headings = {k: v for k, v in markdown_headings.items() if k < level}
+                markdown_headings[level] = heading[2]
+                section = " / ".join(markdown_headings.values())[:280]
+                block = []
+            block.append(line)
+        if block:
+            yield page["location"], section, "\n".join(block)
+
+
+def passages(pages: list[dict[str, str]]):
+    """Keep section provenance within each bounded passage, including continuation pages."""
+    position = 0
+    for location, section, block in section_blocks(pages):
+        prefix = f"Seção: {section}\n" if section else ""
+        remaining = block.strip()
         while remaining:
             # At most 1000 Unicode characters / 4000 UTF-8 bytes plus prefix.
-            end = min(len(remaining), 1000)
+            end = min(len(remaining), 1000 - len(prefix))
             if end < len(remaining):
                 boundary = max(remaining.rfind("\n", 400, end), remaining.rfind(". ", 400, end))
                 if boundary > 0:
@@ -59,7 +102,47 @@ def passages(pages: list[dict[str, str]]):
             content, remaining = remaining[:end].strip(), remaining[end:].lstrip()
             if content:
                 position += 1
-                yield position, f"{page['location']};passage:{position}", content
+                yield position, f"{location};passage:{position}", prefix + content
+
+
+def section_terms(value):
+    normalized = unicodedata.normalize("NFKD", value.casefold())
+    words = set(
+        re.findall(r"[a-z0-9]+", "".join(c for c in normalized if not unicodedata.combining(c)))
+    )
+    return words - {
+        "a",
+        "as",
+        "o",
+        "os",
+        "de",
+        "da",
+        "das",
+        "do",
+        "dos",
+        "e",
+        "em",
+        "para",
+        "por",
+        "com",
+        "que",
+        "qual",
+        "quais",
+        "como",
+        "segundo",
+        "guia",
+        "atividade",
+        "atividades",
+        "fisica",
+        "fisicas",
+    }
+
+
+def section_match(content, query):
+    if not content.startswith("Seção: "):
+        return 0
+    heading = content.split("\n", 1)[0][7:]
+    return len(section_terms(heading) & section_terms(query))
 
 
 class KnowledgeService:
@@ -343,7 +426,24 @@ class KnowledgeService:
             for rank, passage in enumerate(ranking, 1):
                 candidates[passage.id] = passage
                 scores[passage.id] = scores.get(passage.id, 0) + 1 / (60 + rank)
-        selected = sorted(scores, key=lambda key: (-scores[key], str(key)))[:limit]
+        # Heading matches boost applicability without filtering out conflicting
+        # evidence from other sources or relying on inferred personal attributes.
+        ranked = sorted(
+            scores,
+            key=lambda key: (
+                -(scores[key] * (1 + 0.5 * min(3, section_match(candidates[key].content, query)))),
+                str(key),
+            ),
+        )
+        selected, seen = [], set()
+        for key in ranked:
+            passage = candidates[key]
+            identity = (passage.version_id, " ".join(passage.content.split()))
+            if identity not in seen:
+                selected.append(key)
+                seen.add(identity)
+            if len(selected) >= limit:
+                break
         results = []
         for key in selected:
             passage = candidates[key]
