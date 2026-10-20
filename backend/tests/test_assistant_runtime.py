@@ -559,3 +559,31 @@ def test_short_model_citations_resolve_to_real_ids_and_keep_source_identity(
     assert context["reference_passages"][0]["passage_id"] == "R1"
     assert context["reference_sources"] == {"S1": {"title": "Manual", "version": 1}}
     assert "title" not in context["reference_passages"][0]
+
+
+def test_plan_review_receives_backend_proposal_status_without_approving_plan(
+    database_session, rollout
+):
+    session = database_session
+    owner(session)
+    complete_onboarding(session, "owner")
+    rollout.passages = [
+        {
+            "passage_id": str(uuid4()),
+            "version_id": str(uuid4()),
+            "source_id": str(uuid4()),
+            "title": "Manual",
+            "version": 1,
+            "location": "text",
+            "content": "Toda proposta exige aprovação do instrutor.",
+        }
+    ]
+    provider = Agent(route={"query": "treino", "needs_references": True})
+    provider.citations = ["R1"]
+    result = InitialTrainingGenerationService(provider=provider).generate_for_subject(
+        session, "owner"
+    )
+    review = provider.calls[-1][1]
+    assert review["delivery_kind"] == "plan_proposal_pending_approval"
+    assert result.status == "proposal"
+    assert result.approved_by is None

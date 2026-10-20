@@ -514,8 +514,10 @@ class AssistantRun:
         if self.references and (
             self.citations or self.route.needs_references or output.grounding == "references"
         ):
+            proposal = self.role in {"initial_plan", "adaptation"}
             review = self._call(
                 {
+                    **({"delivery_kind": "plan_proposal_pending_approval"} if proposal else {}),
                     "question": self.context.get("current_user_message")
                     or self.context.get("reason", "Gerar proposta confirmada"),
                     "answer": output.result.model_dump(mode="json"),
@@ -525,7 +527,17 @@ class AssistantRun:
                         [p for p in self.references if p["passage_id"] not in canonical_ids]
                     ),
                 },
-                _REVIEW,
+                _REVIEW
+                + (
+                    "\nO backend informa que esta saída é somente uma proposta pendente "
+                    "de aprovação, não um treino autorizado para execução. As confirmações "
+                    "e aprovações aplicáveis são obrigatórias no fluxo do backend. Não exija "
+                    "repetir esse status em campos de exercícios que não possuem tal campo. "
+                    "Rejeite qualquer declaração de que já está aprovado ou pode ser executado. "
+                    "Continue exigindo todas as condições físicas, precauções e apoio documental."
+                    if proposal
+                    else ""
+                ),
                 strict_schema(GroundingReview.model_json_schema()),
                 GroundingReview,
                 "orchestrator",
