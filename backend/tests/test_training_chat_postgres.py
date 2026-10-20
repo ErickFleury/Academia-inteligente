@@ -2,22 +2,63 @@
 
 import os
 from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
 from threading import Barrier
+from time import monotonic, sleep
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, text
 from test_training_chat import FakeProvider, complete_onboarding, create_client
 from test_training_chat_generation import service_for
 from test_training_review_postgres import sessions as sessions
 
 from app.integrations.ai import AiTrainingChatResponse
 from app.modules.training.chat_service import TrainingChatService
-from app.modules.training.models import TrainingAiMessage, TrainingPlanVersion
+from app.modules.training.models import (
+    TrainingAiConversation,
+    TrainingAiMessage,
+    TrainingPlanVersion,
+)
 
 pytestmark = pytest.mark.skipif(
     os.getenv("TEST_POSTGRES") != "1", reason="Isolated PostgreSQL opt-in"
 )
+
+
+def test_concurrent_first_chat_reads_reuse_the_same_conversation(sessions):
+    with sessions() as session:
+        client_id = create_client(session, "ada", "ada@example.test").id
+    worker_pid = Queue()
+
+    def open_chat():
+        with sessions() as session:
+            worker_pid.put(session.scalar(text("select pg_backend_pid()")))
+            return TrainingChatService._conversation(session, client_id).id
+
+    with ThreadPoolExecutor(max_workers=1) as pool, sessions() as first:
+        conversation = TrainingChatService._conversation(first, client_id, commit=False)
+        future = pool.submit(open_chat)
+        pid = worker_pid.get(timeout=5)
+        # Observe an actual blocked DB statement before releasing the first
+        # creation, so the test cannot pass merely because threads ran in order.
+        with sessions() as observer:
+            deadline = monotonic() + 3
+            while monotonic() < deadline:
+                waiting = observer.scalar(
+                    text("select wait_event_type from pg_stat_activity where pid = :pid"),
+                    {"pid": pid},
+                )
+                observer.rollback()
+                if waiting == "Lock":
+                    break
+                sleep(0.02)
+            else:
+                pytest.fail("second conversation creation did not wait for the first")
+        first.commit()
+        assert future.result(timeout=5) == conversation.id
+    with sessions() as session:
+        assert len(session.scalars(select(TrainingAiConversation)).all()) == 1
 
 
 @pytest.mark.parametrize("duplicate", [False, True])

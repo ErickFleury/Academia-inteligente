@@ -634,6 +634,9 @@ class TrainingChatService:
     def _conversation(
         session: Session, client_id: UUID, *, commit: bool = True
     ) -> TrainingAiConversation:
+        # First reads can create a conversation too. Use the same client lock
+        # as message submission before checking the unique conversation row.
+        session.scalar(select(Client.id).where(Client.id == client_id).with_for_update())
         conversation = session.scalar(
             select(TrainingAiConversation).where(TrainingAiConversation.client_id == client_id)
         )
