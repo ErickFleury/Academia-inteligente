@@ -38,6 +38,7 @@ def test_local_query_uses_prefix_no_truncation_and_remaining_timeout(monkeypatch
     body = json.loads(request.data)
     assert body["input"] == ["task: search result | query: treino"]
     assert body["truncate"] is False
+    assert body["options"] == {"num_gpu": 0}
     assert request.full_url == "http://ollama:11434/api/embed"
     assert request.get_header("Authorization") is None
     assert timeout == 2
@@ -104,6 +105,25 @@ def test_exhausted_deadline_never_starts_network_call(monkeypatch):
     monkeypatch.setattr(embeddings, "urlopen", lambda *a, **k: pytest.fail("network called"))
     with pytest.raises(AiProviderError, match="budget_exhausted"):
         HttpEmbeddingProvider().embed(["topic"], purpose="query", timeout=0)
+
+
+def test_slow_response_read_has_a_total_deadline(monkeypatch):
+    from threading import Event
+
+    release = Event()
+
+    def slow_read(*args, **kwargs):
+        assert release.wait(2)
+        return BytesIO(json.dumps({"model": "embeddinggemma", "embeddings": [[1, 2]]}).encode())
+
+    monkeypatch.setattr(embeddings, "urlopen", slow_read)
+    try:
+        with pytest.raises(AiProviderError, match="timeout_or_network"):
+            HttpEmbeddingProvider(EmbeddingConfig(dimensions=2)).embed(
+                ["topic"], purpose="query", timeout=0.05
+            )
+    finally:
+        release.set()
 
 
 def test_hosted_selection_without_credentials_is_controlled(monkeypatch):

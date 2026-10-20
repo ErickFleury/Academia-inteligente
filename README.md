@@ -94,6 +94,7 @@ OLLAMA_BASE_URL=http://ollama:11434
 OLLAMA_MODEL=qwen3:8b
 OLLAMA_TIMEOUT_SECONDS=120
 AI_EMBEDDING_PROVIDER=ollama
+AI_EMBEDDING_GPU_LAYERS=0
 AI_EMBEDDING_MODEL=embeddinggemma
 AI_EMBEDDING_DIMENSIONS=768
 AI_ORCHESTRATION_ENABLED=false
@@ -127,6 +128,41 @@ OpenAI is optional and explicitly configured: set `AI_PROVIDER=openai` for
 generation and/or `AI_EMBEDDING_PROVIDER=openai`,
 `AI_EMBEDDING_MODEL=text-embedding-3-small`, `AI_EMBEDDING_DIMENSIONS=1536` for
 embeddings, plus an `OPENAI_API_KEY`. There is no automatic hosted fallback.
+
+The small embedding model uses system RAM by default, leaving GPU memory for
+generation. `AI_EMBEDDING_GPU_LAYERS=-1` opts into automatic GPU offload; benchmark
+before changing it on 8 GB cards. Structured agent calls reuse a 12K context
+window when sufficient and grow it within `OLLAMA_CONTEXT_TOKENS` when needed.
+Required restrictions are never truncated to fit. These are resource settings,
+not a guarantee of laptop performance.
+
+Administrators manage uploaded references at `/admin/referencias`: upload a
+text-based PDF, Markdown or UTF-8 text document, inspect the extraction preview,
+then explicitly activate its version. Replacing an active version is atomic;
+changing embedding configuration requires reimporting and activating compatible
+versions. Scanned PDFs need text extraction outside this initial workflow.
+Clients inspect, edit and forget their compact facts at `/assistente/memoria`,
+including while AI is unavailable. Existing transcript expiry still applies.
+
+The pilot ceilings can be lowered through `AI_REFERENCE_MAX_ACTIVE_DOCUMENTS`
+(100), `AI_REFERENCE_MAX_UPLOAD_MIB` (20), `AI_REFERENCE_MAX_PDF_PAGES` (500), and
+`AI_REFERENCE_MAX_CHARACTERS` (2000000). Larger capacity needs separate validation.
+
+Keep `AI_ORCHESTRATION_ENABLED=false` during deployment validation. After reviewing
+the [pilot evidence](docs/ai-rag-evaluation.md), enable it with an explicit
+comma-separated `AI_ORCHESTRATION_CLIENT_IDS` allowlist of local Client UUIDs.
+Only a deliberate broader rollout should use `*`. Disabling the flag restores
+existing conversational workflows and preserves reference data and memory controls.
+
+For provisioned offline verification, add `-f docker-compose.offline.yml` after
+the base Compose file and optional GPU override. It removes the paid credential,
+forces local adapters, blocks outbound routing, disables ViaCEP and suppresses
+external equipment images. Use local image uploads and manual address entry.
+Keycloak and Mailpit run locally; internet inbox delivery is outside offline mode.
+On Docker versions that do not publish ports for internal-only networks, exercise
+the services inside that network using the documented verification scripts;
+ordinary browser access requires a separately verified host ingress setup.
+The override is a verification harness, not an offline installer.
 Changing embedding configuration requires reindexing reference documents;
 increment `AI_EMBEDDING_REVISION` when replacing a model artifact under the same
 name. Query vectors are not persisted. The new orchestration path remains off

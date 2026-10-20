@@ -55,7 +55,7 @@ commit before code changes and after every major tested implementation.
   explicit per-role model overrides within the selected provider; controlled
   context/output exhaustion. Validation: 27 budget/provider/diagnostics tests,
   Ruff and diff checks. Real-inference deadline checks follow.
-- Offline/deployment foundation: implemented. Local defaults and both model
+- Offline/deployment foundation (`9feb122`): implemented. Local defaults and both model
   provisioning services now apply to production configuration too. PostgreSQL
   bootstrap installs pgvector before non-superuser app migrations. Optional
   per-role models reach containers. Offline override clears paid credentials,
@@ -74,3 +74,31 @@ commit before code changes and after every major tested implementation.
 No acceptance-completion or laptop-performance claim is made. Optional production
 hosting configuration will be reconciled with the local/hosted modes before
 integrated completion; the first checkpoint targets the local development stack.
+
+## Pilot-driven corrections under verification
+
+A frozen 41-case synthetic corpus and explicit local-only evaluation/workflow/
+protocol runners are available. Real evaluation found model-loading contention,
+query normalization failures and unsupported conflict resolution. Corrections
+keep embeddings in RAM, reuse modest generation context, bound query correction,
+normalize Portuguese retrieval with a matching GIN index, and add a final
+orchestrator grounding/conflict check. Existing call, token and time ceilings
+remain unchanged. Onboarding extraction cannot invoke reference guidance.
+Clarification cannot carry a draft mutation; database revalidation locks honor
+remaining time. Pilot document limits can be lowered through configuration.
+
+Offline PKCE login, authenticated admin access, frontend delivery and local
+Mailpit delivery passed with outbound networking blocked and paid credentials
+removed. See [evaluation evidence](../ai-rag-evaluation.md) for the failed
+iterations, final verification status and human-review rubric. The feature flag
+remains disabled; synthetic results do not establish laptop or corpus capacity.
+
+Validation for the pilot-correction checkpoint: 635 backend tests passed with
+`TEST_POSTGRES=1`, including all PostgreSQL opt-in scenarios; 242 frontend tests
+passed; TypeScript, Ruff and diff checks passed. The full run exposed the local
+reset utility's explicit table allowlist dependency: it now erases private memory
+and preserves shared reference versions/passages, verified only in a disposable
+schema. No real application reset was executed. Migration through `20261019_35`
+passed upgrade/downgrade testing and was applied only to the isolated offline stack.
+All four local workflows produced successful synthetic outcomes, retaining the
+client/instructor review gates. Final full-corpus grounding review is pending.

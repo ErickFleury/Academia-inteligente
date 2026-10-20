@@ -7,7 +7,8 @@ import re
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import Float, case, delete, func, select, text
+from sqlalchemy import Float, Text, case, delete, func, literal_column, select, text
+from sqlalchemy.dialects.postgresql import TSQUERY
 from sqlalchemy.orm import Session
 
 from app.integrations.ai import AiProviderError
@@ -16,6 +17,7 @@ from app.integrations.document_text import (
     MEDIA_TYPES,
     DocumentError,
     extract_document,
+    reference_limit,
 )
 from app.integrations.embeddings import EmbeddingProvider, HttpEmbeddingProvider
 from app.modules.knowledge.models import ReferencePassage, ReferenceSource, ReferenceVersion
@@ -25,6 +27,16 @@ class KnowledgeError(Exception):
     def __init__(self, code: str, status: int = 400):
         super().__init__(code)
         self.code, self.status = code, status
+
+
+def searchable_text(value):
+    # Match accented client questions and unaccented router keywords without
+    # introducing another PostgreSQL extension. Keep the GIN migration in sync.
+    return func.translate(
+        func.lower(value),
+        literal_column("'áàâãäéèêëíìîïóòôõöúùûüçñ'"),
+        literal_column("'aaaaaeeeeiiiiooooouuuucn'"),
+    )
 
 
 def catalog_lock(session: Session):
@@ -154,7 +166,7 @@ class KnowledgeService:
                     .select_from(ReferenceVersion)
                     .where(ReferenceVersion.active.is_(True))
                 )
-                if total >= 100:
+                if total >= reference_limit("AI_REFERENCE_MAX_ACTIVE_DOCUMENTS", 100):
                     raise KnowledgeError("reference_capacity", 409)
             for old in active:
                 old.active, old.status = False, "withdrawn"
@@ -267,8 +279,16 @@ class KnowledgeService:
             .where(ReferenceVersion.active.is_(True), ReferenceVersion.status == "active")
         )
         if session.bind.dialect.name == "postgresql":
-            document = func.to_tsvector(text("'portuguese'::regconfig"), ReferencePassage.content)
-            terms = func.websearch_to_tsquery(text("'portuguese'::regconfig"), query)
+            document = func.to_tsvector(
+                text("'portuguese'::regconfig"), searchable_text(ReferencePassage.content)
+            )
+            # Natural questions contain words absent from an otherwise relevant
+            # passage. Match Portuguese lexemes disjunctively and rank overlap;
+            # requiring every word discarded exact equipment/error-code matches.
+            plain = func.plainto_tsquery(text("'portuguese'::regconfig"), searchable_text(query))
+            # Cast the already-normalized lexemes instead of stemming them a
+            # second time (which turns "série" -> "seri" -> a different lexeme).
+            terms = func.replace(plain.cast(Text), " & ", " | ").cast(TSQUERY)
             lexical = session.scalars(
                 base.where(document.op("@@")(terms))
                 .order_by(func.ts_rank_cd(document, terms).desc(), ReferencePassage.id)

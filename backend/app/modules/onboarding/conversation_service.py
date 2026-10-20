@@ -214,7 +214,9 @@ class OnboardingConversationService:
                 )
                 session.commit()  # Keep only the original message before external work.
                 run.prepare(context)
-            if confirmation and answer in {"sim", "confirmo", "isso", "correto"}:
+            if run and run.route.specialist == "clarify":
+                candidate = memory.answers
+            elif confirmation and answer in {"sim", "confirmo", "isso", "correto"}:
                 candidate = OnboardingDraftUpdate(**(memory.answers.model_dump() | confirmation))
                 accepted.update(confirmation)
                 record_turn(path="confirmation")
@@ -304,6 +306,9 @@ class OnboardingConversationService:
                 text += (
                     " Você também pode preencher esse dado diretamente abaixo ou usar o formulário."
                 )
+
+        if run and run.route.specialist == "clarify" and run.route.clarification:
+            text = run.route.clarification
 
         session.add(
             OnboardingAiMessage(

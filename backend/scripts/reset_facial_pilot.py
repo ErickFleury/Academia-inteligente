@@ -24,10 +24,14 @@ PRESERVED_TABLES = {
     "equipment_model",
     "equipment_unit",
     "equipment_image",
+    "ai_reference_source",
+    "ai_reference_version",
+    "ai_reference_passage",
 }
 RESET_TABLES = {
     "person_profile",
     "client",
+    "client_memory_fact",
     "employee",
     "client_identity_reconciliation",
     "employee_identity_reconciliation",

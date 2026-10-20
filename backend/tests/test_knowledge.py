@@ -99,6 +99,23 @@ def test_failed_replacement_keeps_previous_version_and_can_retry(setup):
         assert {r["version_id"] for r in service.search(session, "força")} == {str(second["id"])}
 
 
+def test_lowered_pilot_limits_reject_capacity_without_disabling_existing_source(setup, monkeypatch):
+    sessions, service, _ = setup
+    monkeypatch.setenv("AI_REFERENCE_MAX_ACTIVE_DOCUMENTS", "1")
+    first = upload(sessions, service)
+    service.import_next(sessions)
+    activate(sessions, service, first)
+    second = upload(sessions, service)
+    service.import_next(sessions)
+    with pytest.raises(KnowledgeError, match="reference_capacity"):
+        activate(sessions, service, second)
+    with sessions() as session:
+        assert {r["version_id"] for r in service.search(session, "força")} == {str(first["id"])}
+    monkeypatch.setenv("AI_REFERENCE_MAX_CHARACTERS", "10")
+    with pytest.raises(DocumentError, match="document_extraction_failed"):
+        extract_document(b"This document is longer than the operator limit.", "text/plain")
+
+
 def test_withdrawn_sources_invalidate_inflight_citations(setup):
     sessions, service, _ = setup
     item = upload(sessions, service)

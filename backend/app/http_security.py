@@ -4,6 +4,8 @@ import re
 
 from starlette.responses import JSONResponse
 
+from app.integrations.document_text import MAX_UPLOAD_BYTES
+
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 IMAGE_UPLOAD = re.compile(
     r"^(?:/progress/image-only|/progress/[^/]+/images/[^/]+|"
@@ -39,7 +41,7 @@ class HttpSecurityMiddleware:
         document_upload = (
             scope["method"] == "POST" and scope["path"].rstrip("/") == "/ai/references"
         )
-        maximum = 20 * 1024 * 1024 if document_upload else MAX_IMAGE_BYTES
+        maximum = MAX_UPLOAD_BYTES if document_upload else MAX_IMAGE_BYTES
         size_error = "document_size" if document_upload else "Image size is invalid"
         if document_upload or (
             scope["method"] in {"POST", "PUT"} and IMAGE_UPLOAD.fullmatch(scope["path"])

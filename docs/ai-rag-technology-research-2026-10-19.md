@@ -254,9 +254,11 @@ OpenAI services; disconnected verification must succeed without them.
 ## Evidence limits
 
 Sources are upstream documentation and source metadata accessed for this note.
-No prototype, package-resolution test, corpus benchmark, or deployment test was
-run. Library versions, model choice, retrieval quality, latency, memory capacity,
-and exact deployment pins remain decisions or experiments, not verified outcomes.
+At the time of the original research, no prototype, package-resolution test,
+corpus benchmark, or deployment test had been run. Subsequent implementation
+evidence is recorded in [task 45](tasks/45-local-rag-multiagent-implementation.md)
+and the [pilot evaluation](ai-rag-evaluation.md); the original research itself
+does not establish retrieval quality, latency or deployment capacity.
 
 ## Execution-budget implementation verification
 
@@ -271,3 +273,18 @@ The local adapter sets both explicitly during bounded orchestration. Conservativ
 input sizing rejects overflow instead of dropping restrictions. These controls
 do not establish usable latency or VRAM capacity; real local benchmarks remain
 necessary.
+
+## Local inference resource findings
+
+The first synthetic pilot exposed repeated embedding-load timeouts when both
+models competed for an 8 GB GPU. The default now keeps embeddinggemma on CPU and
+allows two loaded models. [Ollama's embedding endpoint](https://docs.ollama.com/api/embed)
+accepts runtime options, while its [concurrency documentation](https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests)
+explains memory-dependent model loading and eviction. Explicit provider-call
+deadlines still apply; local resource contention never enables a hosted fallback.
+
+Changing the context allocation between router and specialist also caused model
+reloads in the observed runtime. A shared 12K minimum avoids that churn for small
+requests, while larger required contexts remain bounded by the configured ceiling.
+This is measured implementation tuning, not a claim that every plan fits or every
+laptop meets the latency gate. Structured local calls use temperature zero.

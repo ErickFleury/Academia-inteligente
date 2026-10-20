@@ -111,9 +111,10 @@ class TrainingAdaptationService:
             raise AdaptationStateError from error
         # Match the lifecycle lock order after the external call, before equipment
         # locks/persistence. This avoids a model/client lock inversion at approval.
-        TrainingLifecycleService._lock_client(session, client_id)
         if run:
             run.finalize()
+        else:
+            TrainingLifecycleService._lock_client(session, client_id)
         session.refresh(base)
         if not self._is_current(session, base):
             raise AdaptationStateError

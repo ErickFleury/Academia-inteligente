@@ -73,12 +73,13 @@ a test client after verification. Disabling orchestration preserves memory
 controls and existing onboarding/instructor workflows. Numeric pilot capacities
 and evaluation thresholds are recorded in the canonical requirements.
 
-This records an accepted direction, not a completed design or authorization to
-implement it. The owner subsequently required complete local operation alongside
+The owner subsequently confirmed the detailed design and authorized implementation,
+including complete local operation alongside
 optional paid OpenAI support; see [ADR 0004](0004-local-operation-and-optional-hosted-ai.md).
 Local operation is now the default, with offline-after-provisioning acceptance
 and `embeddinggemma` selected for local embeddings. Detailed contracts and the
 evaluation rubric are consolidated in the
-[design](../ai-rag-multiagent-design.md) awaiting final confirmation.
+[confirmed design](../ai-rag-multiagent-design.md). Implementation checkpoints and
+remaining evidence gates are tracked in [task 45](../tasks/45-local-rag-multiagent-implementation.md).
 The canonical requirements and approval boundary
 are recorded in [requirements.md](../requirements.md#rag-and-multiagent-assistant-design--2026-10-19).

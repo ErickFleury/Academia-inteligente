@@ -1,12 +1,22 @@
 """Resource-bounded local extraction in a disposable process; no network access needed."""
 
 import json
+import os
 import subprocess
 import sys
 
-MAX_UPLOAD_BYTES = 20 * 1024 * 1024
-MAX_TEXT_CHARACTERS = 2_000_000
-MAX_PAGES = 500
+
+def reference_limit(name: str, ceiling: int) -> int:
+    """Operators may lower pilot limits; larger capacity needs separate validation."""
+    value = int(os.environ.get(name, str(ceiling)))
+    if not 1 <= value <= ceiling:
+        raise ValueError(f"{name} must be between 1 and {ceiling}")
+    return value
+
+
+MAX_UPLOAD_BYTES = reference_limit("AI_REFERENCE_MAX_UPLOAD_MIB", 20) * 1024 * 1024
+MAX_TEXT_CHARACTERS = reference_limit("AI_REFERENCE_MAX_CHARACTERS", 2_000_000)
+MAX_PAGES = reference_limit("AI_REFERENCE_MAX_PDF_PAGES", 500)
 MEDIA_TYPES = {"application/pdf", "text/plain", "text/markdown"}
 
 

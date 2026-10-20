@@ -21,7 +21,8 @@ The pgvector extension and Python integration are approved dependencies. The
 owner approved pilot evaluation thresholds in the canonical requirements and
 requires local embeddings with optional hosted support under
 [ADR 0004](0004-local-operation-and-optional-hosted-ai.md). Exact dependency
-versions and PostgreSQL deployment compatibility remain unverified;
+versions are now pinned to pgvector server 0.8.7 and Python integration 0.5.1,
+with PostgreSQL 18.6 migration tests recorded in [task 45](../tasks/45-local-rag-multiagent-implementation.md);
 `embeddinggemma` is selected as the initial local embedding model, subject to
 quality/resource verification. See the
 [research note](../ai-rag-technology-research-2026-10-19.md) for primary-source

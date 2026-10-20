@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from app.integrations.ai import AiProviderError
+from app.integrations.ai_budget import BudgetExceeded, bounded_wait
 
 Purpose = Literal["document", "query"]
 MAX_INPUT_BYTES = 6000
@@ -29,6 +30,7 @@ class EmbeddingConfig:
     api_key: str = ""
     timeout_seconds: float = 10
     revision: str = "1"
+    gpu_layers: int = 0
 
     def __post_init__(self):
         if (
@@ -37,6 +39,7 @@ class EmbeddingConfig:
             or not 1 <= self.dimensions <= 4096
             or not 0 < self.timeout_seconds <= 120
             or not self.revision.strip()
+            or not -1 <= self.gpu_layers <= 999
         ):
             raise AiProviderError("configuration", retryable=False)
         if self.provider == "ollama":
@@ -76,6 +79,7 @@ class EmbeddingConfig:
                 api_key=os.environ.get("OPENAI_API_KEY", "") if hosted else "",
                 timeout_seconds=float(os.environ.get("AI_EMBEDDING_TIMEOUT_SECONDS", "10")),
                 revision=os.environ.get("AI_EMBEDDING_REVISION", "1"),
+                gpu_layers=int(os.environ.get("AI_EMBEDDING_GPU_LAYERS", "0")),
             )
         except ValueError:
             raise AiProviderError("configuration", retryable=False) from None
@@ -125,13 +129,20 @@ class HttpEmbeddingProvider:
         else:
             endpoint = f"{self.config.base_url.rstrip('/')}/api/embed"
             body["truncate"] = False
+            # Keep the small embedding model in RAM by default, leaving scarce
+            # VRAM for generation and avoiding repeated model evictions on 8GB GPUs.
+            body["options"] = {"num_gpu": self.config.gpu_layers}
         request = Request(endpoint, data=json.dumps(body).encode(), headers=headers, method="POST")
         try:
-            with urlopen(request, timeout=deadline_timeout) as response:  # noqa: S310
-                raw = response.read(MAX_RESPONSE_BYTES + 1)
-                if len(raw) > MAX_RESPONSE_BYTES:
-                    raise ValueError
-                payload = json.loads(raw)
+
+            def read():
+                with urlopen(request, timeout=deadline_timeout) as response:  # noqa: S310
+                    raw = response.read(MAX_RESPONSE_BYTES + 1)
+                    if len(raw) > MAX_RESPONSE_BYTES:
+                        raise ValueError
+                    return json.loads(raw)
+
+            payload = bounded_wait(read, deadline_timeout)
             if not isinstance(payload, dict):
                 raise ValueError
             if self.config.provider == "openai":
@@ -161,7 +172,7 @@ class HttpEmbeddingProvider:
             raise AiProviderError(
                 "provider_server" if retryable else "embedding_rejected", retryable=retryable
             ) from None
-        except (TimeoutError, URLError):
+        except (TimeoutError, URLError, BudgetExceeded):
             raise AiProviderError("timeout_or_network", retryable=True) from None
         except (ValueError, TypeError, KeyError, AttributeError):
             raise AiProviderError("malformed_embedding_output", retryable=False) from None

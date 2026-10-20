@@ -47,6 +47,7 @@ prevent in-flight agent work from overwriting newer corrections or restoring
 forgotten memory; conflicting requests return a retryable conflict.
 
 The accepted retention direction supersedes the first interview round's lack of
-authorization for durable derived memory. It is a design decision, not an
-implemented behavior. [Canonical requirements](../requirements.md#rag-and-multiagent-assistant-design--2026-10-19)
+authorization for durable derived memory. Implementation and validation evidence
+are recorded in [task 45](../tasks/45-local-rag-multiagent-implementation.md); this
+ADR records the decision and does not itself establish acceptance. [Canonical requirements](../requirements.md#rag-and-multiagent-assistant-design--2026-10-19)
 remain authoritative.

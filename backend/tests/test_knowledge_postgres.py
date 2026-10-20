@@ -50,7 +50,24 @@ def test_vector_and_lexical_queries_use_real_postgres(postgres_sessions):
         assert service.search(session, "força")[0]["version_id"] == str(version["id"])
         provider.fail = True
         assert service.search(session, "iniciantes")[0]["version_id"] == str(version["id"])
+        assert service.search(session, "Como começar exercícios de força?")[0]["version_id"] == str(
+            version["id"]
+        )
+        assert service.search(session, "orientacao forca")[0]["version_id"] == str(version["id"])
         assert service.search(session, "sem correspondência") == []
+
+
+def test_portuguese_lexemes_are_not_stemmed_twice(postgres_sessions):
+    provider = FakeEmbedding()
+    service = KnowledgeService(provider)
+    version = upload(postgres_sessions, service, body="Série é um grupo de repetições na ficha.")
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    provider.fail = True
+    with postgres_sessions() as session:
+        assert service.search(session, "Qual a diferença entre serie e repeticao?")[0][
+            "version_id"
+        ] == str(version["id"])
 
 
 def test_migration_upgrade_and_downgrade_preserve_base_database(monkeypatch):

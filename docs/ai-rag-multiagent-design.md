@@ -309,9 +309,10 @@ performed during this design interview. No commit or push is authorized.
 - [ADR 0004: mandatory local operation](adr/0004-local-operation-and-optional-hosted-ai.md)
 - [Primary-source research and hardware observations](ai-rag-technology-research-2026-10-19.md)
 
-The interview has selected the product/architecture direction. Final confirmation
-must cover these proposed contracts, rubric, and migration defaults. Exact package
-pins, artifact compatibility, safe ingestion resource settings, useful local
-latency, and laptop capacity are implementation evidence gates, not passing
-results or permission to weaken requirements. If verification reveals an
+The owner confirmed these contracts, rubric, and migration defaults and authorized
+implementation. Progress and checkpoint commits are recorded in
+[task 45](tasks/45-local-rag-multiagent-implementation.md); measured results and
+remaining evidence gates are recorded in the [pilot evaluation](ai-rag-evaluation.md).
+Ingestion capacity, useful local latency and laptop performance remain evidence
+gates, not permission to weaken requirements. If verification reveals an
 incompatible requirement, bring that decision back to the owner.

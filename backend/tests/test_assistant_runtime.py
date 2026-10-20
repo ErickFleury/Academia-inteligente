@@ -51,6 +51,7 @@ class Agent:
         self.fail = False
         self.hook = None
         self.citations = []
+        self.review_supported, self.review_conflict = True, False
 
     def structured(self, context, instructions, schema, type_, *, role):
         budget = current_budget.get()
@@ -58,6 +59,10 @@ class Agent:
         budget.reconcile_output(reserve, 25)
         self.calls.append((role, context, instructions))
         if role == "orchestrator":
+            if "cited_passages" in context:
+                return type_.model_validate(
+                    {"supported": self.review_supported, "relevant_conflict": self.review_conflict}
+                )
             return type_.model_validate(
                 {
                     "specialist": context["allowed_specialist"],
@@ -75,6 +80,8 @@ class Agent:
             "initial_plan": proposal().model_dump(),
             "adaptation": adjust_response().model_dump(),
         }
+        if role == "onboarding":
+            return type_.model_validate(results[role])
         return type_.model_validate(
             {
                 "result": results[role],
@@ -177,17 +184,18 @@ def test_direct_correction_during_inference_invalidates_reply(database_session):
     )
 
 
-def test_onboarding_uses_specialist_without_bypassing_completion(database_session):
+def test_onboarding_uses_specialist_without_bypassing_completion(database_session, rollout):
     session = database_session
     client = owner(session)
     scope = OnboardingDraftService().resolve_client_scope(session, "owner")
-    provider = Agent(changes=[report()])
+    provider = Agent(changes=[report()], route={"query": "força", "needs_references": True})
     OnboardingConversationService(provider).submit(
         session, scope, message=report()["text"], client_request_id=uuid4()
     )
     assert [call[0] for call in provider.calls] == ["orchestrator", "onboarding"]
     assert session.scalar(select(Onboarding)).status == "draft"
     assert len(MemoryService.snapshot(session, client.id)["facts"]) == 1
+    assert rollout.queries == []
 
 
 def test_initial_generation_stays_a_single_unapproved_proposal(database_session):
@@ -242,13 +250,80 @@ def test_arbitrary_delegation_and_memory_tools_are_rejected(database_session):
 def test_missing_evidence_returns_controlled_referral(database_session, rollout):
     session = database_session
     owner(session)
-    provider = Agent(route={"query": "treino força", "needs_references": True})
+    provider = Agent(
+        route={"query": "treino força", "needs_references": True, "clarification": "Irrelevante"}
+    )
     result = TrainingChatService(provider).submit_for_subject(
         session, "owner", message="Como devo treinar força?", client_request_id=uuid4()
     )
     assert "instrutor" in result.messages[-1].content
     assert len(provider.calls) == 1
     assert rollout.queries == ["treino força"]
+
+
+def test_invalid_query_has_one_bounded_correction_without_retrieving_it(database_session, rollout):
+    class CorrectingAgent(Agent):
+        def structured(self, context, *args, **kwargs):
+            self.route = {"query": "termo " * 13, "needs_references": True}
+            if context.get("validation_feedback"):
+                self.route["query"] = "banco inclinação"
+            return super().structured(context, *args, **kwargs)
+
+    session = database_session
+    owner(session)
+    provider = CorrectingAgent()
+    state = TrainingChatService(provider).submit_for_subject(
+        session, "owner", message="Como ajustar o banco?", client_request_id=uuid4()
+    )
+    assert rollout.queries == ["banco inclinação"]
+    assert len(provider.calls) == 2
+    assert "instrutor" in state.messages[-1].content
+
+
+@pytest.mark.parametrize(
+    "query", ["cliente 123.456.789-00", "telefone (11) 99999-0000", "a@b.test"]
+)
+def test_personal_identifiers_never_reach_reference_embeddings(database_session, rollout, query):
+    session = database_session
+    owner(session)
+    provider = Agent(route={"query": query, "needs_references": True})
+    with pytest.raises(AssistantError, match="reference_query_invalid"):
+        TrainingChatService(provider).submit_for_subject(
+            session, "owner", message="Minha dúvida", client_request_id=uuid4()
+        )
+    assert rollout.queries == []
+    assert len(provider.calls) == 2
+
+
+def test_onboarding_clarification_is_a_reply_without_accepting_uncertain_facts(database_session):
+    session = database_session
+    owner(session)
+    scope = OnboardingDraftService().resolve_client_scope(session, "owner")
+    provider = Agent(route={"specialist": "clarify", "clarification": "Qual é sua altura exata?"})
+    service = OnboardingConversationService(provider)
+    service.submit(session, scope, message="Talvez 170 cm", client_request_id=uuid4())
+    state = service.state(session, scope)
+    assert state.messages[-1].content == "Qual é sua altura exata?"
+    assert state.known_answers.height_cm is None
+    assert len(provider.calls) == 1
+
+
+def test_clarification_cannot_carry_a_draft_mutation(database_session):
+    class UncertainAgent(Agent):
+        def structured(self, *args, **kwargs):
+            result = super().structured(*args, **kwargs)
+            if kwargs["role"] == "training_chat":
+                result.grounding = "clarification"
+                result.result.draft_update = proposal().plan
+            return result
+
+    session = database_session
+    owner(session)
+    with pytest.raises(AssistantError, match="assistant_clarification_required"):
+        TrainingChatService(UncertainAgent()).submit_for_subject(
+            session, "owner", message="Troque meu treino", client_request_id=uuid4()
+        )
+    assert session.scalar(select(TrainingPlanVersion)) is None
 
 
 def test_document_instructions_cannot_change_tools_and_citations_are_allowlisted(
@@ -307,6 +382,34 @@ def test_reference_withdrawal_before_commit_discards_answer(database_session, ro
         session.scalar(select(TrainingAiMessage).where(TrainingAiMessage.role == "assistant"))
         is None
     )
+
+
+@pytest.mark.parametrize("supported,conflict", [(False, False), (True, True)])
+def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
+    database_session, rollout, supported, conflict
+):
+    session = database_session
+    owner(session)
+    rollout.passages = [
+        {
+            "passage_id": str(uuid4()),
+            "version_id": str(uuid4()),
+            "source_id": str(uuid4()),
+            "title": "Manual",
+            "version": 1,
+            "location": "text",
+            "content": "Fonte de teste.",
+        }
+    ]
+    provider = Agent(route={"query": "treino", "needs_references": True})
+    provider.citations = [rollout.passages[0]["passage_id"]]
+    provider.review_supported, provider.review_conflict = supported, conflict
+    state = TrainingChatService(provider).submit_for_subject(
+        session, "owner", message="Explique esse exercício", client_request_id=uuid4()
+    )
+    assert "Consulte o instrutor" in state.messages[-1].content
+    assert state.messages[-1].reference_citations == []
+    assert [call[0] for call in provider.calls] == ["orchestrator", "training_chat", "orchestrator"]
 
 
 def test_expired_budget_cannot_commit_reply_or_memory(database_session):
