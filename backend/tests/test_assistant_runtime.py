@@ -52,6 +52,7 @@ class Agent:
         self.hook = None
         self.citations = []
         self.review_supported, self.review_conflict = True, False
+        self.review_missing_conditions, self.review_conflicting_statements = [], []
 
     def structured(self, context, instructions, schema, type_, *, role):
         budget = current_budget.get()
@@ -61,7 +62,12 @@ class Agent:
         if role == "orchestrator":
             if "cited_passages" in context:
                 return type_.model_validate(
-                    {"supported": self.review_supported, "relevant_conflict": self.review_conflict}
+                    {
+                        "missing_conditions": self.review_missing_conditions,
+                        "conflicting_statements": self.review_conflicting_statements,
+                        "supported": self.review_supported,
+                        "relevant_conflict": self.review_conflict,
+                    }
                 )
             return type_.model_validate(
                 {
@@ -384,9 +390,17 @@ def test_reference_withdrawal_before_commit_discards_answer(database_session, ro
     )
 
 
-@pytest.mark.parametrize("supported,conflict", [(False, False), (True, True)])
+@pytest.mark.parametrize(
+    "supported,conflict,missing,contradictions",
+    [
+        (False, False, [], []),
+        (True, True, [], []),
+        (True, False, ["Desligar antes de ajustar."], []),
+        (True, False, [], ["Duas posições incompatíveis sem prioridade."]),
+    ],
+)
 def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
-    database_session, rollout, supported, conflict
+    database_session, rollout, supported, conflict, missing, contradictions
 ):
     session = database_session
     owner(session)
@@ -404,6 +418,10 @@ def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
     provider = Agent(route={"query": "treino", "needs_references": True})
     provider.citations = [rollout.passages[0]["passage_id"]]
     provider.review_supported, provider.review_conflict = supported, conflict
+    provider.review_missing_conditions, provider.review_conflicting_statements = (
+        missing,
+        contradictions,
+    )
     state = TrainingChatService(provider).submit_for_subject(
         session, "owner", message="Explique esse exercício", client_request_id=uuid4()
     )

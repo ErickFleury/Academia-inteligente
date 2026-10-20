@@ -77,6 +77,14 @@ def test_migration_upgrade_and_downgrade_preserve_base_database(monkeypatch):
     with admin.begin() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public"))
         connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+        # Keep public available for the vector type, but mask its Alembic marker.
+        # Otherwise a migrated base database makes this isolated upgrade a no-op.
+        connection.execute(
+            text(
+                f'CREATE TABLE "{schema}".alembic_version '
+                "(version_num VARCHAR(32) NOT NULL PRIMARY KEY)"
+            )
+        )
     url = make_url(original_url).update_query_dict({"options": f"-csearch_path={schema},public"})
     monkeypatch.setenv("DATABASE_URL", url.render_as_string(hide_password=False))
     try:
