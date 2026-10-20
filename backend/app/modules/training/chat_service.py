@@ -6,7 +6,7 @@ import json
 import os
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -21,6 +21,7 @@ from app.integrations.ai import (
     training_chat_provider_from_environment,
 )
 from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
+from app.modules.assistant.runtime import AssistantError, AssistantRun, enabled
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.draft_service import OnboardingDraftService
@@ -68,6 +69,7 @@ class TrainingChatMessage:
     reply_to_client_request_id: UUID | None
     adaptation_suggested: bool
     adaptation_reason: str | None
+    reference_citations: list[dict] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -147,13 +149,27 @@ class TrainingChatService:
         context = self._context(session, client_id, conversation, message, user.id)
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
+        run = None
         try:
             initial_reply = self._initial_plan_reply(session, subject, client_id, context)
             if initial_reply is not None:
                 response = AiTrainingChatResponse(assistant_message=initial_reply)
             else:
                 record_turn(path="model")
-                response = self._retry(lambda: self._provider.training_chat(context))
+                if enabled(client_id):
+                    run = AssistantRun(
+                        session, client_id, "training_chat", source=user, provider=self._provider
+                    )
+                    # Retain retry input, release the client lock during inference.
+                    session.commit()
+                    run.prepare(context)
+                    response = run.specialist()
+                    run.finalize()
+                else:
+                    response = self._retry(lambda: self._provider.training_chat(context))
+        except AssistantError:
+            session.rollback()
+            raise
         except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
             session.commit()  # Preserve only the original client message for retry.
             raise
@@ -163,6 +179,8 @@ class TrainingChatService:
                 self._apply_draft_update(
                     session, editable_draft, response.draft_update, draft_revision
                 )
+                if run:
+                    editable_draft.reference_citations = run.public_citations()
                 record_turn(outcome="draft_saved")
                 content = (
                     "Atualizei o rascunho conforme solicitado. "
@@ -203,6 +221,7 @@ class TrainingChatService:
             content=content,
             sequence=self._next(session, conversation.id),
             reply_to_client_request_id=client_request_id,
+            reference_citations=run.public_citations() if run else None,
             adaptation_suggested=response.adaptation_suggested and can_suggest_adaptation,
             adaptation_reason=response.adaptation_reason
             if response.adaptation_suggested and can_suggest_adaptation
@@ -273,7 +292,14 @@ class TrainingChatService:
         return {
             "current_user_message": message,
             "conversation_summary": self._bounded_summary(session, conversation.id, message_id),
-            "recent_messages": [{"role": item.role, "content": item.content} for item in history],
+            "recent_messages": [
+                {
+                    "role": item.role,
+                    "content": item.content,
+                    "created_at": item.created_at.isoformat(),
+                }
+                for item in history
+            ],
             "current_training_plan": current_plan,
             "active_equipment_models": EquipmentService().training_context(session)
             if draft
@@ -663,6 +689,7 @@ class TrainingChatService:
                 reply_to_client_request_id=message.reply_to_client_request_id,
                 adaptation_suggested=message.adaptation_suggested,
                 adaptation_reason=message.adaptation_reason,
+                reference_citations=message.reference_citations or [],
             )
             for message in session.scalars(statement.order_by(TrainingAiMessage.sequence)).all()
         ]

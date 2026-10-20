@@ -46,7 +46,7 @@ export function StatusNotice({ severity, children }: { severity: 'error' | 'succ
   return <Alert severity={severity} variant="outlined">{children}</Alert>
 }
 
-export function ChatMessage({ role, children }: { role: 'user' | 'assistant'; children: ReactNode }) {
+export function ChatMessage({ role, children, footer }: { role: 'user' | 'assistant'; children: ReactNode; footer?: ReactNode }) {
   const isUser = role === 'user'
   return (
     <Box
@@ -69,6 +69,7 @@ export function ChatMessage({ role, children }: { role: 'user' | 'assistant'; ch
         {isUser ? 'Você' : 'Assistente'}
       </Typography>
       <Typography component="p" sx={{ whiteSpace: 'pre-wrap' }}>{children}</Typography>
+      {footer}
     </Box>
   )
 }

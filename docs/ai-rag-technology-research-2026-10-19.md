@@ -257,7 +257,8 @@ Sources are upstream documentation and source metadata accessed for this note.
 No prototype, package-resolution test, corpus benchmark, or deployment test was
 run. Library versions, model choice, retrieval quality, latency, memory capacity,
 and exact deployment pins remain decisions or experiments, not verified outcomes.
-# Execution-budget implementation verification
+
+## Execution-budget implementation verification
 
 Official [OpenAI reasoning documentation](https://developers.openai.com/api/docs/guides/reasoning)
 states that `max_output_tokens` includes reasoning and visible output, and that
@@ -270,4 +271,3 @@ The local adapter sets both explicitly during bounded orchestration. Conservativ
 input sizing rejects overflow instead of dropping restrictions. These controls
 do not establish usable latency or VRAM capacity; real local benchmarks remain
 necessary.
-

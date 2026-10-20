@@ -8,6 +8,7 @@ export type TrainingChatMessage = {
   reply_to_client_request_id?: string | null
   adaptation_suggested?: boolean
   adaptation_reason?: string | null
+  reference_citations?: { passage_id: string; title: string; version: number; location: string }[]
 }
 
 export type TrainingChat = { messages: TrainingChatMessage[] }
@@ -15,7 +16,12 @@ export type TrainingChat = { messages: TrainingChatMessage[] }
 async function chatError(response: Response, fallback: string): Promise<never> {
   if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
   if (response.status === 403) throw new Error('Você não tem permissão para acessar o assistente de treino.')
-  if (response.status === 409) throw new Error('Seu rascunho mudou durante a resposta. Recarregue o treino e revise antes de tentar novamente.')
+  if (response.status === 409) throw new Error('Seu treino, memória ou referências mudaram durante a resposta. Confira as informações e envie uma nova mensagem.')
+  if (response.status === 422) {
+    const data = await response.json().catch(() => ({}))
+    if (data.detail === 'memory_capacity') throw new Error('Sua memória está cheia. Abra Memória do assistente para revisar as informações antes de continuar.')
+    if (data.detail === 'assistant_clarification_required') throw new Error('Confirme as informações relevantes ou consulte seu instrutor antes de gerar a proposta.')
+  }
   if (response.status === 503) throw new Error('O assistente de treino está indisponível no momento. Tente novamente.')
   throw new Error(fallback)
 }

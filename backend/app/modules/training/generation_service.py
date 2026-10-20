@@ -12,6 +12,7 @@ from app.integrations.ai import (
     training_generation_provider_from_environment,
 )
 from app.integrations.ai_diagnostics import record_retry
+from app.modules.assistant.runtime import AssistantRun, enabled
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.draft_service import (
     ClientOnboardingScope,
@@ -59,6 +60,11 @@ class InitialTrainingGenerationService:
     def generate_for_scope(
         self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
     ):
+        run = (
+            AssistantRun(session, scope.client_id, "initial_plan", provider=self._provider)
+            if enabled(scope.client_id)
+            else None
+        )
         onboarding = session.scalar(
             select(Onboarding).where(Onboarding.client_id == scope.client_id)
         )
@@ -84,7 +90,12 @@ class InitialTrainingGenerationService:
                 "instructor_review_required": True,
             },
         }
-        response = self._retry(lambda: self._provider.generate_training(context))
+        if run:
+            session.commit()  # In chat, this preserves the original message only.
+            run.prepare(context)
+            response = run.specialist()
+        else:
+            response = self._retry(lambda: self._provider.generate_training(context))
         try:
             proposal = TrainingPlanVersionInput.model_validate(response.plan)
         except ValidationError as error:
@@ -93,14 +104,21 @@ class InitialTrainingGenerationService:
         # Validation happens before lifecycle persistence, so malformed output
         # cannot create a partial plan or version.
         try:
-            return self._lifecycle.create_proposal(
+            if run:
+                run.finalize()
+            result = self._lifecycle.create_proposal(
                 session,
                 client_id=scope.client_id,
                 data=proposal,
                 created_by="ai",
                 origin="ai",
-                commit=commit,
+                commit=commit if not run else False,
             )
+            if run:
+                result.reference_citations = run.public_citations()
+                if commit:
+                    session.commit()
+            return result
         except ActiveTrainingProposalExistsError:
             # Another request created the sole draft while the provider was running.
             existing = self._lifecycle.find_proposal(session, client_id=scope.client_id)
@@ -108,6 +126,8 @@ class InitialTrainingGenerationService:
                 return existing
             raise
         except InvalidTrainingContentError:
+            if run:
+                session.rollback()
             raise InvalidTrainingGenerationError from None
 
     @staticmethod

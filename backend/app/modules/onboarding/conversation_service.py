@@ -19,6 +19,7 @@ from app.integrations.ai import (
     onboarding_ai_provider_from_environment,
 )
 from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
+from app.modules.assistant.runtime import AssistantError, AssistantRun, enabled
 from app.modules.onboarding.answer_evidence import grounded_answers
 from app.modules.onboarding.direct_answers import direct_extraction, measurement_suggestion
 from app.modules.onboarding.draft_service import (
@@ -205,7 +206,14 @@ class OnboardingConversationService:
         confirmation = memory.confirmation.copy()
         direct = direct_extraction(message, user.sequence, question)
         record_turn(path="direct" if direct is not None else "model")
+        run = None
         try:
+            if enabled(scope.client_id):
+                run = AssistantRun(
+                    session, scope.client_id, "onboarding", source=user, provider=self._provider
+                )
+                session.commit()  # Keep only the original message before external work.
+                run.prepare(context)
             if confirmation and answer in {"sim", "confirmo", "isso", "correto"}:
                 candidate = OnboardingDraftUpdate(**(memory.answers.model_dump() | confirmation))
                 accepted.update(confirmation)
@@ -217,7 +225,11 @@ class OnboardingConversationService:
                 extracted = (
                     direct
                     if direct is not None
-                    else self._retry(lambda: self._provider.extract_onboarding(context))
+                    else (
+                        run.specialist()
+                        if run
+                        else self._retry(lambda: self._provider.extract_onboarding(context))
+                    )
                 )
                 candidate = grounded_answers(
                     extracted,
@@ -226,6 +238,11 @@ class OnboardingConversationService:
                     latest_sequence=user.sequence,
                     accepted_fields=accepted,
                 )
+            if run:
+                run.finalize()
+        except AssistantError:
+            session.rollback()
+            raise
         except (AiConversationUnavailableError, ValidationError) as error:
             if isinstance(error, ValidationError):
                 record_turn(reason="invalid_extraction")
@@ -391,7 +408,12 @@ class OnboardingConversationService:
     ) -> dict[str, object]:
         return {
             "conversation": [
-                {"message_sequence": item.sequence, "role": item.role, "content": item.content}
+                {
+                    "message_sequence": item.sequence,
+                    "role": item.role,
+                    "content": item.content,
+                    "created_at": item.created_at.isoformat(),
+                }
                 for item in messages
             ],
             "existing_structured_onboarding": {

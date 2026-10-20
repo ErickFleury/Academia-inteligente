@@ -1,6 +1,8 @@
+import type { SupportingReference } from './components/supporting-references'
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
 export type TrainingAdaptation = {
+  reference_citations?: SupportingReference[]
   id: string
   status: string
   source_client_request_id: string
@@ -26,7 +28,11 @@ async function adaptationError(response: Response): Promise<never> {
   if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
   if (response.status === 403) throw new Error('Você não tem permissão para esta alteração.')
   if (response.status === 409) throw new Error('Já existe um rascunho ou o treino mudou. Recarregue e revise antes de continuar.')
-  if (response.status === 422) throw new Error('Você precisa ter um treino atual antes de solicitar uma alteração.')
+  if (response.status === 422) {
+    const data = await response.json().catch(() => ({}))
+    if (data.detail === 'assistant_clarification_required') throw new Error('Confirme seus relatos relevantes no assistente ou consulte seu instrutor antes de gerar a proposta.')
+    throw new Error('Confira seu treino atual e as informações da alteração antes de continuar.')
+  }
   if (response.status === 503) throw new Error('A proposta de alteração está indisponível no momento. Tente novamente.')
   throw new Error('Não foi possível processar a proposta de alteração. Tente novamente.')
 }

@@ -14,6 +14,7 @@ from app.integrations.ai import (
     TrainingAdaptationProvider,
     training_adaptation_provider_from_environment,
 )
+from app.modules.assistant.runtime import AssistantRun, enabled
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.models import Onboarding
@@ -91,11 +92,17 @@ class TrainingAdaptationService:
             return existing
 
         source = self._source_message(session, client_id, source_client_request_id)
-        response = self._retry(
-            lambda: self._provider.generate_adaptation(
-                self._context(session, client_id, base, source, reason.strip())
-            )
+        run = (
+            AssistantRun(session, client_id, "adaptation", source=source, provider=self._provider)
+            if enabled(client_id)
+            else None
         )
+        context = self._context(session, client_id, base, source, reason.strip())
+        if run:
+            run.prepare(context)
+            response = run.specialist()
+        else:
+            response = self._retry(lambda: self._provider.generate_adaptation(context))
         try:
             operations = [
                 AdaptationOperationInput.model_validate(value) for value in response.operations
@@ -105,6 +112,8 @@ class TrainingAdaptationService:
         # Match the lifecycle lock order after the external call, before equipment
         # locks/persistence. This avoids a model/client lock inversion at approval.
         TrainingLifecycleService._lock_client(session, client_id)
+        if run:
+            run.finalize()
         session.refresh(base)
         if not self._is_current(session, base):
             raise AdaptationStateError
@@ -118,6 +127,7 @@ class TrainingAdaptationService:
             reason=reason.strip(),
             explanation=response.explanation.strip(),
             status="proposed",
+            reference_citations=run.public_citations() if run else None,
         )
         session.add(proposal)
         session.flush()
@@ -171,6 +181,7 @@ class TrainingAdaptationService:
                     commit=False,
                 )
                 proposal.resulting_version_id = draft.id
+                draft.reference_citations = proposal.reference_citations
             except (ValidationError, InvalidTrainingContentError):
                 session.rollback()
                 raise AdaptationStateError from None
@@ -323,7 +334,12 @@ class TrainingAdaptationService:
                 ],
             },
             "recent_messages": [
-                {"role": item.role, "content": item.content} for item in reversed(recent)
+                {
+                    "role": item.role,
+                    "content": item.content,
+                    "created_at": item.created_at.isoformat(),
+                }
+                for item in reversed(recent)
             ],
             "conversation_summary": chat.summary if chat else None,
             "relevant_onboarding": {

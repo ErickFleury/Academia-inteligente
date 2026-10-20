@@ -38,12 +38,23 @@ commit before code changes and after every major tested implementation.
   six new interface tests, 28 existing routing tests with local test OIDC URLs,
   TypeScript, Ruff, and backend regression (558 passed,
   44 opt-in tests skipped). Live conversational extraction quality is pending.
-- Bounded orchestrator and four workflow integrations: pending.
-  Provider execution-budget foundation implemented: request-local call, input,
+- Bounded orchestrator and four workflow integrations: implemented behind
+  `AI_ORCHESTRATION_ENABLED` plus an explicit Client UUID allowlist. The LLM
+  chooses the backend-permitted specialist or clarification; the runtime owns
+  reference retrieval, source-grounded memory proposals and citation validation.
+  Conversational inference releases the client lock and rejects intervening
+  memory/plan/reference/message changes before the reply transaction. Existing
+  completion, confirmation, single-draft and instructor approval gates remain.
+  Supporting citations accompany replies, generated drafts and adaptations.
+  Validation: 11 enabled-path workflow tests; two real PostgreSQL concurrency
+  tests; migration upgrade/downgrade; 10 training UI tests including citation
+  rendering; TypeScript/Ruff; backend regression (575 passed, 46 opt-in skipped).
+  Live model routing, grounding, latency and offline evaluation remain pending.
+  Provider execution-budget foundation (`70c84dc`): request-local call, input,
   output, retrieval and time ceilings; bounded HTTP waiting without a work queue;
   explicit per-role model overrides within the selected provider; controlled
   context/output exhaustion. Validation: 27 budget/provider/diagnostics tests,
-  Ruff and diff checks. Workflow wiring and end-to-end deadline checks follow.
+  Ruff and diff checks. Real-inference deadline checks follow.
 - Evaluation, offline checks, hardware evidence, and rollout: pending.
 
 No acceptance-completion or laptop-performance claim is made. Optional production

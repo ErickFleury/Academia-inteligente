@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.health.router import router as health_router
 from app.http_security import HttpSecurityMiddleware
+from app.modules.assistant.runtime import AssistantError
 from app.modules.biometrics.config import BiometricError
 from app.modules.biometrics.router import router as biometrics_router
 from app.modules.clients.instructor_router import router as instructor_clients_router
@@ -40,6 +41,10 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(BiometricError)
     async def biometric_error(request, error):
+        return JSONResponse(status_code=error.status, content={"detail": error.code})
+
+    @app.exception_handler(AssistantError)
+    async def assistant_error(request, error):
         return JSONResponse(status_code=error.status, content={"detail": error.code})
 
     allowed_origins = [

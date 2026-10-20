@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     ForeignKey,
@@ -71,6 +72,7 @@ class TrainingPlanVersion(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     objective: Mapped[str] = mapped_column(Text, nullable=False)
     origin: Mapped[str] = mapped_column(String(16), nullable=False)
+    reference_citations: Mapped[list[dict] | None] = mapped_column(JSON)
     created_by: Mapped[str] = mapped_column(String(255), nullable=False)
     created_employee_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("employee.id"))
     created_at: Mapped[datetime] = mapped_column(
@@ -159,6 +161,7 @@ class TrainingAiMessage(Base):
         Boolean, nullable=False, default=False, server_default="false"
     )
     adaptation_reason: Mapped[str | None] = mapped_column(Text)
+    reference_citations: Mapped[list[dict] | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -181,6 +184,7 @@ class TrainingAdaptationProposal(Base):
     client_request_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
+    reference_citations: Mapped[list[dict] | None] = mapped_column(JSON)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="proposed")
     client_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     instructor_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

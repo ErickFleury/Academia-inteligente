@@ -298,6 +298,7 @@ class TrainingLifecycleService:
         self, session: Session, version: TrainingPlanVersion, data: TrainingPlanVersionInput
     ) -> None:
         version.name, version.objective = data.name.strip(), data.objective.strip()
+        version.reference_citations = None  # Changed content needs fresh supporting evidence.
         for item in session.scalars(
             select(TrainingPlanItem).where(TrainingPlanItem.version_id == version.id)
         ).all():

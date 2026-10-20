@@ -96,6 +96,7 @@ class TrainingChatMessageResponse(BaseModel):
     reply_to_client_request_id: UUID | None = None
     adaptation_suggested: bool = False
     adaptation_reason: str | None = None
+    reference_citations: list[dict] = Field(default_factory=list)
 
 
 class TrainingChatResponse(BaseModel):
@@ -118,6 +119,7 @@ def training_chat_response(state: TrainingChatState) -> TrainingChatResponse:
                 reply_to_client_request_id=message.reply_to_client_request_id,
                 adaptation_suggested=message.adaptation_suggested,
                 adaptation_reason=message.adaptation_reason,
+                reference_citations=message.reference_citations,
             )
             for message in state.messages
         ]
@@ -160,6 +162,7 @@ def adaptation_response(
         "source_client_request_id": str(proposal.source_client_request_id),
         "reason": proposal.reason,
         "explanation": proposal.explanation,
+        "reference_citations": proposal.reference_citations or [],
         "client_reviewed_at": (
             proposal.client_reviewed_at.isoformat() if proposal.client_reviewed_at else None
         ),
@@ -228,6 +231,7 @@ def version_response(session: Session, version: TrainingPlanVersion) -> dict[str
         "updated_at": version.updated_at.isoformat(),
         "approved_at": version.approved_at.isoformat() if version.approved_at else None,
         "revision": version.revision,
+        "reference_citations": version.reference_citations or [],
         "items": [
             {
                 "exercise_name": item.exercise_name,

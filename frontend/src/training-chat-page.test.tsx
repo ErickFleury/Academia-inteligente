@@ -17,7 +17,7 @@ test('sends a Portuguese client training-chat message with a frontend UUID', asy
     .mockResolvedValueOnce({ ok: true, json: async () => ({ plan: null }) })
     .mockResolvedValueOnce({ ok: true, json: async () => ({ messages: [
       { role: 'user', content: 'Como faço o agachamento?', created_at: '2026-09-22T00:00:00Z' },
-      { role: 'assistant', content: 'Faça com controle.', created_at: '2026-09-22T00:00:01Z' },
+      { role: 'assistant', content: 'Faça com controle.', created_at: '2026-09-22T00:00:01Z', reference_citations: [{ passage_id: 'passage', title: 'Manual de exercícios', version: 2, location: 'page:3;passage:4' }] },
     ] }) })
   vi.stubGlobal('fetch', fetchMock)
   vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000016' })
@@ -27,6 +27,7 @@ test('sends a Portuguese client training-chat message with a frontend UUID', asy
   fireEvent.change(screen.getByLabelText('Escreva sua pergunta'), { target: { value: 'Como faço o agachamento?' } })
   fireEvent.keyDown(screen.getByLabelText('Escreva sua pergunta'), { key: 'Enter' })
   expect(await screen.findByText('Faça com controle.')).toBeInTheDocument()
+  expect(screen.getByLabelText('Referências de apoio')).toHaveTextContent('Manual de exercícios · versão 2 · página 3 · trecho 4')
   expect(fetchMock.mock.calls[3][0]).toBe('http://localhost:8000/training/chat/messages')
   expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({
     message: 'Como faço o agachamento?', client_request_id: '00000000-0000-4000-8000-000000000016',
