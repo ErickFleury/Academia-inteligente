@@ -36,7 +36,14 @@ class HttpSecurityMiddleware:
                 )
             await send(message)
 
-        if scope["method"] in {"POST", "PUT"} and IMAGE_UPLOAD.fullmatch(scope["path"]):
+        document_upload = (
+            scope["method"] == "POST" and scope["path"].rstrip("/") == "/ai/references"
+        )
+        maximum = 20 * 1024 * 1024 if document_upload else MAX_IMAGE_BYTES
+        size_error = "document_size" if document_upload else "Image size is invalid"
+        if document_upload or (
+            scope["method"] in {"POST", "PUT"} and IMAGE_UPLOAD.fullmatch(scope["path"])
+        ):
             headers = dict(scope.get("headers", []))
             try:
                 declared = int(headers.get(b"content-length", b"0"))
@@ -46,18 +53,16 @@ class HttpSecurityMiddleware:
                 return await JSONResponse({"detail": "Invalid content length"}, 400)(
                     scope, receive, secure_send
                 )
-            if declared > MAX_IMAGE_BYTES:
-                return await JSONResponse({"detail": "Image size is invalid"}, 413)(
-                    scope, receive, secure_send
-                )
+            if declared > maximum:
+                return await JSONResponse({"detail": size_error}, 413)(scope, receive, secure_send)
             body = bytearray()
             while True:
                 message = await receive()
                 if message["type"] == "http.disconnect":
                     return
                 chunk = message.get("body", b"")
-                if len(body) + len(chunk) > MAX_IMAGE_BYTES:
-                    return await JSONResponse({"detail": "Image size is invalid"}, 413)(
+                if len(body) + len(chunk) > maximum:
+                    return await JSONResponse({"detail": size_error}, 413)(
                         scope, receive, secure_send
                     )
                 body.extend(chunk)

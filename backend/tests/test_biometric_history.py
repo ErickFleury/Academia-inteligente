@@ -18,7 +18,7 @@ from app.modules.biometrics.models import BiometricAudit
 from app.modules.biometrics.passages import PassageService
 from app.modules.biometrics.router import get_access_service
 from app.modules.identity.router import get_authenticated_identity
-from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.identity.service import AuthenticatedIdentity, InvalidSessionError
 
 
 def verify_pagination(session, service, access):
@@ -107,7 +107,7 @@ def test_provider_failure_returns_only_safe_status(database_session, access):
     }
 
 
-def test_history_api_limits_and_admin_only(database_session, access):
+def test_history_api_limits_and_admin_only(database_session, access, monkeypatch):
     app = create_app()
     app.dependency_overrides[get_database_session] = lambda: database_session
     app.dependency_overrides[get_access_service] = lambda: access
@@ -126,4 +126,12 @@ def test_history_api_limits_and_admin_only(database_session, access):
         for path in ("/biometrics/events", "/biometrics/provider-status"):
             assert http.get(path).status_code == 403
     del app.dependency_overrides[get_authenticated_identity]
+    # The test client always sends a bearer token. Reject it locally instead
+    # of contacting a live Keycloak server during the regression suite.
+    def reject_token(self, token):
+        raise InvalidSessionError
+
+    monkeypatch.setattr(
+        "app.modules.identity.service.OidcUserInfoProvider.get_identity", reject_token
+    )
     assert http.get("/biometrics/events").status_code == 401

@@ -8,7 +8,6 @@ from app.health.router import router as health_router
 from app.http_security import HttpSecurityMiddleware
 from app.modules.biometrics.config import BiometricError
 from app.modules.biometrics.router import router as biometrics_router
-from app.modules.biometrics.worker import biometric_lifespan
 from app.modules.clients.instructor_router import router as instructor_clients_router
 from app.modules.clients.router import router as clients_router
 from app.modules.dashboard.router import router as dashboard_router
@@ -18,6 +17,8 @@ from app.modules.equipment.instructor_router import router as instructor_equipme
 from app.modules.equipment.router import router as equipment_router
 from app.modules.identity.recovery_router import router as recovery_router
 from app.modules.identity.router import router as identity_router
+from app.modules.knowledge.router import router as knowledge_router
+from app.modules.knowledge.worker import assistant_lifespan
 from app.modules.occupancy.router import router as occupancy_router
 from app.modules.onboarding.instructor_router import router as instructor_onboarding_router
 from app.modules.onboarding.router import router as onboarding_router
@@ -30,7 +31,7 @@ from app.modules.training.router import router as training_router
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        lifespan=biometric_lifespan,
+        lifespan=assistant_lifespan,
         title="Academia Inteligente API",
         version="0.1.0",
         description="Foundation API; business endpoints are introduced in their owning tasks.",
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
         ],
     )
     app.include_router(health_router)
+    app.include_router(knowledge_router)
     app.include_router(biometrics_router)
     app.include_router(identity_router)
     app.include_router(recovery_router)

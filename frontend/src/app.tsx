@@ -23,6 +23,7 @@ import { ProgressPage } from './progress-page'
 import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
 import { EquipmentManagementPage } from './equipment-management-page'
+import { AiReferencePage } from './ai-reference-page'
 import { SocialProfilePage } from './social-profile-page'
 import { PostDetailPage } from './post-detail-page'
 import { InstructorFeedPage } from './instructor-feed-page'
@@ -158,6 +159,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
   const isTrainingChatRoute = location.pathname === '/assistente'
   const isProgressRoute = location.pathname === '/feed'
   const isEquipmentManagementRoute = location.pathname === '/admin/equipamentos'
+  const isReferencesRoute = location.pathname === '/admin/referencias'
   const isFacialAccessRoute = location.pathname === '/admin/acesso-facial'
   const isProfileRoute = location.pathname === '/perfil'
   const viewedProfileId = location.pathname.match(/^\/perfis\/([^/]+)$/)?.[1]
@@ -327,7 +329,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
     return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><PostDetailPage accessToken={session.accessToken} onSignOut={endSession} postId={viewedPostId} /></ClientNavigationStateProvider>
   }
 
-  if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute || isFacialAccessRoute) && !isAdministrator) {
+  if ((isAdministrativeRoute || isProgressModerationRoute || isEquipmentManagementRoute || isReferencesRoute || isFacialAccessRoute) && !isAdministrator) {
     return (
       <ClientNavigationStateProvider onboardingComplete={onboardingComplete}>
         <ClientShell onSignOut={endSession} showClientNavigation={session.roles.includes('client')}>
@@ -344,6 +346,10 @@ function Application({ session, setSession }: { session: Session | null; setSess
 
   if (isEquipmentManagementRoute && session) {
     return <EquipmentManagementPage accessToken={session.accessToken} onSignOut={endSession} />
+  }
+
+  if (isReferencesRoute && session) {
+    return <AiReferencePage accessToken={session.accessToken} onSignOut={endSession} />
   }
 
   if (isFacialAccessRoute && session) {

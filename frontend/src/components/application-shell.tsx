@@ -501,6 +501,7 @@ function AdminNavigation({ id, onNavigate }: { id?: string; onNavigate?: () => v
     { href: "/admin", label: "Painel administrativo", icon: "equipment" },
     { href: "/admin/acesso-facial", label: "Acesso facial", icon: "profile" },
     { href: "/admin/equipamentos", label: "Gerenciar equipamentos", icon: "training" },
+    { href: "/admin/referencias", label: "Referências do assistente", icon: "assistant" },
     { href: "/admin/publicacoes", label: "Moderar publicações", icon: "feed" },
   ];
   return <Stack component="nav" aria-label="Navegação da administração" id={id} spacing={0.5}>
