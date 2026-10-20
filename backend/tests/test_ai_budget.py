@@ -105,3 +105,60 @@ def test_context_overflow_never_calls_provider(monkeypatch):
     monkeypatch.setattr(ai, "urlopen", lambda *args, **kwargs: pytest.fail("must not send"))
     with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="context_capacity"):
         OllamaOnboardingProvider().structured({}, "instructions", {}, Result, role="orchestrator")
+
+
+@pytest.mark.parametrize("hosted", [False, True])
+def test_multilingual_multiagent_calls_reconcile_actual_prompt_usage(monkeypatch, hosted):
+    """Portuguese reference text must not consume budget as JSON unicode escapes."""
+    calls = []
+
+    def respond(request, timeout):
+        calls.append(json.loads(request.data))
+        payload = (
+            {
+                "output": [{"content": [{"type": "output_text", "text": '{"answer":"ok"}'}]}],
+                "usage": {"input_tokens": 1600, "output_tokens": 5},
+            }
+            if hosted
+            else {
+                "message": {"content": '{"answer":"ok"}'},
+                "prompt_eval_count": 1600,
+                "eval_count": 5,
+            }
+        )
+        return BytesIO(json.dumps(payload).encode())
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    provider = (
+        OpenAiResponsesOnboardingProvider(OpenAiConfig("test", "base", 10))
+        if hosted
+        else OllamaOnboardingProvider(OllamaConfig("http://local", "base", 10))
+    )
+    budget = ExecutionBudget()
+    with budget.scope():
+        for role in ("orchestrator", "training_chat", "orchestrator"):
+            provider.structured(
+                {"references": "Orientação de força e respiração. " * 140},
+                "Responda em português.",
+                Result.model_json_schema(),
+                Result,
+                role=role,
+            )
+    assert len(calls) == 3
+    assert budget.input_tokens == 4800
+    assert budget.output_tokens == 15
+
+
+@pytest.mark.parametrize("actual", [-1, True, "10", 32001])
+def test_prompt_usage_is_validated_and_cannot_exceed_total_budget(actual):
+    budget = ExecutionBudget()
+    budget.reserve(100, 1000)
+    with pytest.raises(BudgetExceeded):
+        budget.reconcile_input(612, actual)
+
+
+def test_missing_prompt_usage_keeps_reservation():
+    budget = ExecutionBudget()
+    budget.reserve(100, 1000)
+    budget.reconcile_input(612, None)
+    assert budget.input_tokens == 612

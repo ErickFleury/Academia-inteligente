@@ -82,6 +82,16 @@ class ExecutionBudget:
             self.output_tokens -= reserved - actual
         self.remaining()
 
+    def reconcile_input(self, reserved, actual):
+        """Retain the conservative reservation if the adapter has no usage data."""
+        if actual is not None:
+            if type(actual) is not int or actual < 0:
+                raise BudgetExceeded("provider_usage_invalid")
+            self.input_tokens += actual - reserved
+            if self.input_tokens > (64000 if self.plan else 32000):
+                raise BudgetExceeded("input_token_limit")
+        self.remaining()
+
     def retrieval(self):
         self.remaining()
         if self.retrievals >= 2:

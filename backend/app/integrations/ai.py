@@ -398,17 +398,25 @@ class _Provider:
             reserved = None
             if budget:
                 body = json.loads(request.data)
+                # Reserve from decoded prompt content, not HTTP JSON escapes.
+                # UTF-8 bytes remain a conservative bound, not an exact tokenizer.
+                # Include the schema for providers that inject it into the prompt.
+                input_bound = (
+                    len(instructions.encode())
+                    + len(_json(context).encode())
+                    + len(_json(schema).encode())
+                )
                 desired = 1000 if role == "orchestrator" else (7000 if budget.plan else 3000)
-                reserved = budget.reserve(len(request.data), desired)
+                reserved = budget.reserve(input_bound, desired)
                 if role and (model := os.getenv(f"AI_MODEL_{role.upper()}", "").strip()):
                     body["model"] = model
                 if "messages" in body:
                     # Reserve room for input and output instead of letting
                     # Ollama silently drop necessary health/plan context.
                     window = int(os.getenv("OLLAMA_CONTEXT_TOKENS", "32768"))
-                    if len(request.data) + 512 + reserved > window:
+                    if input_bound + 512 + reserved > window:
                         raise BudgetExceeded("context_capacity")
-                    required = len(request.data) + 512 + reserved
+                    required = input_bound + 512 + reserved
                     # Reuse a modest window across router/specialist calls.
                     # Changing num_ctx reloads Ollama's model; always reserving
                     # 32K instead forces avoidable offload on 8GB GPUs.
@@ -437,6 +445,9 @@ class _Provider:
                 usage = payload.get("usage") or {}
                 if not isinstance(usage, dict):
                     raise ValueError("invalid_usage")
+                budget.reconcile_input(
+                    input_bound + 512, usage.get("input_tokens", payload.get("prompt_eval_count"))
+                )
                 actual = usage.get("output_tokens", payload.get("eval_count"))
                 budget.reconcile_output(reserved, actual)
                 if payload.get("status") == "incomplete" or payload.get("done_reason") == "length":
