@@ -1,6 +1,7 @@
 import json
 from io import BytesIO
 from time import monotonic, sleep
+from urllib.error import HTTPError
 
 import pytest
 from pydantic import BaseModel
@@ -100,10 +101,66 @@ def test_adapter_caps_output_and_uses_explicit_role_model(monkeypatch, hosted):
         assert captured[0]["options"]["temperature"] == 0
 
 
-def test_context_overflow_never_calls_provider(monkeypatch):
-    monkeypatch.setenv("OLLAMA_CONTEXT_TOKENS", "100")
-    monkeypatch.setattr(ai, "urlopen", lambda *args, **kwargs: pytest.fail("must not send"))
-    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="context_capacity"):
+@pytest.mark.parametrize("nested", [False, True])
+def test_actual_context_overflow_is_controlled_and_not_retryable(monkeypatch, nested):
+    def reject(request, timeout):
+        body = json.loads(request.data)
+        assert body["truncate"] is False
+        assert body["shift"] is False
+        error = (
+            json.dumps({"error": {"type": "exceed_context_size_error", "message": "too long"}})
+            if nested
+            else "the prompt is longer than the context length currently available to the model; "
+            "shorten the prompt, adjust the context length in settings, "
+            "or use a model with a longer context length"
+        )
+        raise HTTPError(
+            request.full_url, 400, "Bad Request", {}, BytesIO(json.dumps({"error": error}).encode())
+        )
+
+    monkeypatch.setattr(ai, "urlopen", reject)
+    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="context_capacity") as exc:
+        OllamaOnboardingProvider().structured({}, "instructions", {}, Result, role="orchestrator")
+    assert exc.value.retryable is False
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b"not JSON",
+        b'{"error":"private details"}',
+        b'{"error":{"type":"unknown"}}',
+        b'{"error":"{\\"error\\": []}"}',
+        b"x" * 4097,
+    ],
+)
+def test_unrecognized_ollama_errors_do_not_expose_response_bodies(monkeypatch, raw):
+    def reject(request, timeout):
+        raise HTTPError(request.full_url, 400, "Bad Request", {}, BytesIO(raw))
+
+    monkeypatch.setattr(ai, "urlopen", reject)
+    with ExecutionBudget().scope(), pytest.raises(AiProviderError) as exc:
+        OllamaOnboardingProvider().structured({}, "instructions", {}, Result, role="orchestrator")
+    assert str(exc.value) == "configuration"
+    assert exc.value.retryable is False
+
+
+def test_context_exhaustion_during_output_never_returns_partial_answer(monkeypatch):
+    def respond(request, timeout):
+        assert json.loads(request.data)["shift"] is False
+        return BytesIO(
+            json.dumps(
+                {
+                    "message": {"content": '{"answer":"partial"}'},
+                    "done_reason": "length",
+                    "prompt_eval_count": 12000,
+                    "eval_count": 288,
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="incomplete_response"):
         OllamaOnboardingProvider().structured({}, "instructions", {}, Result, role="orchestrator")
 
 
@@ -190,8 +247,30 @@ def test_readonly_chat_reserves_output_for_final_review(monkeypatch):
 
 def test_chat_window_is_fixed_and_never_silently_grows(monkeypatch):
     monkeypatch.setenv("OLLAMA_CHAT_CONTEXT_TOKENS", "8192")
-    monkeypatch.setattr(ai, "urlopen", lambda *args, **kwargs: pytest.fail("must not send"))
-    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="context_capacity"):
-        OllamaOnboardingProvider().structured(
-            {"required_health_record": "x" * 8500}, "Return JSON", {}, Result, role="orchestrator"
+    context = {"required_health_record": "Restrição preservada. " * 400}
+    captured = []
+
+    def respond(request, timeout):
+        captured.append(json.loads(request.data))
+        return BytesIO(
+            json.dumps(
+                {
+                    "message": {"content": '{"answer":"ok"}'},
+                    "prompt_eval_count": 2400,
+                    "eval_count": 5,
+                }
+            ).encode()
         )
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    budget = ExecutionBudget()
+    with budget.scope():
+        result = OllamaOnboardingProvider().structured(
+            context, "Return JSON", {}, Result, role="orchestrator"
+        )
+    assert result.answer == "ok"
+    assert captured[0]["options"]["num_ctx"] == 8192
+    assert captured[0]["truncate"] is False
+    assert captured[0]["shift"] is False
+    assert json.loads(captured[0]["messages"][1]["content"]) == context
+    assert budget.input_tokens == 2400

@@ -416,13 +416,12 @@ class _Provider:
                 if role and (model := os.getenv(f"AI_MODEL_{role.upper()}", "").strip()):
                     body["model"] = model
                 if "messages" in body:
-                    # Reserve room for input and output instead of letting
-                    # Ollama silently drop necessary health/plan context.
+                    # Bytes reserve aggregate usage conservatively, but are not
+                    # tokens. Ollama enforces actual capacity with truncation
+                    # and context shifting disabled in the request.
                     window = int(os.getenv("OLLAMA_CONTEXT_TOKENS", "32768"))
                     if not budget.plan:
                         window = min(window, int(os.getenv("OLLAMA_CHAT_CONTEXT_TOKENS", "12288")))
-                    if input_bound + 512 + reserved > window:
-                        raise BudgetExceeded("context_capacity")
                     required = input_bound + 512 + reserved
                     # Reuse a modest window across router/specialist calls.
                     # Changing num_ctx reloads Ollama's model; always reserving
@@ -443,11 +442,17 @@ class _Provider:
                 timeout = min(timeout, budget.remaining())
 
             def read():
-                with urlopen(request, timeout=timeout) as response:  # noqa: S310
-                    raw = response.read(1_048_577)
-                    if len(raw) > 1_048_576:
-                        raise ValueError("response_size")
-                    return json.loads(raw)
+                try:
+                    with urlopen(request, timeout=timeout) as response:  # noqa: S310
+                        raw = response.read(1_048_577)
+                        if len(raw) > 1_048_576:
+                            raise ValueError("response_size")
+                        return json.loads(raw)
+                except HTTPError as error:
+                    raise AiProviderError(
+                        self._http_error_category(error),
+                        retryable=error.code >= 500 or error.code == 429,
+                    ) from None
 
             payload = bounded_wait(read, timeout) if budget else read()
             if not isinstance(payload, dict):
@@ -466,15 +471,13 @@ class _Provider:
             return type_.model_validate_json(self._text(payload))
         except BudgetExceeded as error:
             raise AiProviderError(str(error), retryable=False) from None
-        except HTTPError as error:
-            raise AiProviderError(
-                "provider_server" if error.code >= 500 or error.code == 429 else "configuration",
-                retryable=error.code >= 500 or error.code == 429,
-            ) from None
         except (TimeoutError, URLError):
             raise AiProviderError("timeout_or_network", retryable=True) from None
         except (json.JSONDecodeError, ValidationError, ValueError, TypeError):
             raise AiProviderError("malformed_structured_output", retryable=True) from None
+
+    def _http_error_category(self, error: HTTPError) -> str:
+        return "provider_server" if error.code >= 500 or error.code == 429 else "configuration"
 
     def structured(self, context, instructions, schema, type_, *, role):
         """Provider-neutral structured agent call; no model-supplied tool execution."""
@@ -564,6 +567,8 @@ class OllamaOnboardingProvider(_Provider):
             "stream": False,
             "format": schema,
             "think": False,
+            "truncate": False,
+            "shift": False,
         }
         return Request(
             f"{self._config.base_url.rstrip('/')}/api/chat",
@@ -577,6 +582,28 @@ class OllamaOnboardingProvider(_Provider):
         if not isinstance(message, dict) or not isinstance(message.get("content"), str):
             raise ValueError
         return message["content"]
+
+    def _http_error_category(self, error: HTTPError) -> str:
+        if error.code == 400:
+            # Ollama 0.34.1 exposes either its own error or a nested runner
+            # error. Classify only known capacity failures; never log the body.
+            try:
+                raw = error.read(4097)
+                payload = json.loads(raw) if len(raw) <= 4096 else None
+                detail = payload.get("error") if isinstance(payload, dict) else None
+                if detail == (
+                    "the prompt is longer than the context length currently available to the "
+                    "model; shorten the prompt, adjust the context length in settings, "
+                    "or use a model with a longer context length"
+                ):
+                    return "context_capacity"
+                nested = json.loads(detail) if isinstance(detail, str) else None
+                inner = nested.get("error") if isinstance(nested, dict) else None
+                if isinstance(inner, dict) and inner.get("type") == "exceed_context_size_error":
+                    return "context_capacity"
+            except (ValueError, OSError):
+                pass
+        return super()._http_error_category(error)
 
 
 def onboarding_ai_provider_from_environment() -> OnboardingAiProvider:
