@@ -39,6 +39,15 @@ _REASONS = {
     "no_editable_draft",
     "unsupported_save_claim",
     "unclassified",
+    "deadline_exceeded",
+    "generation_call_limit",
+    "retrieval_limit",
+    "input_token_limit",
+    "output_token_limit",
+    "context_capacity",
+    "provider_capacity",
+    "provider_usage_invalid",
+    "incomplete_response",
 }
 _PATHS = {"none", "model", "direct", "confirmation", "cached"}
 _OPERATIONS = {"onboarding", "training_chat", "training_generation", "training_adaptation"}
@@ -110,7 +119,7 @@ def observe_turn(operation: str):
 
 def observe_provider_call(function):
     @wraps(function)
-    def observed(provider, context, instructions, schema, response_type):
+    def observed(provider, context, instructions, schema, response_type, **kwargs):
         started = perf_counter()
         metadata = {
             "event": "ai_provider_call",
@@ -129,7 +138,7 @@ def observe_provider_call(function):
             "reason": "none",
         }
         try:
-            return function(provider, context, instructions, schema, response_type)
+            return function(provider, context, instructions, schema, response_type, **kwargs)
         except Exception as error:
             metadata["outcome"] = "failure"
             metadata["reason"] = _allowed(

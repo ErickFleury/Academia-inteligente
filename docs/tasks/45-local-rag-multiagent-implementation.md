@@ -26,7 +26,7 @@ commit before code changes and after every major tested implementation.
   One existing authentication assertion was made deterministic with a fake
   invalid token instead of depending on a live Keycloak server. Ruff and diff
   whitespace checks passed. Live embedding quality remains unverified.
-- Durable memory, client UI, and erasure: implemented as the next checkpoint.
+- Durable memory, client UI, and erasure (`4fed71e`): implemented.
   Client-only inspection/correction/forgetting requires no AI service. Compact
   reports have dates and attribution; bounded agent proposals require whole
   first-person source sentences, reject inferred diagnoses/uncertainty, and use
@@ -39,6 +39,11 @@ commit before code changes and after every major tested implementation.
   TypeScript, Ruff, and backend regression (558 passed,
   44 opt-in tests skipped). Live conversational extraction quality is pending.
 - Bounded orchestrator and four workflow integrations: pending.
+  Provider execution-budget foundation implemented: request-local call, input,
+  output, retrieval and time ceilings; bounded HTTP waiting without a work queue;
+  explicit per-role model overrides within the selected provider; controlled
+  context/output exhaustion. Validation: 27 budget/provider/diagnostics tests,
+  Ruff and diff checks. Workflow wiring and end-to-end deadline checks follow.
 - Evaluation, offline checks, hardware evidence, and rollout: pending.
 
 No acceptance-completion or laptop-performance claim is made. Optional production

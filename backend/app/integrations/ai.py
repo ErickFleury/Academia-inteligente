@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from app.integrations.ai_budget import BudgetExceeded, bounded_wait, current_budget
 from app.integrations.ai_diagnostics import observe_provider_call
 
 
@@ -387,12 +388,53 @@ class _Provider:
         instructions: str,
         schema: dict[str, object],
         type_: type[BaseModel],
+        *,
+        role: str | None = None,
     ) -> BaseModel:
         try:
-            with urlopen(
-                self._request(context, instructions, schema), timeout=self._timeout
-            ) as response:  # noqa: S310
-                return type_.model_validate_json(self._text(json.load(response)))
+            request = self._request(context, instructions, schema)
+            budget = current_budget.get()
+            timeout = self._timeout
+            reserved = None
+            if budget:
+                body = json.loads(request.data)
+                desired = 1000 if role == "orchestrator" else (7000 if budget.plan else 3000)
+                reserved = budget.reserve(len(request.data), desired)
+                if role and (model := os.getenv(f"AI_MODEL_{role.upper()}", "").strip()):
+                    body["model"] = model
+                if "messages" in body:
+                    # Reserve room for input and output instead of letting
+                    # Ollama silently drop necessary health/plan context.
+                    window = int(os.getenv("OLLAMA_CONTEXT_TOKENS", "32768"))
+                    if len(request.data) + 512 + reserved > window:
+                        raise BudgetExceeded("context_capacity")
+                    body["options"] = {"num_predict": reserved, "num_ctx": window}
+                else:
+                    body.update(max_output_tokens=reserved, truncation="disabled", store=False)
+                request.data = json.dumps(body).encode()
+                timeout = min(timeout, budget.remaining())
+
+            def read():
+                with urlopen(request, timeout=timeout) as response:  # noqa: S310
+                    raw = response.read(1_048_577)
+                    if len(raw) > 1_048_576:
+                        raise ValueError("response_size")
+                    return json.loads(raw)
+
+            payload = bounded_wait(read, timeout) if budget else read()
+            if not isinstance(payload, dict):
+                raise ValueError("invalid_response")
+            if budget:
+                usage = payload.get("usage") or {}
+                if not isinstance(usage, dict):
+                    raise ValueError("invalid_usage")
+                actual = usage.get("output_tokens", payload.get("eval_count"))
+                budget.reconcile_output(reserved, actual)
+                if payload.get("status") == "incomplete" or payload.get("done_reason") == "length":
+                    raise BudgetExceeded("incomplete_response")
+            return type_.model_validate_json(self._text(payload))
+        except BudgetExceeded as error:
+            raise AiProviderError(str(error), retryable=False) from None
         except HTTPError as error:
             raise AiProviderError(
                 "provider_server" if error.code >= 500 or error.code == 429 else "configuration",
@@ -402,6 +444,10 @@ class _Provider:
             raise AiProviderError("timeout_or_network", retryable=True) from None
         except (json.JSONDecodeError, ValidationError, ValueError, TypeError):
             raise AiProviderError("malformed_structured_output", retryable=True) from None
+
+    def structured(self, context, instructions, schema, type_, *, role):
+        """Provider-neutral structured agent call; no model-supplied tool execution."""
+        return self._call(context, instructions, schema, type_, role=role)
 
     def interview_turn(self, context: dict[str, object]) -> AiInterviewTurnResponse:
         return self._call(context, _INTERVIEW, _turn_schema(), AiInterviewTurnResponse)  # type: ignore[return-value]
