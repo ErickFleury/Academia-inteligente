@@ -1,0 +1,56 @@
+{
+  "started_at": "2026-10-20T02:44:35.220309+00:00",
+  "synthetic_only": true,
+  "steps": [
+    {
+      "step": "onboarding",
+      "status": "success",
+      "result": {
+        "reply": "Atualizei objetivo de treino. Como você descreve sua experiência: nenhuma, iniciante, intermediária ou avançada?",
+        "completion_ready": false
+      },
+      "seconds": 9.436
+    },
+    {
+      "step": "training_chat_memory_retry_forget",
+      "status": "success",
+      "result": {
+        "reply": "Entendi, você prefere treinar de manhã. Vamos ajustar o plano para que as sessões ocorram nesse horário. Me avise se quiser incluir algum exercício específico!",
+        "retry_and_memory_controls": "passed"
+      },
+      "seconds": 6.768
+    },
+    {
+      "step": "initial_plan_and_instructor_review",
+      "status": "success",
+      "result": {
+        "name": "Plano Inicial de Treino para Ganho de Força",
+        "status": "proposal",
+        "citations": [
+          {
+            "passage_id": "54e0ca4e-34df-4b4f-abbf-039623ea4e58",
+            "version_id": "cab07043-495a-4bc4-abaa-8782488ba138",
+            "source_id": "f4ccab8e-e494-48d0-afeb-e96a760ce455",
+            "title": "Protocolo sintético do piloto de software",
+            "version": 1,
+            "location": "text;passage:1"
+          }
+        ]
+      },
+      "seconds": 21.755
+    },
+    {
+      "step": "adaptation_and_client_review",
+      "status": "success",
+      "result": {
+        "explanation": "A proposta de adaptação do treino foi preparada com base no pedido do cliente de aumentar o descanso para noventa segundos entre as séries. O plano base foi revisado para refletir essa alteração, mantendo os exercícios, as séries e as repetições conforme solicitado.",
+        "status": "pending_instructor_review",
+        "chat_request_seconds": 22.018,
+        "adaptation_request_seconds": 33.431
+      },
+      "seconds": 55.465
+    }
+  ],
+  "retained_synthetic_messages": 4,
+  "completed_at": "2026-10-20T02:46:10.104495+00:00"
+}

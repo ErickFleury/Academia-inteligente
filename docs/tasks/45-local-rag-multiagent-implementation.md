@@ -69,13 +69,14 @@ commit before code changes and after every major tested implementation.
   this host; complete offline browser/login verification is still outstanding.
   A 41-case synthetic local retrieval/answer evaluation is now running.
 - Evaluation, complete offline workflow checks, hardware evidence, and rollout:
-  in progress.
+  desktop evaluation and offline protocol/workflow evidence recorded; human
+  grounding acceptance, CPU/laptop qualification and rollout remain pending.
 
 No acceptance-completion or laptop-performance claim is made. Optional production
-hosting configuration will be reconciled with the local/hosted modes before
-integrated completion; the first checkpoint targets the local development stack.
+configuration now supports explicit local/hosted adapters; Compose configuration
+validation passed with synthetic credentials, without deploying production services.
 
-## Pilot-driven corrections under verification
+## Pilot-driven corrections (`965c93b`)
 
 A frozen 41-case synthetic corpus and explicit local-only evaluation/workflow/
 protocol runners are available. Real evaluation found model-loading contention,
@@ -102,3 +103,50 @@ schema. No real application reset was executed. Migration through `20261019_35`
 passed upgrade/downgrade testing and was applied only to the isolated offline stack.
 All four local workflows produced successful synthetic outcomes, retaining the
 client/instructor review gates. Final full-corpus grounding review is pending.
+
+The complete 965c93b evaluation reached 37/37 lexical and hybrid retrieval, with
+39 delivered responses and two controlled memory-validation failures. Its answer
+review found omitted procedure conditions and unsupported conflict resolution;
+the retrieval score therefore does not establish acceptance. Raw synthetic
+reports and the revised review contract are documented in the evaluation report.
+
+## Final grounding correction (`f87e46c`)
+
+The review contract now lists omitted prerequisite conditions and incompatible
+statements before its verdict. Any listed issue blocks delivery even when a
+boolean verdict incorrectly accepts it. Specialist instructions preserve operating
+prerequisites and keep passage IDs out of client text. Two additional regression
+cases cover inconsistent review verdicts. Migration-test setup now isolates its
+Alembic marker from an already migrated base schema. Validation: 637 backend
+tests passed with PostgreSQL checks enabled, Ruff, and diff whitespace checks.
+The complete local evaluation and final human-review worksheet accompany this
+checkpoint's evidence report; pilot acceptance remains separate from implementation.
+
+## Plan tool permissions (`314f7fa`)
+
+A local adaptation rerun proposed a memory mutation without permission and was
+correctly rejected. The plan-routing schema now permits only an empty memory
+change list; backend permission checks still reject a provider that ignores it.
+Validation: all four local workflows passed again, including a 37.051-second
+adaptation request; all 638 backend tests passed with PostgreSQL checks enabled.
+The 41-case chat evaluation reached 37/37 lexical/hybrid recall, but the >=95%
+human grounding gate is not claimed. Cold and warmed CPU-only q03 probes both
+hit the 30-second deadline. See the [evidence report](../ai-rag-evaluation.md) and
+[review worksheet](../evaluations/2026-10-19-local-assistant/f87e46c-review.md).
+
+## Outstanding acceptance work
+
+The final memory guard (`6fdef5c`) also rejects first-person questions as uncertain
+agent evidence, preserving both facts and revision on rejection. Full backend
+validation after this guard: 639 passed with PostgreSQL checks enabled. The
+frontend remains at 242 passing tests; TypeScript/Ruff checks passed. No live
+paid API was used, and no real application data was migrated or reset.
+
+- Human claim-by-claim grounding review and correction of the flagged answer
+  quality issues. Retrieval success does not satisfy this gate.
+- A CPU-only profile that meets the existing deadlines; the selected 8B model
+  failed both CPU probes. No paid fallback or relaxed deadline was introduced.
+- Actual RTX 2070/seventh-generation i7 laptop measurements, concurrent capacity
+  and disconnected browser-ingress verification. Protocol checks and component
+  tests are recorded with their narrower scope.
+- Deliberate test-client rollout after verification. Defaults remain disabled.

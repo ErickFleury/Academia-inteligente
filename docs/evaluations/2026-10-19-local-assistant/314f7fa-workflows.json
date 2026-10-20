@@ -1,0 +1,56 @@
+{
+  "started_at": "2026-10-20T03:02:41.847620+00:00",
+  "synthetic_only": true,
+  "steps": [
+    {
+      "step": "onboarding",
+      "status": "success",
+      "result": {
+        "reply": "Atualizei objetivo de treino. Como você descreve sua experiência: nenhuma, iniciante, intermediária ou avançada?",
+        "completion_ready": false
+      },
+      "seconds": 8.956
+    },
+    {
+      "step": "training_chat_memory_retry_forget",
+      "status": "success",
+      "result": {
+        "reply": "Posso gerar seu rascunho inicial com base no onboarding concluído, para revisão do instrutor. Quer que eu prepare seu rascunho de treino?",
+        "retry_and_memory_controls": "passed"
+      },
+      "seconds": 8.244
+    },
+    {
+      "step": "initial_plan_and_instructor_review",
+      "status": "success",
+      "result": {
+        "name": "Plano Inicial de Treino para Ganho de Força",
+        "status": "proposal",
+        "citations": [
+          {
+            "passage_id": "c2e6e4dd-4913-4a43-81c6-a0c9cb37a14a",
+            "version_id": "53b7fb36-dcf9-4385-bd2f-db07507f34d6",
+            "source_id": "2c7913da-e8b7-4e38-a489-20dc8bfdb223",
+            "title": "Protocolo sintético do piloto de software",
+            "version": 1,
+            "location": "text;passage:1"
+          }
+        ]
+      },
+      "seconds": 22.986
+    },
+    {
+      "step": "adaptation_and_client_review",
+      "status": "success",
+      "result": {
+        "explanation": "A proposta de adaptação do treino foi preparada com base no pedido do cliente de aumentar o descanso para 90 segundos entre as séries. O plano base foi revisado, mantendo os exercícios, carga e repetições, mas alterando o tempo de descanso conforme solicitado. A alteração foi documentada e está pronta para revisão do instrutor.",
+        "status": "pending_instructor_review",
+        "chat_request_seconds": 23.788,
+        "adaptation_request_seconds": 37.051
+      },
+      "seconds": 60.859
+    }
+  ],
+  "retained_synthetic_messages": 4,
+  "completed_at": "2026-10-20T03:04:24.380305+00:00"
+}

@@ -1,0 +1,52 @@
+{
+  "started_at": "2026-10-20T03:00:20.595566+00:00",
+  "synthetic_only": true,
+  "steps": [
+    {
+      "step": "onboarding",
+      "status": "success",
+      "result": {
+        "reply": "Atualizei objetivo de treino. Como você descreve sua experiência: nenhuma, iniciante, intermediária ou avançada?",
+        "completion_ready": false
+      },
+      "seconds": 9.533
+    },
+    {
+      "step": "training_chat_memory_retry_forget",
+      "status": "success",
+      "result": {
+        "reply": "Posso gerar seu rascunho inicial com base no onboarding concluído, para revisão do instrutor. Quer que eu prepare seu rascunho de treino?",
+        "retry_and_memory_controls": "passed"
+      },
+      "seconds": 8.053
+    },
+    {
+      "step": "initial_plan_and_instructor_review",
+      "status": "success",
+      "result": {
+        "name": "Plano Inicial de Treino para Ganho de Força",
+        "status": "proposal",
+        "citations": [
+          {
+            "passage_id": "9a224b2c-cd66-4ffd-bf29-0483f4c91e05",
+            "version_id": "4e594f63-0f6a-4051-9958-a2476f42ef34",
+            "source_id": "de74948c-3d29-4207-b21f-dcef567e31e7",
+            "title": "Protocolo sintético do piloto de software",
+            "version": 1,
+            "location": "text;passage:1"
+          }
+        ]
+      },
+      "seconds": 22.653
+    },
+    {
+      "step": "adaptation_and_client_review",
+      "status": "failure",
+      "error_type": "AssistantError",
+      "error": "memory_tool_not_allowed",
+      "seconds": 26.744
+    }
+  ],
+  "retained_synthetic_messages": 4,
+  "completed_at": "2026-10-20T03:01:29.025417+00:00"
+}
