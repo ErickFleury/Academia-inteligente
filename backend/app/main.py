@@ -19,6 +19,7 @@ from app.modules.identity.recovery_router import router as recovery_router
 from app.modules.identity.router import router as identity_router
 from app.modules.knowledge.router import router as knowledge_router
 from app.modules.knowledge.worker import assistant_lifespan
+from app.modules.memory.router import router as memory_router
 from app.modules.occupancy.router import router as occupancy_router
 from app.modules.onboarding.instructor_router import router as instructor_onboarding_router
 from app.modules.onboarding.router import router as onboarding_router
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(health_router)
     app.include_router(knowledge_router)
+    app.include_router(memory_router)
     app.include_router(biometrics_router)
     app.include_router(identity_router)
     app.include_router(recovery_router)

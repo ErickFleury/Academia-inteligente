@@ -24,6 +24,7 @@ import { ProgressModerationPage } from './progress-moderation-page'
 import { EquipmentCatalogPage } from './equipment-catalog-page'
 import { EquipmentManagementPage } from './equipment-management-page'
 import { AiReferencePage } from './ai-reference-page'
+import { AssistantMemoryPage } from './assistant-memory-page'
 import { SocialProfilePage } from './social-profile-page'
 import { PostDetailPage } from './post-detail-page'
 import { InstructorFeedPage } from './instructor-feed-page'
@@ -157,6 +158,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
   const isOnboardingConversationRoute = location.pathname === '/onboarding/conversa'
   const isCurrentTrainingRoute = location.pathname === '/treino'
   const isTrainingChatRoute = location.pathname === '/assistente'
+  const isMemoryRoute = location.pathname === '/assistente/memoria'
   const isProgressRoute = location.pathname === '/feed'
   const isEquipmentManagementRoute = location.pathname === '/admin/equipamentos'
   const isReferencesRoute = location.pathname === '/admin/referencias'
@@ -168,7 +170,7 @@ function Application({ session, setSession }: { session: Session | null; setSess
   const instructorPostId = location.pathname.match(/^\/instrutor\/publicacoes\/([^/]+)$/)?.[1]
   const isClientOnboardingRoute = isOnboardingRoute || isOnboardingConversationRoute
   const isClientEntryRoute = location.pathname === '/cliente'
-  const isClientRoute = isClientEntryRoute || isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isProgressRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
+  const isClientRoute = isClientEntryRoute || isClientOnboardingRoute || isCurrentTrainingRoute || isTrainingChatRoute || isMemoryRoute || isProgressRoute || isProfileRoute || Boolean(viewedProfileId) || Boolean(viewedPostId)
   const isInstructor = session?.roles.includes('instructor') ?? false
 
   function clearSession() {
@@ -287,6 +289,10 @@ function Application({ session, setSession }: { session: Session | null; setSess
 
   if (isOnboardingConversationRoute && session) {
     return <Navigate replace to="/assistente" />
+  }
+
+  if (isMemoryRoute && session) {
+    return <ClientNavigationStateProvider onboardingComplete={onboardingComplete}><AssistantMemoryPage accessToken={session.accessToken} onSignOut={endSession} /></ClientNavigationStateProvider>
   }
 
   if (isOnboardingRoute && session) {

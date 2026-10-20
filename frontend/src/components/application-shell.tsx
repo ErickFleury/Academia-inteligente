@@ -78,6 +78,7 @@ function ClientNavigation({
       : []),
     { href: "/treino", label: "Meu treino", icon: "training" },
     { href: "/assistente", label: "Assistente", icon: "assistant" },
+    { href: "/assistente/memoria", label: "Memória do assistente", icon: "assistant" },
     { href: "/feed", label: "Feed", icon: "feed" },
     { href: "/equipamentos", label: "Equipamentos", icon: "equipment" },
   ];

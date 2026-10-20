@@ -444,6 +444,9 @@ class ClientService:
 
         lock_biometrics(session)
         erase_access_history(session, client_id=client.id)
+        from app.modules.memory.models import ClientMemoryFact
+
+        session.execute(delete(ClientMemoryFact).where(ClientMemoryFact.client_id == client.id))
         conversation_ids = select(OnboardingAiConversation.id).where(
             OnboardingAiConversation.client_id == client.id
         )

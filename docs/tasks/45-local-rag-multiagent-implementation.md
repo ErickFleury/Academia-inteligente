@@ -15,7 +15,7 @@ commit before code changes and after every major tested implementation.
   checkpoint; actual model inference remains pending. Validation: embedding and
   existing generation-provider tests, Ruff, CPU/GPU Compose validation, and
   `git diff --check`.
-- Reference persistence/import/retrieval and administrator UI: implemented.
+- Reference persistence/import/retrieval and administrator UI (`402ad63`): implemented.
   Versioned administrator uploads, bounded extraction/import with retries,
   preview and explicit activation/withdrawal, PostgreSQL full-text/vector RRF,
   namespace isolation and lexical fallback are covered by 13 focused tests
@@ -26,7 +26,18 @@ commit before code changes and after every major tested implementation.
   One existing authentication assertion was made deterministic with a fake
   invalid token instead of depending on a live Keycloak server. Ruff and diff
   whitespace checks passed. Live embedding quality remains unverified.
-- Durable memory, client UI, and erasure: pending.
+- Durable memory, client UI, and erasure: implemented as the next checkpoint.
+  Client-only inspection/correction/forgetting requires no AI service. Compact
+  reports have dates and attribution; bounded agent proposals require whole
+  first-person source sentences, reject inferred diagnoses/uncertainty, and use
+  revision checks plus a non-content event cutoff against stale replay.
+  Integration with conversational agents follows in the orchestration checkpoint.
+  Memory survives short transcript expiry and is erased with a Client even when
+  an employee Account survives. Validation: 15 focused memory/PostgreSQL/migration
+  checks, 34 memory/erasure/shared-account checks before the last additional case,
+  six new interface tests, 28 existing routing tests with local test OIDC URLs,
+  TypeScript, Ruff, and backend regression (558 passed,
+  44 opt-in tests skipped). Live conversational extraction quality is pending.
 - Bounded orchestrator and four workflow integrations: pending.
 - Evaluation, offline checks, hardware evidence, and rollout: pending.
 

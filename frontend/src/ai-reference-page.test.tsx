@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AiReferencePage } from './ai-reference-page'
@@ -6,7 +6,7 @@ import * as api from './ai-references'
 
 vi.mock('./ai-references', () => ({ listReferences: vi.fn(), previewReference: vi.fn(), referenceAction: vi.fn(), uploadReference: vi.fn() }))
 const item: api.ReferenceVersion = { id: 'version', source_id: 'source', title: 'Manual de treino', number: 1, status: 'ready', active: false, progress: 100, error_code: null, revision: 1 }
-afterEach(() => vi.resetAllMocks())
+afterEach(() => { cleanup(); vi.resetAllMocks() })
 function mount() { render(<MemoryRouter><AiReferencePage accessToken="test-token" onSignOut={() => {}} /></MemoryRouter>) }
 
 describe('referências do assistente', () => {
