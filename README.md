@@ -85,41 +85,52 @@ Real webcam verification is still pending; no liveness or hardware readiness is 
 
 ### Local conversational AI with Ollama
 
-OpenAI remains the initial configured provider. For local development without
-an API cost, use the optional internal Ollama Compose profile. Set the following
-values in `.env` (a smaller compatible model such as `qwen3:4b` can be used
-instead):
+Local Ollama is the default for generation and embeddings. Existing `.env`
+files retain their explicit provider choices; use these values for local operation:
 
 ```bash
 AI_PROVIDER=ollama
 OLLAMA_BASE_URL=http://ollama:11434
 OLLAMA_MODEL=qwen3:8b
 OLLAMA_TIMEOUT_SECONDS=120
+AI_EMBEDDING_PROVIDER=ollama
+AI_EMBEDDING_MODEL=embeddinggemma
+AI_EMBEDDING_DIMENSIONS=768
+AI_ORCHESTRATION_ENABLED=false
 ```
 
-Start it when needed:
+Provision models once while connected, then start from cached artifacts:
 
 ```bash
-docker compose --profile ollama up -d
+docker compose up -d ollama
+docker compose --profile provision-models run --rm ollama-model
+docker compose --profile provision-models run --rm ollama-embedding-model
 ```
 
-The first execution downloads the configured model. It is then retained in the
-`ollama_data` Docker volume. Recreate the backend with
-`docker compose up --build -d backend`, then sign in as a client and test
-`/onboarding/conversa`. To stop local inference without deleting the model,
-run `docker compose --profile ollama stop ollama`; start it again with
-`docker compose --profile ollama start ollama`.
+These explicit provisioning commands download models into `ollama_data`. Ordinary
+startup does not execute model pulls. Recreate the backend after configuration
+changes, then test `/assistente`. Stop/start inference with `docker compose stop
+ollama` / `docker compose start ollama`; keep the model volume.
 
 The Ollama API is accessible only to Compose services; this project does not
 publish port 11434. To use an Ollama process installed directly on the Linux
 host instead, set `OLLAMA_BASE_URL=http://host.docker.internal:11434`; the
 Compose backend includes the required Linux host-gateway mapping.
 
-The optional Compose service is pinned to NVIDIA GPU `0` and its CUDA 12 runner;
-it does not silently use a CPU runner. The host must have a compatible NVIDIA
-driver and NVIDIA Container Toolkit configured for Docker; otherwise the Ollama
-service cannot perform inference until GPU access is restored. This project does
-not configure a host GPU driver or expose GPU services publicly.
+The base service supports CPU execution and disables Ollama cloud features. For
+GPU acceleration use `docker compose -f docker-compose.yml -f docker-compose.gpu.yml
+up -d ollama`. This requires a working NVIDIA driver and Container Toolkit;
+the project does not install drivers. Local quality and latency still require
+verification on the deployment hardware.
+
+OpenAI is optional and explicitly configured: set `AI_PROVIDER=openai` for
+generation and/or `AI_EMBEDDING_PROVIDER=openai`,
+`AI_EMBEDDING_MODEL=text-embedding-3-small`, `AI_EMBEDDING_DIMENSIONS=1536` for
+embeddings, plus an `OPENAI_API_KEY`. There is no automatic hosted fallback.
+Changing embedding configuration requires reindexing reference documents;
+increment `AI_EMBEDDING_REVISION` when replacing a model artifact under the same
+name. Query vectors are not persisted. The new orchestration path remains off
+until its integrated verification is complete.
 
 For a fresh local realm, `docker-compose up --build` imports the provisioning
 service account and Mailpit SMTP configuration. Existing Keycloak realms are

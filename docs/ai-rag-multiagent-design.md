@@ -1,12 +1,14 @@
 # Local RAG and multiagent assistant design
 
-**Status:** consolidated for final owner confirmation; implementation has not
-started. Interview decisions Q1–Q37 are recorded in the
+**Status:** confirmed by the owner; implementation in progress. Interview
+decisions Q1–Q37 are recorded in the
 [canonical requirements](requirements.md#rag-and-multiagent-assistant-design--2026-10-19).
 This document translates those decisions into proposed contracts and delivery
 work; it does not independently override or extend the canonical specification.
-Detailed defaults below are reviewable implementation proposals, not completed
-features. No requirement is marked verified by this document.
+The owner confirmed the detailed defaults below, including no historical-memory
+backfill. They are implementation contracts, not completed features. No requirement
+is marked verified by this document. Baseline and major implementation checkpoints
+must be committed independently, as explicitly requested by the owner.
 
 ## Outcome and scope
 

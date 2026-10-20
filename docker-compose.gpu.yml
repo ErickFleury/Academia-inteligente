@@ -1,0 +1,10 @@
+# Optional GPU override; the base Ollama service supports CPU execution.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]

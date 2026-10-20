@@ -373,7 +373,7 @@ class OllamaConfig:
     @classmethod
     def from_environment(cls) -> "OllamaConfig":
         return cls(
-            os.environ.get("OLLAMA_BASE_URL", "http://host.docker.internal:11434"),
+            os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434"),
             os.environ.get("OLLAMA_MODEL", "qwen3:8b"),
             int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "120")),
         )
@@ -503,7 +503,7 @@ class OllamaOnboardingProvider(_Provider):
 
 
 def onboarding_ai_provider_from_environment() -> OnboardingAiProvider:
-    provider = os.environ.get("AI_PROVIDER", "openai").strip().lower()
+    provider = os.environ.get("AI_PROVIDER", "ollama").strip().lower()
     if provider == "openai":
         return OpenAiResponsesOnboardingProvider()
     if provider == "ollama":

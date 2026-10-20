@@ -2072,9 +2072,10 @@ retention policy, dependency, schema migration or plan-approval change is approv
 
 ### RAG and multiagent assistant design — 2026-10-19
 
-**Status:** owner-approved design direction; design interview in progress.
-Implementation awaits confirmation of the completed shared design. This section
-does not mark any acceptance criterion implemented or verified.
+**Status:** consolidated design confirmed by the owner; implementation authorized.
+The owner also requires a baseline commit and a focused checkpoint commit after
+each major implementation. This section does not mark acceptance criteria
+implemented or verified.
 
 **Scope:** EXT-RF-AI-01, RF-15, RF-18, and RF-19, preserving the RF-11–RF-13
 onboarding gates and RF-17 lifecycle dependencies. Existing client isolation,
@@ -2260,9 +2261,11 @@ The owner approved the following design decisions:
 Q27 is resolved as mandatory local capability plus optional paid OpenAI support
 through replaceable adapters. Local defaults and offline-after-provisioning
 verification are approved; Q37 selects `embeddinggemma` for local embeddings.
-The [consolidated design](ai-rag-multiagent-design.md) contains the proposed
-contracts, evaluation rubric, and delivery sequence for final shared-understanding
-confirmation before implementation. Newly approved dependencies are
+The owner confirmed the [consolidated design](ai-rag-multiagent-design.md), including
+its contracts, evaluation rubric, delivery sequence, and building durable memory
+from new conversations without automatic historical backfill. Use exact vector
+search with reciprocal-rank fusion for the initial pilot, tracked import states,
+and minimal non-content replay suppression for forgetting. Newly approved dependencies are
 pypdf, the pgvector server extension, and its Python integration; exact pins,
 deployment compatibility, retrieval quality, and operating capacity remain
 unverified. Supporting rationale:
