@@ -48,6 +48,7 @@ class Agent:
     def __init__(self, *, changes=None, route=None):
         self.changes, self.route = changes or [], route or {}
         self.calls = []
+        self.schemas = []
         self.fail = False
         self.hook = None
         self.citations = []
@@ -59,6 +60,7 @@ class Agent:
         reserve = budget.reserve(len(json.dumps(context, default=str).encode()), 1000)
         budget.reconcile_output(reserve, 25)
         self.calls.append((role, context, instructions))
+        self.schemas.append(schema)
         if role == "orchestrator":
             if "cited_passages" in context:
                 return type_.model_validate(
@@ -240,12 +242,16 @@ def test_adaptation_retains_client_confirmation_and_instructor_review(database_s
     assert [call[0] for call in provider.calls] == ["orchestrator", "adaptation"]
 
 
-def test_arbitrary_delegation_and_memory_tools_are_rejected(database_session):
+@pytest.mark.parametrize("plan_role", ["initial_plan", "adaptation"])
+def test_arbitrary_delegation_and_memory_tools_are_rejected(database_session, plan_role):
     session = database_session
     client = owner(session)
-    run = AssistantRun(session, client.id, "initial_plan", provider=Agent(changes=[report()]))
+    provider = Agent(changes=[report()])
+    run = AssistantRun(session, client.id, plan_role, provider=provider)
     with pytest.raises(AssistantError, match="memory_tool_not_allowed"):
         run.prepare({})
+    assert provider.schemas[0]["properties"]["memory_changes"]["maxItems"] == 0
+    assert session.scalar(select(ClientMemoryFact)) is None
     run = AssistantRun(
         session, client.id, "training_chat", provider=Agent(route={"specialist": "adaptation"})
     )

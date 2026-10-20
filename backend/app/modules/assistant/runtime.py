@@ -289,11 +289,16 @@ class AssistantRun:
                 self.context.get("current_training_plan") or self.context.get("base_plan")
             ),
         }
+        route_schema = strict_schema(Route.model_json_schema())
+        if not routing_context["memory_writes"]:
+            # Plan requests have no source event authorizing memory mutation.
+            # Constrain generation as well as enforcing the permission below.
+            route_schema["properties"]["memory_changes"]["maxItems"] = 0
         for attempt in range(2):
             self.route = self._call(
                 routing_context,
                 _ROUTING,
-                strict_schema(Route.model_json_schema()),
+                route_schema,
                 Route,
                 "orchestrator",
             )
