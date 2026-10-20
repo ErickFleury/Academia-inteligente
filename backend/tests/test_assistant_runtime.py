@@ -54,6 +54,7 @@ class Agent:
         self.citations = []
         self.review_supported, self.review_conflict = True, False
         self.review_missing_conditions, self.review_conflicting_statements = [], []
+        self.review_unsupported_claims = []
 
     def structured(self, context, instructions, schema, type_, *, role):
         budget = current_budget.get()
@@ -67,6 +68,7 @@ class Agent:
                     {
                         "missing_conditions": self.review_missing_conditions,
                         "conflicting_statements": self.review_conflicting_statements,
+                        "unsupported_claims": self.review_unsupported_claims,
                         "supported": self.review_supported,
                         "relevant_conflict": self.review_conflict,
                     }
@@ -399,16 +401,17 @@ def test_reference_withdrawal_before_commit_discards_answer(database_session, ro
 
 
 @pytest.mark.parametrize(
-    "supported,conflict,missing,contradictions",
+    "supported,conflict,missing,contradictions,unsupported",
     [
-        (False, False, [], []),
-        (True, True, [], []),
-        (True, False, ["Desligar antes de ajustar."], []),
-        (True, False, [], ["Duas posições incompatíveis sem prioridade."]),
+        (False, False, [], [], []),
+        (True, True, [], [], []),
+        (True, False, ["Desligar antes de ajustar."], [], []),
+        (True, False, [], ["Duas posições incompatíveis sem prioridade."], []),
+        (True, False, [], [], ["Continuar o uso contradiz a ordem de parar."]),
     ],
 )
 def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
-    database_session, rollout, supported, conflict, missing, contradictions
+    database_session, rollout, supported, conflict, missing, contradictions, unsupported
 ):
     session = database_session
     owner(session)
@@ -426,6 +429,7 @@ def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
     provider = Agent(route={"query": "treino", "needs_references": True})
     provider.citations = [rollout.passages[0]["passage_id"]]
     provider.review_supported, provider.review_conflict = supported, conflict
+    provider.review_unsupported_claims = unsupported
     provider.review_missing_conditions, provider.review_conflicting_statements = (
         missing,
         contradictions,

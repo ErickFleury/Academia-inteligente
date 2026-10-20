@@ -44,6 +44,7 @@ class Route(BaseModel):
 
 class GroundingReview(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    unsupported_claims: list[str] = Field(max_length=5)
     missing_conditions: list[str] = Field(max_length=5)
     conflicting_statements: list[str] = Field(max_length=5)
     supported: bool
@@ -126,7 +127,14 @@ discordarem para o mesmo equipamento/situação e não houver prioridade explíc
 marque relevant_conflict=true, mesmo que a resposta tenha escolhido uma fonte.
 Fontes sobre equipamentos diferentes não constituem conflito entre si.
 Não invente prioridade nem presuma que a ordem dos documentos define prioridade.
-Primeiro preencha missing_conditions com as condições obrigatórias do procedimento
+Primeiro compare cada afirmação da resposta com o que a fonte realmente diz.
+Preencha unsupported_claims com afirmações inventadas, inferidas sem apoio ou que
+contradizem a fonte (ou [] se nenhuma). Uma ordem de interromper NÃO autoriza
+continuar; ausência de proibição também NÃO comprova segurança. Não basta a
+citação mencionar o mesmo equipamento ou código. Exemplo: fonte 'se houver
+vazamento, feche a válvula'; resposta 'pode manter a válvula aberta':
+unsupported_claims=['Manter aberta contradiz fechar em caso de vazamento'].
+Depois preencha missing_conditions com as condições obrigatórias do procedimento
 que aparecem na fonte mas faltam na resposta (ou [] se nenhuma). Preencha
 conflicting_statements com as afirmações incompatíveis sobre o MESMO assunto,
 mesmo quando a resposta reconhece a divergência (ou [] se não houver).
@@ -524,6 +532,7 @@ class AssistantRun:
             )
             if (
                 not review.supported
+                or review.unsupported_claims
                 or review.relevant_conflict
                 or review.missing_conditions
                 or review.conflicting_statements
