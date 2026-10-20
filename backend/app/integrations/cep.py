@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from typing import Protocol
 from urllib.error import HTTPError, URLError
@@ -37,6 +38,8 @@ class ViaCepLookup:
     """Small server-side ViaCEP adapter; callers retain manual entry on failure."""
 
     def lookup(self, postal_code: str) -> CepAddress:
+        if os.getenv("VIA_CEP_ENABLED", "true").lower() != "true":
+            raise PostalCodeUnavailableError
         request = Request(
             f"https://viacep.com.br/ws/{postal_code}/json/",
             headers={"Accept": "application/json"},

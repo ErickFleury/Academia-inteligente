@@ -307,3 +307,21 @@ def test_reference_withdrawal_before_commit_discards_answer(database_session, ro
         session.scalar(select(TrainingAiMessage).where(TrainingAiMessage.role == "assistant"))
         is None
     )
+
+
+def test_expired_budget_cannot_commit_reply_or_memory(database_session):
+    from time import monotonic
+
+    session = database_session
+    owner(session)
+    provider = Agent(changes=[report()])
+    provider.hook = lambda: setattr(current_budget.get(), "started", monotonic() - 31)
+    with pytest.raises(AssistantError, match="deadline_exceeded"):
+        TrainingChatService(provider).submit_for_subject(
+            session, "owner", message=report()["text"], client_request_id=uuid4()
+        )
+    assert session.scalar(select(ClientMemoryFact)) is None
+    assert (
+        session.scalar(select(TrainingAiMessage).where(TrainingAiMessage.role == "assistant"))
+        is None
+    )

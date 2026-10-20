@@ -38,7 +38,7 @@ commit before code changes and after every major tested implementation.
   six new interface tests, 28 existing routing tests with local test OIDC URLs,
   TypeScript, Ruff, and backend regression (558 passed,
   44 opt-in tests skipped). Live conversational extraction quality is pending.
-- Bounded orchestrator and four workflow integrations: implemented behind
+- Bounded orchestrator and four workflow integrations (`1f99df0`): implemented behind
   `AI_ORCHESTRATION_ENABLED` plus an explicit Client UUID allowlist. The LLM
   chooses the backend-permitted specialist or clarification; the runtime owns
   reference retrieval, source-grounded memory proposals and citation validation.
@@ -55,7 +55,21 @@ commit before code changes and after every major tested implementation.
   explicit per-role model overrides within the selected provider; controlled
   context/output exhaustion. Validation: 27 budget/provider/diagnostics tests,
   Ruff and diff checks. Real-inference deadline checks follow.
-- Evaluation, offline checks, hardware evidence, and rollout: pending.
+- Offline/deployment foundation: implemented. Local defaults and both model
+  provisioning services now apply to production configuration too. PostgreSQL
+  bootstrap installs pgvector before non-superuser app migrations. Optional
+  per-role models reach containers. Offline override clears paid credentials,
+  blocks external routing, disables ViaCEP and external equipment images.
+  Ollama context allocation uses a conservative per-request bound instead of
+  reserving 32K for every short route. Validation: 32 focused deployment,
+  budget, agent and offline tests; 10 equipment/chat interface regressions; Ruff.
+  Fresh isolated offline database migrated to head; local API health, OIDC
+  discovery and Mailpit API responded successfully with outbound access blocked.
+  Docker internal-only networks did not publish normal browser-facing ports on
+  this host; complete offline browser/login verification is still outstanding.
+  A 41-case synthetic local retrieval/answer evaluation is now running.
+- Evaluation, complete offline workflow checks, hardware evidence, and rollout:
+  in progress.
 
 No acceptance-completion or laptop-performance claim is made. Optional production
 hosting configuration will be reconciled with the local/hosted modes before

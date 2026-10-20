@@ -95,6 +95,8 @@ def test_adapter_caps_output_and_uses_explicit_role_model(monkeypatch, hosted):
     if hosted:
         assert captured[0]["store"] is False
         assert captured[0]["truncation"] == "disabled"
+    else:
+        assert captured[0]["options"]["num_ctx"] == 4096
 
 
 def test_context_overflow_never_calls_provider(monkeypatch):

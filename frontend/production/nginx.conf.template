@@ -99,6 +99,14 @@ http {
         }
         location ~ /\. { return 404; }
         location ~ ^/api/(docs|redoc|openapi\.json)(/|$) { return 404; }
+        location = /api/ai/references {
+            client_max_body_size 20m;
+            limit_req zone=api burst=20 nodelay;
+            set $api_upstream backend:8000;
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass http://$api_upstream;
+            proxy_cache off;
+        }
         location /api/ {
             limit_req zone=api burst=80 nodelay;
             limit_req zone=ai burst=6 nodelay;

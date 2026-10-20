@@ -408,7 +408,11 @@ class _Provider:
                     window = int(os.getenv("OLLAMA_CONTEXT_TOKENS", "32768"))
                     if len(request.data) + 512 + reserved > window:
                         raise BudgetExceeded("context_capacity")
-                    body["options"] = {"num_predict": reserved, "num_ctx": window}
+                    required = len(request.data) + 512 + reserved
+                    # Allocate only this request's conservative bound. Reserving
+                    # 32K for a short route forces avoidable CPU offload on 8GB GPUs.
+                    allocated = min(window, max(4096, ((required + 2047) // 2048) * 2048))
+                    body["options"] = {"num_predict": reserved, "num_ctx": allocated}
                 else:
                     body.update(max_output_tokens=reserved, truncation="disabled", store=False)
                 request.data = json.dumps(body).encode()

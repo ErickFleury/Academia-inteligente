@@ -12,3 +12,5 @@ CREATE USER academia_identity WITH PASSWORD '$identity_password' NOSUPERUSER NOC
 CREATE DATABASE keycloak OWNER academia_identity;
 REVOKE ALL ON DATABASE keycloak FROM PUBLIC;
 SQL
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname academia \
+  -c 'CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public'

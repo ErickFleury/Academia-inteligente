@@ -13,6 +13,10 @@ export function EquipmentPhoto({ url, name, token, compact = false, revision = '
     let local: string | null = null
     setSource(null); setFailed(false)
     if (!url) return
+    if (import.meta.env.VITE_ALLOW_EXTERNAL_IMAGES === 'false' && /^https?:\/\//.test(url)) {
+      setFailed(true)
+      return
+    }
     if (url.startsWith('/equipment/admin/') && token) {
       void fetch(equipmentImageUrl(url), { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
         .then((response) => { if (!response.ok) throw new Error(); return response.blob() })

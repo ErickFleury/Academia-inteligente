@@ -1,0 +1,19 @@
+# Use only after images/dependencies/models have been provisioned.
+# The application network has no outbound internet route. Browser assets use
+# local origins; external equipment images are replaced by the existing fallback.
+services:
+  backend:
+    environment:
+      AI_PROVIDER: ollama
+      AI_EMBEDDING_PROVIDER: ollama
+      AI_EMBEDDING_MODEL: embeddinggemma
+      AI_EMBEDDING_DIMENSIONS: "768"
+      OLLAMA_BASE_URL: http://ollama:11434
+      OPENAI_API_KEY: ""
+      VIA_CEP_ENABLED: "false"
+  frontend:
+    environment:
+      VITE_ALLOW_EXTERNAL_IMAGES: "false"
+networks:
+  default:
+    internal: true

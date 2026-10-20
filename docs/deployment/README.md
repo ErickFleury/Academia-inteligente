@@ -300,3 +300,42 @@ The integration review used synthetic data, an isolated Compose project and a
 short-lived local certificate. Real SMTP deliverability, public DNS/certificates,
 provider firewall policy, off-host encryption and alert delivery require the
 chosen deployment services and must be validated during rollout.
+
+## Local AI and reference migration
+
+The default AI providers are local Ollama generation and embeddings. The public
+production stack still requires its explicitly configured SMTP relay and HTTPS;
+the fully local Mailpit/offline setup is documented in the repository README.
+`--openai-key-file` is optional. To opt into paid generation, set
+`AI_PROVIDER=openai` and supply the key; hosted embeddings independently require
+`AI_EMBEDDING_PROVIDER=openai`, `AI_EMBEDDING_MODEL=text-embedding-3-small`, and
+`AI_EMBEDDING_DIMENSIONS=1536`. Never reuse a different embedding namespace's vectors.
+
+Provision local models explicitly before disconnecting:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.production.yml up -d ollama
+docker compose --env-file .env.production -f docker-compose.production.yml --profile provision-models run --rm ollama-model
+docker compose --env-file .env.production -f docker-compose.production.yml --profile provision-models run --rm ollama-embedding-model
+```
+
+CPU operation is the baseline. Add `-f docker-compose.gpu.yml` for optional NVIDIA
+GPU acceleration. Keep the `ollama_data` volume when switching modes.
+
+New databases install pgvector during initialization. For an existing deployment,
+build the new PostgreSQL image, take the normal database backup, recreate PostgreSQL
+with its existing volume, then install the extension with the administrative role
+before running the application-role migrations:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.production.yml build postgres
+docker compose --env-file .env.production -f docker-compose.production.yml up -d postgres
+docker compose --env-file .env.production -f docker-compose.production.yml exec -T postgres psql -U postgres -d academia -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public'
+docker compose --env-file .env.production -f docker-compose.production.yml run --rm migrate
+```
+
+The database remains PostgreSQL 18.6. The extension is installed by the database
+administrator; the application role stays non-superuser. Enable orchestration only
+after verification with `AI_ORCHESTRATION_ENABLED=true` and a comma-separated
+`AI_ORCHESTRATION_CLIENT_IDS` test-client allowlist. Memory inspection/deletion
+remains available when orchestration is disabled.

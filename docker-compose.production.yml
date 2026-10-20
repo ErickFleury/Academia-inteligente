@@ -29,7 +29,19 @@ x-backend: &backend
     SMTP_PASSWORD_FILE: /run/secrets/smtp_password
     SMTP_FROM: ${SMTP_FROM:?Set SMTP_FROM}
     ONBOARDING_INVITATION_URL: https://${APP_DOMAIN}/onboarding
-    AI_PROVIDER: ${AI_PROVIDER:-openai}
+    AI_PROVIDER: ${AI_PROVIDER:-ollama}
+    AI_EMBEDDING_PROVIDER: ${AI_EMBEDDING_PROVIDER:-ollama}
+    AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-embeddinggemma}
+    AI_EMBEDDING_DIMENSIONS: ${AI_EMBEDDING_DIMENSIONS:-768}
+    AI_EMBEDDING_REVISION: ${AI_EMBEDDING_REVISION:-1}
+    AI_ORCHESTRATION_ENABLED: ${AI_ORCHESTRATION_ENABLED:-false}
+    AI_ORCHESTRATION_CLIENT_IDS: ${AI_ORCHESTRATION_CLIENT_IDS:-}
+    OLLAMA_CONTEXT_TOKENS: ${OLLAMA_CONTEXT_TOKENS:-32768}
+    AI_MODEL_ORCHESTRATOR: ${AI_MODEL_ORCHESTRATOR:-}
+    AI_MODEL_ONBOARDING: ${AI_MODEL_ONBOARDING:-}
+    AI_MODEL_INITIAL_PLAN: ${AI_MODEL_INITIAL_PLAN:-}
+    AI_MODEL_TRAINING_CHAT: ${AI_MODEL_TRAINING_CHAT:-}
+    AI_MODEL_ADAPTATION: ${AI_MODEL_ADAPTATION:-}
     OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6-luna}
     OPENAI_API_KEY_FILE: /run/secrets/openai_key
     AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-10}
@@ -186,6 +198,9 @@ services:
     networks: [outbound]
   ollama-model:
     extends: {file: docs/deployment/providers.yml, service: ollama-model}
+    networks: [outbound]
+  ollama-embedding-model:
+    extends: {file: docs/deployment/providers.yml, service: ollama-embedding-model}
     networks: [outbound]
 
 networks:
