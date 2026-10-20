@@ -20,7 +20,13 @@ from app.integrations import ai
 from app.integrations.ai_budget import BudgetExceeded, ExecutionBudget, current_budget
 from app.modules.clients.models import Client
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
-from app.modules.memory.service import MemoryChange, MemoryError, MemoryService, utc
+from app.modules.memory.service import (
+    MemoryChange,
+    MemoryError,
+    MemoryService,
+    proposal_evidence,
+    utc,
+)
 from app.modules.onboarding.models import Onboarding, OnboardingAiMessage
 from app.modules.training.models import TrainingAiMessage, TrainingPlan, TrainingPlanVersion
 
@@ -69,8 +75,9 @@ consequentes. Restrições do onboarding e planos aprovados nunca desaparecem po
 de melhora. Proponha somente mudanças específicas de memória da current_user_message.
 Perguntas sobre exercícios ou equipamentos não são fatos pessoais: nesses casos
 retorne memory_changes=[]. Nunca invente IDs de memória. add exige fact_id=null.
-Copie uma frase COMPLETA, curta, literal, inequívoca e em primeira pessoa em evidence
-e text. Não remova negações nem transforme dor em diagnóstico. Incerteza exige pergunta.
+Copie uma frase COMPLETA, curta, literal, inequívoca e em primeira pessoa em evidence.
+O backend usa essa frase como texto da memória; não gere outra versão da frase.
+Não remova negações nem transforme dor em diagnóstico. Incerteza exige pergunta.
 Use correct com o ID existente para corrigir uma memória, add para informação nova e
 forget somente para pedido explícito de esquecimento com o ID exato. Não deduza fatos
 de referências, do assistente, de resumos ou mensagens antigas. Se memory_writes=false,
@@ -88,7 +95,7 @@ Quando não houver dúvida a esclarecer, clarification é null, não uma pergunt
 _ROUTING += """ Relatar uma preferência não pede orientação técnica: para
 'Prefiro treinar de manhã.', use query=null, needs_references=false e a mudança
 {"action":"add","fact_id":null,"category":"preference",
-"text":"Prefiro treinar de manhã.","evidence":"Prefiro treinar de manhã."}.
+"evidence":"Prefiro treinar de manhã."}.
 Pedidos de editar o treino, como aumentar o descanso de uma série, não são memória
 durável: retorne memory_changes=[] para esses pedidos. Não confunda objetivos gerais
 de treino com comandos de alteração do plano. Onboarding só coleta dados pessoais,
@@ -372,10 +379,20 @@ class AssistantRun:
             ),
         }
         route_schema = strict_schema(Route.model_json_schema())
-        if not routing_context["memory_writes"]:
-            # Plan requests have no source event authorizing memory mutation.
-            # Constrain generation as well as enforcing the permission below.
+        memory_schema = route_schema["$defs"]["MemoryChange"]
+        # Text must equal its source quote. Have the model choose that quote
+        # once; persistence still validates it against the original event.
+        memory_schema["properties"].pop("text")
+        memory_schema["required"].remove("text")
+        evidence = (
+            proposal_evidence(self.source.content) if routing_context["memory_writes"] else []
+        )
+        if not evidence:
+            # A valid onboarding answer need not be an eligible durable report.
+            # Prevent invented memory quotes without disabling interview extraction.
             route_schema["properties"]["memory_changes"]["maxItems"] = 0
+        else:
+            memory_schema["properties"]["evidence"]["enum"] = evidence
         for attempt in range(2):
             self.route = self._call(
                 routing_context,
@@ -400,6 +417,9 @@ class AssistantRun:
             raise AssistantError("delegation_not_allowed", 422)
         if not routing_context["memory_writes"] and self.route.memory_changes:
             raise AssistantError("memory_tool_not_allowed", 422)
+        for change in self.route.memory_changes:
+            if change.action in {"add", "correct"} and change.text is None:
+                change.text = change.evidence
         if self.role == "onboarding":
             # Collection/extraction has no knowledge-guidance tool permission.
             self.route.query, self.route.needs_references = None, False

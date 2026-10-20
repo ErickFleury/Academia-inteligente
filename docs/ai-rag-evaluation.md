@@ -388,3 +388,34 @@ import error. No evaluation schemas remain. The baseline and each major fix
 have focused commits; no push was made. Human grounding acceptance, the
 documented broader answer-quality/memory-routing issues, and laptop/CPU
 performance acceptance remain unresolved.
+
+## Onboarding memory-validation failure — 2026-10-20
+
+A reported onboarding turn returned HTTP 422 after both local-model calls
+succeeded. Existing diagnostics incorrectly classified it as `unexpected_error`
+with no reason. A replay in a disposable schema reproduced
+`memory_evidence_invalid`: the router supplied memory evidence not present in
+the current message. Restricting evidence alone exposed a second inconsistency,
+because the separately generated memory text differed from its source quote.
+No conversation content, client identifiers or health values are included here.
+
+Baseline checkpoint `4ac719b` precedes the correction. Routing now limits memory
+evidence to current-message sentences eligible under the existing persistence
+rules, and disallows memory proposals when none qualify. The model selects the
+quote once; the backend derives the memory text from it before the unchanged
+source, uncertainty, permission and revision checks. Structured onboarding
+extraction remains available for answers that are not eligible durable memories.
+Diagnostics now report allowlisted assistant-validation categories without
+logging exception text or private context.
+
+The original failing turn succeeded in the isolated replay after the correction;
+the temporary schema was removed and application-client state was not changed.
+Regression checks cover source restrictions, rejected noncompliant providers,
+quote-derived memory, idempotent retries and private-error redaction.
+
+Verification: 103 targeted tests and the full 669-test backend suite passed,
+including PostgreSQL checks. Ruff lint/format passed; only the existing Alembic
+deprecation warnings remained. After restart the backend health endpoint returned
+`ok`, RAG remained enabled system-wide, and no replay schemas remained. The
+diagnostic harness, containing no captured client values, is retained only under
+the ignored `.deployment/debug/onboarding-memory-20261020/` directory.

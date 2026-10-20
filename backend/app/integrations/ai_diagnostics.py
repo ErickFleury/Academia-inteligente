@@ -18,6 +18,7 @@ _OUTCOMES = {
     "conflict",
     "unavailable",
     "unexpected_error",
+    "validation_failure",
     "draft_saved",
     "draft_blocked",
 }
@@ -48,6 +49,10 @@ _REASONS = {
     "provider_capacity",
     "provider_usage_invalid",
     "incomplete_response",
+    "memory_evidence_invalid",
+    "memory_evidence_uncertain",
+    "memory_conflict",
+    "memory_event_expired",
 }
 _PATHS = {"none", "model", "direct", "confirmation", "cached"}
 _OPERATIONS = {"onboarding", "training_chat", "training_generation", "training_adaptation"}
@@ -106,6 +111,15 @@ def observe_turn(operation: str):
                     "TrainingChatDraftUpdateError": "draft_blocked",
                     "TrainingChatNotFoundError": "unavailable",
                 }.get(type(error).__name__, "unexpected_error")
+                if type(error).__name__ == "AssistantError":
+                    metadata["outcome"] = {
+                        409: "conflict",
+                        422: "validation_failure",
+                        503: "provider_failure",
+                    }.get(getattr(error, "status", None), "unavailable")
+                    metadata["reason"] = _allowed(
+                        getattr(error, "code", None), _REASONS, "unclassified"
+                    )
                 raise
             finally:
                 metadata["duration_ms"] = round((perf_counter() - started) * 1000, 2)

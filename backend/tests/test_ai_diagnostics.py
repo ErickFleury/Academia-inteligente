@@ -112,3 +112,23 @@ def test_diagnostic_contexts_are_isolated_and_unknown_metadata_is_discarded(capl
     assert "SENSITIVE" not in caplog.text
     record_turn(reason="unsupported_answer")  # Outside a turn is harmless and produces no event.
     assert len(events(caplog)) == 2
+
+
+@pytest.mark.parametrize("code", ["memory_evidence_invalid", "PRIVATE_UNRECOGNIZED_ERROR"])
+def test_assistant_validation_logs_allowlisted_reason_without_private_error(caplog, code):
+    from app.modules.assistant.runtime import AssistantError
+
+    caplog.set_level(logging.INFO, logger="uvicorn.error.ai")
+
+    @observe_turn("onboarding")
+    def turn():
+        raise AssistantError(code, 422)
+
+    with pytest.raises(AssistantError):
+        turn()
+    item = events(caplog)[-1]
+    assert item["outcome"] == "validation_failure"
+    assert item["reason"] == (
+        "memory_evidence_invalid" if code == "memory_evidence_invalid" else "unclassified"
+    )
+    assert "PRIVATE_UNRECOGNIZED_ERROR" not in caplog.text

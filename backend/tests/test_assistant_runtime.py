@@ -208,6 +208,65 @@ def test_onboarding_uses_specialist_without_bypassing_completion(database_sessio
     assert rollout.queries == []
 
 
+@pytest.mark.parametrize(
+    "message,allowed",
+    [
+        ("Sou iniciante.", []),
+        ("Tenho alguma doença?", []),
+        ("Quero ganhar força. Minha irmã prefere correr.", ["Quero ganhar força."]),
+        ("Prefiro treinar de manhã.", ["Prefiro treinar de manhã."]),
+        ("Esqueça minha preferência.", ["Esqueça minha preferência."]),
+    ],
+)
+def test_onboarding_memory_schema_only_allows_supported_current_sentences(
+    database_session, message, allowed
+):
+    session = database_session
+    owner(session)
+    scope = OnboardingDraftService().resolve_client_scope(session, "owner")
+    provider = Agent()
+    OnboardingConversationService(provider).submit(
+        session, scope, message=message, client_request_id=uuid4()
+    )
+    schema = provider.schemas[0]
+    if allowed:
+        evidence = schema["$defs"]["MemoryChange"]["properties"]["evidence"]
+        assert evidence["enum"] == allowed
+    else:
+        assert schema["properties"]["memory_changes"]["maxItems"] == 0
+    assert session.scalar(select(Onboarding)).status == "draft"
+    assert session.scalar(select(ClientMemoryFact)) is None
+
+
+def test_onboarding_rejects_a_provider_ignoring_memory_source_constraints(database_session):
+    session = database_session
+    owner(session)
+    scope = OnboardingDraftService().resolve_client_scope(session, "owner")
+    with pytest.raises(AssistantError, match="memory_evidence_invalid"):
+        OnboardingConversationService(Agent(changes=[report()])).submit(
+            session, scope, message="Sou iniciante.", client_request_id=uuid4()
+        )
+    assert session.scalar(select(ClientMemoryFact)) is None
+    assert session.scalar(select(Onboarding)).status == "draft"
+
+
+def test_onboarding_derives_memory_text_from_verified_quote(database_session):
+    session = database_session
+    client = owner(session)
+    scope = OnboardingDraftService().resolve_client_scope(session, "owner")
+    change = report()
+    del change["text"]
+    provider = Agent(changes=[change])
+    service = OnboardingConversationService(provider)
+    request_id = uuid4()
+    service.submit(session, scope, message=change["evidence"], client_request_id=request_id)
+    definition = provider.schemas[0]["$defs"]["MemoryChange"]
+    assert "text" not in definition["properties"] and "text" not in definition["required"]
+    assert MemoryService.snapshot(session, client.id)["facts"][0]["text"] == change["evidence"]
+    service.submit(session, scope, message="Ignored retry", client_request_id=request_id)
+    assert len(MemoryService.snapshot(session, client.id)["facts"]) == 1
+
+
 def test_initial_generation_stays_a_single_unapproved_proposal(database_session):
     session = database_session
     owner(session)

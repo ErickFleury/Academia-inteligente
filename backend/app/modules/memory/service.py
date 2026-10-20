@@ -33,6 +33,49 @@ def normalized(value):
     return " ".join(value.split())
 
 
+def source_sentences(message):
+    return list(
+        dict.fromkeys(normalized(s) for s in re.split(r"(?<=[.!?])\s+|\n+", message.strip()))
+    )
+
+
+def forget_command(value):
+    return bool(
+        re.match(
+            r"^(por favor[, ]+)?(esqueça|esqueca|apague|remova|não guarde|nao guarde)\b",
+            value,
+            re.I,
+        )
+    )
+
+
+def reported_statement(value):
+    return (
+        "?" not in value
+        and not re.search(r"\b(talvez|acho que|poderia|se eu|não sei|nao sei)\b", value, re.I)
+        and bool(
+            re.match(
+                r"^(eu\s+)?(não\s+|nao\s+)?"
+                r"(tenho|prefiro|quero|gosto|sinto|estou|uso|busco|preciso|fui|"
+                r"meu objetivo|minha meta|minha preferência|minha rotina|meus treinos|"
+                r"minhas limitações|minha saúde)\b",
+                value,
+                re.I,
+            )
+        )
+    )
+
+
+def proposal_evidence(message):
+    """Constrain generation to the same source rules enforced during persistence."""
+    return [
+        sentence
+        for sentence in source_sentences(message)
+        if (len(sentence) <= 400 and reported_statement(sentence))
+        or (len(sentence) <= 1000 and forget_command(sentence))
+    ]
+
+
 def utc(value):
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
@@ -152,7 +195,7 @@ class MemoryService:
                 session, client_id, revision, event_after=occurred_at if changes else None
             )
             facts = self._facts(session, client_id)
-            sentences = {normalized(s) for s in re.split(r"(?<=[.!?])\s+|\n+", message.strip())}
+            sentences = set(source_sentences(message))
             now = datetime.now(UTC)
             for change in changes:
                 evidence = normalized(change.evidence)
@@ -162,12 +205,7 @@ class MemoryService:
                 if change.action != "add" and fact is None:
                     raise MemoryError("memory_not_found", 404)
                 if change.action == "forget":
-                    if not re.match(
-                        r"^(por favor[, ]+)?"
-                        r"(esqueça|esqueca|apague|remova|não guarde|nao guarde)\b",
-                        evidence,
-                        re.I,
-                    ):
+                    if not forget_command(evidence):
                         raise MemoryError("memory_evidence_invalid", 422)
                     session.delete(fact)
                     del facts[str(fact.id)]
@@ -175,20 +213,7 @@ class MemoryService:
                 value = normalized(change.text or "")
                 if value != evidence or not change.category or len(value) > 400:
                     raise MemoryError("memory_evidence_invalid", 422)
-                if (
-                    "?" in value
-                    or re.search(
-                        r"\b(talvez|acho que|poderia|se eu|não sei|nao sei)\b", value, re.I
-                    )
-                    or not re.match(
-                        r"^(eu\s+)?(não\s+|nao\s+)?"
-                        r"(tenho|prefiro|quero|gosto|sinto|estou|uso|busco|preciso|fui|"
-                        r"meu objetivo|minha meta|minha preferência|minha rotina|meus treinos|"
-                        r"minhas limitações|minha saúde)\b",
-                        value,
-                        re.I,
-                    )
-                ):
+                if not reported_statement(value):
                     raise MemoryError("memory_evidence_uncertain", 422)
                 if change.action == "add":
                     if change.fact_id is not None:
