@@ -1614,7 +1614,7 @@ the active implementation architecture.
 | Authentication | Keycloak 26.6.3 through OIDC; identity model in section 2.2. |
 | API | REST + JSON + OpenAPI. |
 | E-mail | SMTP adapter; Mailpit 1.30.7 in local Docker development. |
-| AI | Provider-independent adapter; Task 11 uses the OpenAI Responses API with configurable `gpt-5.6-luna` behind that boundary. Ollama is an approved local development/test adapter with configurable base URL, model (default `qwen3:8b`), and timeout; it may run through an optional internal Docker Compose profile with persistent model storage, and does not replace OpenAI. Later AI features require their own approved contracts. |
+| AI | Provider-independent adapter; Task 11 uses the OpenAI Responses API with configurable `gpt-5.6-luna` behind that boundary. The existing Ollama adapter has configurable base URL, model (default `qwen3:8b`), and timeout, with an optional internal Docker Compose profile and persistent model storage. The 2026-10-19 RAG design amendment requires fully local operation without mandatory paid services, plus optional paid OpenAI operation; this extends the earlier development/test-only local scope and is not yet an implementation claim. Later AI features require their own approved contracts. |
 | Runtime/deployment | Docker Compose on a Linux host; host-level UFW; PostgreSQL and other internal services are not directly Internet-exposed. |
 | Tests | pytest/FastAPI `TestClient`; Vitest + React Testing Library. No Jest/Supertest for the Python backend. |
 | Hosting | Undecided. |
@@ -1802,7 +1802,7 @@ retains the chronological decision history.
 | DEC-05 | **Resolved** | `account_active` controls application login only; `gym_access_enabled`/physical eligibility is separate. CA-03.4 remains explicitly deferred to RF-22 and unsatisfied. | RF-03/RF-04 and future physical access. |
 | DEC-06 | Resolved for implemented flows | Invitation tokens are 24-hour, client-bound, purpose-bound, hashed, single-use on intentional redemption, and superseded by resends. The onboarding schema, draft behavior, and completion prerequisites are approved. Password recovery uses Keycloak-owned UPDATE_PASSWORD email links with a user-approved 15-minute lifetime. | Tasks 07, 09, 10, 11, 12 and RF-06 recovery. |
 | DEC-07 | **Resolved for Tasks 13–17** | Plan-version states are proposal/approved/current/superseded; only instructors approve/activate; AI never does. Relevant health onboarding data must influence a proposal but does not automatically block its generation; mandatory instructor review is the safety gate. Task 17 applies this lifecycle to client-confirmed proposals and immutable history. | Tasks 13–17. |
-| DEC-08 | **Resolved for Tasks 11, 14, 16, and 17** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output where applicable, minimized bounded context, ten-second timeout, and one retry. Ollama is additionally approved as a configurable local development/test adapter and does not alter OpenAI behavior. Task 17 uses validated structured proposal output only after explicit client confirmation. | Tasks 11, 14, 16, 17, and later AI tasks with their own scope-specific safety contracts. |
+| DEC-08 | **Resolved for Tasks 11, 14, 16, and 17; local-operation scope extended in the 2026-10-19 design amendment** | OpenAI Responses API, configurable `gpt-5.6-luna`, provider-neutral adapter, constrained output where applicable, minimized bounded context, ten-second timeout, and one retry. The existing Ollama development/test adapter remains supported; the RAG design additionally requires full local operation without paid-service dependencies and optional paid OpenAI support. Task 17 uses validated structured proposal output only after explicit client confirmation. | Tasks 11, 14, 16, 17, and later AI tasks with their own scope-specific safety contracts; the local/RAG extension is not yet implemented or verified. |
 | DEC-09 | **Resolved for biometric recognition and enrollment** | Measured configured-system precision is at least 95%; the provider/model uses a calibrated configurable match threshold; below-threshold results are rejected; biometric references, replacement, retention, and non-sensitive auditing are separately protected. CompreFace is a non-binding personal-use self-hosted pilot recommendation, not a selected provider. | RF-21/RF-22. |
 | DEC-10 | **Resolved for Task 22 occupancy** | Confirmed client-passage ledger is authoritative for one logical zone; cameras are deferred auxiliary observations with declared coverage, 60-second freshness, and no overwrite/blending behavior. | RF-24/RF-25, RN-37, Task 22. |
 | DEC-11 | **Resolved for approved integration boundaries** | Confirmed-passage occupancy ingestion uses source-idempotent events with opaque client references resolved privately to local Clients; its public view is aggregate-only. Provider-neutral facial recognition uses server-side credentials, correlated recognition IDs, and idempotent release requests to an external turnstile. It neither controls physical passage nor changes DEC-10 occupancy semantics. | Task 22; later RF-20–RF-23 biometric/access implementation. |
@@ -2069,3 +2069,204 @@ interview state and are superseded by manual edits. Diagnostics report operation
 path, elapsed time and controlled outcome/rejection categories, without message
 text, answer values, identities, tokens or raw provider errors. No model,
 retention policy, dependency, schema migration or plan-approval change is approved.
+
+### RAG and multiagent assistant design — 2026-10-19
+
+**Status:** owner-approved design direction; design interview in progress.
+Implementation awaits confirmation of the completed shared design. This section
+does not mark any acceptance criterion implemented or verified.
+
+**Scope:** EXT-RF-AI-01, RF-15, RF-18, and RF-19, preserving the RF-11–RF-13
+onboarding gates and RF-17 lifecycle dependencies. Existing client isolation,
+single-draft rules, instructor approval, pt-BR responses, and provider-independent
+integration boundaries remain applicable.
+
+The owner approved the following design decisions:
+
+- Improve grounded training guidance and reliable request handling. Evaluate
+  representative client conversations and factual grounding alongside latency
+  and cost against the pilot thresholds below.
+- Cover conversational onboarding, initial training-plan generation, training
+  chat, and adaptation.
+- Use curated training guidance, exercise instructions, and equipment
+  documentation for initial retrieval tests. Keep authoritative client facts
+  and plan state in their existing database flows.
+- Preserve continuity across conversations through compact, evolving client
+  memory, including client-reported health issues and preferences. The owner
+  refined the earlier conversation-history retrieval request: agents may update
+  these blocks during conversations, and they persist until client account
+  deletion without requiring indefinite storage of complete transcripts. This
+  explicitly approves a separate durable-memory retention direction. Retain
+  existing five-day onboarding and 30-day training-chat persistence for reload,
+  retry, confirmation, and adaptation behavior; complete transcripts expire
+  under their existing policies while compact memory survives. Their histories
+  remain separate.
+- Represent memory as individual compact facts grouped into health reports,
+  preferences, and training goals, each with attribution and a last-update date.
+  Agents propose specific additions, corrections, and removals; the backend
+  validates them rather than accepting wholesale free-form summary replacement.
+- Clear first-person statements and explicit corrections may update memory
+  automatically. Uncertain statements require clarification. Store what the
+  client reports without inferring diagnoses; a reported improvement does not
+  silently remove an authoritative onboarding or approved-plan restriction.
+- Add a client-facing "Memória do assistente" view for inspecting, correcting,
+  and deleting individual memories, alongside conversational controls. An
+  explicit request to forget information removes the memory and prevents its
+  recreation from old retained messages. Authoritative health/plan records
+  retain their separate validated update workflows. This focused UI extension
+  must follow the established frontend design system and own-client access.
+- Own memory and its derived search data through Client, and erase them when
+  that Client is deleted even if a shared employee Account remains. All derived
+  client-memory representations must participate in the existing erasure flow.
+- Retained health reports remain dated reports, not indefinitely current facts.
+  Reconfirm potentially outdated reports when relevant before relying on them
+  for consequential training proposals; age alone establishes neither current
+  illness nor resolution.
+- Load compact private memory through ordinary Client-scoped database queries,
+  separately from shared-reference vector search. Relevant restrictions must
+  not be omitted because a similarity search fails to retrieve them.
+- Initially restrict memory inspection to its owning client and backend
+  operations serving that client. Administrator reference management does not
+  grant private-memory access. Instructors retain existing authorized access to
+  onboarding and plans; memory sharing with staff is not part of this scope.
+- Retain normalized memory statements, attribution, dates, and originating event
+  identifiers without retaining original messages indefinitely. Validate
+  extraction against the source message during processing. After transcript
+  expiration, represent the fact as client-reported without implying the source
+  quotation remains available.
+- Treat conversational information as attributed, dated evidence rather than
+  automatically authoritative client facts. Explicit corrections supersede
+  earlier conversational claims; ambiguity requires clarification. Completed
+  health onboarding and plan records retain their validated update workflows.
+- Use an LLM orchestrator to select narrowly scoped specialist agents and
+  combine their results within bounded execution. Backend services retain
+  control of authorization, validation, persistence, and approval; agent
+  decisions cannot bypass those controls.
+- Start with four specialists: onboarding, initial plan generation, training
+  questions, and plan adaptation. Invoke only specialists needed for a request;
+  retrieval is a shared tool rather than a mandatory extra agent.
+- Implement a small explicit Python orchestration runtime around existing
+  provider adapters. The LLM selects allowed specialists; backend code enforces
+  delegation, tool permissions, deadlines, and validated outputs. Specialists
+  cannot recursively spawn agents. No graph-framework dependency is selected;
+  resumable long-running agent workflows would require a separate decision.
+- Administrators alone provide training references, using sources deemed
+  trustworthy from the start. Instructor approval of reference material is not
+  required. Initially support administrator uploads of text-based PDF, Markdown,
+  and plain-text documents, with explicit activation, replacement, and withdrawal.
+  Scanned-document OCR is outside this initial scope. Retain source titles and
+  versions for citations; replacement or withdrawal stops retrieval of obsolete
+  content. Use pypdf behind the PDF extraction boundary. Require successful
+  extraction and indexing before activation and expose extracted-text preview
+  to administrators. Reject unsupported/failed documents with actionable
+  feedback. Activate replacements atomically; a failed replacement preserves
+  the previous active version unless explicitly withdrawn. Imports run as
+  tracked background work with progress and retry.
+- Expose compact supporting references for substantive knowledge-based training
+  guidance. Missing or conflicting evidence requires clarification or instructor
+  referral. Ordinary conversation and explanations of saved plans need not
+  require a document citation.
+- Run orchestration and specialists inside the existing FastAPI modular
+  monolith, retaining provider-independent OpenAI/Ollama adapters.
+- Use PostgreSQL full-text search plus pgvector semantic retrieval for shared
+  training references, comparing hybrid retrieval against a full-text baseline
+  during the pilot. The owner approves the pgvector server extension and its
+  Python integration; exact versions and deployment compatibility require
+  verification before implementation changes.
+- Commit a conversational reply and its validated memory/plan changes together
+  only after required processing succeeds. Failure preserves previously saved
+  state and retries cannot apply changes twice. Direct memory-screen edits
+  remain independent of AI-provider availability.
+- Set provisional total request deadlines of 30 seconds for conversation and
+  60 seconds for plan generation/adaptation, retaining individual adapter
+  timeout/retry limits. Delegation cannot extend the total budget indefinitely;
+  exhaustion must produce a controlled response.
+- Initially use the existing configured chat model for all agents, with optional
+  configuration overrides per role. Do not automatically switch to a more
+  expensive model or another provider.
+- Full local operation without mandatory paid APIs or services is a project
+  requirement, not merely a development/test alternative. The AI design must
+  support local orchestration, all four specialists, embedding generation,
+  reference indexing/retrieval, and client memory. Optional OpenAI APIs remain
+  supported through replaceable adapters and may incur usage costs when enabled.
+  This owner decision extends the earlier development/test-only Ollama policy.
+- Use separate replaceable generation and embedding adapters. The proposed
+  hosted embedding option is OpenAI `text-embedding-3-small` with its default
+  1,536 dimensions; it is optional rather than a prerequisite for local use.
+  Embed reference passages and minimized queries, not client memory or whole
+  conversations, and keep query embeddings temporary. Local configuration must
+  never silently send requests to a hosted service. Changing embedding models
+  requires reindexing. Local generation and local embeddings are the default;
+  OpenAI requires explicit configuration and credentials. The two adapters may
+  be configured independently for deliberate mixed deployments.
+- Select Ollama `embeddinggemma` as the initial local embedding model, keeping
+  the existing `qwen3:8b` local chat-model configuration. Validate retrieval
+  quality and resource usage before declaring the local setup supported. Local
+  model selection does not establish container GPU access, usable concurrent
+  context capacity, or compliance with response deadlines.
+- The application must remain usable with internet access disconnected after
+  initial installation and model downloads. Verify with external networking
+  blocked and paid credentials removed. Local Keycloak and Mailpit provide
+  authentication and locally accessible invitation/recovery messages, without
+  requiring external inbox delivery. Manual address entry remains available
+  without ViaCEP; use local image uploads and locally stored models/dependencies.
+  A fully offline installer is a separate packaging requirement, outside this
+  scope.
+- Use the owner's desktop as the initial local-verification baseline, while
+  accommodating a potential deployment laptop with an RTX 2070 and a
+  seventh-generation Intel Core i7. Support CPU operation and optional GPU
+  acceleration. Measure against the agreed quality/latency criteria; failed
+  benchmarks remain explicit issues and must not introduce paid processing.
+  Desktop evidence is recorded in the research note. Laptop RAM, usable VRAM,
+  precise processor, and measured performance remain unverified; desktop results
+  do not establish laptop performance.
+- Adopt configurable pilot limits of 100 active reference documents, 20 MiB per
+  upload, 500 pages per PDF, and two million extracted characters per document.
+  These are operating limits, not verified capacity claims.
+- Limit compact client memory to 50 current facts and 8,000 characters per client.
+  Consolidate duplicates and superseded facts. At capacity, ask the client to
+  review memory rather than silently discard health information.
+- Allow at most four generation-model calls for conversational requests and six
+  for plan generation/adaptation, counting retries, with at most two reference
+  retrieval rounds. Aggregate input/output token ceilings are 32,000/4,000 for
+  conversation and 64,000/12,000 for plans. Stop at any applicable limit, including
+  the total deadline; required restrictions must not be truncated to fit.
+- If embeddings are unavailable, attempt PostgreSQL full-text retrieval. Answer
+  with citations only when sufficiently relevant supporting evidence is found;
+  otherwise explain that the guidance cannot be substantiated. Failure of a
+  required specialist produces a controlled error. Do not silently switch
+  providers or present unsupported guidance as grounded.
+- Recheck relevant versions before committing work. Direct client edits,
+  instructor plan changes, and reference withdrawals invalidate conflicting
+  in-flight work. An agent may not overwrite newer memory corrections, restore
+  forgotten information, modify a changed plan, or deliver guidance grounded
+  in a source withdrawn during processing. Return a retryable conflict when
+  needed.
+- Evaluate at least 40 reference questions, primarily in pt-BR, including
+  paraphrases, absent evidence, and conflicting sources. A relevant reference
+  must appear among the first five results for at least 90% of answerable cases;
+  at least 95% of substantive reference-based claims must have supporting
+  citations, assessed against a written rubric.
+- Every critical scenario must pass: client isolation, corrections/forgetting,
+  retention/deletion, instructor approval, retries, concurrency, malicious
+  instructions inside documents, and controlled failures. Existing workflow
+  regressions must pass, and requests must respect execution limits. Automated
+  tests use controlled providers rather than live external services.
+- Roll out behind a feature flag: reference retrieval, then memory, then
+  orchestration across the four workflows. Enable for a test client after
+  verification before expanding deliberately. Disabling orchestration preserves
+  memory inspection/deletion and existing onboarding/instructor workflows.
+
+Q27 is resolved as mandatory local capability plus optional paid OpenAI support
+through replaceable adapters. Local defaults and offline-after-provisioning
+verification are approved; Q37 selects `embeddinggemma` for local embeddings.
+The [consolidated design](ai-rag-multiagent-design.md) contains the proposed
+contracts, evaluation rubric, and delivery sequence for final shared-understanding
+confirmation before implementation. Newly approved dependencies are
+pypdf, the pgvector server extension, and its Python integration; exact pins,
+deployment compatibility, retrieval quality, and operating capacity remain
+unverified. Supporting rationale:
+[ADR 0001](adr/0001-bounded-ai-orchestration-and-retrieval.md) and
+[ADR 0002](adr/0002-durable-client-memory.md), plus
+[ADR 0003](adr/0003-postgresql-reference-retrieval.md) and
+[ADR 0004](adr/0004-local-operation-and-optional-hosted-ai.md).
