@@ -520,7 +520,20 @@ class AssistantRun:
                     **({"delivery_kind": "plan_proposal_pending_approval"} if proposal else {}),
                     "question": self.context.get("current_user_message")
                     or self.context.get("reason", "Gerar proposta confirmada"),
-                    "answer": output.result.model_dump(mode="json"),
+                    "answer": {
+                        **output.result.model_dump(mode="json"),
+                        **(
+                            {
+                                "backend_enforced_conditions": (
+                                    "Proposta ainda não autorizada para execução. "
+                                    "Exige as confirmações aplicáveis do cliente e aprovação "
+                                    "do instrutor antes de se tornar um treino autorizado."
+                                )
+                            }
+                            if proposal
+                            else {}
+                        ),
+                    },
                     "reference_sources": self.model_sources(),
                     "cited_passages": self.model_references(self.citations),
                     "other_passages": self.model_references(

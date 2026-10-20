@@ -585,5 +585,6 @@ def test_plan_review_receives_backend_proposal_status_without_approving_plan(
     )
     review = provider.calls[-1][1]
     assert review["delivery_kind"] == "plan_proposal_pending_approval"
+    assert "aprovação do instrutor" in review["answer"]["backend_enforced_conditions"]
     assert result.status == "proposal"
     assert result.approved_by is None
