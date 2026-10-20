@@ -94,6 +94,7 @@ def test_correction_and_forgetting_block_stale_and_replayed_sources(database_ses
         ("Minha irmã tem uma condição.", "Tenho uma condição.", "Tenho uma condição."),
         ("Não tenho dor.", "tenho dor.", "tenho dor."),
         ("Talvez eu tenha dor.", "Talvez eu tenha dor.", "Talvez eu tenha dor."),
+        ("Tenho alguma doença?", "Tenho alguma doença?", "Tenho alguma doença?"),
         ("Tenho dor no joelho.", "Tenho dor no joelho.", "Tenho artrite."),
         (
             "Minha irmã tem uma condição.",

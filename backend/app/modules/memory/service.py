@@ -175,15 +175,19 @@ class MemoryService:
                 value = normalized(change.text or "")
                 if value != evidence or not change.category or len(value) > 400:
                     raise MemoryError("memory_evidence_invalid", 422)
-                if re.search(
-                    r"\b(talvez|acho que|poderia|se eu|não sei|nao sei)\b", value, re.I
-                ) or not re.match(
-                    r"^(eu\s+)?(não\s+|nao\s+)?"
-                    r"(tenho|prefiro|quero|gosto|sinto|estou|uso|busco|preciso|fui|"
-                    r"meu objetivo|minha meta|minha preferência|minha rotina|meus treinos|"
-                    r"minhas limitações|minha saúde)\b",
-                    value,
-                    re.I,
+                if (
+                    "?" in value
+                    or re.search(
+                        r"\b(talvez|acho que|poderia|se eu|não sei|nao sei)\b", value, re.I
+                    )
+                    or not re.match(
+                        r"^(eu\s+)?(não\s+|nao\s+)?"
+                        r"(tenho|prefiro|quero|gosto|sinto|estou|uso|busco|preciso|fui|"
+                        r"meu objetivo|minha meta|minha preferência|minha rotina|meus treinos|"
+                        r"minhas limitações|minha saúde)\b",
+                        value,
+                        re.I,
+                    )
                 ):
                     raise MemoryError("memory_evidence_uncertain", 422)
                 if change.action == "add":
