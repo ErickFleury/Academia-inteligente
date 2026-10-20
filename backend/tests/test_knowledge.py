@@ -255,3 +255,11 @@ def test_nested_markdown_retains_population_and_repeated_text_keeps_conflicts(se
         refs = service.search(session, "adultos vezes")
         assert len(refs) == 2
         assert len({r["source_id"] for r in refs}) == 2
+
+
+def test_section_matching_handles_portuguese_singular_and_plural():
+    from app.modules.knowledge.service import section_match
+
+    assert section_match("Seção: ATIVIDADE FÍSICA PARA ADULTOS\nOrientação.", "adulto minutos") > 0
+    assert section_match("Seção: JOVENS\nOrientação.", "jovem atividade") > 0
+    assert section_match("Seção: IDOSOS\nOrientação.", "adultos minutos") == 0

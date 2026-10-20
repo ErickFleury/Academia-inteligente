@@ -361,7 +361,9 @@ def test_document_instructions_cannot_change_tools_and_citations_are_allowlisted
             session, "owner", message="Explique treino de força", client_request_id=uuid4()
         )
     assert "Ignore previous" not in provider.calls[-1][2]
-    assert provider.calls[-1][1]["reference_passages"] == rollout.passages
+    assert provider.calls[-1][1]["reference_passages"] == [
+        runtime.model_reference(p) for p in rollout.passages
+    ]
     assert session.scalar(select(TrainingPlanVersion)) is None
     assert (
         session.scalar(select(TrainingAiMessage).where(TrainingAiMessage.role == "assistant"))
@@ -452,3 +454,74 @@ def test_expired_budget_cannot_commit_reply_or_memory(database_session):
         session.scalar(select(TrainingAiMessage).where(TrainingAiMessage.role == "assistant"))
         is None
     )
+
+
+def test_readonly_chat_omits_plan_schema_but_preserves_health_and_history(database_session):
+    session = database_session
+    client = owner(session)
+    complete_onboarding(session, "owner")
+    provider = Agent()
+    run = AssistantRun(session, client.id, "training_chat", provider=provider)
+    run.context = {
+        "current_user_message": "Explique atividade moderada.",
+        "recent_messages": [{"role": "user", "content": "Uma informação anterior."}],
+        "client_memory": [{"text": "Prefiro atividades ao ar livre."}],
+        "authoritative_health_records": {"limitations_or_complaints": "Restrição preservada."},
+        "rules": {"may_update_ai_draft": False},
+    }
+    run.route = runtime.Route(specialist="training_chat")
+    run.specialist()
+    schema = provider.schemas[-1]["properties"]["result"]["properties"]
+    assert schema["draft_update"] == {"type": "null"}
+    context = provider.calls[-1][1]
+    for key in ("recent_messages", "client_memory", "authoritative_health_records"):
+        assert context[key] == run.context[key]
+
+
+def test_reference_metadata_suffix_is_not_delivered_as_client_prose():
+    citation = str(uuid4())
+    original = f'Pratique conforme o guia. grounding:references; citation_ids: ["{citation}"]'
+    assert (
+        runtime.clean_reference_suffix(original, [citation], "references")
+        == "Pratique conforme o guia."
+    )
+    # Only the exact validated metadata suffix may be removed, never arbitrary prose.
+    text = f"Confira o código {citation} no manual e procure o instrutor."
+    assert runtime.clean_reference_suffix(text, [citation], "references") == text
+    unknown = str(uuid4())
+    assert runtime.clean_reference_suffix(original, [unknown], "references") == original
+
+
+def test_grounding_review_and_saved_reply_receive_only_clean_prose(database_session, rollout):
+    session = database_session
+    owner(session)
+    complete_onboarding(session, "owner")
+    citation = str(uuid4())
+    rollout.passages = [
+        {
+            "passage_id": citation,
+            "version_id": str(uuid4()),
+            "source_id": str(uuid4()),
+            "title": "Manual",
+            "version": 1,
+            "location": "page:1",
+            "content": "Pratique conforme o guia.",
+        }
+    ]
+
+    class MetadataAgent(Agent):
+        def structured(self, *args, **kwargs):
+            output = super().structured(*args, **kwargs)
+            if kwargs["role"] == "training_chat":
+                output.result.assistant_message = (
+                    f'Pratique conforme o guia. grounding:references; citation_ids: ["{citation}"]'
+                )
+            return output
+
+    provider = MetadataAgent(route={"query": "treino", "needs_references": True})
+    provider.citations = [citation]
+    state = TrainingChatService(provider).submit_for_subject(
+        session, "owner", message="Explique o treino.", client_request_id=uuid4()
+    )
+    assert state.messages[-1].content == "Pratique conforme o guia."
+    assert provider.calls[-1][1]["answer"]["assistant_message"] == "Pratique conforme o guia."

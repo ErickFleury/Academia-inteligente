@@ -407,6 +407,11 @@ class _Provider:
                     + len(_json(schema).encode())
                 )
                 desired = 1000 if role == "orchestrator" else (7000 if budget.plan else 3000)
+                result_schema = schema.get("properties", {}).get("result", {})
+                if role == "training_chat" and result_schema.get("properties", {}).get(
+                    "draft_update"
+                ) == {"type": "null"}:
+                    desired = 1000
                 reserved = budget.reserve(input_bound, desired)
                 if role and (model := os.getenv(f"AI_MODEL_{role.upper()}", "").strip()):
                     body["model"] = model
@@ -414,13 +419,19 @@ class _Provider:
                     # Reserve room for input and output instead of letting
                     # Ollama silently drop necessary health/plan context.
                     window = int(os.getenv("OLLAMA_CONTEXT_TOKENS", "32768"))
+                    if not budget.plan:
+                        window = min(window, int(os.getenv("OLLAMA_CHAT_CONTEXT_TOKENS", "12288")))
                     if input_bound + 512 + reserved > window:
                         raise BudgetExceeded("context_capacity")
                     required = input_bound + 512 + reserved
                     # Reuse a modest window across router/specialist calls.
                     # Changing num_ctx reloads Ollama's model; always reserving
                     # 32K instead forces avoidable offload on 8GB GPUs.
-                    allocated = min(window, max(12288, ((required + 2047) // 2048) * 2048))
+                    allocated = (
+                        min(window, max(12288, ((required + 2047) // 2048) * 2048))
+                        if budget.plan
+                        else window
+                    )
                     body["options"] = {
                         "num_predict": reserved,
                         "num_ctx": allocated,

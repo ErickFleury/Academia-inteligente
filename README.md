@@ -131,8 +131,13 @@ embeddings, plus an `OPENAI_API_KEY`. There is no automatic hosted fallback.
 
 The small embedding model uses system RAM by default, leaving GPU memory for
 generation. `AI_EMBEDDING_GPU_LAYERS=-1` opts into automatic GPU offload; benchmark
-before changing it on 8 GB cards. Structured agent calls reuse a 12K context
-window when sufficient and grow it within `OLLAMA_CONTEXT_TOKENS` when needed.
+before changing it on 8 GB cards. Conversational agent calls use a fixed
+`OLLAMA_CHAT_CONTEXT_TOKENS` window (default 12288), capped by
+`OLLAMA_CONTEXT_TOKENS` (32768). Plan requests may grow within the latter limit.
+Fixed conversational windows avoid model reloads between routing, answering,
+and review. Requests exceeding the window fail explicitly. Prompt reservations
+use decoded UTF-8 content as a conservative bound and reconcile actual provider
+usage after each call; HTTP JSON escapes are not counted as prompt tokens.
 Required restrictions are never truncated to fit. These are resource settings,
 not a guarantee of laptop performance.
 

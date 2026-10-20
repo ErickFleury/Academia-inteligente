@@ -6,6 +6,7 @@ no agent can spawn another agent, issue SQL, or execute arbitrary tools.
 """
 
 import copy
+import json
 import os
 import re
 from datetime import UTC, datetime
@@ -145,6 +146,23 @@ _SPECIALISTS = {
     "adaptation": (ai.AiTrainingAdaptationResponse, ai._adaptation_schema, ai._TRAINING_ADAPTATION),
 }
 
+_READ_ONLY_CHAT = """Você é o assistente de treino da Academia Inteligente.
+Responda à mensagem atual em pt-BR, até três frases ou itens breves, sem introdução.
+Use o histórico, resumo e memórias como contexto datado; só fatos do próprio cliente.
+Correções explícitas atualizam o relato, nunca o onboarding ou plano autorizado.
+Não invente lembranças, diagnósticos, tratamentos ou orientações de medicação.
+Equipamentos da academia vêm de active_equipment_models; não invente disponibilidade
+nem ocupação. Referências gerais não comprovam que a academia possui um aparelho.
+Não altere, aprove ou ative planos: draft_update=null; nunca diga que salvou mudanças.
+Se um problema relatado justificar adaptação e houver plano atual, ofereça proposta
+para confirmação e revisão do instrutor, com adaptation_suggested e motivo concreto.
+Sem plano atual, não sugira adaptação. Se perguntarem sobre obter um plano:
+onboarding_completed=false exige concluir onboarding; se já houver rascunho,
+indique Meu treino; caso contrário ofereça gerar uma proposta com uma única pergunta
+de confirmação. Responda perguntas técnicas diretamente, sem oferecer planos à toa.
+Campos grounding e citation_ids pertencem somente ao JSON externo, nunca à mensagem.
+"""
+
 
 def enabled(client_id):
     if os.getenv("AI_ORCHESTRATION_ENABLED", "false").lower() != "true":
@@ -160,6 +178,32 @@ def valid_reference_query(query):
         and re.search(r"\d(?:[\s().+/-]?\d){6,}", query) is None
         and re.search(r"\b[0-9a-f]{8}-[0-9a-f-]{27,}\b", query, re.I) is None
     )
+
+
+def model_reference(reference):
+    """Pass evidence/provenance, keeping database lifecycle identifiers in the backend."""
+    return {
+        key: value
+        for key, value in reference.items()
+        if key in {"passage_id", "title", "version", "location", "content"}
+    }
+
+
+def clean_reference_suffix(message, citation_ids, grounding):
+    """Remove only a trailing duplicate of already validated envelope metadata."""
+    suffix = re.search(
+        r"\s+grounding\s*:\s*(references|record|clarification)\s*;?\s*"
+        r"citation_ids\s*:\s*(\[[^\]\n]*\])\s*\.?\s*$",
+        message,
+    )
+    if not suffix or suffix[1] != grounding:
+        return message
+    try:
+        ids = json.loads(suffix[2])
+    except ValueError:
+        return message
+    prose = message[: suffix.start()].rstrip()
+    return prose if prose and ids == citation_ids else message
 
 
 def strict_schema(schema):
@@ -343,7 +387,7 @@ class AssistantRun:
                 raise AssistantError(str(error)) from None
             except KnowledgeError as error:
                 raise AssistantError(error.code, error.status) from None
-        self.context["reference_passages"] = self.references
+        self.context["reference_passages"] = [model_reference(ref) for ref in self.references]
         self.context["reference_evidence_required"] = self.route.needs_references
 
     def specialist(self):
@@ -379,16 +423,26 @@ class AssistantRun:
             citation_ids=(list[str], Field(max_length=10)),
             grounding=(Literal["record", "references", "clarification"], ...),
         )
+        result_schema = schema_factory()
+        if self.role == "training_chat" and not self.context.get("rules", {}).get(
+            "may_update_ai_draft", False
+        ):
+            # The caller's permission also constrains generation. No need to
+            # serialize a full replacement-plan schema for a factual question.
+            result_schema["properties"]["draft_update"] = {"type": "null"}
+            instructions = _READ_ONLY_CHAT
         schema = {
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "result": schema_factory(),
+                "result": result_schema,
                 "citation_ids": {"type": "array", "maxItems": 10, "items": {"type": "string"}},
                 "grounding": {"type": "string", "enum": ["record", "references", "clarification"]},
             },
             "required": ["result", "citation_ids", "grounding"],
         }
+        if self.route.needs_references:
+            schema["properties"]["grounding"]["enum"] = ["references", "clarification"]
         output = self._call(self.context, instructions + _GROUNDING, schema, envelope, self.role)
         allowed = {p["passage_id"]: p for p in self.references}
         if any(id_ not in allowed for id_ in output.citation_ids):
@@ -408,6 +462,10 @@ class AssistantRun:
         ):
             raise AssistantError("assistant_clarification_required", 422)
         self.citations = [allowed[id_] for id_ in dict.fromkeys(output.citation_ids)]
+        if self.role == "training_chat":
+            output.result.assistant_message = clean_reference_suffix(
+                output.result.assistant_message, output.citation_ids, output.grounding
+            )
         if self.references and (
             self.citations or self.route.needs_references or output.grounding == "references"
         ):
@@ -416,9 +474,11 @@ class AssistantRun:
                     "question": self.context.get("current_user_message")
                     or self.context.get("reason", "Gerar proposta confirmada"),
                     "answer": output.result.model_dump(mode="json"),
-                    "cited_passages": self.citations,
+                    "cited_passages": [model_reference(p) for p in self.citations],
                     "other_passages": [
-                        p for p in self.references if p["passage_id"] not in output.citation_ids
+                        model_reference(p)
+                        for p in self.references
+                        if p["passage_id"] not in output.citation_ids
                     ],
                 },
                 _REVIEW,

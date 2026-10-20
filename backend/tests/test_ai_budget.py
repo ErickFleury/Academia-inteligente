@@ -162,3 +162,36 @@ def test_missing_prompt_usage_keeps_reservation():
     budget.reserve(100, 1000)
     budget.reconcile_input(612, None)
     assert budget.input_tokens == 612
+
+
+def test_readonly_chat_reserves_output_for_final_review(monkeypatch):
+    captured = []
+
+    def respond(request, timeout):
+        captured.append(json.loads(request.data))
+        return BytesIO(
+            json.dumps(
+                {
+                    "message": {"content": '{"answer":"ok"}'},
+                    "eval_count": 5,
+                    "prompt_eval_count": 100,
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    schema = {"properties": {"result": {"properties": {"draft_update": {"type": "null"}}}}}
+    with ExecutionBudget().scope():
+        OllamaOnboardingProvider().structured(
+            {}, "Return JSON", schema, Result, role="training_chat"
+        )
+    assert captured[0]["options"]["num_predict"] == 1000
+
+
+def test_chat_window_is_fixed_and_never_silently_grows(monkeypatch):
+    monkeypatch.setenv("OLLAMA_CHAT_CONTEXT_TOKENS", "8192")
+    monkeypatch.setattr(ai, "urlopen", lambda *args, **kwargs: pytest.fail("must not send"))
+    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="context_capacity"):
+        OllamaOnboardingProvider().structured(
+            {"required_health_record": "x" * 8500}, "Return JSON", {}, Result, role="orchestrator"
+        )

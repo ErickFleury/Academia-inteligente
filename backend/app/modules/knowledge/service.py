@@ -110,7 +110,7 @@ def section_terms(value):
     words = set(
         re.findall(r"[a-z0-9]+", "".join(c for c in normalized if not unicodedata.combining(c)))
     )
-    return words - {
+    words = words - {
         "a",
         "as",
         "o",
@@ -135,6 +135,10 @@ def section_terms(value):
         "atividades",
         "fisica",
         "fisicas",
+    }
+    return {
+        "jovem" if word == "jovens" else word[:-1] if len(word) > 3 and word.endswith("s") else word
+        for word in words
     }
 
 
