@@ -322,3 +322,30 @@ formatting of changed Python files passed. The new cases cover persisted/reloade
 continuation, idempotency, schema constraints, cancellation/topic changes,
 replacement, uncertainty, repeat-question repair, ownership, expiry, forgetting,
 durable answers and preservation of onboarding restrictions.
+
+### Optional OpenAI generation configuration (2026-10-23)
+
+At the owner's request, the deployment's ignored `.env` now selects
+`AI_PROVIDER=openai` and `OPENAI_MODEL=gpt-6-luna`, with empty per-role model
+overrides. All generation roles inherit Luna. The existing Ollama embedding
+configuration (`embeddinggemma`) and system-wide RAG remain active; no reference
+reindexing or application-code changes were needed. The backend was recreated
+and its health endpoint returned HTTP 200. Credentials were neither printed nor
+committed. The pre-change code checkpoint is `c6d102d`.
+
+A single synthetic Responses API preflight, initiated with Sol before the owner
+selected Luna, returned HTTP 429 / `credit_balance_exhausted`. No generation
+completed, and no further live requests were made after that billing failure.
+Luna account/model access and end-to-end answer quality therefore remain
+unverified. The configured OpenAI chat requires funded API billing before it can
+operate. No client conversation, memory, or plan was modified by this check.
+
+Validation: 45 mocked adapter/budget tests passed
+(`test_openai_onboarding_adapter.py`, `test_ai_budget.py`); runtime configuration
+confirmed the OpenAI adapter, Luna for all generation roles, local embeddings,
+and enabled RAG. These tests made no paid API calls.
+
+Operational rollback: set `AI_PROVIDER=ollama` in the local `.env` and run
+`docker compose up -d --no-deps --force-recreate backend`. The existing local
+model configuration and model volumes were retained. Git checkout alone does
+not revert the ignored deployment configuration.
