@@ -11,6 +11,7 @@ import os
 import re
 from datetime import UTC, datetime
 from itertools import zip_longest
+from time import monotonic
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
@@ -36,6 +37,7 @@ from app.modules.assistant.client_questions import (
     render_questions,
 )
 from app.modules.clients.models import Client
+from app.modules.knowledge.prescription_evidence import allocation_options, source_parameters
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
 from app.modules.memory.service import (
     MemoryChange,
@@ -79,6 +81,7 @@ class Clarification(BaseModel):
     next_step: str = Field(min_length=1, max_length=800)
     missing_fields: list[ClientField] = Field(default_factory=list, max_length=10)
     questions: list[ClientQuestion] = Field(default_factory=list, max_length=6)
+    evidence_query: str | None = Field(default=None, min_length=1, max_length=200)
 
     def message(self):
         return " ".join(part for part in (self.explanation, self.next_step) if part)
@@ -101,6 +104,38 @@ class PlanRoute(Route):
     followup_action: Literal["resume", "cancel", "chat"] | None = None
 
 
+class PrescriptionCheck(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    item_position: int = Field(ge=1, le=100)
+    exercise_supported: bool
+    sets_supported: bool
+    repetitions_supported: bool
+    rest_supported: bool
+    load_supported: bool
+    equipment_appropriate: bool
+    applicable: bool
+    gap: str = Field(max_length=200)
+
+
+def prescription_clarification(fields):
+    labels = {
+        "exercise_supported": "escolha dos exercícios",
+        "sets_supported": "quantidade de séries",
+        "repetitions_supported": "repetições ou duração",
+        "rest_supported": "intervalos de descanso",
+        "load_supported": "carga",
+        "equipment_appropriate": "seleção dos equipamentos",
+        "applicable": "adequação às limitações informadas",
+    }
+    gaps = [label for key, label in labels.items() if key in fields]
+    return Clarification(
+        reason="unsupported_guidance",
+        explanation="Ainda não encontrei apoio suficiente nas referências para estes pontos "
+        "do treino: " + ", ".join(gaps) + ".",
+        next_step="Um instrutor precisa avaliar esses pontos do treino.",
+    )
+
+
 class GroundingReview(BaseModel):
     model_config = ConfigDict(extra="forbid")
     unsupported_claims: list[str] = Field(max_length=5)
@@ -109,6 +144,7 @@ class GroundingReview(BaseModel):
     supported: bool
     relevant_conflict: bool
     clarification: Clarification | None = None
+    prescription_checks: list[PrescriptionCheck] = Field(default_factory=list, max_length=100)
 
 
 _ROUTING = """Você é o orquestrador da Academia Inteligente. Escolha somente o
@@ -180,10 +216,25 @@ technique_query pode buscar técnica de exercícios solicitados ou precauções 
 use null se não houver uma busca complementar útil. Cada consulta tem no máximo 12
 palavras. Não inclua medidas pessoais de altura/peso nem transcreva memórias.
 Não presuma idade, gestação ou população saudável a partir de dados ausentes.
+Quando a idade estiver informada, busque pela faixa populacional (adultos, idosos,
+adolescentes), não pela idade exata. Agenda e preferências pessoais pertencem ao
+plano, não à busca: não transcreva dias disponíveis, minutos livres, nem respostas
+como 'nenhum' ou 'não' nas consultas. Nenhuma restrição de equipamento não significa
+ausência de equipamentos. query e technique_query são termos, NUNCA perguntas.
 Restrições são relatos, nunca diagnósticos inferidos. Preserve nomes de exercícios
 solicitados em adaptações. Para planos, needs_references=true. Se faltar informação
 essencial, escolha clarify. Você escolhe buscas, não exercícios nem prescrições.
 Não limite toda busca a musculação: escolha modalidades pertinentes ao objetivo.
+Se o pedido inicial tem objetivo geral, como emagrecer ou condicionamento, e não
+especifica musculação nem um exercício, query deve buscar atividade física para a
+população informada, com duração e intensidade; technique_query deve buscar opções
+de atividades (exemplos e modalidades), não apenas cuidados ou dor. Não escolha musculação por conta
+própria antes de ver as opções sustentadas pelas referências.
+Escreva termos separados por espaços, nunca nomes de campos ou snake_case.
+Exemplos de buscas conforme a necessidade: 'adultos atividade física duração
+intensidade frequência'; 'musculação iniciantes séries repetições descanso';
+'adultos exercício cuidados dor'. Escolha pelo pedido e contexto, não copie um
+exemplo sem pertinência.
 Use a segunda busca para complementar uma lacuna diferente: dosagem, técnica ou
 precauções aplicáveis. Inclua experiência quando relevante. Evite buscas só de
 definições. Não transforme sintomas em diagnósticos nem selecione um exercício
@@ -202,6 +253,21 @@ essenciais, pergunte todos juntos; não invente novas exigências."""
 _PLAN_GROUNDING = """ Antes de montar a proposta, confira se os trechos sustentam
 os exercícios, dosagem (séries, repetições/duração, carga, descanso) e precauções
 necessárias para este cliente. Benefícios genéricos não sustentam uma prescrição.
+source_prescription_parameters contém quantidades e atividades reconhecidas
+literalmente nos trechos, com referência e unidades explícitas. Use esses valores
+para evitar inventar números. Isso não prova aplicabilidade: confira o texto,
+população e condições. Não prescreva séries, repetições ou descanso sem uma faixa
+correspondente na fonte. daily_minutes_if_divided fornece a divisão aritmética do
+total semanal pelos dias informados: quando aplicável, use esse valor exato e
+explique os dias, minutos diários e total semanal no objetivo, em vez de inventar
+uma faixa de duração. Uma atividade contínua com duração documentada é uma
+opção quando adequada ao pedido; não acrescente musculação sem dados de prescrição.
+source_allocation_options contém alternativas calculadas com apoio identificado.
+Se alguma atende ao pedido, pode usá-la como base sem alterar os números; confira
+a intensidade e condições na fonte e complete a orientação de carga fielmente.
+São ALTERNATIVAS, não exercícios para somar: escolha uma opção adequada, não todas.
+Se só há apoio para uma atividade, uma proposta com um item é válida; não invente
+outros exercícios para preencher uma rotina convencional.
 Não transfira recomendações de gestantes, idosos, crianças ou adultos saudáveis
 para outra população sem apoio explícito. Se a aplicabilidade depender de informação
 ausente, peça esclarecimento. Os relatos pessoais fundamentam objetivos/restrições,
@@ -211,6 +277,18 @@ preencher o esquema. Quando houver apoio, gere somente detalhes sustentados e ci
 os trechos correspondentes. Combine orientações gerais de programação e instruções
 de execução quando forem compatíveis e aplicáveis: não exija que todos os parâmetros
 apareçam no mesmo trecho ou que o livro descreva este cliente individualmente.
+Você pode distribuir uma quantidade semanal documentada pelos dias disponíveis
+informados pelo cliente usando aritmética simples, se a fonte permitir essa
+distribuição. Explique a derivação no objetivo; não invente uma regra de progressão,
+carga ou aplicabilidade. Uma atividade contínua pode ser representada como um
+bloco (sets=1) com duração em repetitions e sem intervalo entre séries (rest_seconds=0).
+Isso não autoriza atribuir intervalos ou séries novos a exercícios resistidos.
+Decida primeiro grounding e clarification, antes de escrever result. Se faltar
+apoio técnico e reference_searches_remaining > 0, use evidence_query com uma busca
+complementar de até 12 palavras sobre a lacuna, sem informações pessoais.
+O backend fará essa busca antes de encaminhar a lacuna ao cliente. Caso contrário,
+evidence_query=null. Produza uma proposta concisa, sem duplicar exercícios só
+para representar dias iguais e sem recapitular o perfil. Preserve precauções.
 Escolha exercícios sustentados; um exercício sem apoio não impede outras opções
 adequadas às fontes e restrições. Nunca complete doses ausentes por conta própria.
 Em repetitions, escreva somente a quantidade/faixa ou
@@ -284,6 +362,36 @@ Exemplo de conflito: duas fontes do mesmo instrumento exigem calibração a cada
 10 e 20 dias, sem prioridade. Mesmo se a resposta mencionar ambas, registre as
 duas periodicidades em conflicting_statements e marque relevant_conflict=true.
 Retorne somente os campos JSON do esquema."""
+
+_PRESCRIPTION_REVIEW = """ Para cada item do plano, preencha prescription_checks
+na mesma ordem, com item_position começando em 1. Compare SEPARADAMENTE o nome do
+exercício, séries, repetições/duração, descanso, carga, equipamento e aplicabilidade.
+Não complete detalhes usando seu conhecimento. Uma fonte sobre musculação em geral
+não sustenta automaticamente agachamento, flexão ou outro exercício específico.
+Uma fonte que permite 2–3 minutos de descanso NÃO sustenta 60 segundos.
+Uma quantidade semanal NÃO sustenta uma duração diária arbitrária: confira a
+distribuição informada no objetivo e a aritmética com os dias disponíveis.
+Um banco de supino não é equipamento de agachamento ou flexão só porque está no
+inventário. Ausência de fonte para um detalhe significa false no campo respectivo.
+Uma proposta pendente de revisão também precisa de evidência. Em gap, identifique
+brevemente os detalhes sem apoio; se todos forem sustentados, gap="". Quando
+houver qualquer false, supported=false e clarification deve identificar a lacuna
+técnica, sem pedir ao cliente uma prescrição nem repetir dados pessoais conhecidos.
+Preserve o contexto de aplicação: resultados para saudáveis não estabelecem
+adequação a uma queixa clínica; não infira diagnóstico ou resolução de queixas.
+Se answer.plan ou answer.draft_update está presente, é obrigatório verificar CADA
+item mesmo quando nenhum detalhe tem apoio. Somente para conversa sem plano nem
+rascunho, prescription_checks=[]."""
+
+_PRESCRIPTION_REVIEW += """ Se faltar apoio e reference_searches_remaining > 0,
+preencha clarification.evidence_query com termos para buscar a evidência ausente,
+até 12 palavras, sem dados pessoais. Busque opções aplicáveis ao objetivo se o
+exercício proposto não tem apoio. Não peça informações técnicas ao cliente."""
+
+_PRESCRIPTION_REVIEW += """ existing_draft é o rascunho salvo deste cliente.
+Valores exatamente inalterados podem se apoiar nesse registro; mudanças de
+exercício ou prescrição exigem fontes. Registros anteriores não comprovam
+adequação a novas queixas ou mudanças de saúde: verifique o contexto atual."""
 
 _CLARIFICATION = """ Quando precisar esclarecer ou recusar uma proposta, preencha
 clarification; caso contrário, use null. Fale diretamente com a pessoa que está
@@ -392,7 +500,12 @@ def valid_plan_reference_query(query):
     return (
         valid_reference_query(query)
         and "?" not in query
-        and not re.search(r"\b(?:altura|peso|height|weight)\s*[:=]?\s*\d", query, re.I)
+        and not re.search(
+            r"\b(?:altura|peso|height|weight)\s*[:=]?\s*\d|"
+            r"\b\d+\s*(?:anos?|dias?|horas?|minutos?)\b",
+            query,
+            re.I,
+        )
     )
 
 
@@ -567,7 +680,7 @@ class AssistantRun:
                     ]
             if (
                 self.source is not None
-                and self.role in {"onboarding", "training_chat"}
+                and self.role in {"onboarding", "training_chat", "initial_plan"}
                 and utc(self.source.created_at) <= cutoff
             ):
                 raise AssistantError("memory_event_expired", 409)
@@ -636,6 +749,10 @@ class AssistantRun:
         # This same call may correct or withdraw an earlier answer. Constrain
         # the questions after interpreting those updates, not to stale gaps.
         route_schema = strict_schema(route_type.model_json_schema())
+        if plan:
+            # This action belongs to the chat dispatcher, not the plan router.
+            route_schema["properties"].pop("plan_action")
+            route_schema["required"].remove("plan_action")
         if self.role == "onboarding" or not sources:
             route_schema["properties"]["answer_updates"]["maxItems"] = 0
         else:
@@ -776,7 +893,10 @@ class AssistantRun:
                 self.budget.retrieval()
                 rankings.append(
                     self.knowledge.search(
-                        self.session, query, timeout=min(10, self.budget.remaining())
+                        self.session,
+                        query,
+                        timeout=min(10, self.budget.remaining()),
+                        include_activity_options=self.role == "initial_plan",
                     )
                 )
                 self.budget.remaining()
@@ -795,8 +915,29 @@ class AssistantRun:
         self.context["reference_passages"] = self.model_references(self.references)
         self.context["reference_sources"] = self.model_sources()
         self.context["reference_evidence_required"] = self.route.needs_references
+        self.context["reference_searches_remaining"] = 2 - self.budget.retrievals
 
     def _refresh_unanswered_fields(self):
+        if self.role in {"initial_plan", "adaptation"}:
+            report = self.context.get("client_answers", {}).get("age", {})
+            age = report.get("value")
+            if (
+                report.get("reported_at")
+                and (
+                    datetime.now(UTC).date() - datetime.fromisoformat(report["reported_at"]).date()
+                ).days
+                > 30
+            ):
+                age = None
+            self.plan_brief["population"] = "not_established"
+            if isinstance(age, (int, float)):
+                self.plan_brief["population"] = (
+                    "older_adults"
+                    if age >= 65
+                    else "adults"
+                    if age >= 18
+                    else "children_or_adolescents"
+                )
         self.unanswered_client_fields = available_fields(self.context, self.plan_brief)
         if self.role == "initial_plan":
             self.unanswered_client_fields = [
@@ -876,6 +1017,7 @@ class AssistantRun:
         self.clarification = {**detail.model_dump(), "stage": stage}
         if not self.clarification["questions"]:
             self.clarification.pop("questions")
+        self.clarification.pop("evidence_query")
         if self.context.get("client_answers"):
             self.clarification["client_answers"] = self.context["client_answers"]
         self.citations = []
@@ -887,6 +1029,32 @@ class AssistantRun:
         raise AssistantError(
             "assistant_clarification_required", 422, clarification=self.clarification
         )
+
+    def _search_for_evidence(self, query):
+        if not query or not valid_plan_reference_query(query) or self.budget.retrievals >= 2:
+            return False
+        try:
+            self.budget.retrieval()
+            additional = self.knowledge.search(
+                self.session,
+                query,
+                timeout=min(10, self.budget.remaining()),
+                include_activity_options=self.role == "initial_plan",
+            )
+            self.budget.remaining()
+        except (KnowledgeError, BudgetExceeded) as error:
+            raise AssistantError(getattr(error, "code", str(error))) from None
+        combined, seen = [], set()
+        for group in zip_longest(additional, self.references):
+            for reference in group:
+                if reference and reference["passage_id"] not in seen:
+                    combined.append(reference)
+                    seen.add(reference["passage_id"])
+        self.references = combined[:5]
+        self.context["reference_passages"] = self.model_references(self.references)
+        self.context["reference_sources"] = self.model_sources()
+        self.context["reference_searches_remaining"] = 0
+        return bool(additional)
 
     def specialist(self):
         if self.route.specialist == "clarify" or (
@@ -921,8 +1089,26 @@ class AssistantRun:
             # or duration). Instructor-authored free text remains unchanged.
             item_schema = result_schema["properties"]["plan"]["properties"]["items"]["items"]
             item_schema["properties"]["repetitions"]["pattern"] = r"^[0-9].{0,99}$"
+        if plan or self.context.get("rules", {}).get("may_update_ai_draft"):
+            self.context["source_prescription_parameters"] = source_parameters(
+                self.context["reference_passages"],
+                self.context.get("client_answers", {}).get("weekly_availability", {}).get("value"),
+            )
+            self.context["source_allocation_options"] = allocation_options(
+                self.context["reference_passages"], self.context
+            )
         if plan:
+            instructions = instructions.replace("somente o onboarding", "o contexto")
             instructions += _PLAN_GROUNDING
+            if self.context.get("plan_review_feedback"):
+                instructions += (
+                    " A proposta anterior falhou na revisão. Use plan_review_feedback para "
+                    "corrigir os pontos sem apoio. Selecione SOMENTE exercícios nomeados nas "
+                    "fontes atuais e parâmetros sustentados. Prefira uma proposta enxuta e "
+                    "coerente a repetir exercícios sem evidência. Não há número obrigatório "
+                    "de exercícios. Se não for possível atender ao pedido com as fontes, "
+                    "retorne clarification identificando somente a lacuna real."
+                )
             instructions += (
                 " Use também recent_messages como relatos datados do próprio cliente, "
                 "incluindo respostas a esclarecimentos anteriores. Isso complementa "
@@ -956,14 +1142,28 @@ class AssistantRun:
         # clarification object (both adapters consume this same schema).
         detail_schema = schema["properties"]["clarification"]["anyOf"][0]
         schema["$defs"] = detail_schema.pop("$defs", {})
+        schema["properties"] = {
+            key: schema["properties"][key]
+            for key in ("grounding", "clarification", "citation_ids", "result")
+        }
         if self.route.needs_references or plan:
             schema["properties"]["grounding"]["enum"] = ["references", "clarification"]
         if self.references:
             schema["properties"]["citation_ids"]["items"]["enum"] = list(
                 self.reference_labels().values()
             )
+        specialist_started = monotonic()
         output = self._call(self.context, instructions + _GROUNDING, schema, envelope, self.role)
+        specialist_seconds = monotonic() - specialist_started
         if output.grounding == "clarification":
+            detail = output.clarification
+            if (
+                plan
+                and detail
+                and detail.reason == "insufficient_evidence"
+                and self._search_for_evidence(detail.evidence_query)
+            ):
+                return self.specialist()
             return self._clarify("specialist", output.clarification)
         if output.result is None or (plan and output.grounding != "references"):
             raise AssistantError("malformed_structured_output", 422)
@@ -1017,6 +1217,73 @@ class AssistantRun:
             proposal = self.role in {"initial_plan", "adaptation"} or (
                 self.role == "training_chat" and output.result.draft_update is not None
             )
+            plan_items = (
+                output.result.plan.get("items")
+                if self.role == "initial_plan"
+                else output.result.draft_update.get("items")
+                if self.role == "training_chat" and output.result.draft_update
+                else None
+            )
+            if plan_items is not None:
+                objective = (
+                    output.result.plan.get("objective", "")
+                    if self.role == "initial_plan"
+                    else output.result.draft_update.get("objective", "")
+                )
+                try:
+                    source_gaps = self.knowledge.prescription_gaps(
+                        plan_items, self.citations, context=self.context, objective=objective
+                    )
+                except (KeyError, TypeError, ValueError):
+                    raise AssistantError("malformed_structured_output", 422) from None
+                if source_gaps:
+                    # Do not spend a model review on quantities already disproved
+                    # by the cited text. One correction still shares the budget.
+                    if (
+                        self.role == "initial_plan"
+                        and not self.context.get("plan_review_feedback")
+                        and self.budget.calls <= 4
+                        and self.budget.remaining() >= specialist_seconds + 10
+                    ):
+                        self.context["plan_review_feedback"] = {
+                            "checks": [
+                                {
+                                    **gap,
+                                    "exercise": plan_items[gap["item_position"] - 1][
+                                        "exercise_name"
+                                    ],
+                                }
+                                for gap in source_gaps
+                            ],
+                            "instruction": "Use somente nomes e quantidades documentados. "
+                            "Para distribuir o total semanal, use daily_minutes_if_divided "
+                            "e explicite os dias e minutos no objetivo. Não repita doses "
+                            "rejeitadas nem acrescente exercícios sem apoio.",
+                        }
+                        self.citations = []
+                        return self.specialist()
+                    return self._clarify(
+                        "review",
+                        prescription_clarification(
+                            {field for gap in source_gaps for field in gap["fields"]}
+                        ),
+                    )
+            review_schema = self._question_schema(GroundingReview.model_json_schema())
+            checks = review_schema["properties"]["prescription_checks"]
+            checks["minItems"] = checks["maxItems"] = len(plan_items or [])
+            if plan_items:
+                review_schema["$defs"]["PrescriptionCheck"]["properties"]["item_position"][
+                    "enum"
+                ] = list(range(1, len(plan_items) + 1))
+            review_schema["properties"] = {
+                "prescription_checks": checks,
+                **{
+                    key: value
+                    for key, value in review_schema["properties"].items()
+                    if key != "prescription_checks"
+                },
+            }
+            review_started = monotonic()
             review = self._call(
                 {
                     **({"delivery_kind": "plan_proposal_pending_approval"} if proposal else {}),
@@ -1051,6 +1318,8 @@ class AssistantRun:
                             else {}
                         ),
                     },
+                    "reference_searches_remaining": 2 - self.budget.retrievals,
+                    "existing_draft": self.context.get("editable_training_draft"),
                     "reference_sources": self.model_sources(),
                     "cited_passages": self.model_references(self.citations),
                     "other_passages": self.model_references(
@@ -1058,6 +1327,7 @@ class AssistantRun:
                     ),
                 },
                 _REVIEW
+                + _PRESCRIPTION_REVIEW
                 + (
                     "\nO backend informa que esta saída é somente uma proposta pendente "
                     "de aprovação, não um treino autorizado para execução. As confirmações "
@@ -1075,10 +1345,33 @@ class AssistantRun:
                     if proposal
                     else ""
                 ),
-                self._question_schema(GroundingReview.model_json_schema()),
+                review_schema,
                 GroundingReview,
                 "orchestrator",
             )
+            if plan_items is not None:
+                if [check.item_position for check in review.prescription_checks] != list(
+                    range(1, len(plan_items) + 1)
+                ):
+                    raise AssistantError("malformed_structured_output", 422)
+                if any(
+                    not all(
+                        value
+                        for key, value in check.model_dump().items()
+                        if key not in {"item_position", "gap"}
+                    )
+                    for check in review.prescription_checks
+                ):
+                    review.supported = False
+                    if review.clarification is None:
+                        review.clarification = prescription_clarification(
+                            {
+                                key
+                                for check in review.prescription_checks
+                                for key, value in check.model_dump().items()
+                                if key not in {"item_position", "gap"} and not value
+                            }
+                        )
             if (
                 not review.supported
                 or review.unsupported_claims
@@ -1086,6 +1379,32 @@ class AssistantRun:
                 or review.missing_conditions
                 or review.conflicting_statements
             ):
+                if (
+                    self.role == "initial_plan"
+                    and plan_items is not None
+                    and not self.context.get("plan_review_feedback")
+                    and not review.relevant_conflict
+                    and not review.conflicting_statements
+                    and self.budget.calls <= 4
+                    and self.budget.remaining()
+                    >= max(15, specialist_seconds + monotonic() - review_started + 10)
+                ):
+                    detail = review.clarification
+                    if detail:
+                        self._search_for_evidence(detail.evidence_query)
+                    self.context["plan_review_feedback"] = {
+                        "checks": [
+                            {
+                                **check.model_dump(),
+                                "exercise": plan_items[check.item_position - 1]["exercise_name"],
+                            }
+                            for check in review.prescription_checks
+                        ],
+                        "unsupported_claims": review.unsupported_claims,
+                        "missing_conditions": review.missing_conditions,
+                    }
+                    self.citations = []
+                    return self.specialist()
                 return self._clarify(
                     "review",
                     review.clarification,

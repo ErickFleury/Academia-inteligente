@@ -189,11 +189,20 @@ class MemoryService:
         """
         if len(changes) > 10:
             raise MemoryError("memory_invalid", 422)
+        answer_changes = {
+            key: report
+            for key, report in (answers or {}).items()
+            if report.get("source_event_id") == str(event_id)
+        }
         with session.begin_nested():
             state = self.snapshot(session, client_id)
             if state["revision"] != revision:
                 raise MemoryError("memory_conflict")
-            if changes and state["event_after"] and utc(occurred_at) <= utc(state["event_after"]):
+            if (
+                (changes or answer_changes)
+                and state["event_after"]
+                and utc(occurred_at) <= utc(state["event_after"])
+            ):
                 raise MemoryError("memory_event_expired")
             self.validate_revision(
                 session, client_id, revision, event_after=occurred_at if changes else None
@@ -234,9 +243,7 @@ class MemoryService:
                 fact.source_event_id, fact.reported_at, fact.updated_at = event_id, occurred_at, now
             # Only interpretations of THIS authenticated source event become
             # durable. Older retained messages are context, never backfilled.
-            for key, report in (answers or {}).items():
-                if report.get("source_event_id") != str(event_id):
-                    continue
+            for key, report in answer_changes.items():
                 quote = report.get("source_text", "")
                 if not quote or quote not in message:
                     raise MemoryError("memory_evidence_invalid", 422)

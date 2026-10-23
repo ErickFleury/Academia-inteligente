@@ -106,10 +106,16 @@ def test_current_answers_survive_evidence_gap_and_transcript_expiry(database_ses
     service = TrainingChatService(
         agent, generation_service=InitialTrainingGenerationService(provider=agent)
     )
-    # The first turn gathers personal answers. There are deliberately no sources.
+    rollout.passages = [passage("Synthetic reference")]
     service.submit_for_subject(
+        database_session, "owner", message="Gere meu treino", client_request_id=uuid4()
+    )
+    rollout.passages = []
+    # Generation cannot proceed, but the current personal answers remain valid.
+    result = service.submit_for_subject(
         database_session, "owner", message=FREE_REPLY, client_request_id=uuid4()
     )
+    assert result.messages[-1].clarification["reason"] == "insufficient_evidence"
     facts = MemoryService.snapshot(database_session, client.id)["facts"]
     assert len(facts) == 5
     assert all("source_text" not in str(fact) for fact in facts)
@@ -262,3 +268,49 @@ def test_continuation_command_is_not_a_personal_answer():
         "current_user_message": "gere meu treino",
     }
     assert not client_answers(context)
+
+
+def test_compact_answers_cannot_restore_a_forgotten_source(database_session):
+    from datetime import UTC, datetime, timedelta
+
+    import pytest
+
+    from app.modules.memory.service import MemoryError, MemoryService
+
+    client = owner(database_session)
+    memory = MemoryService()
+    event_id = uuid4()
+    occurred_at = datetime.now(UTC) - timedelta(days=1)
+    answers = {
+        "training_location": {
+            "source_event_id": str(event_id),
+            "source_text": "Em casa",
+            "question": "Onde você treina?",
+            "value": "Em casa",
+        }
+    }
+    memory.apply(
+        database_session,
+        client.id,
+        0,
+        [],
+        event_id=event_id,
+        occurred_at=occurred_at,
+        message="Em casa",
+        answers=answers,
+    )
+    database_session.commit()
+    state = memory.snapshot(database_session, client.id)
+    cleared = memory.edit(database_session, client.id, state["facts"][0]["id"], state["revision"])
+    with pytest.raises(MemoryError, match="memory_event_expired"):
+        memory.apply(
+            database_session,
+            client.id,
+            cleared["revision"],
+            [],
+            event_id=event_id,
+            occurred_at=occurred_at,
+            message="Em casa",
+            answers=answers,
+        )
+    assert memory.snapshot(database_session, client.id)["facts"] == []

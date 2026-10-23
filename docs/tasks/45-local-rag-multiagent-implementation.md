@@ -150,3 +150,67 @@ paid API was used, and no real application data was migrated or reset.
   and disconnected browser-ingress verification. Protocol checks and component
   tests are recorded with their narrower scope.
 - Deliberate test-client rollout after verification. Defaults remain disabled.
+
+## Fluid training control correction (2026-10-23)
+
+Scope: the owner-requested RF-15/RF-18 conversation and durable-memory refinement
+in the canonical specification. Checkpoints began at `b92d5d6`; `d48643b` adds
+dynamic personal questions, semantic plan/draft intent, bounded earlier-message
+recall and compact structured answers. Migration `20261023_38` adds nullable
+answer metadata to existing memory facts. Raw quotations remain in expiring chat
+state; only current validated reports become durable facts. Manual corrections,
+forgetting, ownership, optimistic revisions and source-event cutoff remain enforced.
+
+The reproduction identified fixed question topics, copied rejected assistant
+prose, personal schedules in search queries, definitions displacing prescription
+passages, missing activity-selection passages, and false-positive model review.
+The correction separates client reports from reference evidence, retains valid
+answers on a source-gap reply, and adds prescription/population/coverage ranking.
+There are still at most two retrieval rounds and five passages in the working
+context. A specialist may request the remaining search; a proposal may use one
+correction when time remains for validation. Neither extends the request budget.
+
+The reviewer must inspect every proposed item. Necessary backend checks now
+compare exercise names and numerical sets/repetitions/rest/duration against the
+actual cited passages. They recognize bounded Portuguese/English forms and simple
+explicit weekly allocations. The generator receives extracted quantities with
+source labels and units. These checks are conservative: an unrecognized synonym
+or source format may cause abstention. They do not establish medical applicability,
+verify every free-text claim, or replace instructor approval and human accuracy
+evaluation. Unchanged draft values may use the saved record; changed prescriptions
+still require evidence.
+
+On the desktop, the 12,288-token local context used 85% GPU residency and reproduced
+60-second plan timeouts. An 8,192-token context used 100% GPU residency. A synthetic
+supported plan completed generation and item review in 17.08 seconds before the
+final source-parser guard; a real-account replay exposed unsupported prescriptions
+despite a positive model verdict, motivating that independent guard. Subsequent
+read-only replays rejected unsupported prescriptions rather than saving them.
+No real-account messages, memories or plans were written by these replays. Local
+chat and plan defaults now use the measured smaller window; truncation/context
+shifting remain disabled, so oversized requests fail explicitly. This is desktop
+evidence, not a laptop-capacity or full-corpus accuracy claim.
+
+Regression coverage includes natural plan requests, non-catalog questions,
+free-form corrections, topic changes, earlier own-message recall, transcript
+expiration, source-gap memory persistence, forgetting/replay suppression,
+source quantity checks, population/measurement/activity retrieval, per-item review,
+bounded repair and existing plan/instructor/privacy workflows. The final test
+result and deployed checkpoint are reported with this task's delivery.
+
+Final regression run: **803 passed**, including PostgreSQL tests, with two existing
+Alembic configuration warnings. Ruff lint passed; all eleven changed Python files
+passed formatting checks. The repository-wide format check still reports three
+unrelated pre-existing test files, which were left unchanged.
+
+With the final source guard enabled, a synthetic, fully supported local plan
+completed routing, generation and review in **34.12 seconds / three calls**.
+The read-only test-account replay recovered all five previously supplied answers
+and did not repeat them. It still failed to produce an acceptable proposal: the
+model combined alternative activities, added unsupported stretching and mismatched
+the documented weekly amount. The backend rejected it without saving a plan or
+requesting those personal answers again. This remains a real-source generation
+quality limitation; the passing synthetic control does not resolve it. The final
+8,192-token probe showed **89% GPU / 11% CPU** residency, rather than the earlier
+100% GPU observation, so full GPU residency is not guaranteed under current
+desktop memory pressure. No paid model or deadline relaxation was introduced.

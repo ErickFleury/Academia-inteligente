@@ -23,6 +23,7 @@ from app.integrations.document_text import (
 )
 from app.integrations.embeddings import EmbeddingProvider, HttpEmbeddingProvider
 from app.modules.knowledge.models import ReferencePassage, ReferenceSource, ReferenceVersion
+from app.modules.knowledge.prescription_evidence import prescription_gaps, source_parameters
 from app.modules.knowledge.search_terms import expand_search_terms
 
 
@@ -243,7 +244,58 @@ def bibliography_weight(content):
     return 0.2 if len(re.findall(r"\b(?:19|20)\d{2};\s*\d+", content)) >= 2 else 1.0
 
 
+def prescription_weight(content, query):
+    """Prefer measured guidance for dose searches, without treating it as approval."""
+    terms = section_terms(query)
+    if terms & {"definition", "definicao", "significa", "conceito"}:
+        return 1.0
+    dose_terms = {
+        "serie",
+        "set",
+        "repeticao",
+        "repetition",
+        "rep",
+        "descanso",
+        "rest",
+        "intensidade",
+        "intensity",
+        "frequencia",
+        "frequency",
+        "duracao",
+        "duration",
+    }
+    if not terms & {"prescription", "prescricao"} and len(terms & dose_terms) < 2:
+        return 1.0
+    measures = re.findall(
+        r"\d+(?:[–−-]\d+)?\s*(?:sets?\b|séries?\b|repeti(?:tions|ções)\b|"
+        r"minutes?\b|minutos?\b|seconds?\b|segundos?\b|sessions?\b|dias?\b|%\s*1\s*RM)",
+        content,
+        re.I,
+    )
+    return 1 + 0.5 * min(3, len(measures))
+
+
+def population_weight(content, query):
+    """Explicit section populations outrank dose density for a different group."""
+    if not content.startswith("Seção: "):
+        return 1.0
+    groups = (
+        {"adulto", "adult"},
+        {"idoso", "elderly", "older"},
+        {"crianca", "jovem", "adolescente", "child", "children", "adolescent"},
+        {"gestante", "pregnant", "pregnancy", "posparto"},
+        {"deficiencia", "disabilitie", "disability"},
+    )
+    wanted = {i for i, words in enumerate(groups) if words & section_terms(query)}
+    heading = {
+        i for i, words in enumerate(groups) if words & section_terms(content.split("\n", 1)[0])
+    }
+    return 0.25 if wanted and heading and not wanted & heading else 1.0
+
+
 class KnowledgeService:
+    prescription_gaps = staticmethod(prescription_gaps)
+
     def __init__(self, provider: EmbeddingProvider | None = None):
         self.provider = provider or HttpEmbeddingProvider()
 
@@ -483,7 +535,15 @@ class KnowledgeService:
                     session.commit()
         return True
 
-    def search(self, session: Session, query: str, *, timeout: float = 10, limit: int = 5):
+    def search(
+        self,
+        session: Session,
+        query: str,
+        *,
+        timeout: float = 10,
+        limit: int = 5,
+        include_activity_options: bool = False,
+    ):
         if not query.strip() or len(query) > 500 or not 1 <= limit <= 10:
             raise KnowledgeError("reference_query_invalid")
         query = expand_search_terms(query)
@@ -585,6 +645,8 @@ class KnowledgeService:
                     scores[key]
                     * (1 + 0.5 * min(3, section_match(candidates[key].content, query)))
                     * bibliography_weight(candidates[key].content)
+                    * prescription_weight(candidates[key].content, query)
+                    * population_weight(candidates[key].content, query)
                 ),
                 candidates[key].position,
                 str(candidates[key].version_id),
@@ -600,6 +662,29 @@ class KnowledgeService:
                 seen.add(identity)
             if len(selected) >= limit:
                 break
+        if include_activity_options and limit >= 3:
+
+            def has_activity(key):
+                return bool(
+                    source_parameters(
+                        [{"passage_id": str(key), "content": candidates[key].content}]
+                    )[0]["named_activities"]
+                )
+
+            if not any(has_activity(key) for key in selected[:3]):
+                candidate = next(
+                    (
+                        key
+                        for key in ranked
+                        if has_activity(key)
+                        and population_weight(candidates[key].content, query) == 1
+                    ),
+                    None,
+                )
+                if candidate is not None:
+                    selected = [key for key in selected if key != candidate]
+                    selected.insert(min(2, len(selected)), candidate)
+                    selected = selected[:limit]
         results = []
         for key in selected:
             passage = candidates[key]

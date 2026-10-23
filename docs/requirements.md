@@ -648,6 +648,15 @@ failures, concurrent changes and retries cannot corrupt memory or plans. A sourc
 gap identifies the actual missing technical support without restarting a personal
 interview. Choose supported plan options when available, combining compatible
 programming and technique passages without inventing prescription parameters.
+Validation also checks each proposed exercise separately and rejects numerical
+prescriptions or exercise names without recognizable support in the cited text,
+even when an overall model verdict says the plan is supported. Simple weekly
+allocation may use the client's availability when the source permits distribution;
+its arithmetic must be correct and explained in the proposal. Unchanged values
+in an existing draft may use that saved record; new prescriptions require sources.
+Additional retrieval and one proposal correction share the existing call, token,
+retrieval and deadline ceilings. A failed check must not become another request
+for personal facts already supplied or for technical instructions from the client.
 
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a

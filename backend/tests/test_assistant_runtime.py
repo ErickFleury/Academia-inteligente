@@ -28,6 +28,12 @@ from app.modules.training.models import TrainingAiMessage, TrainingPlanVersion
 
 
 class ReferenceTool:
+    @staticmethod
+    def prescription_gaps(items, citations, **kwargs):
+        # Controlled grounding boundary for orchestration/lifecycle tests.
+        # Real source-quantity checks have separate tests and live replays.
+        return []
+
     def __init__(self):
         self.passages = []
         self.queries = []
@@ -64,6 +70,7 @@ class Agent:
         self.schemas.append(schema)
         if role == "orchestrator":
             if "cited_passages" in context:
+                plan = context["answer"].get("plan") or context["answer"].get("draft_update")
                 return type_.model_validate(
                     {
                         "missing_conditions": self.review_missing_conditions,
@@ -71,6 +78,22 @@ class Agent:
                         "unsupported_claims": self.review_unsupported_claims,
                         "supported": self.review_supported,
                         "relevant_conflict": self.review_conflict,
+                        "prescription_checks": [
+                            {
+                                "item_position": index,
+                                "exercise_supported": True,
+                                "sets_supported": True,
+                                "repetitions_supported": True,
+                                "rest_supported": True,
+                                "load_supported": True,
+                                "equipment_appropriate": True,
+                                "applicable": True,
+                                "gap": "",
+                            }
+                            for index, _ in enumerate(plan["items"], 1)
+                        ]
+                        if plan
+                        else [],
                     }
                 )
             return type_.model_validate(

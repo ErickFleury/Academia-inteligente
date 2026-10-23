@@ -283,3 +283,71 @@ def test_deleted_import_cannot_publish_vectors_in_postgres(postgres_sessions):
     with postgres_sessions() as session:
         assert session.scalars(select(ReferenceVersion)).all() == []
         assert session.scalars(select(ReferencePassage)).all() == []
+
+
+def test_prescription_search_prioritizes_doses_over_repeated_definitions(postgres_sessions):
+    provider = FakeEmbedding()
+    service = KnowledgeService(provider)
+    version = upload(
+        postgres_sessions,
+        service,
+        body=(
+            "\n".join(
+                f"# Resistance training {i}\nPrescription terminology: sets repetitions rest. "
+                "Sets are groups of repetitions. Rest separates sets."
+                for i in range(12)
+            )
+            + "\n# Resistance training\nPrescription example for a synthetic test only: "
+            "2 sets of 8 repetitions; rest 90 seconds between sets."
+        ),
+    )
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    with postgres_sessions() as session:
+        hits = service.search(session, "resistance training prescription sets repetitions rest")
+        assert any("8 repetitions" in hit["content"] for hit in hits[:3])
+        definitions = service.search(session, "definition sets repetitions")
+        assert "Sets are groups" in definitions[0]["content"]
+
+
+def test_extra_doses_for_another_population_do_not_displace_requested_group(postgres_sessions):
+    service = KnowledgeService(FakeEmbedding())
+    version = upload(
+        postgres_sessions,
+        service,
+        body=(
+            "# Atividade física para idosos\nDuração frequência intensidade: 150 minutos, "
+            "75 minutos, 30 minutos, 2 dias.\n"
+            "# Atividade física para adultos\nDuração frequência intensidade: 150 minutos.\n"
+            "# Atividade física para crianças\nDuração frequência intensidade: 60 minutos, "
+            "30 minutos, 3 dias."
+        ),
+    )
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    with postgres_sessions() as session:
+        hits = service.search(session, "adultos duração frequência intensidade")
+        assert "para adultos" in hits[0]["content"]
+
+
+def test_plan_search_keeps_an_activity_passage_alongside_dosage(postgres_sessions):
+    service = KnowledgeService(FakeEmbedding())
+    version = upload(
+        postgres_sessions,
+        service,
+        body=(
+            "\n".join(
+                f"# Adultos {i}\nAtividade física duração frequência: 150 minutos por semana."
+                for i in range(12)
+            )
+            + "\n# Adultos\nAtividade física: você pode caminhar, correr ou pedalar."
+        ),
+    )
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    with postgres_sessions() as session:
+        hits = service.search(
+            session, "adultos atividade física duração frequência", include_activity_options=True
+        )
+        assert any("caminhar" in hit["content"] for hit in hits[:3])
+        assert any("150 minutos" in hit["content"] for hit in hits[:3])
