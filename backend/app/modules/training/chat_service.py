@@ -31,6 +31,7 @@ from app.modules.assistant.runtime import (
 )
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
+from app.modules.memory.service import utc
 from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import Onboarding
 from app.modules.training.generation_service import (
@@ -324,6 +325,18 @@ class TrainingChatService:
             # handled by the backend, never sent back to the model to ask again.
             content = self._initial_plan_guidance(context)
         can_suggest_adaptation = context["current_training_plan"] is not None
+        if (
+            clarification
+            and clarification.get("reason") == "missing_client_information"
+            and editable_draft is not None
+            and context["rules"]["may_update_ai_draft"]
+        ):
+            pending = run.context.get("pending_draft_edit") if run else None
+            clarification["pending_draft_edit"] = {
+                "draft_id": str(editable_draft.id),
+                "draft_revision": draft_revision,
+                "request_event_id": pending["request_event_id"] if pending else str(user.id),
+            }
         assistant = TrainingAiMessage(
             conversation_id=conversation.id,
             role="assistant",
@@ -461,6 +474,13 @@ class TrainingChatService:
         current_plan = self._current_plan(session, client_id)
         draft = self._editable_ai_draft(session, client_id)
         draft_content = self._draft_context(session, draft) if draft else None
+        pending_edit = self._pending_draft_edit(
+            retained,
+            draft,
+            event_after=session.scalar(
+                select(Client.memory_event_after).where(Client.id == client_id)
+            ),
+        )
         may_update = draft_content is not None and self._requests_draft_change(
             message, history, [item["exercise_name"] for item in draft_content["items"]]
         )
@@ -485,6 +505,7 @@ class TrainingChatService:
             else False
         )
         return {
+            "pending_draft_edit": pending_edit,
             "resume_initial_plan": resume_initial_plan,
             "current_user_message": message,
             "current_event_id": str(message_id),
@@ -519,6 +540,39 @@ class TrainingChatService:
                 "summary_contains_only_client_statements": True,
                 "initial_generation_requires_explicit_request": True,
             },
+        }
+
+    @staticmethod
+    def _pending_draft_edit(history, draft, *, event_after=None):
+        if not draft or not history or history[-1].role != "assistant":
+            return None
+        if event_after and utc(history[-1].created_at) <= utc(event_after):
+            return None  # A later memory correction/forgetting invalidates old context.
+        detail = history[-1].clarification or {}
+        pending = detail.get("pending_draft_edit") or {}
+        if (
+            detail.get("reason") != "missing_client_information"
+            or pending.get("draft_id") != str(draft.id)
+            or pending.get("draft_revision") != draft.revision
+        ):
+            return None
+        # Resolve the request from this conversation's retained user events.
+        # Never trust a model-supplied request, another chat, or a stale draft.
+        source = next(
+            (
+                item
+                for item in history
+                if item.role == "user" and str(item.event_id) == pending.get("request_event_id")
+            ),
+            None,
+        )
+        if source is None:
+            return None
+        return {
+            **pending,
+            "request": source.content,
+            "missing_fields": detail.get("missing_fields", []),
+            "questions": detail.get("questions", []),
         }
 
     def _initial_plan_reply(

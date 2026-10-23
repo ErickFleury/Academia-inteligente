@@ -9,7 +9,7 @@ from test_plan_evidence import passage
 
 from app.integrations import ai
 from app.integrations.ai_budget import ExecutionBudget
-from app.modules.assistant.runtime import AssistantRun
+from app.modules.assistant.runtime import AssistantError, AssistantRun
 
 
 @pytest.mark.parametrize("preauthorized", [False, True])
@@ -80,7 +80,10 @@ def test_draft_prompt_omits_unused_derivations_but_preserves_evidence_and_restri
         database_session, client.id, "training_chat", provider=agent, knowledge=search
     )
     run.prepare(context)
-    run.specialist()
+    # A plain response without an update/structured clarification is invalid
+    # for an authorized edit, even when the provider ignores its JSON schema.
+    with pytest.raises(AssistantError, match="malformed_structured_output"):
+        run.specialist()
     _, prompt, instructions = next(call for call in agent.calls if call[0] == "training_chat")
     assert "source_allocation_options" not in prompt
     assert "source_prescription_parameters" not in prompt

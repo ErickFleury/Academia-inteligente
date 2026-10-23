@@ -664,6 +664,21 @@ Additional retrieval and one proposal correction share the existing call, token,
 retrieval and deadline ceilings. A failed check must not become another request
 for personal facts already supplied or for technical instructions from the client.
 
+**Draft-edit clarification continuation (RF-15/RF-18, owner request 2026-10-23):**
+an authorized draft edit must return a structured update or clarification, never
+hide a blocking personal question inside an ordinary answer. Persist pending
+questions with the original retained user-event identifier and the owned draft's
+identifier/revision. Interpret free-form answers using those questions and resume
+the edit without another edit command. Partial or uncertain answers preserve the
+pending request; a replacement request supersedes it, while cancellation or a
+topic change stops continuation. Expired/other-client request events, revised or
+no-longer-editable drafts cannot authorize continuation. Later memory corrections
+or forgetting invalidate earlier pending clarification context. Known answers must not
+be asked again under the same question; one bounded correction may repair a model
+that tries. A relevant conflict with onboarding warrants a specific question
+about that conflict, not silent removal of the restriction. Metadata follows chat
+retention; retries, atomic writes, source validation and instructor approval remain.
+
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
 change could be useful and offer a non-binding draft suggestion. The client

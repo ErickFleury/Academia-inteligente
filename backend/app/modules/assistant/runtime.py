@@ -97,6 +97,7 @@ class Route(BaseModel):
     clarification_detail: Clarification | None = None
     answer_updates: list[AnswerUpdate] = Field(default_factory=list, max_length=13)
     plan_action: Literal["none", "generate_initial_plan", "edit_draft"] = "none"
+    draft_followup_action: Literal["resume", "replace", "cancel", "chat"] | None = None
 
 
 class PlanRoute(Route):
@@ -200,6 +201,19 @@ reais. Não peça confirmação extra de um pedido claro. O backend valida os es
 Para generate_initial_plan, escolha training_chat, query=null e needs_references=false:
 o especialista de geração fará a busca. Nunca transforme uma preferência isolada
 em autorização para criar ou editar treino."""
+
+_DRAFT_FOLLOWUP = """ Existe pending_draft_edit: um pedido de alteração já autorizado
+que aguardava esclarecimento pessoal. Interprete a resposta atual no contexto de
+suas questions; extraia cada resposta em answer_updates usando o MESMO field da
+pergunta, inclusive negações como 'não tenho limitações'. Use draft_followup_action:
+resume para respostas, correções ou dúvidas sobre esse pedido; replace para um
+novo pedido de edição que substitui o anterior; cancel para desistência; chat para
+mudança de assunto. Em resume, plan_action=edit_draft: não exija novo pedido de edição.
+Preserve a dúvida se a resposta for incerta; não repita perguntas já respondidas.
+Relatos atuais não apagam queixas no onboarding. Se houver conflito relevante,
+pergunte especificamente sobre a diferença, sem reiniciar a mesma pergunta.
+Em cancel/chat, plan_action=none. A busca deve tratar do exercício e do pedido
+original, nunca usar a resposta pessoal como consulta técnica."""
 
 _PLAN_ROUTING = """Você é o orquestrador da Academia Inteligente. Escolha somente
 allowed_specialist ou clarify se precisar esclarecer algo em português brasileiro.
@@ -709,7 +723,9 @@ class AssistantRun:
             "memory_writes": self.source is not None
             and self.role in {"onboarding", "training_chat"},
             "has_saved_plan": bool(
-                self.context.get("current_training_plan") or self.context.get("base_plan")
+                self.context.get("current_training_plan")
+                or self.context.get("base_plan")
+                or self.context.get("editable_training_draft")
             ),
             "plan_state": {
                 "onboarding_completed": self.context.get("onboarding_completed", False),
@@ -717,9 +733,19 @@ class AssistantRun:
                 "has_editable_draft": bool(self.context.get("editable_training_draft")),
             },
         }
+        if self.role == "training_chat" and self.context.get("pending_draft_edit"):
+            routing_context["pending_draft_edit"] = self.context["pending_draft_edit"]
+        if self.role == "training_chat" and self.context.get("editable_training_draft"):
+            draft = self.context["editable_training_draft"]
+            routing_context["editable_draft"] = {
+                "name": draft.get("name"),
+                "exercises": [item["exercise_name"] for item in draft.get("items", [])],
+            }
         plan = self.role in {"initial_plan", "adaptation"}
         route_type = PlanRoute if plan else Route
         routing_instructions = _ROUTING
+        if routing_context.get("pending_draft_edit"):
+            routing_instructions += _DRAFT_FOLLOWUP
         if plan:
             # Read authoritative fields from this client's scoped onboarding,
             # not a generated summary or another client's retrieval result.
@@ -760,6 +786,16 @@ class AssistantRun:
         # This same call may correct or withdraw an earlier answer. Constrain
         # the questions after interpreting those updates, not to stale gaps.
         route_schema = strict_schema(route_type.model_json_schema())
+        if self.role == "training_chat" and self.context.get("editable_training_draft"):
+            route_schema["properties"]["plan_action"]["enum"] = ["none", "edit_draft"]
+        if not routing_context.get("pending_draft_edit"):
+            route_schema["properties"].pop("draft_followup_action")
+            route_schema["required"].remove("draft_followup_action")
+        else:
+            route_schema["properties"]["draft_followup_action"] = {
+                "type": "string",
+                "enum": ["resume", "replace", "cancel", "chat"],
+            }
         if plan:
             # This action belongs to the chat dispatcher, not the plan router.
             route_schema["properties"].pop("plan_action")
@@ -861,6 +897,19 @@ class AssistantRun:
         if self.route.specialist not in {self.role, "clarify"}:
             raise AssistantError("delegation_not_allowed", 422)
         if self.role == "training_chat":
+            if self.context.get("pending_draft_edit"):
+                action = self.route.draft_followup_action
+                if action == "resume":
+                    self.route.plan_action = "edit_draft"
+                elif action in {"replace", "cancel", "chat"}:
+                    self.context.pop("pending_draft_edit")
+                    if action == "replace":
+                        self.route.plan_action = "edit_draft"
+                    else:
+                        self.route.plan_action = "none"
+                        self.context["rules"]["may_update_ai_draft"] = False
+                else:
+                    raise AssistantError("malformed_structured_output", 422)
             if self.route.plan_action == "generate_initial_plan" and not self.context.get(
                 "current_training_plan"
             ):
@@ -1090,15 +1139,36 @@ class AssistantRun:
                 self.role,
             )
         plan = self.role in {"initial_plan", "adaptation"}
+        editing = self.role == "training_chat" and bool(
+            self.context.get("rules", {}).get("may_update_ai_draft")
+        )
         envelope = create_model(
             "SpecialistEnvelope",
             __config__=ConfigDict(extra="forbid"),
-            result=(type_ | None if plan else type_, ...),
+            result=(type_ | None if plan or editing else type_, ...),
             citation_ids=(list[str], Field(max_length=10)),
             grounding=(Literal["record", "references", "clarification"], ...),
             clarification=(Clarification | None, None),
         )
         result_schema = schema_factory()
+        if editing:
+            # A requested edit must produce an update or a structured
+            # clarification. Plain prose questions cannot bypass answer state.
+            update_schema = result_schema["properties"]["draft_update"]
+            result_schema["properties"]["draft_update"] = next(
+                branch for branch in update_schema["anyOf"] if branch.get("type") != "null"
+            )
+            result_schema = {"anyOf": [result_schema, {"type": "null"}]}
+            instructions += (
+                " Esta mensagem trata de uma edição autorizada. Retorne o rascunho completo "
+                "em draft_update ou grounding=clarification com result=null. Se precisar de "
+                "informação pessoal, use reason=missing_client_information e questions com "
+                "field estável e pergunta direta. Não esconda pedidos de confirmação em "
+                "assistant_message. Use client_answers e o histórico; não pergunte o que "
+                "já foi respondido. pending_draft_edit.request identifica o pedido original "
+                "a retomar após esclarecimentos, preservando os itens não afetados. "
+                "Novos relatos nunca apagam restrições do onboarding."
+            )
         if self.role == "initial_plan":
             # Generated dose strings must begin with a quantity (count, range
             # or duration). Instructor-authored free text remains unchanged.
@@ -1202,6 +1272,27 @@ class AssistantRun:
         specialist_seconds = monotonic() - specialist_started
         if output.grounding == "clarification":
             detail = output.clarification
+            if detail and detail.questions:
+                self.context["question_catalog"].update({q.field: q.text for q in detail.questions})
+                self._refresh_unanswered_fields()
+            fields = (
+                set(detail.missing_fields) | {q.field for q in detail.questions}
+                if detail
+                else set()
+            )
+            if (
+                editing
+                and detail
+                and detail.reason == "missing_client_information"
+                and fields
+                and not fields.intersection(self.unanswered_client_fields)
+                and not self.context.get("draft_clarification_repair")
+            ):
+                self.context["draft_clarification_repair"] = (
+                    "Essas perguntas já têm respostas em client_answers. Use-as para "
+                    "continuar a edição; não repita a pergunta nem invente nova lacuna."
+                )
+                return self.specialist()
             if (
                 plan
                 and detail
@@ -1211,6 +1302,8 @@ class AssistantRun:
                 return self.specialist()
             return self._clarify("specialist", output.clarification)
         if output.result is None or (plan and output.grounding != "references"):
+            raise AssistantError("malformed_structured_output", 422)
+        if editing and output.result.draft_update is None:
             raise AssistantError("malformed_structured_output", 422)
         if self.role == "initial_plan":
             items = output.result.plan.get("items")

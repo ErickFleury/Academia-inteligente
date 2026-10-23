@@ -275,3 +275,50 @@ of 32.44 and 28.74 seconds without the budget error. The inspected reply asked
 about limitations relevant to stair climbing and returned no draft update.
 This verifies the technical failure is removed, not that the substitution has
 been applied. Replays saved no account messages, memories or plan changes.
+
+### Draft-edit clarification state correction (2026-10-23)
+
+Baseline: `118999d`. The repeated stair-climbing question was persisted as an
+ordinary answer with `clarification=null`; the following personal reply became
+an unstructured memory statement. Both requests returned HTTP 200, bypassing the
+structured answered-question checks. This was distinct from the earlier budget
+failure.
+
+Authorized draft editing now requires either a structured draft update or a
+structured clarification, including in the provider's output schema. A personal
+clarification stores the owned draft identifier/revision and original retained
+user-event identifier alongside its dynamic questions. Request text is resolved
+from that same conversation rather than copied into durable memory. The router
+interprets free-form answers against those fields and chooses resume, replace,
+cancel or ordinary chat. An already-answered question gets at most one correction
+within the existing request budget. Authoritative onboarding restrictions remain
+available and cannot be cleared by a new report.
+
+The router now receives the saved draft's name/exercises and cannot choose initial
+generation while that draft exists. Continuation metadata is discarded for a
+changed draft, absent/expired or foreign request, or a later memory-reset cutoff.
+Reloads and retries retain the original pending command without double-applying
+the edit; uncertainty keeps the request pending and a replacement request gets
+its own source event. Existing ordinary prose questions are not retroactively
+converted into authorization metadata: resubmitting the edit starts the corrected
+flow.
+
+Read-only local verification with corrected pending-question metadata recognized
+“não tenho limitações” under the pending topic, selected resume/edit_draft, and
+did not repeat the question. It completed in 31.11 seconds, then rejected the
+generated replacement at source validation (exercise choice/duration). This
+verifies continuation, not a successful or medically approved stair prescription.
+No production conversation, memory or draft was written by the harnesses.
+
+Live verification also found a separate lost GPU device in the Ollama container:
+host NVIDIA access worked but container NVML failed and inference fell back to
+CPU. Recreating only the existing Ollama container restored device access while
+preserving model volumes/configuration; no dependency or GPU-driver change was
+made. Temporary diagnostic scripts and outputs are removed after verification.
+
+Final validation: **822 backend tests passed**, including PostgreSQL tests and
+ten new clarification cases, with two existing Alembic warnings. Ruff lint and
+formatting of changed Python files passed. The new cases cover persisted/reloaded
+continuation, idempotency, schema constraints, cancellation/topic changes,
+replacement, uncertainty, repeat-question repair, ownership, expiry, forgetting,
+durable answers and preservation of onboarding restrictions.
