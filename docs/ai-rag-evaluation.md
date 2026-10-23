@@ -712,3 +712,61 @@ Changed files: `backend/app/modules/training/{chat_service,models,router}.py`,
 `backend/tests/test_mvp_end_to_end_verification.py`,
 `frontend/src/{training-chat,training-chat-page}.{ts,tsx}` and their tests,
 `docs/requirements.md`, and this record.
+
+## Fixed plan context allocation — 2026-10-22
+
+Scope: the owner's request to try the first GPU/timeout optimization for RF-15,
+RF-18 and RF-19, within the existing local RAG execution budgets. Baseline
+checkpoint: `e89a64d`. No model, cache-precision, deadline, retrieval, persistence,
+or output-limit change is included.
+
+The Ollama adapter previously used the conservative UTF-8 byte reservation as
+the basis for plan context allocation. A regression fixture reproduced window
+changes of 14,336 → 20,480 → 14,336 across routing, generation and review. This
+reserved excess KV-cache memory and caused model reloads. Aggregate token-budget
+reservations still use the conservative bound and reconcile provider usage;
+they no longer determine plan KV-cache allocation.
+
+Plan/adaptation workflows now use `OLLAMA_PLAN_CONTEXT_TOKENS` (default 12,288),
+capped by `OLLAMA_CONTEXT_TOKENS`, consistently across routing, specialist and
+grounding review. Both Compose deployments and `.env.example` expose the setting.
+This is a measured fixed-capacity profile, **not an exact client-side tokenizer**.
+All prompt messages, health restrictions, source passages and the output schema
+are sent unchanged. Ollama's tokenizer enforces capacity with `truncate=false`
+and `shift=false`; oversized input and incomplete output remain controlled
+failures. Larger workflows may require an explicitly configured larger window
+and will not silently expand memory use. Existing 30/60-second deadlines,
+provider selection, output budgets, and CPU embedding placement remain intact.
+
+Verification: the fixed-window regression failed before the change. **155 tests
+passed** across adapter/budget, legacy training generation/adaptation, chat
+generation, orchestration, grounding, diagnostics, and PostgreSQL chat-progress
+coverage. Overflow and incomplete-response tests now cover plan budgets too.
+An initial legacy-suite invocation inherited live RAG configuration and failed
+because legacy fakes lack `structured`; rerunning with the established isolated
+test environment passed. Ruff lint/format, Compose validation and whitespace
+checks passed. No new dependency or migration is required.
+
+Read-only live probes used the test account's onboarding, existing equipment and
+five retrieved passages without saving a plan, message or memory. With Ollama
+0.34.1 and qwen3:8b on the RTX 2070 SUPER, the baseline allocated 20,480 for the
+specialist, ran at approximately 9.8–10 tokens/second and exhausted 60 seconds
+before finishing generation. The fixed window used 12,288 for every call and
+placed 32/37 model layers on GPU (`ollama ps`: 83% GPU / 17% CPU, 7.2 GB total
+loaded size). The specialist completed 660 output tokens in 38.27 seconds
+(17.25 tokens/second) from 3,138 actual prompt tokens; its model-load time was
+1.5 ms because routing and generation shared the same allocation. The complete
+run still exceeded 60 seconds during final grounding review, with 9.27 seconds
+left when review began. This demonstrates a generation improvement, not a
+resolved end-to-end timeout or a completed human accuracy review.
+
+A subsequent warm run completed all three model calls in **43.66 seconds**
+(specialist: 677 output tokens in 36.68 seconds; review: 45 tokens in 2.25
+seconds). It returned the existing controlled `assistant_clarification_required`
+outcome rather than a validated plan. Warm execution therefore met the time
+limit in this sample, but a usable grounded plan was not established. These
+single-run observations do not establish a latency percentile or laptop support.
+
+Changed files: `backend/app/integrations/ai.py`, `backend/tests/test_ai_budget.py`,
+`docker-compose.yml`, `docker-compose.production.yml`, `.env.example`, and this
+evaluation record.

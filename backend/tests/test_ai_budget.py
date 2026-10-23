@@ -102,7 +102,8 @@ def test_adapter_caps_output_and_uses_explicit_role_model(monkeypatch, hosted):
 
 
 @pytest.mark.parametrize("nested", [False, True])
-def test_actual_context_overflow_is_controlled_and_not_retryable(monkeypatch, nested):
+@pytest.mark.parametrize("plan", [False, True])
+def test_actual_context_overflow_is_controlled_and_not_retryable(monkeypatch, nested, plan):
     def reject(request, timeout):
         body = json.loads(request.data)
         assert body["truncate"] is False
@@ -119,7 +120,10 @@ def test_actual_context_overflow_is_controlled_and_not_retryable(monkeypatch, ne
         )
 
     monkeypatch.setattr(ai, "urlopen", reject)
-    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="context_capacity") as exc:
+    with (
+        ExecutionBudget(plan=plan).scope(),
+        pytest.raises(AiProviderError, match="context_capacity") as exc,
+    ):
         OllamaOnboardingProvider().structured({}, "instructions", {}, Result, role="orchestrator")
     assert exc.value.retryable is False
 
@@ -145,7 +149,8 @@ def test_unrecognized_ollama_errors_do_not_expose_response_bodies(monkeypatch, r
     assert exc.value.retryable is False
 
 
-def test_context_exhaustion_during_output_never_returns_partial_answer(monkeypatch):
+@pytest.mark.parametrize("plan", [False, True])
+def test_context_exhaustion_during_output_never_returns_partial_answer(monkeypatch, plan):
     def respond(request, timeout):
         assert json.loads(request.data)["shift"] is False
         return BytesIO(
@@ -160,7 +165,10 @@ def test_context_exhaustion_during_output_never_returns_partial_answer(monkeypat
         )
 
     monkeypatch.setattr(ai, "urlopen", respond)
-    with ExecutionBudget().scope(), pytest.raises(AiProviderError, match="incomplete_response"):
+    with (
+        ExecutionBudget(plan=plan).scope(),
+        pytest.raises(AiProviderError, match="incomplete_response"),
+    ):
         OllamaOnboardingProvider().structured({}, "instructions", {}, Result, role="orchestrator")
 
 
@@ -274,3 +282,47 @@ def test_chat_window_is_fixed_and_never_silently_grows(monkeypatch):
     assert captured[0]["shift"] is False
     assert json.loads(captured[0]["messages"][1]["content"]) == context
     assert budget.input_tokens == 2400
+
+
+@pytest.mark.parametrize(
+    ("plan_window", "global_window", "expected"),
+    [(None, "32768", 12288), ("16384", "32768", 16384), ("16384", "8192", 8192)],
+)
+def test_plan_calls_reuse_fixed_window_without_dropping_context(
+    monkeypatch, plan_window, global_window, expected
+):
+    monkeypatch.setenv("OLLAMA_CONTEXT_TOKENS", global_window)
+    monkeypatch.delenv("OLLAMA_PLAN_CONTEXT_TOKENS", raising=False)
+    if plan_window is not None:
+        monkeypatch.setenv("OLLAMA_PLAN_CONTEXT_TOKENS", plan_window)
+    context = {
+        "health_restrictions": "Restrição de saúde preservada. " * 150,
+        "references": "Orientação de força e respiração. " * 150,
+    }
+    captured = []
+
+    def respond(request, timeout):
+        captured.append(json.loads(request.data))
+        return BytesIO(
+            json.dumps(
+                {
+                    "message": {"content": '{"answer":"ok"}'},
+                    "prompt_eval_count": 3100,
+                    "eval_count": 5,
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    budget = ExecutionBudget(plan=True)
+    with budget.scope():
+        provider = OllamaOnboardingProvider()
+        for role in ("orchestrator", "initial_plan", "orchestrator"):
+            provider.structured(context, "Return JSON", {}, Result, role=role)
+    assert [body["options"]["num_ctx"] for body in captured] == [expected] * 3
+    for body in captured:
+        assert body["truncate"] is False
+        assert body["shift"] is False
+        assert json.loads(body["messages"][1]["content"]) == context
+    assert budget.input_tokens == 9300
+    assert budget.output_tokens == 15

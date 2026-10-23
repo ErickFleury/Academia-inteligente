@@ -420,17 +420,17 @@ class _Provider:
                     # tokens. Ollama enforces actual capacity with truncation
                     # and context shifting disabled in the request.
                     window = int(os.getenv("OLLAMA_CONTEXT_TOKENS", "32768"))
-                    if not budget.plan:
-                        window = min(window, int(os.getenv("OLLAMA_CHAT_CONTEXT_TOKENS", "12288")))
-                    required = input_bound + 512 + reserved
-                    # Reuse a modest window across router/specialist calls.
-                    # Changing num_ctx reloads Ollama's model; always reserving
-                    # 32K instead forces avoidable offload on 8GB GPUs.
-                    allocated = (
-                        min(window, max(12288, ((required + 2047) // 2048) * 2048))
+                    window_setting = (
+                        "OLLAMA_PLAN_CONTEXT_TOKENS"
                         if budget.plan
-                        else window
+                        else "OLLAMA_CHAT_CONTEXT_TOKENS"
                     )
+                    # Use one measured window throughout the workflow, including
+                    # routing and review. Byte-based sizing overallocates KV cache
+                    # and reloads the model between calls on memory-limited GPUs.
+                    # This is a capacity setting, not a token estimate: Ollama
+                    # checks the full prompt; overflow/partial output fails closed.
+                    allocated = min(window, int(os.getenv(window_setting, "12288")))
                     body["options"] = {
                         "num_predict": reserved,
                         "num_ctx": allocated,
