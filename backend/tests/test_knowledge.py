@@ -361,3 +361,20 @@ def test_bibliography_penalty_preserves_prose_and_measurements_cover_both_langua
     assert "weekly" in measurement_terms("frequência semanal")
     assert "semana" in measurement_terms("weekly frequency")
     assert "minute" in measurement_terms("minutos por dia")
+
+
+@pytest.mark.parametrize("heading", ["About the NSCA", "About the Authors", "References", "Index"])
+def test_exercise_context_stops_at_back_matter(heading):
+    chunks = list(
+        passages(
+            [
+                {
+                    "location": "page:1",
+                    "text": "Video 5.9\nDumbbell Renegade Row\nStarting Position\nInstructions.",
+                },
+                {"location": "page:2", "text": heading + "\nPublication information."},
+            ]
+        )
+    )
+    assert chunks[0][2].startswith("Seção: Dumbbell Renegade Row\n")
+    assert "Seção:" not in chunks[-1][2]

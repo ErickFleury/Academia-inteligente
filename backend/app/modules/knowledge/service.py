@@ -103,7 +103,12 @@ def section_blocks(pages):
             section = " ".join(candidates[:2])[:280] if candidates else ""
         block = []
         for index, line in enumerate(lines):
-            if re.fullmatch(r"\s*(?:Part|Parte|Chapter|Capítulo)\s+(?:[IVXLCDM]+|\d+)\s*", line):
+            if re.fullmatch(
+                r"\s*(?:(?:Part|Parte|Chapter|Capítulo)\s+(?:[IVXLCDM]+|\d+)"
+                r"|(?i:About the [\w ]{1,60}|References|Bibliography|Index"
+                r"|Referências|Bibliografia|Índice))\s*",
+                line,
+            ):
                 if block:
                     yield page["location"], section, "\n".join(block)
                     block = []
