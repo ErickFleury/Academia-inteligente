@@ -71,3 +71,36 @@ def test_valid_upload_is_preserved_and_response_cannot_be_cached():
     assert received[0]["body"] == b"firstsecond"
     assert dict(sent[0]["headers"])[b"cache-control"] == b"no-store"
     assert dict(sent[0]["headers"])[b"x-content-type-options"] == b"nosniff"
+
+
+def test_reference_upload_accepts_35_mib_intact():
+    body = b"a" * (35 * 1024 * 1024)
+    sent, _, received = exercise(
+        "/ai/references",
+        [{"type": "http.request", "body": body, "more_body": False}],
+        [(b"content-length", str(len(body)).encode())],
+        "POST",
+    )
+    assert sent[0]["status"] == 200
+    assert received[0]["body"] == body
+
+
+@pytest.mark.parametrize("declared", [False, True])
+def test_reference_upload_rejects_one_byte_over_35_mib(declared):
+    limit = 35 * 1024 * 1024
+    sent, reads, received = exercise(
+        "/ai/references",
+        []
+        if declared
+        else [
+            {"type": "http.request", "body": b"a" * limit, "more_body": True},
+            {"type": "http.request", "body": b"b", "more_body": False},
+        ],
+        [(b"content-length", str(limit + 1).encode())] if declared else [],
+        "POST",
+    )
+    assert sent[0]["status"] == 413
+    assert sent[1]["body"] == b'{"detail":"document_size"}'
+    assert not received
+    if declared:
+        assert not reads

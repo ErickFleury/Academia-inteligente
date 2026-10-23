@@ -9,7 +9,7 @@ const messages: Record<string, string> = {
   reference_conflict: 'Esta referência mudou. Atualize a lista e tente novamente.',
   reference_not_ready: 'A referência precisa concluir o processamento antes da ativação.',
   reference_capacity: 'O limite de referências ativas foi atingido. Retire uma referência antes de continuar.',
-  document_size: 'Escolha um documento de até 20 MB.',
+  document_size: 'Escolha um documento de até 35 MB.',
   import_queue_full: 'Há muitos documentos aguardando processamento. Tente novamente em alguns minutos.',
 }
 async function request<T>(token: string, path = '', init?: RequestInit): Promise<T> {
@@ -38,7 +38,7 @@ export function uploadReference(token: string, title: string, file: File, source
   const extension = file.name.split('.').at(-1)?.toLowerCase()
   const types: Record<string, string> = { pdf: 'application/pdf', md: 'text/markdown', txt: 'text/plain' }
   const mediaType = types[extension || '']
-  if (!mediaType || file.size === 0 || file.size > 20 * 1024 * 1024) throw new Error('Escolha um arquivo PDF, Markdown ou TXT de até 20 MB.')
+  if (!mediaType || file.size === 0 || file.size > 35 * 1024 * 1024) throw new Error('Escolha um arquivo PDF, Markdown ou TXT de até 35 MB.')
   const query = new URLSearchParams({ title, media_type: mediaType })
   if (sourceId) query.set('source_id', sourceId)
   return request<ReferenceVersion>(token, `?${query}`, {

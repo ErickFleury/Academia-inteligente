@@ -2221,7 +2221,7 @@ The owner approved the following design decisions:
   Desktop evidence is recorded in the research note. Laptop RAM, usable VRAM,
   precise processor, and measured performance remain unverified; desktop results
   do not establish laptop performance.
-- Adopt configurable pilot limits of 100 active reference documents, 20 MiB per
+- Adopt configurable pilot limits of 100 active reference documents, 35 MiB per
   upload, 500 pages per PDF, and two million extracted characters per document.
   These are operating limits, not verified capacity claims.
 - Limit compact client memory to 50 current facts and 8,000 characters per client.

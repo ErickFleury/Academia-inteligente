@@ -59,7 +59,7 @@ export function AiReferencePage({ accessToken, onSignOut }: { accessToken: strin
         <Typography variant="h6">{replacement ? `Nova versão: ${replacement.title}` : 'Adicionar referência'}</Typography>
         <TextField label="Título da referência" value={title} onChange={(e) => setTitle(e.target.value)} disabled={busy || Boolean(replacement)} slotProps={{ htmlInput: { maxLength: 200 } }} />
         <Button component="label" variant="outlined" disabled={busy}>Escolher documento<input hidden type="file" accept=".pdf,.md,.txt" onChange={(e) => setFile(e.target.files?.[0] || null)} /></Button>
-        <Typography variant="body2">{file?.name || 'PDF com texto selecionável, Markdown ou TXT. Até 20 MB e 500 páginas.'}</Typography>
+        <Typography variant="body2">{file?.name || 'PDF com texto selecionável, Markdown ou TXT. Até 35 MB e 500 páginas.'}</Typography>
         <Stack direction="row" spacing={1}>
           <Button disabled={busy || !title.trim() || !file} onClick={() => void perform(async () => {
             await uploadReference(accessToken, title.trim(), file!, replacement?.source_id)

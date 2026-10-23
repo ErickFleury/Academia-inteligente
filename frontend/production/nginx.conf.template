@@ -100,7 +100,7 @@ http {
         location ~ /\. { return 404; }
         location ~ ^/api/(docs|redoc|openapi\.json)(/|$) { return 404; }
         location = /api/ai/references {
-            client_max_body_size 20m;
+            client_max_body_size 35m;
             limit_req zone=api burst=20 nodelay;
             set $api_upstream backend:8000;
             rewrite ^/api/(.*)$ /$1 break;
