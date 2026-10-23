@@ -293,7 +293,7 @@ def test_client_critical_path_is_scoped_and_preserves_history(
 
     identity.identity = AuthenticatedIdentity("grace", "grace@example.test", ("client",))
     assert api.request("GET", "/training/current").body == {"plan": None}
-    assert api.request("GET", "/training/chat").body == {"messages": []}
+    assert api.request("GET", "/training/chat").body == {"messages": [], "pending_request": None}
     assert api.request("GET", "/clients").status_code == 403
 
     identity.identity = AuthenticatedIdentity("ada", "ada@example.test", ("client",))

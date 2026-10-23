@@ -23,6 +23,7 @@ from app.modules.training.adaptation_service import (
 from app.modules.training.chat_service import (
     TrainingChatDraftUpdateError,
     TrainingChatNotFoundError,
+    TrainingChatRequestState,
     TrainingChatService,
     TrainingChatState,
     TrainingChatUnavailableError,
@@ -101,6 +102,7 @@ class TrainingChatMessageResponse(BaseModel):
 
 class TrainingChatResponse(BaseModel):
     messages: list[TrainingChatMessageResponse]
+    pending_request: TrainingChatRequestState | None = None
 
 
 Client = Annotated[
@@ -122,7 +124,8 @@ def training_chat_response(state: TrainingChatState) -> TrainingChatResponse:
                 reference_citations=message.reference_citations,
             )
             for message in state.messages
-        ]
+        ],
+        pending_request=state.pending_request,
     )
 
 

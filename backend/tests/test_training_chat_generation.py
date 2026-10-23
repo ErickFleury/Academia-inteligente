@@ -244,4 +244,7 @@ def test_plan_is_not_committed_if_saving_chat_reply_fails(session, monkeypatch):
         )
     session.rollback()
     assert not session.scalars(select(TrainingPlanVersion)).all()
-    assert not session.scalars(select(TrainingAiMessage)).all()
+    messages = session.scalars(select(TrainingAiMessage)).all()
+    assert len(messages) == 1 and messages[0].role == "user"
+    session.expunge_all()  # Refresh uses a new HTTP request/identity map.
+    assert service.state_for_subject(session, "ada").pending_request.status == "failed"

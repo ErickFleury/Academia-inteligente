@@ -644,3 +644,71 @@ enabled for `*` with Ollama. Regression tests used controlled providers and
 disposable database schemas; no real client plan or conversation was generated
 by verification. Live model accuracy and the separately identified recognition
 of the shorter wording “quero um novo treino” remain outside this transaction fix.
+
+## Training-chat refresh and processing status — 2026-10-22
+
+Scope: the owner's RF-18/RNF01 refresh-recovery request, including RF-15 chat
+generation and existing retry, retention and atomic-persistence dependencies.
+Checkpoint `85856a3` precedes this correction. Logs showed the live generation
+continued across page reloads and ended at the 60-second deadline; the UI had
+neither durable request status nor a way to follow that result after reload.
+
+The backend now commits accepted input with a bounded processing claim before
+inference for both provider paths. `GET /training/chat` returns the latest
+unanswered request's client-scoped status and an allowlisted failure code.
+Existing-conversation reads avoid waiting on the client lock. Duplicate pending
+UUIDs return current status without another provider invocation; a different
+simultaneous request receives a controlled conflict and can be retried after
+the active request ends. Retry retains the original input and UUID. Status
+ownership expires after 65 seconds (the maximum 60-second plan budget plus a
+small finalization allowance), so a crashed process cannot leave an indefinite
+busy state. An expired or superseded attempt cannot commit a late reply or
+plan/memory changes. Provider and unexpected failures clear their own claim and
+persist only a safe error category; private exception text is not stored.
+
+Committing input first makes the separate chat-generation savepoint unnecessary:
+the outer transaction owns the proposal and reply, and failures roll both back.
+Input remains available for retry. Existing legacy concurrency tests retain
+their message-order, single-draft and provider-call assertions, now explicitly
+retrying a controlled conflict for distinct overlapping requests. Processing
+metadata lives on the retained message and follows its existing erasure/30-day
+cleanup. No worker queue, extra service, dependency or browser transcript
+storage was introduced. Migration `20261022_36` adds three nullable columns.
+
+The UI shows the outgoing message immediately, distinguishes sending from
+server-confirmed processing, and polls an active request until completion or
+failure. Reload restores the message/status and polls without resending. A saved
+failure offers the original UUID for retry. Failed status checks show uncertainty
+and reconnect; stale responses cannot replace a newer completed reply. Requests
+have browser transport timeouts, and message POSTs use keepalive to improve
+delivery during navigation. A message that never reaches the server cannot be
+recovered there; the sending state explicitly awaits receipt confirmation.
+
+Verification: the new PostgreSQL refresh/failure tests and UI progress tests
+failed before implementation. **123 focused backend tests passed**, including
+real concurrent refresh, duplicate invocation prevention, controlled failures,
+expired-attempt fencing, atomic plan/reply rollback and existing provider paths.
+The full backend run passed **710 tests** with one stale empty-response assertion;
+after adding `pending_request: null` to that contract assertion, its complete
+critical-path test passed on rerun (**711 tests verified across those runs**).
+The full run also verified migration upgrade/downgrade in a disposable schema;
+only the existing two Alembic warnings remained. **12 frontend tests passed**,
+covering immediate display, processing recovery, automatic completion, timeout
+retry with the saved UUID, disconnection recovery and pt-BR transport feedback.
+TypeScript/build, Ruff lint/format and Git whitespace checks passed. The existing
+frontend bundle-size warning remains; no browser visual audit was performed.
+
+Deployment applied migration `20261022_36` and restarted the backend. Health
+returned `ok`, OpenAPI exposed `pending_request`, and the HTTPS frontend served
+the new processing text. A read-only inspection found the latest conversation's
+13 retained messages and a failed latest request, which the UI can now recover
+for retry. Verification generated no real client plan or conversation. RAG
+remains enabled. This correction exposes generation timeouts; it does not solve
+the separately tracked model latency, wording-recognition or grounding issues.
+
+Changed files: `backend/app/modules/training/{chat_service,models,router}.py`,
+`backend/alembic/versions/20261022_36_training_chat_progress.py`,
+`backend/tests/test_training_chat{_generation,_postgres,_progress_postgres}.py`,
+`backend/tests/test_mvp_end_to_end_verification.py`,
+`frontend/src/{training-chat,training-chat-page}.{ts,tsx}` and their tests,
+`docs/requirements.md`, and this record.

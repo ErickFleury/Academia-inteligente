@@ -562,6 +562,15 @@ with a pointer to Meu treino and the mandatory instructor-review boundary.
 Negative, conditional, unrelated, or ambiguous replies do not authorize generation.
 Current-plan adaptations retain the RF-19 confirmation and review flow.
 
+**Refresh recovery (RF-18/RNF01, owner request 2026-10-22):** once the backend
+accepts a training-chat message, retain it before inference so refreshing the page
+recovers it. Expose client-scoped processing/failure status and automatically
+refresh an in-progress reply. Refresh must not resubmit the request. Failed or
+interrupted work offers retry with the original request UUID; a duplicate pending
+request must not invoke the provider twice. Processing status must expire after
+bounded execution, and a superseded attempt must not publish late results.
+Raw-message retention and atomic reply/memory/plan persistence remain unchanged.
+
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
 change could be useful and offer a non-binding draft suggestion. The client

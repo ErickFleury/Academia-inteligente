@@ -3,7 +3,7 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from threading import Barrier
+from threading import Barrier, Event
 from time import monotonic, sleep
 from uuid import uuid4
 
@@ -20,6 +20,7 @@ from app.modules.training.models import (
     TrainingAiMessage,
     TrainingPlanVersion,
 )
+from app.modules.training.service import ConcurrentTrainingUpdateError
 
 pytestmark = pytest.mark.skipif(
     os.getenv("TEST_POSTGRES") != "1", reason="Isolated PostgreSQL opt-in"
@@ -67,17 +68,24 @@ def test_concurrent_turns_preserve_order_and_idempotency(sessions, duplicate):
         create_client(session, "ada", "ada@example.test")
     barrier = Barrier(2)
     request_id = uuid4()
+    finished = Event()
 
     def send(index):
         with sessions() as session:
             provider = FakeProvider(AiTrainingChatResponse(assistant_message="Entendido."))
             barrier.wait(timeout=10)
-            TrainingChatService(provider).submit_for_subject(
-                session,
-                "ada",
-                message=f"Relato {index}",
-                client_request_id=request_id if duplicate else uuid4(),
-            )
+            id_ = request_id if duplicate else uuid4()
+            for attempt in range(2):
+                try:
+                    TrainingChatService(provider).submit_for_subject(
+                        session, "ada", message=f"Relato {index}", client_request_id=id_
+                    )
+                    break
+                except ConcurrentTrainingUpdateError:
+                    session.rollback()
+                    assert not duplicate and attempt == 0
+                    assert finished.wait(5)
+            finished.set()
             return provider.calls
 
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -98,17 +106,24 @@ def test_concurrent_initial_generation_creates_one_draft_and_commits_its_reply(s
         complete_onboarding(session, "ada")
     barrier = Barrier(2)
     request_id = uuid4()
+    finished = Event()
 
     def send(index):
         service, _, provider = service_for()
         with sessions() as session:
             barrier.wait(timeout=10)
-            service.submit_for_subject(
-                session,
-                "ada",
-                message="Gere meu treino",
-                client_request_id=request_id if duplicate else uuid4(),
-            )
+            id_ = request_id if duplicate else uuid4()
+            for attempt in range(2):
+                try:
+                    service.submit_for_subject(
+                        session, "ada", message="Gere meu treino", client_request_id=id_
+                    )
+                    break
+                except ConcurrentTrainingUpdateError:
+                    session.rollback()
+                    assert not duplicate and attempt == 0
+                    assert finished.wait(5)
+            finished.set()
             return provider.calls
 
     with ThreadPoolExecutor(max_workers=2) as pool:

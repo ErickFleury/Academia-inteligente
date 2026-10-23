@@ -8,7 +8,8 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from typing import Literal
+from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 from sqlalchemy import delete, func, select, update
@@ -20,6 +21,7 @@ from app.integrations.ai import (
     TrainingChatProvider,
     training_chat_provider_from_environment,
 )
+from app.integrations.ai_budget import ExecutionBudget
 from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
 from app.modules.assistant.runtime import AssistantError, AssistantRun, enabled
 from app.modules.clients.models import Account, Client
@@ -73,8 +75,16 @@ class TrainingChatMessage:
 
 
 @dataclass(frozen=True)
+class TrainingChatRequestState:
+    client_request_id: UUID
+    status: Literal["processing", "failed"]
+    failure_code: str | None = None
+
+
+@dataclass(frozen=True)
 class TrainingChatState:
     messages: list[TrainingChatMessage]
+    pending_request: TrainingChatRequestState | None = None
 
 
 class TrainingChatService:
@@ -96,7 +106,7 @@ class TrainingChatService:
         client_id = self._client_id(session, subject)
         self.purge_expired_content(session)
         conversation = self._conversation(session, client_id)
-        return TrainingChatState(self._messages(session, conversation.id))
+        return self._state(session, conversation.id)
 
     @observe_turn("training_chat")
     def submit_for_subject(
@@ -114,7 +124,19 @@ class TrainingChatService:
         )
         if reply is not None:
             record_turn(outcome="cached", path="cached")
-            return TrainingChatState(self._messages(session, conversation.id))
+            return self._state(session, conversation.id)
+
+        active = session.scalar(
+            select(TrainingAiMessage).where(
+                TrainingAiMessage.conversation_id == conversation.id,
+                TrainingAiMessage.processing_token.is_not(None),
+                TrainingAiMessage.processing_expires_at > datetime.now(UTC),
+            )
+        )
+        if active is not None:
+            if active.client_request_id != client_request_id:
+                raise ConcurrentTrainingUpdateError
+            return self._state(session, conversation.id)
 
         user = session.scalar(
             select(TrainingAiMessage).where(
@@ -145,8 +167,50 @@ class TrainingChatService:
         )
         if newer:
             raise ConcurrentTrainingUpdateError
-        message = user.content
-        context = self._context(session, client_id, conversation, message, user.id)
+        token = uuid4()
+        user.processing_token = token
+        # Covers the maximum 60s plan budget plus bounded finalization. A server
+        # restart cannot leave the UI permanently busy; late attempts are fenced.
+        user.processing_expires_at = datetime.now(UTC) + timedelta(seconds=65)
+        user.failure_code = None
+        session.commit()
+        user_id = user.id
+        try:
+            context = self._context(session, client_id, conversation, user.content, user.id)
+            plan = context["current_training_plan"] is None and self._requests_initial_plan(
+                user.content, context["recent_messages"]
+            )
+            with ExecutionBudget(plan=plan).scope():
+                return self._respond(
+                    session, subject, client_id, conversation, user, token, context
+                )
+        except Exception as error:
+            session.rollback()
+            code = getattr(error, "code", None)
+            if code not in {
+                "deadline_exceeded",
+                "assistant_clarification_required",
+                "memory_capacity",
+            }:
+                code = (
+                    "conflict"
+                    if isinstance(error, ConcurrentTrainingUpdateError)
+                    or getattr(error, "status", None) == 409
+                    else "processing_failed"
+                )
+            session.execute(
+                update(TrainingAiMessage)
+                .where(TrainingAiMessage.id == user_id, TrainingAiMessage.processing_token == token)
+                .values(processing_token=None, processing_expires_at=None, failure_code=code)
+            )
+            session.commit()
+            raise
+
+    def _respond(self, session, subject, client_id, conversation, user, token, context):
+        client_request_id = user.client_request_id
+        if not enabled(client_id):
+            # Preserve the legacy provider's serialization during inference.
+            session.scalar(select(Client.id).where(Client.id == client_id).with_for_update())
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
         run = None
@@ -171,8 +235,12 @@ class TrainingChatService:
             session.rollback()
             raise
         except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
-            session.commit()  # Preserve only the original client message for retry.
+            session.rollback()
             raise
+        session.scalar(select(Client.id).where(Client.id == client_id).with_for_update())
+        claimed = session.get(TrainingAiMessage, user.id, populate_existing=True)
+        if claimed is None or claimed.processing_token != token or not self._processing(claimed):
+            raise ConcurrentTrainingUpdateError
         content = response.assistant_message
         if response.draft_update is not None:
             if editable_draft is not None and context["rules"]["may_update_ai_draft"]:
@@ -231,8 +299,47 @@ class TrainingChatService:
         conversation.raw_expires_at = self._expiry()
         session.flush()
         conversation.summary = self._bounded_summary(session, conversation.id)
+        claimed.processing_token = None
+        claimed.processing_expires_at = None
+        claimed.failure_code = None
         session.commit()
-        return TrainingChatState(self._messages(session, conversation.id))
+        return self._state(session, conversation.id)
+
+    @staticmethod
+    def _processing(message):
+        expires = message.processing_expires_at
+        if expires is not None and expires.tzinfo is None:
+            expires = expires.replace(tzinfo=UTC)
+        return bool(message.processing_token and expires and expires > datetime.now(UTC))
+
+    def _state(self, session, conversation_id):
+        latest = session.scalar(
+            select(TrainingAiMessage)
+            .where(
+                TrainingAiMessage.conversation_id == conversation_id,
+                TrainingAiMessage.role == "user",
+            )
+            .order_by(TrainingAiMessage.sequence.desc())
+            .limit(1)
+            .execution_options(populate_existing=True)
+        )
+        messages = self._messages(session, conversation_id)
+        pending = None
+        if (
+            latest
+            and latest.client_request_id
+            and not any(m.reply_to_client_request_id == latest.client_request_id for m in messages)
+        ):
+            processing = self._processing(latest)
+            pending = TrainingChatRequestState(
+                latest.client_request_id,
+                "processing" if processing else "failed",
+                None
+                if processing
+                else latest.failure_code
+                or ("deadline_exceeded" if latest.processing_token else "processing_failed"),
+            )
+        return TrainingChatState(messages, pending)
 
     def purge_expired_content(self, session: Session, now: datetime | None = None) -> int:
         current_time = now or datetime.now(UTC)
@@ -338,15 +445,10 @@ class TrainingChatService:
             )
         if not context["onboarding_completed"]:
             return self._initial_plan_guidance(context)
-        if enabled(client_id):
-            # Preserve retry input and release the client lock before inference,
-            # before opening the savepoint owned by this chat request.
-            session.commit()
         try:
-            # Keep the proposal, reply and request UUID atomic. A failed
-            # generation rolls back only its savepoint, preserving the message.
-            with session.begin_nested():
-                self._generation.generate_for_subject(session, subject, commit=False)
+            # The input/claim was committed before inference. The outer request
+            # now owns rollback of both the proposal and its eventual reply.
+            self._generation.generate_for_subject(session, subject, commit=False)
         except CompletedOnboardingRequiredError:
             return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
         except TrainingGenerationUnavailableError:
@@ -638,6 +740,13 @@ class TrainingChatService:
     def _conversation(
         session: Session, client_id: UUID, *, commit: bool = True
     ) -> TrainingAiConversation:
+        # Existing reads must remain available while a request holds the client
+        # lock. Only first creation needs serialization against competing reads.
+        conversation = session.scalar(
+            select(TrainingAiConversation).where(TrainingAiConversation.client_id == client_id)
+        )
+        if conversation is not None:
+            return conversation
         # First reads can create a conversation too. Use the same client lock
         # as message submission before checking the unique conversation row.
         session.scalar(select(Client.id).where(Client.id == client_id).with_for_update())

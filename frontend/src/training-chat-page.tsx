@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { WorkspaceIcon } from './components/workspace-presentation'
 import { ClientShell } from './components/application-shell'
@@ -24,28 +24,85 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
   const [adaptations, setAdaptations] = useState<TrainingAdaptation[]>([])
   const [hasCurrentPlan, setHasCurrentPlan] = useState<boolean | null>(null)
   const [creatingProposal, setCreatingProposal] = useState(false)
-  const chatEndRef = useChatAutoScroll(chat?.messages.length ?? 0, pending !== null)
+  const [pollError, setPollError] = useState(false)
+  const submittingRef = useRef<string | null>(null)
+  const completedRef = useRef(new Set<string>())
+  const scopeRef = useRef(0)
+  const processing = chat?.pending_request?.status === 'processing'
+  const busy = pending !== null || processing
+  const trackedRequestId = pending?.id ?? (processing ? chat?.pending_request?.client_request_id : null)
+  const chatEndRef = useChatAutoScroll(chat?.messages.length ?? 0, busy)
 
   useEffect(() => {
     let active = true
+    scopeRef.current += 1
+    completedRef.current.clear()
+    submittingRef.current = null
+    setChat(null); setHasCurrentPlan(null); setPending(null); setRetry(null); setError(null); setMessage('')
     void Promise.all([getOwnTrainingChat(accessToken), getOwnAdaptations(accessToken), getCurrentTrainingPlan(accessToken)])
       .then(([state, proposals, plan]) => { if (active) { setChat(state); setAdaptations(proposals); setHasCurrentPlan(plan !== null) } })
       .catch((reason: unknown) => active && setError(reason instanceof Error ? reason.message : 'Não foi possível carregar sua conversa.'))
-    return () => { active = false }
+    return () => { active = false; scopeRef.current += 1 }
   }, [accessToken])
 
+  useEffect(() => {
+    if (!trackedRequestId) return
+    let active = true
+    let timer: ReturnType<typeof setTimeout>
+    async function poll() {
+      try {
+        const state = await getOwnTrainingChat(accessToken)
+        if (!active) return
+        setPollError(false)
+        const answered = state.messages.some((item) => item.reply_to_client_request_id === trackedRequestId)
+        if (answered) completedRef.current.add(trackedRequestId!)
+        // A GET started before completion must not overwrite its newer POST reply.
+        if (!answered && completedRef.current.has(trackedRequestId!)) return
+        setChat(state)
+        if (answered || state.pending_request?.client_request_id === trackedRequestId) {
+          setPending((item) => item?.id === trackedRequestId ? null : item)
+          if (submittingRef.current === trackedRequestId) submittingRef.current = null
+        }
+        if (answered) { setRetry(null); setError(null); setMessage(''); return }
+        if (state.pending_request?.status === 'failed') return
+      } catch {
+        if (active) setPollError(true)
+      }
+      if (active) timer = setTimeout(() => void poll(), 1500)
+    }
+    timer = setTimeout(() => void poll(), 1000)
+    return () => { active = false; clearTimeout(timer) }
+  }, [accessToken, trackedRequestId])
+
   async function submit(nextMessage: string, id = requestId()) {
-    if (!nextMessage.trim() || pending) return
+    if (!nextMessage.trim() || busy || submittingRef.current) return
+    submittingRef.current = id
+    const scope = scopeRef.current
     setPending({ message: nextMessage, id })
+    setMessage('')
     setError(null)
+    setRetry(null)
+    setPollError(false)
     try {
-      setChat(await sendTrainingChatMessage(accessToken, nextMessage, id))
+      const state = await sendTrainingChatMessage(accessToken, nextMessage, id)
+      if (scope !== scopeRef.current || completedRef.current.has(id)) return
+      for (const item of state.messages) {
+        if (item.reply_to_client_request_id) completedRef.current.add(item.reply_to_client_request_id)
+      }
+      setChat(state)
       setMessage('')
       setRetry(null)
     } catch (reason) {
+      if (scope !== scopeRef.current || completedRef.current.has(id)) return
+      setMessage(nextMessage)
       setError(reason instanceof Error ? reason.message : 'Não foi possível enviar sua mensagem.')
       setRetry({ message: nextMessage, id })
-    } finally { setPending(null) }
+    } finally {
+      if (scope === scopeRef.current) {
+        setPending((item) => item?.id === id ? null : item)
+        if (submittingRef.current === id) submittingRef.current = null
+      }
+    }
   }
 
   async function requestProposal(sourceRequestId: string, reason: string) {
@@ -68,6 +125,17 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
   if (!chat || hasCurrentPlan === null) return <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md"><LoadingState label="Carregando assistente de treino" /></ClientShell>
 
   const suggestions = chat.messages.filter((item) => item.role === 'assistant' && item.adaptation_suggested && item.reply_to_client_request_id && item.adaptation_reason)
+  const unsaved = pending ?? retry
+  const failedRequest = chat.pending_request?.status === 'failed' ? chat.pending_request : null
+  const failedMessage = failedRequest && chat.messages.find((item) => item.client_request_id === failedRequest.client_request_id)
+  const retryMessage = retry ?? (failedMessage?.client_request_id ? { id: failedMessage.client_request_id, message: failedMessage.content } : null)
+  const failureText = failedRequest?.failure_code === 'deadline_exceeded'
+    ? 'O assistente não concluiu a resposta no tempo disponível. Sua mensagem foi salva. Você pode tentar novamente.'
+    : failedRequest?.failure_code === 'assistant_clarification_required'
+      ? 'Confirme as informações relevantes ou consulte seu instrutor antes de gerar a proposta.'
+      : failedRequest?.failure_code === 'memory_capacity'
+        ? 'Sua memória está cheia. Abra Memória do assistente para revisar as informações antes de continuar.'
+        : 'A solicitação não foi concluída. Sua mensagem foi salva. Você pode tentar novamente ou enviar outra mensagem.'
 
   return (
     <ClientShell onSignOut={onSignOut} showClientNavigation contentMaxWidth="md">
@@ -78,18 +146,20 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
           eyebrow="Assistente de treino"
           title="Como posso ajudar hoje?"
         />
-        {error && <Stack spacing={1} sx={{ alignItems: 'flex-start' }}><StatusNotice severity="error">{error}</StatusNotice>{retry && <Button onClick={() => void submit(retry.message, retry.id)} variant="outlined">Tentar novamente</Button>}</Stack>}
+        {(error || failedRequest) && !busy && <Stack spacing={1} sx={{ alignItems: 'flex-start' }}><StatusNotice severity="error">{failedRequest ? failureText : error}</StatusNotice>{retryMessage && <Button onClick={() => void submit(retryMessage.message, retryMessage.id)} variant="outlined">Tentar novamente</Button>}</Stack>}
         <Stack aria-live="polite" aria-relevant="additions" spacing={1.5} sx={{ minHeight: 280, p: { xs: 1, sm: 2 }, borderRadius: 3, bgcolor: 'rgba(16,24,27,0.35)' }}>
-          {chat.messages.length === 0
+          {chat.messages.length === 0 && !unsaved
             ? <EmptyState description="Pergunte sobre os exercícios, séries, repetições ou orientações do seu treino atual." title="Seu espaço para tirar dúvidas" />
             : chat.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role} footer={<SupportingReferences references={item.reference_citations} />}>{item.content}</ChatMessage>)}
+          {unsaved && !chat.messages.some((item) => item.client_request_id === unsaved.id) && <ChatMessage role="user">{unsaved.message}</ChatMessage>}
+          {busy && <Box role="status" aria-label="Status da solicitação"><StatusNotice severity="info">{pollError ? 'Não foi possível verificar o andamento. Tentando reconectar…' : processing ? 'O assistente está processando sua solicitação. Você pode atualizar a página; a resposta aparecerá aqui.' : 'Enviando sua mensagem… Aguardando confirmação do recebimento.'}</StatusNotice></Box>}
         </Stack>
         <Box aria-hidden="true" ref={chatEndRef} sx={{ height: 1, scrollMarginBottom: { xs: 184, sm: 132 } }} />
-        <Card aria-busy={pending !== null} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky', zIndex: 1, borderColor: 'rgba(255,133,100,0.35)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
+        <Card aria-busy={busy} component="form" onSubmit={(event) => { event.preventDefault(); void submit(message) }} sx={{ bottom: 16, position: 'sticky', zIndex: 1, borderColor: 'rgba(255,133,100,0.35)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return; event.preventDefault(); void submit(message) }} disabled={pending !== null} helperText="Enter para enviar · Shift + Enter para uma nova linha" placeholder="Conte o que precisa; você pode reunir dúvidas e corrigir informações." value={message} />
-              <Button disabled={!message.trim() || pending !== null} type="submit" variant="contained" startIcon={<WorkspaceIcon name="send" />}>{pending ? 'Enviando…' : 'Enviar'}</Button>
+              <TextField autoComplete="off" fullWidth label="Escreva sua pergunta" multiline onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return; event.preventDefault(); void submit(message) }} disabled={busy} helperText="Enter para enviar · Shift + Enter para uma nova linha" placeholder="Conte o que precisa; você pode reunir dúvidas e corrigir informações." value={message} />
+              <Button disabled={!message.trim() || busy} type="submit" variant="contained" startIcon={<WorkspaceIcon name="send" />}>{busy ? (processing ? 'Processando…' : 'Enviando…') : 'Enviar'}</Button>
             </Stack>
           </CardContent>
         </Card>

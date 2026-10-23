@@ -11,7 +11,26 @@ export type TrainingChatMessage = {
   reference_citations?: { passage_id: string; title: string; version: number; location: string }[]
 }
 
-export type TrainingChat = { messages: TrainingChatMessage[] }
+export type TrainingChat = {
+  messages: TrainingChatMessage[]
+  pending_request?: {
+    client_request_id: string
+    status: 'processing' | 'failed'
+    failure_code: string | null
+  } | null
+}
+
+async function chatFetch(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init)
+  } catch (error) {
+    if (error instanceof DOMException && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+      throw new Error('Não foi possível confirmar o andamento no tempo disponível. Atualize a conversa para verificar sua solicitação.')
+    }
+    if (error instanceof TypeError) throw new Error('Não foi possível conectar ao assistente. Verifique sua conexão e atualize a conversa.')
+    throw error
+  }
+}
 
 async function chatError(response: Response, fallback: string): Promise<never> {
   if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
@@ -27,8 +46,9 @@ async function chatError(response: Response, fallback: string): Promise<never> {
 }
 
 export async function getOwnTrainingChat(accessToken: string): Promise<TrainingChat> {
-  const response = await fetch(`${apiBaseUrl}/training/chat`, {
+  const response = await chatFetch(`${apiBaseUrl}/training/chat`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(10_000),
   })
   if (!response.ok) return chatError(response, 'Não foi possível carregar sua conversa. Tente novamente.')
   return response.json() as Promise<TrainingChat>
@@ -39,10 +59,12 @@ export async function sendTrainingChatMessage(
   message: string,
   clientRequestId: string,
 ): Promise<TrainingChat> {
-  const response = await fetch(`${apiBaseUrl}/training/chat/messages`, {
+  const response = await chatFetch(`${apiBaseUrl}/training/chat/messages`, {
     method: 'POST',
+    keepalive: true,
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, client_request_id: clientRequestId }),
+    signal: AbortSignal.timeout(75_000),
   })
   if (!response.ok) return chatError(response, 'Não foi possível enviar sua mensagem. Tente novamente.')
   return response.json() as Promise<TrainingChat>
