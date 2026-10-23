@@ -770,3 +770,69 @@ single-run observations do not establish a latency percentile or laptop support.
 Changed files: `backend/app/integrations/ai.py`, `backend/tests/test_ai_budget.py`,
 `docker-compose.yml`, `docker-compose.production.yml`, `.env.example`, and this
 evaluation record.
+
+## Plan grounding rejection investigation — 2026-10-22
+
+Scope: the owner's request to investigate the remaining RF-15/RF-18 plan
+rejection before selecting a grounding correction. Baseline checkpoint:
+`6325965`. This is diagnostic evidence, not a change to retrieval or review
+policy. All live work used read-only database transactions and the authorized
+test account. Private replay artifacts remain temporary and are not committed.
+
+The complete replay reproduced `assistant_clarification_required` in **52.31
+seconds**, after successful routing, generation and review. The router's query
+mixed the weight-loss goal with personal measurements and health keywords,
+without requesting plan-programming variables or exercise instructions. All
+five retrieved passages came from the Brazilian guide: pregnancy/postpartum
+benefits (physical page 39), the introduction (page 6), general physical
+capacities (page 10), and older-adult benefits/precautions (pages 29 and 32).
+The generated proposal cited the final three of those passages.
+
+The draft nevertheless prescribed walking, bodyweight squats, push-ups, jump
+rope and stretching, including specific sets, repetitions and rest periods.
+The cited passages do not substantiate those prescriptions. The walking
+repetition field contained the nonsensical value `Heatmap`; equipment fields
+used the string `null` and a zero UUID instead of JSON null. These outputs were
+rejected before persistence. The final reviewer marked five exercise/load
+claims unsupported. Replaying **only** the captured review with the identical
+draft and evidence reproduced the same five unsupported claims in **8.83
+seconds**. This isolates a justified evidence failure from the earlier timeout.
+
+Hypotheses tested:
+
+1. Poor query intent causes weak evidence selection. Supported: focused
+   Portuguese/English resistance-training queries retrieved prescription
+   passages from the already-active ACSM document (`msse-58-851`), including
+   physical pages 10, 13 and 15. A focused adult-activity query retrieved the
+   adult section of the Brazilian guide on physical pages 24–27. Retrieval
+   therefore has usable indexed content that the original query missed.
+2. The current library may lack applicable guidance for the complete case.
+   Still unresolved: the retrieved ACSM material explicitly describes healthy
+   adults, and generic adult guidance does not automatically substantiate a
+   personalized program with reported restrictions. Improved search alone
+   does not establish sufficient coverage or a valid plan.
+3. The generator invents specifics when evidence is insufficient. Observed in
+   the captured draft: general-benefit passages became detailed exercise
+   prescriptions with unrelated/malformed field content.
+4. The review is simply too strict. Not supported as the main cause: the
+   unsupported exercise claims are reproducible and absent from the citations.
+   However, `missing_conditions` varied between the two reviews and included
+   demands not clearly established by the cited passages. Those additional
+   demands are not accepted as validated requirements or reasons to change
+   the product specification.
+
+Recommended implementation scope after this investigation: supply minimized,
+task-relevant plan intent to the router; retrieve program parameters and
+exercise-specific evidence within the existing two-round limit; preserve
+population applicability rather than treating all matches as interchangeable;
+and make the specialist abstain from inventing prescriptions when support is
+missing. Keep final review and instructor approval. Validate these changes
+against both supported and deliberately insufficient-source cases. The current
+investigation does not authorize weakening review to force this plan through.
+
+Checks executed: one complete live read-only replay, one isolated review replay,
+three focused retrieval probes, and an active-source status check (all three
+sources active). No application code, source activation, embeddings, saved
+messages, client memory or training plans changed. No automated regression
+suite was run because this task only records diagnostic findings. The sole
+changed tracked file is this evaluation record.
