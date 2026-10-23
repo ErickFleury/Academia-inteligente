@@ -263,3 +263,76 @@ def test_section_matching_handles_portuguese_singular_and_plural():
     assert section_match("Seção: ATIVIDADE FÍSICA PARA ADULTOS\nOrientação.", "adulto minutos") > 0
     assert section_match("Seção: JOVENS\nOrientação.", "jovem atividade") > 0
     assert section_match("Seção: IDOSOS\nOrientação.", "adultos minutos") == 0
+
+
+def test_exercise_context_follows_continuation_and_stops_at_next_exercise():
+    chunks = list(
+        passages(
+            [
+                {
+                    "location": "page:1",
+                    "text": "Video 3.1\nFlat Barbell Bench Press\nStarting Position: Lifter\n"
+                    "Keep contact with the bench.",
+                },
+                {
+                    "location": "page:2",
+                    "text": "Upward Movement\n" + "Keep the contact points stable. " * 60,
+                },
+                {
+                    "location": "page:3",
+                    "text": "Racking the bar\nVideo 3.2\nIncline Barbell Bench Press\n"
+                    "Starting Position\nAdjust the seat.",
+                },
+                {"location": "page:4", "text": "Keep the bench inclined."},
+                {"location": "page:5", "text": "Part IV\nOther Exercises"},
+            ]
+        )
+    )
+    continuation = [content for _, location, content in chunks if location.startswith("page:2;")]
+    assert len(continuation) > 1
+    assert all(content.startswith("Seção: Flat Barbell Bench Press\n") for content in continuation)
+    assert any(
+        content.startswith("Seção: Incline Barbell Bench Press\n") and "Adjust the seat." in content
+        for _, _, content in chunks
+    )
+    assert chunks[-2][2].startswith("Seção: Incline Barbell Bench Press\n")
+    assert "Bench Press" not in chunks[-1][2]
+    assert all(len(content) <= 1000 for _, _, content in chunks)
+
+
+def test_pdf_word_wrap_is_joined_without_changing_numbers_or_markdown():
+    chunks = list(
+        passages(
+            [
+                {
+                    "location": "page:1",
+                    "text": "Training and hypertrophy. Resistance train-\ning supports muscle "
+                    "hyper-\ntrophy. Use 2-3 sets; 30%-70% is a range. "
+                    "Five-\npoint contact and single-\njoint exercises.",
+                },
+                {"location": "text", "text": "Keep the authored spelling: train-\ning."},
+            ]
+        )
+    )
+    assert "training" in chunks[0][2] and "hypertrophy" in chunks[0][2]
+    assert "2-3 sets; 30%-70%" in chunks[0][2]
+    assert "Five-point contact and single-joint" in chunks[0][2]
+    assert "train-\ning" in chunks[1][2]
+
+
+def test_video_mentions_in_contents_do_not_become_exercise_headings():
+    chunks = list(
+        passages(
+            [
+                {"location": "page:1", "text": "Video 1.1\nAccess code: example\nContents"},
+                {
+                    "location": "page:2",
+                    "text": "Video 1.10\n1.10\nSplit Jerk\nStarting Position\nInstructions.",
+                },
+                {"location": "page:3", "text": "Chapter 2\nGeneral guidance"},
+            ]
+        )
+    )
+    assert not chunks[0][2].startswith("Seção:")
+    assert chunks[1][2].startswith("Seção: Split Jerk\n")
+    assert not chunks[2][2].startswith("Seção:")

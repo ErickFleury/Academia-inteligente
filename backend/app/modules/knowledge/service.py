@@ -46,6 +46,36 @@ def catalog_lock(session: Session):
         session.execute(text("SELECT pg_advisory_xact_lock(1421407001)"))
 
 
+def exercise_heading(lines, index):
+    """Read an explicit numbered exercise/video title, never infer it from prose."""
+    if not re.fullmatch(
+        r"(?:Video|Vídeo|Exercise|Exercício)\s+\d+(?:\.\d+)+", lines[index].strip()
+    ):
+        return ""
+    title = []
+    for line in lines[index + 1 : index + 5]:
+        line = line.strip()
+        if not line or re.fullmatch(r"\d+(?:\.\d+)+", line):
+            continue
+        if line.startswith(("Starting Position", "Posição Inicial")) or ":" in line:
+            break
+        words = re.findall(r"[\w]+", line)
+        if (
+            not words
+            or len(line) > 140
+            or line.endswith(".")
+            or not all(
+                word[0].isupper()
+                or word.isdigit()
+                or word in {"and", "of", "the", "for", "to", "with", "de", "com", "e"}
+                for word in words
+            )
+        ):
+            break
+        title.append(line)
+    return " ".join(title)[:280]
+
+
 def section_blocks(pages):
     """Carry explicit chapter/Markdown headings, never infer client applicability."""
     repeated = Counter(line.strip() for page in pages for line in set(page["text"].splitlines()))
@@ -71,7 +101,17 @@ def section_blocks(pages):
             # Include a wrapped heading such as "E MULHERES NO PÓS-PARTO".
             section = " ".join(candidates[:2])[:280] if candidates else ""
         block = []
-        for line in lines:
+        for index, line in enumerate(lines):
+            if re.fullmatch(r"\s*(?:Part|Parte|Chapter|Capítulo)\s+(?:[IVXLCDM]+|\d+)\s*", line):
+                if block:
+                    yield page["location"], section, "\n".join(block)
+                    block = []
+                section = ""
+            if title := exercise_heading(lines, index):
+                if block:
+                    yield page["location"], section, "\n".join(block)
+                    block = []
+                section = title
             heading = re.match(r"^(#{1,6})\s+(.+?)\s*#*\s*$", line)
             if heading:
                 if block:
@@ -88,9 +128,27 @@ def section_blocks(pages):
 
 def passages(pages: list[dict[str, str]]):
     """Keep section provenance within each bounded passage, including continuation pages."""
+    words = {
+        word.casefold()
+        for page in pages
+        for word in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", page["text"])
+    }
+
+    def unwrap(match):
+        left, right = match.groups()
+        compound = f"{left}-{right}"
+        # Only remove a hyphen when the document supplies the intact spelling.
+        # Otherwise retain it: five-point and single-joint are meaningful terms.
+        joined = left + right
+        return (
+            joined if joined.casefold() in words and compound.casefold() not in words else compound
+        )
+
     position = 0
     for location, section, block in section_blocks(pages):
         prefix = f"Seção: {section}\n" if section else ""
+        if location.startswith("page:"):
+            block = re.sub(r"([^\W\d_]+)-[ \t]*\n[ \t]*([a-zà-ÿ]+)", unwrap, block)
         remaining = block.strip()
         while remaining:
             # At most 1000 Unicode characters / 4000 UTF-8 bytes plus prefix.
