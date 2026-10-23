@@ -188,7 +188,11 @@ def test_plan_clarification_survives_a_new_database_session(postgres_sessions, r
         )
     with postgres_sessions() as session:
         assert service.state_for_subject(session, "owner") == state
-        assert state.messages[-1].clarification == {**DETAIL, "stage": "specialist"}
+        assert state.messages[-1].clarification == {
+            **DETAIL,
+            "stage": "specialist",
+            "initial_plan_requested": True,
+        }
         assert (
             service.submit_for_subject(
                 session, "owner", message="ignored retry", client_request_id=request_id

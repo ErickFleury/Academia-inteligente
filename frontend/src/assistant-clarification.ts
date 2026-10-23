@@ -8,7 +8,7 @@ export type AssistantClarification = {
 export function clarificationMessage(value: unknown, fallback: string): string {
   if (!value || typeof value !== 'object') return fallback
   const { explanation, next_step: nextStep } = value as Partial<AssistantClarification>
-  if (typeof explanation !== 'string' || !explanation.trim() || explanation.length > 500
-    || typeof nextStep !== 'string' || !nextStep.trim() || nextStep.length > 400) return fallback
-  return `${explanation.trim()} ${nextStep.trim()}`
+  if (typeof explanation !== 'string' || explanation.length > 500
+    || typeof nextStep !== 'string' || !nextStep.trim() || nextStep.length > 800) return fallback
+  return [explanation.trim(), nextStep.trim()].filter(Boolean).join(' ')
 }

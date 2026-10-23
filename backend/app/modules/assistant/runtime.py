@@ -42,6 +42,13 @@ class AssistantError(Exception):
         self.clarification = clarification
 
 
+class InitialPlanFollowup(Exception):
+    """A pending plan request was cancelled or the client changed the subject."""
+
+    def __init__(self, action):
+        self.action = action
+
+
 class Clarification(BaseModel):
     """Client-facing explanation, distinct from private reasoning or a prescription."""
 
@@ -53,11 +60,11 @@ class Clarification(BaseModel):
         "unsupported_guidance",
         "unspecified",
     ]
-    explanation: str = Field(min_length=1, max_length=500)
-    next_step: str = Field(min_length=1, max_length=400)
+    explanation: str = Field(max_length=500)
+    next_step: str = Field(min_length=1, max_length=800)
 
     def message(self):
-        return f"{self.explanation} {self.next_step}"
+        return " ".join(part for part in (self.explanation, self.next_step) if part)
 
 
 class Route(BaseModel):
@@ -72,6 +79,7 @@ class Route(BaseModel):
 
 class PlanRoute(Route):
     technique_query: str | None = Field(default=None, min_length=1, max_length=200)
+    followup_action: Literal["resume", "cancel", "chat"] | None = None
 
 
 class GroundingReview(BaseModel):
@@ -150,6 +158,16 @@ Exemplo de busca de prescrição: 'prescrição treinamento resistido séries re
 Inclua o nível de experiência quando relevante. Para treino inicial sem exercício
 escolhido, a busca complementar deve tratar das precauções para os relatos, não
 escolher um exercício novo. Não transforme sintomas em diagnósticos."""
+
+_PLAN_ROUTING += """ Se resume_initial_plan=true, já existe um pedido de plano
+aguardando respostas às perguntas da última mensagem. Preencha followup_action:
+resume se a mensagem responde total ou parcialmente às perguntas ou pede continuar;
+cancel se cancela/adia o plano; chat se muda de assunto ou pergunta algo em vez de
+responder. Se não estiver claro que é uma resposta, use chat. Para cancel/chat,
+use query=null e technique_query=null, sem produzir proposta. Caso contrário,
+followup_action=null. Ao retomar, use as respostas atuais e anteriores; não peça
+uma nova autorização para gerar o rascunho já solicitado. Se ainda faltarem dados
+essenciais, pergunte todos juntos; não invente novas exigências."""
 
 _PLAN_GROUNDING = """ Antes de montar a proposta, confira se os trechos sustentam
 os exercícios, dosagem (séries, repetições/duração, carga, descanso) e precauções
@@ -238,8 +256,13 @@ reason: missing_client_information para informação essencial ausente do client
 insufficient_evidence para apoio insuficiente nos trechos recuperados;
 conflicting_evidence para fontes aplicáveis incompatíveis; unsupported_guidance
 para uma resposta que acrescentou orientação sem apoio. explanation identifica
-concretamente a lacuna em pt-BR, até duas frases. next_step faz uma pergunta objetiva
-que o cliente possa responder, ou orienta levar a lacuna específica ao instrutor.
+concretamente a lacuna em pt-BR, em uma frase curta apenas quando necessária.
+Para missing_client_information, use explanation="" e coloque em next_step todas
+as perguntas essenciais que já consegue identificar, juntas, em uma lista curta.
+Pergunte só o que falta no contexto: não repita informações nem faça uma entrevista
+de uma pergunta por mensagem. Para lacuna de evidência, next_step orienta levar
+a lacuna específica ao instrutor. Não peça confirmação para retomar um plano já
+solicitado: depois das respostas suficientes, gere a proposta.
 Não peça ao cliente evidência científica nem acesso administrativo. Não declare que
 o livro inteiro não contém algo: você só viu os trechos recuperados. Não transforme
 uma limitação do assistente em contraindicação médica. Não exponha raciocínio interno,
@@ -261,6 +284,7 @@ não repita essa pergunta. Se não identificar o motivo, use unspecified e diga 
 _ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
 _PLAN_ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
 _GROUNDING += _CLARIFICATION
+_GROUNDING += ai._CONVERSATIONAL_STYLE
 _REVIEW += _CLARIFICATION
 
 _SPECIALISTS = {
@@ -271,7 +295,7 @@ _SPECIALISTS = {
 }
 
 _READ_ONLY_CHAT = """Você é o assistente de treino da Academia Inteligente.
-Responda à mensagem atual em pt-BR, até três frases ou itens breves, sem introdução.
+Responda à mensagem atual em pt-BR, com frases ou itens breves, sem introdução.
 Limite-se ao que foi perguntado: uma pergunta sobre duração pede duração, sem
 acrescentar recomendações de intensidade, progressão ou outros assuntos não pedidos.
 Use o histórico, resumo e memórias como contexto datado; só fatos do próprio cliente.
@@ -512,6 +536,9 @@ class AssistantRun:
                 "population": "not_established",
             }
             routing_context["plan_brief"] = self.plan_brief
+            routing_context["resume_initial_plan"] = bool(
+                self.role == "initial_plan" and self.context.get("resume_initial_plan")
+            )
             routing_instructions = _PLAN_ROUTING
         route_schema = strict_schema(route_type.model_json_schema())
         memory_schema = route_schema["$defs"]["MemoryChange"]
@@ -536,6 +563,12 @@ class AssistantRun:
                 route_type,
                 "orchestrator",
             )
+            if (
+                self.role == "initial_plan"
+                and self.context.get("resume_initial_plan")
+                and self.route.followup_action != "resume"
+            ):
+                raise InitialPlanFollowup(self.route.followup_action or "chat")
             queries = [self.route.query]
             if plan:
                 queries.append(self.route.technique_query)

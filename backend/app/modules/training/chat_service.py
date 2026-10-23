@@ -23,7 +23,12 @@ from app.integrations.ai import (
 )
 from app.integrations.ai_budget import ExecutionBudget
 from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
-from app.modules.assistant.runtime import AssistantError, AssistantRun, enabled
+from app.modules.assistant.runtime import (
+    AssistantError,
+    AssistantRun,
+    InitialPlanFollowup,
+    enabled,
+)
 from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
 from app.modules.onboarding.draft_service import OnboardingDraftService
@@ -178,8 +183,9 @@ class TrainingChatService:
         user_id = user.id
         try:
             context = self._context(session, client_id, conversation, user.content, user.id)
-            plan = context["current_training_plan"] is None and self._requests_initial_plan(
-                user.content, context["recent_messages"]
+            plan = context["current_training_plan"] is None and (
+                context["resume_initial_plan"]
+                or self._requests_initial_plan(user.content, context["recent_messages"])
             )
             with ExecutionBudget(plan=plan).scope():
                 return self._respond(
@@ -242,7 +248,11 @@ class TrainingChatService:
             clarification = error.clarification
             run = None
             response = AiTrainingChatResponse(
-                assistant_message=f"{clarification['explanation']} {clarification['next_step']}"
+                assistant_message=" ".join(
+                    part
+                    for part in (clarification["explanation"], clarification["next_step"])
+                    if part
+                )
             )
             record_turn(outcome="clarification", reason=clarification["reason"])
         except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
@@ -409,7 +419,25 @@ class TrainingChatService:
         health_context = " ".join(
             [*(item.content for item in history if item.role == "user"), message]
         )
+        previous_clarification = history[-1].clarification if history else None
+        resume_initial_plan = (
+            bool(
+                enabled(client_id)
+                and current_plan is None
+                and draft is None
+                and history[-1].role == "assistant"
+                and previous_clarification
+                and previous_clarification.get("initial_plan_requested") is True
+                and previous_clarification.get("reason") == "missing_client_information"
+                and not self._requests_initial_plan(
+                    message, [{"role": item.role, "content": item.content} for item in history]
+                )
+            )
+            if history
+            else False
+        )
         return {
+            "resume_initial_plan": resume_initial_plan,
             "current_user_message": message,
             "conversation_summary": self._bounded_summary(session, conversation.id, message_id),
             "recent_messages": [
@@ -446,10 +474,19 @@ class TrainingChatService:
     ) -> str | None:
         if context["current_training_plan"] is not None:
             return None  # Existing-plan changes keep the adaptation/review flow.
-        if not self._requests_initial_plan(
+        resuming = context.get("resume_initial_plan", False)
+        if not resuming and not self._requests_initial_plan(
             context["current_user_message"], context["recent_messages"]
         ):
             return None
+        if resuming and re.fullmatch(
+            r"(?:por favor[, ]+)?(?:cancele|cancela|cancelar|pare|nao (?:gere|crie|monte)|"
+            r"nao quero(?: mais)?|nao precisa|agora nao|deixa pra la|deix[ae] para depois)"
+            r"(?: (?:o |meu |esse |este )?(?:plano|treino|rascunho)(?: de treino)?)?"
+            r"(?:[, ]+por favor)?[.!]*",
+            self._normalized(context["current_user_message"]).strip(),
+        ):
+            return "Tudo bem, cancelei a criação do rascunho."
         record_turn(path="direct")
         if self._lifecycle.find_proposal(session, client_id=client_id) is not None:
             return (
@@ -464,6 +501,15 @@ class TrainingChatService:
             self._generation.generate_for_subject(
                 session, subject, commit=False, chat_context=context
             )
+        except InitialPlanFollowup as decision:
+            if decision.action == "cancel":
+                return "Tudo bem, cancelei a criação do rascunho."
+            return None
+        except AssistantError as error:
+            if error.clarification is not None:
+                # Only this backend-owned workflow can authorize continuation.
+                error.clarification = {**error.clarification, "initial_plan_requested": True}
+            raise
         except CompletedOnboardingRequiredError:
             return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
         except TrainingGenerationUnavailableError:
@@ -471,11 +517,7 @@ class TrainingChatService:
         except InvalidTrainingGenerationError:
             raise TrainingChatDraftUpdateError from None
         record_turn(outcome="draft_saved")
-        return (
-            "Criei seu rascunho de treino com base no onboarding concluído. "
-            "Abra Meu treino para conferir. Ele ainda precisa da revisão e aprovação "
-            "do instrutor antes de se tornar seu plano atual."
-        )
+        return "Criei seu rascunho. Confira em Meu treino; ele aguarda aprovação do instrutor."
 
     @staticmethod
     def _initial_plan_guidance(context: dict) -> str:

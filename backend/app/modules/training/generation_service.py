@@ -108,7 +108,12 @@ class InitialTrainingGenerationService:
             context.update(
                 {
                     key: chat_context[key]
-                    for key in ("current_user_message", "recent_messages", "conversation_summary")
+                    for key in (
+                        "current_user_message",
+                        "recent_messages",
+                        "conversation_summary",
+                        "resume_initial_plan",
+                    )
                     if key in chat_context
                 }
             )

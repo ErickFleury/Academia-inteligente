@@ -14,6 +14,12 @@ test.each(['initial', 'adaptation'])('shows the specific %s clarification from t
   await expect(request).rejects.toThrow('Preciso confirmar a faixa etária. Qual é sua idade?')
 })
 
-test.each([null, {}, { explanation: 42, next_step: 'Pergunta?' }, { explanation: ' ', next_step: 'Pergunta?' }])('keeps a controlled fallback for malformed clarification metadata', (value) => {
+test.each([null, {}, { explanation: 42, next_step: 'Pergunta?' }])('keeps a controlled fallback for malformed clarification metadata', (value) => {
   expect(clarificationMessage(value, 'Consulte o instrutor.')).toBe('Consulte o instrutor.')
+})
+
+
+test('shows grouped questions without a repeated explanatory introduction', () => {
+  const nextStep = 'Qual é sua idade? Quantos dias por semana pode treinar?'
+  expect(clarificationMessage({ explanation: '', next_step: nextStep }, 'fallback')).toBe(nextStep)
 })

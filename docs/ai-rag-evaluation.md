@@ -974,3 +974,50 @@ No model, provider, paid fallback, deadline, retrieval limit, reference document
 health restriction, or instructor-approval rule was changed. Changes span the
 orchestration contract, chat persistence/API, initial generation context,
 allowlisted diagnostics, frontend error formatting, tests, and requirements.
+
+## Direct replies and initial-plan continuation — 2026-10-22
+
+Scope: RF-15/RF-18, owner-approved follow-up to actionable clarification.
+Rollback checkpoint: `d1dcc0e`.
+
+Training-chat and clarification prompts now ask for natural, direct pt-BR replies
+without routine introductions, profile recaps or repetitive explanations. Known
+answers must be reused; all currently identifiable essential questions belong in
+one short reply. Clarification explanations may be empty, and the bounded
+next-step field allows 800 characters for grouped questions. Frontend error
+formatting accepts this question-only form; the existing chat component preserves
+line breaks. Initial-plan success feedback is shorter and still identifies Meu
+treino and instructor approval.
+
+Only an explicit initial-plan request can establish continuation. The chat
+backend marks its saved clarification, and only a latest clarification for
+missing client information can resume on a new message. The existing plan router
+classifies that reply as resume, cancel, or ordinary chat before retrieval or
+prescription. Clear cancellation is also recognized by the backend; a negative
+preference is not automatically cancellation. A topic change ends this immediate
+continuation. The same generation service, 60-second budget, evidence checks,
+claim expiration, atomic persistence and single-draft rules still apply. No new
+confirmation is requested once the original request's answers are sufficient.
+There is no automatic generation merely from completed onboarding, and no change
+to adaptation confirmation or approval. The marker uses existing expiring
+message metadata, so no migration or indefinite workflow state was introduced.
+
+Verification:
+
+- Full backend: **752 passed**, two existing Alembic warnings. After the final
+  cancellation-pattern refinement, the focused continuation suite: **8 passed**,
+  including negative preferences, partial answers, evidence gaps,
+  another client's answers, refresh and UUID replay.
+- Frontend: **17 passed** for clarification formatting and chat interaction;
+  TypeScript compilation passed. Backend lint passed.
+- Synthetic local-model router probes classified an answer as `resume` in
+  **9.55 seconds**, a cancellation as `cancel` in **3.34 seconds**, and a new
+  topic as `chat` in **2.37 seconds**. A separate rendering probe with two
+  explicitly identified missing fields returned an empty explanation and both
+  questions together: “Qual é a sua idade? Quais dias da semana você está
+  disponível para treinar?” No real client data was used in these probes.
+- A router-only probe with absent goal/experience delegated to the specialist
+  rather than itself asking questions; it did not exercise the specialist.
+  The rendering probe verifies grouping after gaps are identified, not exhaustive
+  discovery of every missing fact. Earlier grounding/applicability limitations
+  and the human accuracy acceptance gate remain open.

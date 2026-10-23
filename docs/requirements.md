@@ -559,7 +559,7 @@ required. The backend reuses any existing proposal and saves a newly generated
 proposal atomically with the chat reply and request UUID; retries must not
 create duplicate drafts. It reports success only after validated persistence,
 with a pointer to Meu treino and the mandatory instructor-review boundary.
-Negative, conditional, unrelated, or ambiguous replies do not authorize generation.
+Negative, conditional, unrelated, or ambiguous replies do not independently authorize generation.
 Current-plan adaptations retain the RF-19 confirmation and review flow.
 
 **Refresh recovery (RF-18/RNF01, owner request 2026-10-22):** once the backend
@@ -582,12 +582,33 @@ it must not save a rejected plan/draft or memory proposal. Unknown reasons must
 remain explicitly unspecified rather than being inferred. Operational logs may
 contain only allowlisted categories, never the private explanation. Direct plan
 and adaptation requests expose the same explanation through their controlled
-error response. A subsequent explicit initial-plan request can use the bounded
-own-client chat context, without overriding authoritative onboarding restrictions
-or treating an answer to a question as automatic plan-generation consent.
+error response. Initial-plan generation can use the bounded own-client chat
+context, without overriding authoritative onboarding restrictions. The following
+owner-approved continuation policy governs answers to plan clarifications.
 Acceptance: verify saved/refreshable explanations, new-message continuation,
 UUID replay, account isolation, transcript expiration, stale-request rejection,
 no rejected mutations, and unchanged provider-failure handling.
+
+**Direct conversation and plan continuation (RF-15/RF-18, owner request
+2026-10-22):** training replies use natural, concise pt-BR without repeated
+introductions, profile recaps, or routine explanations. Group all currently
+identifiable essential missing information into one short message; retain known
+answers and ask only what remains. A clarification can contain questions without
+an introductory explanation. Preserve relevant precautions and grounding checks.
+After an explicit initial-plan request, a backend-marked clarification for missing
+client information keeps that request authorized: the next relevant answer
+resumes generation, and sufficient information/evidence produces the draft
+without another confirmation. Partial answers may require further clarification;
+do not manufacture optional prerequisites or medical facts. A cancellation or
+topic change ends this immediate continuation. No automatic initial draft is
+created merely because onboarding is complete. Existing drafts, approved/current
+plans, and adaptation confirmation remain under their existing workflows.
+Acceptance: grouped questions render without boilerplate; continuation survives
+reload and duplicate submissions create one draft only; cancellation, unrelated
+messages and another client's answers cannot resume the request; incomplete
+answers cannot bypass grounding/onboarding gates; instructor approval remains
+required. This refines the earlier clarification policy, not the explicit
+onboarding-completion or RF-19 adaptation-confirmation requirement.
 
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a

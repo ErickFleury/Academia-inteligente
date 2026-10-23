@@ -60,7 +60,7 @@ def test_plan_clarification_is_saved_refreshable_private_and_idempotent(database
     reply = state.messages[-1]
     assert reply.role == "assistant"
     assert DETAIL["explanation"] in reply.content and DETAIL["next_step"] in reply.content
-    assert reply.clarification == {**DETAIL, "stage": "specialist"}
+    assert reply.clarification == {**DETAIL, "stage": "specialist", "initial_plan_requested": True}
     assert not reply.reference_citations and not reply.adaptation_suggested
     assert training_chat_response(state).messages[-1].clarification == reply.clarification
     assert database_session.scalar(select(TrainingPlanVersion)) is None
@@ -123,7 +123,11 @@ def test_router_preserves_specific_question_without_generating_or_retrieving(
     state = service.submit_for_subject(
         database_session, "owner", message="Gere meu treino", client_request_id=uuid4()
     )
-    assert state.messages[-1].clarification == {**DETAIL, "stage": "router"}
+    assert state.messages[-1].clarification == {
+        **DETAIL,
+        "stage": "router",
+        "initial_plan_requested": True,
+    }
     assert len(agent.calls) == 1 and rollout.queries == []
 
 
@@ -148,7 +152,11 @@ def test_review_explanation_replaces_rejected_prescription(database_session, rol
     state = service.submit_for_subject(
         database_session, "owner", message="Gere meu treino", client_request_id=uuid4()
     )
-    assert state.messages[-1].clarification == {**detail, "stage": "review"}
+    assert state.messages[-1].clarification == {
+        **detail,
+        "stage": "review",
+        "initial_plan_requested": True,
+    }
     assert "Agachamento" not in state.messages[-1].content
     assert database_session.scalar(select(TrainingPlanVersion)) is None
 
@@ -191,7 +199,9 @@ def test_non_chat_api_preserves_specific_clarification_payload():
     from app.modules.assistant.runtime import AssistantError
 
     error = AssistantError(
-        "assistant_clarification_required", 422, clarification={**DETAIL, "stage": "specialist"}
+        "assistant_clarification_required",
+        422,
+        clarification={**DETAIL, "stage": "specialist"},
     )
     handler = create_app().exception_handlers[AssistantError]
     response = asyncio.run(handler(None, error))
