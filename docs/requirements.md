@@ -610,6 +610,21 @@ answers cannot bypass grounding/onboarding gates; instructor approval remains
 required. This refines the earlier clarification policy, not the explicit
 onboarding-completion or RF-19 adaptation-confirmation requirement.
 
+**Free-form answer interpretation (RF-15/RF-18, owner request 2026-10-23):**
+the model interprets natural answers, corrections, partial replies and topic
+changes in conversation context, without requiring predefined answer phrases or
+question order. The backend validates source ownership, literal evidence, allowed
+fields, types, bounds and uncertainty before using an interpretation. Known
+answers remain available during clarification; only genuinely missing or
+ambiguous information warrants another question. Explicit corrections supersede
+earlier reports but never silently edit completed onboarding or remove its health
+restrictions. Temporary interpreted answers share the owning chat's existing
+30-day retention and memory-reset boundary; they are not indefinite memory.
+Acceptance: natural wording and number words work; partial answers preserve
+other answers across reload/context-window changes; corrections and topic changes
+do not restart the interview; invented or other-client evidence cannot authorize
+generation; source-grounding, call/deadline limits and instructor approval remain.
+
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
 change could be useful and offer a non-binding draft suggestion. The client

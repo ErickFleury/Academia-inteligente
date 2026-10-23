@@ -26,7 +26,9 @@ FIELDS = [
 class QuestionsAgent(Agent):
     def structured(self, context, instructions, schema, type_, *, role):
         if role == "orchestrator" and "allowed_specialist" in context:
-            self.route = {"query": "prescrição exercícios", "followup_action": "resume"}
+            self.route = {"query": "prescrição exercícios"}
+            if context["allowed_specialist"] == "initial_plan":
+                self.route["followup_action"] = "resume"
         result = super().structured(context, instructions, schema, type_, role=role)
         if role == "initial_plan":
             missing = [field for field in FIELDS if field in context["unanswered_client_fields"]]

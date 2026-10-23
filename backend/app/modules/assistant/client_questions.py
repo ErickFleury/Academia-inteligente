@@ -2,7 +2,7 @@
 
 import re
 import unicodedata
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Literal
 
 ClientField = Literal[
@@ -76,7 +76,7 @@ def client_answers(context):
         {
             "role": "user",
             "content": context.get("current_user_message", ""),
-            "created_at": context.get("current_date"),
+            "created_at": context.get("current_message_created_at", context.get("current_date")),
         },
     ]
     answers = {}
@@ -84,6 +84,18 @@ def client_answers(context):
         if previous.get("role") != "assistant" or reply.get("role") != "user":
             continue
         detail = previous.get("clarification") or {}
+        for field, report in detail.get("client_answers", {}).items():
+            if field not in QUESTIONS or not isinstance(report, dict):
+                continue
+            cutoff = context.get("answer_event_after")
+            if cutoff:
+                if not report.get("reported_at"):
+                    continue
+                reported = datetime.fromisoformat(report["reported_at"])
+                reported = reported.replace(tzinfo=reported.tzinfo or UTC)
+                if reported <= datetime.fromisoformat(cutoff):
+                    continue
+            answers[field] = report
         fields = detail.get("missing_fields", [])
         if (
             detail.get("reason") != "missing_client_information"

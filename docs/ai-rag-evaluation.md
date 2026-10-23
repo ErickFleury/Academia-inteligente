@@ -1123,3 +1123,56 @@ Validation:
 The fixed question catalog and limited deterministic recognition still constrain
 conversation flexibility. This correction supports ordered short replies; it does
 not claim comprehensive understanding of arbitrary phrasing.
+
+## Model interpretation of free-form answers — 2026-10-23
+
+Scope: RF-15/RF-18, explicitly requested semantic interpretation of free-form
+answers, corrections, partial replies and topic changes. Checkpoint: `6e88f37`.
+
+The existing router call now returns bounded `answer_updates`, with a field,
+interpreted value/status, source index and literal evidence. The model handles
+wording, number words, explicit unit conversions, named weekdays and corrections;
+clients do not need to match the deterministic question/answer patterns. The
+backend accepts evidence only from the owning client's supplied user messages,
+checks quote boundaries/qualifiers, types, ranges, uncertainty and chronology,
+and keeps authoritative onboarding restrictions separate. Invalid interpretation
+has at most the existing bounded router correction attempt; it cannot silently
+reach a plan. Final plan review also checks interpreted values against their
+quoted reports. These checks validate provenance and structural constraints;
+they are not proof of arbitrary natural-language semantic entailment.
+
+Validated answers accompany saved clarifications under the same 30-day chat
+retention, preserving partial answers and corrections across reload and the
+recent-message window. Memory resets fence older reports. The provider receives
+one compact current answer state rather than copies from every previous reply.
+This is temporary conversation state, not new indefinite health memory. The
+existing onboarding extraction flow, source-grounding requirements, request
+budgets and instructor review remain in place. No new dependency or migration.
+
+Validation:
+
+- A red service regression initially repeated the question grid for a natural
+  paragraph containing number words, weekdays and informal duration wording.
+  It now generates one proposal using interpreted values, with onboarding intact.
+- Backend tests cover partial answers over five turns, a corrected age, retaining
+  prior availability, topic changes, invalid/missing/third-party evidence,
+  dropped qualifiers, uncertainty withdrawal and the memory-reset fence.
+- Final full backend suite with PostgreSQL checks: **774 passed**, two existing
+  Alembic warnings. Final targeted routing/interpretation checks: **52 passed**.
+  Ruff and diff checks passed.
+- Synthetic local-model routing probes passed: complete free-form answers
+  (**17.32s**, age/availability/duration interpreted correctly); partial answers
+  (**7.05s**, known age retained and uncertain availability left unresolved);
+  topic change (**2.95s**, `chat`); explicit availability correction (**5.71s**,
+  previous value replaced). These probes exercised interpretation/routing, not
+  complete plan correctness.
+- An authorized, read-only replay of “Pode continuar” against the existing test
+  account recovered all five saved answers and selected `resume` in **16.31s**.
+  It generated and saved no plan, message or memory. The prior full replay's
+  source-grounding rejection remains a separate unresolved acceptance issue.
+
+Files: `backend/app/modules/assistant/answer_interpretation.py`, `runtime.py`,
+`client_questions.py`; `backend/tests/test_semantic_client_answers.py` and
+`test_ordered_client_answers.py`; canonical requirements and this evaluation.
+The clarification-topic catalog remains bounded; this change removes reliance
+on fixed answer phrasing, not the catalog itself.

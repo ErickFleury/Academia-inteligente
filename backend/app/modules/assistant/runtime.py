@@ -20,6 +20,13 @@ from sqlalchemy.exc import DBAPIError
 from app.integrations import ai
 from app.integrations.ai_budget import BudgetExceeded, ExecutionBudget, current_budget
 from app.integrations.ai_diagnostics import record_turn
+from app.modules.assistant.answer_interpretation import (
+    INTERPRET_ANSWERS,
+    AnswerUpdate,
+    InvalidAnswerInterpretation,
+    answer_sources,
+    apply_interpretations,
+)
 from app.modules.assistant.client_questions import (
     ClientField,
     available_fields,
@@ -82,6 +89,7 @@ class Route(BaseModel):
     memory_changes: list[MemoryChange] = Field(default_factory=list, max_length=10)
     clarification: str | None = Field(default=None, max_length=400)
     clarification_detail: Clarification | None = None
+    answer_updates: list[AnswerUpdate] = Field(default_factory=list, max_length=13)
 
 
 class PlanRoute(Route):
@@ -496,6 +504,11 @@ class AssistantRun:
         self.context = copy.deepcopy(context)
         self.context["client_memory"] = self.snapshot["facts"]
         self.context["current_date"] = datetime.now(UTC).date().isoformat()
+        self.context["current_message_created_at"] = (
+            self.source.created_at.isoformat()
+            if self.source is not None
+            else datetime.now(UTC).isoformat()
+        )
         # Full authoritative restrictions are loaded independently of lexical or
         # vector similarity. The old heuristic health-term filter cannot omit them.
         onboarding = self.session.scalar(
@@ -520,6 +533,7 @@ class AssistantRun:
             # unnecessary once compact facts exist, and could restore corrections.
             self.context.pop("conversation_summary", None)
             cutoff = utc(self.snapshot["event_after"])
+            self.context["answer_event_after"] = cutoff.isoformat()
             for key in ("recent_messages", "conversation"):
                 if key in self.context:
                     self.context[key] = [
@@ -571,16 +585,27 @@ class AssistantRun:
             )
             routing_instructions = _PLAN_ROUTING
         self.context["client_answers"] = client_answers(self.context)
+        # Carry one compact answer state, not a copy of it inside every past
+        # clarification. The persisted messages retain their own expiring state.
+        for message in self.context.get("recent_messages", []):
+            if message.get("clarification"):
+                message["clarification"].pop("client_answers", None)
+        sources = answer_sources(self.context) if self.role != "onboarding" else []
+        routing_context["answer_sources"] = sources
+        if sources:
+            routing_instructions += INTERPRET_ANSWERS
         routing_context["client_answers"] = self.context["client_answers"]
-        self.unanswered_client_fields = available_fields(self.context, self.plan_brief)
-        if self.role == "initial_plan":
-            # Selecting exercises is part of creating the requested plan.
-            self.unanswered_client_fields = [
-                field for field in self.unanswered_client_fields if field != "target_exercise"
-            ]
-        self.context["unanswered_client_fields"] = self.unanswered_client_fields
+        self._refresh_unanswered_fields()
         routing_context["unanswered_client_fields"] = self.unanswered_client_fields
-        route_schema = self._question_schema(route_type.model_json_schema())
+        # This same call may correct or withdraw an earlier answer. Constrain
+        # the questions after interpreting those updates, not to stale gaps.
+        route_schema = strict_schema(route_type.model_json_schema())
+        if self.role == "onboarding" or not sources:
+            route_schema["properties"]["answer_updates"]["maxItems"] = 0
+        else:
+            route_schema["$defs"]["AnswerUpdate"]["properties"]["source_index"]["enum"] = [
+                source["index"] for source in sources
+            ]
         memory_schema = route_schema["$defs"]["MemoryChange"]
         # Text must equal its source quote. Have the model choose that quote
         # once; persistence still validates it against the original event.
@@ -609,6 +634,39 @@ class AssistantRun:
                 and self.route.followup_action != "resume"
             ):
                 raise InitialPlanFollowup(self.route.followup_action or "chat")
+            try:
+                if self.role == "onboarding" and self.route.answer_updates:
+                    raise InvalidAnswerInterpretation("onboarding_uses_own_extraction")
+                self.context["client_answers"] = apply_interpretations(
+                    self.context["client_answers"], self.route.answer_updates, sources
+                )
+            except InvalidAnswerInterpretation as error:
+                if attempt:
+                    raise AssistantError("malformed_structured_output", 422) from None
+                routing_context["validation_feedback"] = (
+                    f"answer_updates rejeitado: {error}. Corrija a interpretação; use apenas "
+                    "trechos literais das mensagens do próprio cliente em answer_sources."
+                )
+                continue
+            self._refresh_unanswered_fields()
+            routing_context["client_answers"] = self.context["client_answers"]
+            routing_context["unanswered_client_fields"] = self.unanswered_client_fields
+            detail = self.route.clarification_detail
+            if (
+                self.route.specialist == "clarify"
+                and detail
+                and detail.reason == "missing_client_information"
+                and detail.missing_fields
+                and not set(detail.missing_fields) & set(self.unanswered_client_fields)
+            ):
+                if attempt:
+                    raise AssistantError("malformed_structured_output", 422)
+                routing_context["validation_feedback"] = (
+                    "As perguntas propostas já foram respondidas em client_answers. "
+                    "Escolha allowed_specialist e buscas apropriadas para continuar, "
+                    "ou pergunte somente outra informação essencial realmente ausente."
+                )
+                continue
             queries = [self.route.query]
             if plan:
                 queries.append(self.route.technique_query)
@@ -681,6 +739,14 @@ class AssistantRun:
         self.context["reference_sources"] = self.model_sources()
         self.context["reference_evidence_required"] = self.route.needs_references
 
+    def _refresh_unanswered_fields(self):
+        self.unanswered_client_fields = available_fields(self.context, self.plan_brief)
+        if self.role == "initial_plan":
+            self.unanswered_client_fields = [
+                field for field in self.unanswered_client_fields if field != "target_exercise"
+            ]
+        self.context["unanswered_client_fields"] = self.unanswered_client_fields
+
     def _question_schema(self, schema):
         schema = strict_schema(schema)
         definition = schema.get("$defs", {}).get("Clarification", schema)
@@ -745,6 +811,8 @@ class AssistantRun:
                     "Tente novamente ou peça ajuda ao instrutor.",
                 )
         self.clarification = {**detail.model_dump(), "stage": stage}
+        if self.context.get("client_answers"):
+            self.clarification["client_answers"] = self.context["client_answers"]
         self.citations = []
         # Clarification must not accidentally apply a rejected draft or memory proposal.
         self.route.memory_changes = []
@@ -905,6 +973,8 @@ class AssistantRun:
                     "Rejeite qualquer declaração de que já está aprovado ou pode ser executado. "
                     "Continue exigindo todas as condições físicas, precauções e apoio documental."
                     " client_constraints contém relatos do cliente, não evidência científica. "
+                    "Confira se valores interpretados em client_answers correspondem ao "
+                    "source_text e à pergunta original; rejeite inferências pessoais sem apoio. "
                     "Use-os para verificar compatibilidade e restrições, sem exigir que fontes "
                     "comprovem objetivos pessoais. Não presuma população saudável/idade/gestação "
                     "desconhecida. Em missing_conditions, liste apenas condições realmente "
