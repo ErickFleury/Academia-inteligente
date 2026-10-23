@@ -913,3 +913,64 @@ changed.
 Changed files: `backend/app/modules/assistant/runtime.py`,
 `backend/tests/test_plan_evidence.py`, `backend/tests/test_assistant_runtime.py`,
 `backend/tests/test_assistant_postgres.py`, and this evaluation record.
+
+## Actionable clarification replies — 2026-10-22
+
+Scope: RF-15/RF-18 and shared RF-19 clarification handling. Baseline checkpoint:
+`6306a00`. The original failure was reproduced through `TrainingChatService`:
+empty retrieval raised `assistant_clarification_required` instead of saving an
+answer, while the specialist envelope could not carry a specific explanation.
+
+The router, specialist, and grounding reviewer now have a bounded structured
+clarification contract: reason, pt-BR explanation, and next step. The backend
+adds the originating stage (router, retrieval, specialist, or review). An unknown
+reason stays `unspecified`; absence of retrieved evidence is distinguished from
+proof that the entire source library lacks the answer. Model-provided reasons
+are explanations reported by the model, not independently verified causes.
+
+In chat, clarification completes the request as a saved assistant reply, clears
+processing status, and allows the client to answer with a new request. Repeating
+the original UUID reuses the reply. Rejected draft/plan and proposed memory
+changes are not saved. Metadata lives on the same client-owned message and
+expires with it after 30 days; technical logs retain only allowlisted categories.
+Direct generation/adaptation errors include the explanation, which the frontend
+now displays. Existing service-failure and bounded-expiration handling remain.
+
+Initial-plan generation from chat also receives the existing bounded own-client
+history and current request. This makes answers to clarifications available on
+the next explicit generation request; answering a question alone is not consent
+to generate, and conversation cannot overwrite authoritative onboarding.
+Migration `20261022_37` adds a nullable JSON column; existing messages remain
+unchanged and historical generic failures cannot acquire explanations retroactively.
+
+Verification:
+
+- Full backend suite: **744 passed**, with two existing Alembic deprecation
+  warnings. A final added no-memory-mutation test and its focused suite:
+  **9 passed**. PostgreSQL tests cover persistence across sessions, UUID replay,
+  isolation, and rejection of a late clarification after request expiration.
+  The migration upgrade/downgrade test passed in a disposable schema.
+- Frontend: **19 passed**, including refresh with a clarification reply, a new
+  answer using a new request UUID, and specific direct-plan/adaptation feedback.
+  TypeScript compilation passed. The first container test run inherited the LAN
+  `/api` URL; the test run with its expected localhost URL passed without changing
+  application routing.
+- Local Ollama, synthetic references and an in-memory test account only: the
+  first insufficient-evidence fixture identified the documentary gap but labeled
+  it missing client information and asked the client for technical details.
+  Explicit examples corrected that classification in the subsequent probe:
+  `insufficient_evidence`, a concrete explanation of missing prescription
+  parameters, and instructor referral, in **14.41 seconds**. The supported
+  synthetic fixture still generated a plan and passed grounding review in
+  **25.57 seconds** (router, specialist, and reviewer included).
+- **Unresolved quality finding:** an additional missing-age synthetic fixture
+  produced a plan instead of requesting age. Repeating with an explicit source
+  requirement to confirm age also failed the expected abstention assertion.
+  No real client data or plan was read or written by these probes. This change
+  improves explanation/persistence of abstentions; it does not establish reliable
+  detection of every applicability condition or close human grounding acceptance.
+
+No model, provider, paid fallback, deadline, retrieval limit, reference document,
+health restriction, or instructor-approval rule was changed. Changes span the
+orchestration contract, chat persistence/API, initial generation context,
+allowlisted diagnostics, frontend error formatting, tests, and requirements.

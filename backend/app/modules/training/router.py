@@ -98,6 +98,7 @@ class TrainingChatMessageResponse(BaseModel):
     adaptation_suggested: bool = False
     adaptation_reason: str | None = None
     reference_citations: list[dict] = Field(default_factory=list)
+    clarification: dict | None = None
 
 
 class TrainingChatResponse(BaseModel):
@@ -122,6 +123,7 @@ def training_chat_response(state: TrainingChatState) -> TrainingChatResponse:
                 adaptation_suggested=message.adaptation_suggested,
                 adaptation_reason=message.adaptation_reason,
                 reference_citations=message.reference_citations,
+                clarification=message.clarification,
             )
             for message in state.messages
         ],

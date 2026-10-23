@@ -182,3 +182,35 @@ test('a failed status check reports uncertainty and recovers without resending',
   expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeEnabled()
   expect(fetchMock.mock.calls.every(([, init]) => init?.method !== 'POST')).toBe(true)
 })
+
+test('reloads a clarification as a reply and lets the client answer with a new request', async () => {
+  const clarification = {
+    reason: 'missing_client_information', stage: 'specialist',
+    explanation: 'Preciso confirmar sua faixa etária para verificar a aplicação das referências.',
+    next_step: 'Qual é sua idade?',
+  }
+  const messages = [
+    { role: 'user', content: 'Gere meu treino', created_at: '2026-10-22T00:00:00Z', client_request_id: 'old-request' },
+    { role: 'assistant', content: `${clarification.explanation} ${clarification.next_step}`, clarification, created_at: '2026-10-22T00:00:01Z', reply_to_client_request_id: 'old-request' },
+  ]
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ messages, pending_request: null }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => [] })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ plan: null }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ messages: [
+      ...messages,
+      { role: 'user', content: 'Tenho 35 anos.', created_at: '2026-10-22T00:00:02Z' },
+      { role: 'assistant', content: 'Obrigado por esclarecer.', created_at: '2026-10-22T00:00:03Z' },
+    ], pending_request: null }) })
+  vi.stubGlobal('fetch', fetchMock)
+  vi.stubGlobal('crypto', { randomUUID: () => 'new-request' })
+  render(<TrainingChatPage accessToken="token" onSignOut={vi.fn()} />)
+  expect(await screen.findByText(`${clarification.explanation} ${clarification.next_step}`)).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument()
+  const input = screen.getByLabelText('Escreva sua pergunta')
+  expect(input).toBeEnabled()
+  fireEvent.change(input, { target: { value: 'Tenho 35 anos.' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+  expect(await screen.findByText('Obrigado por esclarecer.')).toBeInTheDocument()
+  expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ message: 'Tenho 35 anos.', client_request_id: 'new-request' })
+})

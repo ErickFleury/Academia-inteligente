@@ -111,11 +111,29 @@ def test_refresh_after_failure_recovers_retry_with_original_uuid(postgres_sessio
         assert service.state_for_subject(refresh, "owner").pending_request is None
 
 
-def test_expired_attempt_cannot_overwrite_a_retried_request(postgres_sessions):
+@pytest.mark.parametrize("clarification", [False, True])
+def test_expired_attempt_cannot_overwrite_a_retried_request(postgres_sessions, clarification):
     with postgres_sessions() as session:
         owner(session)
     entered, resume = Event(), Event()
     agent = Agent()
+    if clarification:
+        from app.modules.assistant.runtime import Clarification
+
+        original = agent.structured
+
+        def clarify(*args, **kwargs):
+            result = original(*args, **kwargs)
+            if kwargs["role"] == "training_chat":
+                result.grounding = "clarification"
+                result.clarification = Clarification(
+                    reason="missing_client_information",
+                    explanation="Preciso esclarecer seu pedido.",
+                    next_step="Qual exercício você quer discutir?",
+                )
+            return result
+
+        agent.structured = clarify
 
     def hold():
         entered.set()
@@ -156,3 +174,26 @@ def test_expired_attempt_cannot_overwrite_a_retried_request(postgres_sessions):
     with postgres_sessions() as session:
         state = service.state_for_subject(session, "owner")
         assert len(state.messages) == 2 and state.pending_request is None
+
+
+def test_plan_clarification_survives_a_new_database_session(postgres_sessions, rollout):
+    from test_training_clarifications import DETAIL, setup_chat
+
+    with postgres_sessions() as session:
+        service, agent = setup_chat(session, rollout)
+    request_id = uuid4()
+    with postgres_sessions() as session:
+        state = service.submit_for_subject(
+            session, "owner", message="Gere meu treino", client_request_id=request_id
+        )
+    with postgres_sessions() as session:
+        assert service.state_for_subject(session, "owner") == state
+        assert state.messages[-1].clarification == {**DETAIL, "stage": "specialist"}
+        assert (
+            service.submit_for_subject(
+                session, "owner", message="ignored retry", client_request_id=request_id
+            )
+            == state
+        )
+        assert service.state_for_subject(session, "other").messages == []
+    assert len(agent.calls) == 2

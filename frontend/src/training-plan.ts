@@ -1,3 +1,4 @@
+import { clarificationMessage } from './assistant-clarification'
 import type { SupportingReference } from './components/supporting-references'
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
@@ -38,7 +39,7 @@ export async function createInitialTrainingProposal(accessToken: string): Promis
   if (response.status === 403) throw new Error('Você não tem permissão para gerar seu rascunho de treino.')
   if (response.status === 422) {
     const data = await response.json().catch(() => ({}))
-    if (data.detail === 'assistant_clarification_required') throw new Error('Confirme seus relatos relevantes no assistente ou consulte seu instrutor antes de gerar a proposta.')
+    if (data.detail === 'assistant_clarification_required') throw new Error(clarificationMessage(data.clarification, 'Confirme seus relatos relevantes no assistente ou consulte seu instrutor antes de gerar a proposta.'))
     throw new Error('Conclua seu onboarding e confira as informações antes de gerar seu rascunho de treino.')
   }
   if (response.status === 503) throw new Error('A geração por IA está indisponível no momento. Tente novamente.')

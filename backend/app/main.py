@@ -45,7 +45,10 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(AssistantError)
     async def assistant_error(request, error):
-        return JSONResponse(status_code=error.status, content={"detail": error.code})
+        content = {"detail": error.code}
+        if error.clarification is not None:
+            content["clarification"] = error.clarification
+        return JSONResponse(status_code=error.status, content=content)
 
     allowed_origins = [
         origin.strip()

@@ -53,12 +53,24 @@ class InitialTrainingGenerationService:
         self._drafts = draft_service or OnboardingDraftService()
         self._lifecycle = lifecycle_service or TrainingLifecycleService()
 
-    def generate_for_subject(self, session: Session, subject: str, *, commit: bool = True):
+    def generate_for_subject(
+        self,
+        session: Session,
+        subject: str,
+        *,
+        commit: bool = True,
+        chat_context: dict | None = None,
+    ):
         scope = self._drafts.resolve_client_scope(session, subject)
-        return self.generate_for_scope(session, scope, commit=commit)
+        return self.generate_for_scope(session, scope, commit=commit, chat_context=chat_context)
 
     def generate_for_scope(
-        self, session: Session, scope: ClientOnboardingScope, *, commit: bool = True
+        self,
+        session: Session,
+        scope: ClientOnboardingScope,
+        *,
+        commit: bool = True,
+        chat_context: dict | None = None,
     ):
         run = (
             AssistantRun(session, scope.client_id, "initial_plan", provider=self._provider)
@@ -90,6 +102,16 @@ class InitialTrainingGenerationService:
                 "instructor_review_required": True,
             },
         }
+        if chat_context is not None:
+            # Only the authenticated chat service supplies this already bounded,
+            # own-client history. It cannot replace authoritative onboarding.
+            context.update(
+                {
+                    key: chat_context[key]
+                    for key in ("current_user_message", "recent_messages", "conversation_summary")
+                    if key in chat_context
+                }
+            )
         if run:
             # A caller using commit=False owns its transaction/savepoint.
             # Closing it here breaks chat generation and its atomic reply.

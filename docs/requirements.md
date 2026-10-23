@@ -571,6 +571,24 @@ request must not invoke the provider twice. Processing status must expire after
 bounded execution, and a superseded attempt must not publish late results.
 Raw-message retention and atomic reply/memory/plan persistence remain unchanged.
 
+**Actionable clarification (RF-15/RF-18/RF-19, owner request 2026-10-22):**
+when the assistant cannot proceed because of missing client information,
+insufficient retrieved evidence, conflicting evidence, or unsupported guidance,
+return a bounded pt-BR explanation of the specific gap and a question or next
+step. Retain the structured reason and originating stage with the owning client's
+chat reply under the existing 30-day retention policy. Clarification completes
+the chat turn, survives refresh, permits a new answer, and is idempotent on retry;
+it must not save a rejected plan/draft or memory proposal. Unknown reasons must
+remain explicitly unspecified rather than being inferred. Operational logs may
+contain only allowlisted categories, never the private explanation. Direct plan
+and adaptation requests expose the same explanation through their controlled
+error response. A subsequent explicit initial-plan request can use the bounded
+own-client chat context, without overriding authoritative onboarding restrictions
+or treating an answer to a question as automatic plan-generation consent.
+Acceptance: verify saved/refreshable explanations, new-message continuation,
+UUID replay, account isolation, transcript expiration, stale-request rejection,
+no rejected mutations, and unchanged provider-failure handling.
+
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
 change could be useful and offer a non-binding draft suggestion. The client

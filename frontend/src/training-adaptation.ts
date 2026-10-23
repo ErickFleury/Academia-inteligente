@@ -1,3 +1,4 @@
+import { clarificationMessage } from './assistant-clarification'
 import type { SupportingReference } from './components/supporting-references'
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
@@ -30,7 +31,7 @@ async function adaptationError(response: Response): Promise<never> {
   if (response.status === 409) throw new Error('Já existe um rascunho ou o treino mudou. Recarregue e revise antes de continuar.')
   if (response.status === 422) {
     const data = await response.json().catch(() => ({}))
-    if (data.detail === 'assistant_clarification_required') throw new Error('Confirme seus relatos relevantes no assistente ou consulte seu instrutor antes de gerar a proposta.')
+    if (data.detail === 'assistant_clarification_required') throw new Error(clarificationMessage(data.clarification, 'Confirme seus relatos relevantes no assistente ou consulte seu instrutor antes de gerar a proposta.'))
     throw new Error('Confira seu treino atual e as informações da alteração antes de continuar.')
   }
   if (response.status === 503) throw new Error('A proposta de alteração está indisponível no momento. Tente novamente.')

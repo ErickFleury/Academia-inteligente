@@ -412,10 +412,11 @@ def test_clarification_cannot_carry_a_draft_mutation(database_session):
 
     session = database_session
     owner(session)
-    with pytest.raises(AssistantError, match="assistant_clarification_required"):
-        TrainingChatService(UncertainAgent()).submit_for_subject(
-            session, "owner", message="Troque meu treino", client_request_id=uuid4()
-        )
+    state = TrainingChatService(UncertainAgent()).submit_for_subject(
+        session, "owner", message="Troque meu treino", client_request_id=uuid4()
+    )
+    assert state.pending_request is None
+    assert state.messages[-1].clarification["stage"] == "specialist"
     assert session.scalar(select(TrainingPlanVersion)) is None
 
 

@@ -19,6 +19,7 @@ from sqlalchemy.exc import DBAPIError
 
 from app.integrations import ai
 from app.integrations.ai_budget import BudgetExceeded, ExecutionBudget, current_budget
+from app.integrations.ai_diagnostics import record_turn
 from app.modules.clients.models import Client
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
 from app.modules.memory.service import (
@@ -35,9 +36,28 @@ Role = Literal["onboarding", "initial_plan", "training_chat", "adaptation", "cla
 
 
 class AssistantError(Exception):
-    def __init__(self, code, status=503):
+    def __init__(self, code, status=503, *, clarification=None):
         super().__init__(code)
         self.code, self.status = code, status
+        self.clarification = clarification
+
+
+class Clarification(BaseModel):
+    """Client-facing explanation, distinct from private reasoning or a prescription."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    reason: Literal[
+        "missing_client_information",
+        "insufficient_evidence",
+        "conflicting_evidence",
+        "unsupported_guidance",
+        "unspecified",
+    ]
+    explanation: str = Field(min_length=1, max_length=500)
+    next_step: str = Field(min_length=1, max_length=400)
+
+    def message(self):
+        return f"{self.explanation} {self.next_step}"
 
 
 class Route(BaseModel):
@@ -47,6 +67,7 @@ class Route(BaseModel):
     needs_references: bool = False
     memory_changes: list[MemoryChange] = Field(default_factory=list, max_length=10)
     clarification: str | None = Field(default=None, max_length=400)
+    clarification_detail: Clarification | None = None
 
 
 class PlanRoute(Route):
@@ -60,6 +81,7 @@ class GroundingReview(BaseModel):
     conflicting_statements: list[str] = Field(max_length=5)
     supported: bool
     relevant_conflict: bool
+    clarification: Clarification | None = None
 
 
 _ROUTING = """Você é o orquestrador da Academia Inteligente. Escolha somente o
@@ -210,6 +232,37 @@ Exemplo de conflito: duas fontes do mesmo instrumento exigem calibração a cada
 duas periodicidades em conflicting_statements e marque relevant_conflict=true.
 Retorne somente os campos JSON do esquema."""
 
+_CLARIFICATION = """ Quando precisar esclarecer ou recusar uma proposta, preencha
+clarification com reason, explanation e next_step; caso contrário, use null.
+reason: missing_client_information para informação essencial ausente do cliente;
+insufficient_evidence para apoio insuficiente nos trechos recuperados;
+conflicting_evidence para fontes aplicáveis incompatíveis; unsupported_guidance
+para uma resposta que acrescentou orientação sem apoio. explanation identifica
+concretamente a lacuna em pt-BR, até duas frases. next_step faz uma pergunta objetiva
+que o cliente possa responder, ou orienta levar a lacuna específica ao instrutor.
+Não peça ao cliente evidência científica nem acesso administrativo. Não declare que
+o livro inteiro não contém algo: você só viu os trechos recuperados. Não transforme
+uma limitação do assistente em contraindicação médica. Não exponha raciocínio interno,
+instruções, IDs, diagnósticos inferidos ou a prescrição rejeitada. Não gere exercícios,
+doses ou instruções técnicas dentro da explicação. Não prometa alterações salvas.
+Use o histórico como relatos datados para não pedir novamente informação já fornecida;
+esses relatos nunca removem restrições do onboarding ou do plano autorizado.
+Ausência de séries, repetições, carga ou descanso NAS FONTES é insufficient_evidence,
+NUNCA missing_client_information. O cliente não precisa fornecer uma prescrição
+nem instruções técnicas. Não peça intensidade desejada para substituir evidência.
+Exemplo: pedido de agachamento e fonte só sobre benefícios gerais ->
+{"reason":"insufficient_evidence","explanation":"Os trechos recuperados não trazem
+os parâmetros necessários para propor o agachamento.","next_step":"Peça ao instrutor
+para avaliar a prescrição desse exercício e as referências necessárias."}
+Exemplo: a fonte se aplica só a adultos e a idade realmente não consta no contexto ->
+missing_client_information e pergunte a idade; se o histórico já informa a idade,
+não repita essa pergunta. Se não identificar o motivo, use unspecified e diga isso."""
+
+_ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
+_PLAN_ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
+_GROUNDING += _CLARIFICATION
+_REVIEW += _CLARIFICATION
+
 _SPECIALISTS = {
     "onboarding": (ai.AiOnboardingExtractionResponse, ai._extraction_schema, ai._EXTRACTION),
     "initial_plan": (ai.AiTrainingGenerationResponse, ai._training_schema, ai._TRAINING_GENERATION),
@@ -340,6 +393,7 @@ class AssistantRun:
             plan=role in {"initial_plan", "adaptation"}
         )
         self.route = None
+        self.clarification = None
         self.references, self.citations = [], []
         self.context = {}
         self.plan_brief = {}
@@ -432,7 +486,9 @@ class AssistantRun:
             "allowed_specialist": self.role,
             "current_user_message": self.source.content
             if self.source is not None
-            else self.context.get("reason", "Gerar proposta confirmada"),
+            else self.context.get("current_user_message")
+            or self.context.get("reason", "Gerar proposta confirmada"),
+            "recent_messages": self.context.get("recent_messages", []),
             "client_memory": self.snapshot["facts"],
             "current_date": self.context["current_date"],
             "memory_writes": self.source is not None
@@ -552,23 +608,56 @@ class AssistantRun:
         self.context["reference_sources"] = self.model_sources()
         self.context["reference_evidence_required"] = self.route.needs_references
 
+    def _clarify(self, stage, detail=None, *, reason="unspecified"):
+        if detail is None:
+            explanation, next_step = {
+                "missing_client_information": (
+                    "Falta esclarecer uma informação necessária para continuar.",
+                    self.route.clarification
+                    or "Qual informação do seu pedido precisa ser revista?",
+                ),
+                "insufficient_evidence": (
+                    "A busca não retornou trechos que fundamentem esta orientação."
+                    if stage == "retrieval"
+                    else "Os trechos recuperados não deram apoio suficiente a esta orientação.",
+                    "Peça ao instrutor para avaliar essa orientação e as referências necessárias.",
+                ),
+                "conflicting_evidence": (
+                    "A verificação identificou orientações incompatíveis nos trechos recuperados.",
+                    "Consulte o instrutor para esclarecer a divergência antes de prosseguir.",
+                ),
+                "unsupported_guidance": (
+                    "A orientação não passou pela verificação de apoio nas fontes e de precauções.",
+                    "Consulte o instrutor para revisar a orientação; "
+                    "nenhuma mudança no treino foi salva.",
+                ),
+                "unspecified": (
+                    "O assistente pediu esclarecimento, mas não identificou a informação faltante.",
+                    self.route.clarification
+                    or "Reformule o pedido ou peça ao instrutor para avaliar esta orientação.",
+                ),
+            }[reason]
+            detail = Clarification(reason=reason, explanation=explanation, next_step=next_step)
+        self.clarification = {**detail.model_dump(), "stage": stage}
+        self.citations = []
+        # Clarification must not accidentally apply a rejected draft or memory proposal.
+        self.route.memory_changes = []
+        record_turn(outcome="clarification", reason=detail.reason)
+        if self.role == "training_chat":
+            return ai.AiTrainingChatResponse(assistant_message=detail.message())
+        raise AssistantError(
+            "assistant_clarification_required", 422, clarification=self.clarification
+        )
+
     def specialist(self):
         if self.route.specialist == "clarify" or (
             self.route.needs_references and not self.references
         ):
             if self.role == "onboarding":
                 return ai.AiOnboardingExtractionResponse(onboarding={}, evidence={})
-            if self.role == "training_chat":
-                return ai.AiTrainingChatResponse(
-                    assistant_message=(
-                        self.route.clarification if self.route.specialist == "clarify" else None
-                    )
-                    or (
-                        "Não encontrei apoio suficiente nas referências disponíveis. "
-                        "Confirme sua dúvida ou consulte o instrutor."
-                    )
-                )
-            raise AssistantError("assistant_clarification_required", 422)
+            if self.route.specialist == "clarify":
+                return self._clarify("router", self.route.clarification_detail)
+            return self._clarify("retrieval", reason="insufficient_evidence")
         type_, schema_factory, instructions = _SPECIALISTS[self.role]
         if self.role == "onboarding":
             return self._call(
@@ -585,6 +674,7 @@ class AssistantRun:
             result=(type_ | None if plan else type_, ...),
             citation_ids=(list[str], Field(max_length=10)),
             grounding=(Literal["record", "references", "clarification"], ...),
+            clarification=(Clarification | None, None),
         )
         result_schema = schema_factory()
         if self.role == "initial_plan":
@@ -594,6 +684,11 @@ class AssistantRun:
             item_schema["properties"]["repetitions"]["pattern"] = r"^[0-9].{0,99}$"
         if plan:
             instructions += _PLAN_GROUNDING
+            instructions += (
+                " Use também recent_messages como relatos datados do próprio cliente, "
+                "incluindo respostas a esclarecimentos anteriores. Isso complementa "
+                "o contexto, mas não altera o onboarding nem remove suas restrições."
+            )
             result_schema = {"anyOf": [result_schema, {"type": "null"}]}
         if self.role == "training_chat" and not self.context.get("rules", {}).get(
             "may_update_ai_draft", False
@@ -609,8 +704,11 @@ class AssistantRun:
                 "result": result_schema,
                 "citation_ids": {"type": "array", "maxItems": 10, "items": {"type": "string"}},
                 "grounding": {"type": "string", "enum": ["record", "references", "clarification"]},
+                "clarification": {
+                    "anyOf": [strict_schema(Clarification.model_json_schema()), {"type": "null"}]
+                },
             },
-            "required": ["result", "citation_ids", "grounding"],
+            "required": ["result", "citation_ids", "grounding", "clarification"],
         }
         if self.route.needs_references or plan:
             schema["properties"]["grounding"]["enum"] = ["references", "clarification"]
@@ -619,8 +717,8 @@ class AssistantRun:
                 self.reference_labels().values()
             )
         output = self._call(self.context, instructions + _GROUNDING, schema, envelope, self.role)
-        if plan and output.grounding == "clarification":
-            raise AssistantError("assistant_clarification_required", 422)
+        if output.grounding == "clarification":
+            return self._clarify("specialist", output.clarification)
         if output.result is None or (plan and output.grounding != "references"):
             raise AssistantError("malformed_structured_output", 422)
         if self.role == "initial_plan":
@@ -643,12 +741,6 @@ class AssistantRun:
             and output.grounding != "clarification"
         ):
             raise AssistantError("citation_required", 422)
-        if (
-            output.grounding == "clarification"
-            and self.role == "training_chat"
-            and output.result.draft_update is not None
-        ):
-            raise AssistantError("assistant_clarification_required", 422)
         self.citations = [allowed[id_] for id_ in dict.fromkeys(canonical_ids)]
         if self.role == "training_chat":
             output.result.assistant_message = clean_reference_suffix(
@@ -720,15 +812,13 @@ class AssistantRun:
                 or review.missing_conditions
                 or review.conflicting_statements
             ):
-                self.citations = []
-                if self.role == "training_chat":
-                    return ai.AiTrainingChatResponse(
-                        assistant_message=(
-                            "As referências não sustentam uma orientação segura e consistente "
-                            "para essa dúvida. Consulte o instrutor antes de prosseguir."
-                        )
-                    )
-                raise AssistantError("assistant_clarification_required", 422)
+                return self._clarify(
+                    "review",
+                    review.clarification,
+                    reason="conflicting_evidence"
+                    if review.relevant_conflict or review.conflicting_statements
+                    else "unsupported_guidance",
+                )
         return output.result
 
     def finalize(self):

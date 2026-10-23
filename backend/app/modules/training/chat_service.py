@@ -72,6 +72,7 @@ class TrainingChatMessage:
     adaptation_suggested: bool
     adaptation_reason: str | None
     reference_citations: list[dict] = field(default_factory=list)
+    clarification: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -214,6 +215,8 @@ class TrainingChatService:
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
         run = None
+        initial_reply = None
+        clarification = None
         try:
             initial_reply = self._initial_plan_reply(session, subject, client_id, context)
             if initial_reply is not None:
@@ -229,11 +232,19 @@ class TrainingChatService:
                     run.prepare(context)
                     response = run.specialist()
                     run.finalize()
+                    clarification = run.clarification
                 else:
                     response = self._retry(lambda: self._provider.training_chat(context))
-        except AssistantError:
+        except AssistantError as error:
             session.rollback()
-            raise
+            if error.code != "assistant_clarification_required" or error.clarification is None:
+                raise
+            clarification = error.clarification
+            run = None
+            response = AiTrainingChatResponse(
+                assistant_message=f"{clarification['explanation']} {clarification['next_step']}"
+            )
+            record_turn(outcome="clarification", reason=clarification["reason"])
         except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
             session.rollback()
             raise
@@ -268,14 +279,15 @@ class TrainingChatService:
                     "não há um único rascunho disponível para edição. "
                     "Seu plano atual só pode mudar após revisão profissional."
                 )
-        elif initial_reply is None and self._claims_saved_change(content):
+        elif clarification is None and initial_reply is None and self._claims_saved_change(content):
             record_turn(outcome="draft_blocked", reason="unsupported_save_claim")
             content = (
                 "Nenhuma alteração foi salva no treino nesta mensagem. "
                 "Diga qual mudança deseja fazer no rascunho para eu ajudar."
             )
         elif (
-            initial_reply is None
+            clarification is None
+            and initial_reply is None
             and context["current_training_plan"] is None
             and self._offers_initial_plan(content)
         ):
@@ -290,6 +302,7 @@ class TrainingChatService:
             sequence=self._next(session, conversation.id),
             reply_to_client_request_id=client_request_id,
             reference_citations=run.public_citations() if run else None,
+            clarification=clarification,
             adaptation_suggested=response.adaptation_suggested and can_suggest_adaptation,
             adaptation_reason=response.adaptation_reason
             if response.adaptation_suggested and can_suggest_adaptation
@@ -448,7 +461,9 @@ class TrainingChatService:
         try:
             # The input/claim was committed before inference. The outer request
             # now owns rollback of both the proposal and its eventual reply.
-            self._generation.generate_for_subject(session, subject, commit=False)
+            self._generation.generate_for_subject(
+                session, subject, commit=False, chat_context=context
+            )
         except CompletedOnboardingRequiredError:
             return "Revise e conclua seu onboarding antes de gerar o rascunho de treino."
         except TrainingGenerationUnavailableError:
@@ -806,6 +821,7 @@ class TrainingChatService:
                 adaptation_suggested=message.adaptation_suggested,
                 adaptation_reason=message.adaptation_reason,
                 reference_citations=message.reference_citations or [],
+                clarification=message.clarification,
             )
             for message in session.scalars(statement.order_by(TrainingAiMessage.sequence)).all()
         ]

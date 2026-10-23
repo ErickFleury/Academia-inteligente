@@ -23,6 +23,11 @@ _OUTCOMES = {
     "draft_blocked",
 }
 _REASONS = {
+    "missing_client_information",
+    "insufficient_evidence",
+    "conflicting_evidence",
+    "unsupported_guidance",
+    "unspecified",
     "none",
     "unsupported_answer",
     "invalid_measurement",
@@ -120,6 +125,12 @@ def observe_turn(operation: str):
                     metadata["reason"] = _allowed(
                         getattr(error, "code", None), _REASONS, "unclassified"
                     )
+                    clarification = getattr(error, "clarification", None)
+                    if clarification:
+                        metadata["outcome"] = "clarification"
+                        metadata["reason"] = _allowed(
+                            clarification.get("reason"), _REASONS, "unclassified"
+                        )
                 raise
             finally:
                 metadata["duration_ms"] = round((perf_counter() - started) * 1000, 2)
