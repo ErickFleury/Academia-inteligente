@@ -20,6 +20,7 @@ from sqlalchemy.exc import DBAPIError
 from app.integrations import ai
 from app.integrations.ai_budget import BudgetExceeded, ExecutionBudget, current_budget
 from app.integrations.ai_diagnostics import record_turn
+from app.modules.assistant.client_questions import ClientField, available_fields, render_questions
 from app.modules.clients.models import Client
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
 from app.modules.memory.service import (
@@ -62,6 +63,7 @@ class Clarification(BaseModel):
     ]
     explanation: str = Field(max_length=500)
     next_step: str = Field(min_length=1, max_length=800)
+    missing_fields: list[ClientField] = Field(default_factory=list, max_length=10)
 
     def message(self):
         return " ".join(part for part in (self.explanation, self.next_step) if part)
@@ -251,14 +253,23 @@ duas periodicidades em conflicting_statements e marque relevant_conflict=true.
 Retorne somente os campos JSON do esquema."""
 
 _CLARIFICATION = """ Quando precisar esclarecer ou recusar uma proposta, preencha
-clarification com reason, explanation e next_step; caso contrário, use null.
+clarification; caso contrário, use null. Fale diretamente com a pessoa que está
+lendo, nunca com outro agente. Não escreva 'peça ao cliente', 'confirme com o cliente'
+ou instruções internas. Dados pessoais vêm do onboarding, histórico e memória,
+NUNCA das referências: um livro não precisa informar a idade ou experiência do cliente.
 reason: missing_client_information para informação essencial ausente do cliente;
 insufficient_evidence para apoio insuficiente nos trechos recuperados;
 conflicting_evidence para fontes aplicáveis incompatíveis; unsupported_guidance
 para uma resposta que acrescentou orientação sem apoio. explanation identifica
 concretamente a lacuna em pt-BR, em uma frase curta apenas quando necessária.
-Para missing_client_information, use explanation="" e coloque em next_step todas
-as perguntas essenciais que já consegue identificar, juntas, em uma lista curta.
+Para missing_client_information, use explanation="" e selecione em missing_fields
+TODOS os campos pessoais essenciais ainda ausentes, dentre unanswered_client_fields.
+O backend escreve as perguntas diretamente ao cliente; next_step pode ser 'Responder
+às perguntas'. Não selecione todos os campos disponíveis por padrão: somente os
+necessários para o pedido. Dados presentes, inclusive experiência none e respostas
+de saúde false, já foram respondidos. current_limitation_impact pergunta o impacto
+atual de uma limitação registrada, não repete seu histórico; use só se esse impacto
+for necessário e desconhecido. Para os outros motivos, missing_fields=[].
 Pergunte só o que falta no contexto: não repita informações nem faça uma entrevista
 de uma pergunta por mensagem. Para lacuna de evidência, next_step orienta levar
 a lacuna específica ao instrutor. Não peça confirmação para retomar um plano já
@@ -274,11 +285,13 @@ Ausência de séries, repetições, carga ou descanso NAS FONTES é insufficient
 NUNCA missing_client_information. O cliente não precisa fornecer uma prescrição
 nem instruções técnicas. Não peça intensidade desejada para substituir evidência.
 Exemplo: pedido de agachamento e fonte só sobre benefícios gerais ->
-{"reason":"insufficient_evidence","explanation":"Os trechos recuperados não trazem
+{"reason":"insufficient_evidence","missing_fields":[],
+"explanation":"Os trechos recuperados não trazem
 os parâmetros necessários para propor o agachamento.","next_step":"Peça ao instrutor
 para avaliar a prescrição desse exercício e as referências necessárias."}
 Exemplo: a fonte se aplica só a adultos e a idade realmente não consta no contexto ->
-missing_client_information e pergunte a idade; se o histórico já informa a idade,
+missing_client_information, missing_fields=["age"], explanation="";
+se o histórico já informa a idade,
 não repita essa pergunta. Se não identificar o motivo, use unspecified e diga isso."""
 
 _ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
@@ -418,6 +431,7 @@ class AssistantRun:
         )
         self.route = None
         self.clarification = None
+        self.unanswered_client_fields = []
         self.references, self.citations = [], []
         self.context = {}
         self.plan_brief = {}
@@ -540,7 +554,15 @@ class AssistantRun:
                 self.role == "initial_plan" and self.context.get("resume_initial_plan")
             )
             routing_instructions = _PLAN_ROUTING
-        route_schema = strict_schema(route_type.model_json_schema())
+        self.unanswered_client_fields = available_fields(self.context, self.plan_brief)
+        if self.role == "initial_plan":
+            # Selecting exercises is part of creating the requested plan.
+            self.unanswered_client_fields = [
+                field for field in self.unanswered_client_fields if field != "target_exercise"
+            ]
+        self.context["unanswered_client_fields"] = self.unanswered_client_fields
+        routing_context["unanswered_client_fields"] = self.unanswered_client_fields
+        route_schema = self._question_schema(route_type.model_json_schema())
         memory_schema = route_schema["$defs"]["MemoryChange"]
         # Text must equal its source quote. Have the model choose that quote
         # once; persistence still validates it against the original event.
@@ -641,6 +663,16 @@ class AssistantRun:
         self.context["reference_sources"] = self.model_sources()
         self.context["reference_evidence_required"] = self.route.needs_references
 
+    def _question_schema(self, schema):
+        schema = strict_schema(schema)
+        definition = schema.get("$defs", {}).get("Clarification", schema)
+        fields = definition["properties"]["missing_fields"]
+        if self.unanswered_client_fields:
+            fields["items"]["enum"] = self.unanswered_client_fields
+        else:
+            fields["maxItems"] = 0
+        return schema
+
     def _clarify(self, stage, detail=None, *, reason="unspecified"):
         if detail is None:
             explanation, next_step = {
@@ -671,6 +703,29 @@ class AssistantRun:
                 ),
             }[reason]
             detail = Clarification(reason=reason, explanation=explanation, next_step=next_step)
+        if detail.reason == "missing_client_information":
+            fields = list(
+                dict.fromkeys(
+                    field
+                    for field in detail.missing_fields
+                    if field in self.unanswered_client_fields
+                )
+            )
+            if fields:
+                detail = Clarification(
+                    reason=detail.reason,
+                    explanation="",
+                    missing_fields=fields,
+                    next_step=render_questions(fields),
+                )
+            else:
+                # Do not publish internal prose or fabricate a missing personal fact.
+                detail = Clarification(
+                    reason="unspecified",
+                    explanation="",
+                    next_step="Não consegui identificar o que falta para continuar. "
+                    "Tente novamente ou peça ajuda ao instrutor.",
+                )
         self.clarification = {**detail.model_dump(), "stage": stage}
         self.citations = []
         # Clarification must not accidentally apply a rejected draft or memory proposal.
@@ -738,7 +793,10 @@ class AssistantRun:
                 "citation_ids": {"type": "array", "maxItems": 10, "items": {"type": "string"}},
                 "grounding": {"type": "string", "enum": ["record", "references", "clarification"]},
                 "clarification": {
-                    "anyOf": [strict_schema(Clarification.model_json_schema()), {"type": "null"}]
+                    "anyOf": [
+                        self._question_schema(Clarification.model_json_schema()),
+                        {"type": "null"},
+                    ]
                 },
             },
             "required": ["result", "citation_ids", "grounding", "clarification"],
@@ -798,6 +856,7 @@ class AssistantRun:
                     ),
                     "question": self.context.get("current_user_message")
                     or self.context.get("reason", "Gerar proposta confirmada"),
+                    "unanswered_client_fields": self.unanswered_client_fields,
                     "answer": {
                         **output.result.model_dump(mode="json"),
                         **(
@@ -834,7 +893,7 @@ class AssistantRun:
                     if proposal
                     else ""
                 ),
-                strict_schema(GroundingReview.model_json_schema()),
+                self._question_schema(GroundingReview.model_json_schema()),
                 GroundingReview,
                 "orchestrator",
             )

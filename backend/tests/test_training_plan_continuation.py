@@ -42,6 +42,7 @@ class CollectingAgent(Agent):
                         "clarification": {
                             "reason": "missing_client_information",
                             "explanation": "",
+                            "missing_fields": ["age", "weekly_availability"],
                             "next_step": "Me diga:\n- Qual é sua idade?\n"
                             "- Quantos dias por semana pode treinar?",
                         },
@@ -74,7 +75,7 @@ def test_all_questions_are_saved_together_and_final_answer_generates_without_con
     first = send(database_session, service, "Gere meu treino")
     assert (
         first.messages[-1].content
-        == "Me diga:\n- Qual é sua idade?\n- Quantos dias por semana pode treinar?"
+        == "- Qual é sua idade?\n- Quantos dias por semana você pode treinar?"
     )
     database_session.expire_all()  # Reload must not lose the original request's continuation.
     agent.answer_received = True
@@ -101,6 +102,7 @@ def test_partial_answer_keeps_request_pending_without_creating_an_unsupported_pl
     service, agent = setup(database_session, rollout)
     send(database_session, service, "Gere meu treino")
     state = send(database_session, service, "Tenho 35 anos.")
+    assert state.messages[-1].content == "Quantos dias por semana você pode treinar?"
     assert state.messages[-1].clarification["initial_plan_requested"] is True
     assert database_session.scalar(select(TrainingPlanVersion)) is None
     assert agent.plan_calls == 2

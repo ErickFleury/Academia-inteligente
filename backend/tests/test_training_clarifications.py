@@ -18,9 +18,11 @@ from app.modules.training.router import training_chat_response
 
 DETAIL = {
     "reason": "missing_client_information",
-    "explanation": "Preciso confirmar sua faixa etária para verificar a aplicação das referências.",
+    "explanation": "",
     "next_step": "Qual é sua idade?",
+    "missing_fields": ["age"],
 }
+PRIVATE_EXPLANATION = "Preciso confirmar sua faixa etária para verificar as referências."
 
 
 class ClarifyingAgent(Agent):
@@ -33,7 +35,7 @@ class ClarifyingAgent(Agent):
                     "result": None,
                     "citation_ids": [],
                     "grounding": "clarification",
-                    "clarification": DETAIL,
+                    "clarification": {**DETAIL, "explanation": PRIVATE_EXPLANATION},
                 }
             )
         return super().structured(context, instructions, schema, type_, role=role)
@@ -136,6 +138,7 @@ def test_review_explanation_replaces_rejected_prescription(database_session, rol
     original = Agent.structured
     detail = {
         "reason": "conflicting_evidence",
+        "missing_fields": [],
         "explanation": "Os trechos divergem sobre o intervalo de descanso para esta proposta.",
         "next_step": "Consulte o instrutor para definir qual orientação se aplica ao seu caso.",
     }
@@ -176,7 +179,7 @@ def test_clarification_logs_category_without_private_explanation(
     events = [json.loads(r.message) for r in caplog.records if r.name == "uvicorn.error.ai"]
     assert events[-1]["outcome"] == "clarification"
     assert events[-1]["reason"] == "missing_client_information"
-    assert DETAIL["explanation"] not in caplog.text
+    assert PRIVATE_EXPLANATION not in caplog.text
     assert DETAIL["next_step"] not in caplog.text
     assert "owner@example.test" not in caplog.text
 

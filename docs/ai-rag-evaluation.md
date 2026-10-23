@@ -1021,3 +1021,55 @@ Verification:
   The rendering probe verifies grouping after gaps are identified, not exhaustive
   discovery of every missing fact. Earlier grounding/applicability limitations
   and the human accuracy acceptance gate remain open.
+
+## Structured client questions — 2026-10-23
+
+Scope: RF-15/RF-18, correction to the direct-reply implementation.
+Rollback checkpoint: `9d88e35`.
+
+A test-account reply exposed specialist instructions ("Peça ao cliente") and
+claimed that references lacked personal information already recorded in onboarding.
+A regression through the real chat/generation services reproduced the exact
+symptom before the fix: the saved reply contained agent-facing prose instead of
+"Qual é sua idade?". Prompt instructions alone did not enforce the intended output.
+
+Personal clarifications now select bounded `missing_fields`. The backend removes
+answered fields and renders direct pt-BR questions, together, without publishing
+the model's explanation or next-step prose for this category. The router,
+specialist and final review receive schema options constrained to unanswered
+fields. Explicit negative health answers and experience `none` count as answers;
+clear recent first-person age/availability/duration statements also prevent
+repetition. Assistant claims, uncertain statements, third-party ages and old
+memory reports do not establish current answers. Existing memory retention is
+unchanged. Selecting exercises is the initial-plan agent's responsibility, so
+that route cannot ask the client to name a target exercise.
+
+If a personal clarification selects no valid missing field, a controlled message
+acknowledges that the assistant could not identify the gap; internal prose is not
+published and no plan is saved. Other evidence/referral categories retain their
+specific explanations. This is a bounded question catalog, not a new medical
+assessment or a guarantee that the model identifies every needed condition.
+
+Verification:
+
+- The original regression and related clarification/continuation checks passed
+  (**23 tests**). A full run exposed an accent-folding bug where Portuguese `é`
+  was split as conjunction `e`; splitting before normalization fixed it, with a
+  regression for a third-party age statement.
+- A read-only replay used the explicitly authorized test account's onboarding
+  and the configured local model/runtime. It saved no
+  messages, memory or plans. The first run exposed an unnecessary target-exercise
+  question for general plan creation; that option is now excluded for initial
+  plans. The corrected replay returned five direct questions together in
+  **5.76 seconds**, without repeated onboarding questions or reference-based
+  explanations of missing personal details. It clarified at the router before
+  retrieval; it did not evaluate the uploaded sources or generate a plan.
+- Final full backend suite with PostgreSQL checks: **759 passed**, with two
+  existing Alembic configuration warnings. Ruff lint/format and diff checks passed.
+- Existing plan-continuation tests still cover grouping, partial answers,
+  automatic generation after sufficient answers, cancellation, client isolation
+  and request replay. Source-grounding accuracy and human acceptance remain open;
+  this replay verifies clarification behavior, not the correctness of a full plan.
+
+No frontend changes or database migration are needed. Previously saved messages
+are preserved; the new rendering applies to subsequent replies.
