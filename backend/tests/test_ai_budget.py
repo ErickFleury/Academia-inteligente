@@ -97,7 +97,7 @@ def test_adapter_caps_output_and_uses_explicit_role_model(monkeypatch, hosted):
         assert captured[0]["store"] is False
         assert captured[0]["truncation"] == "disabled"
     else:
-        assert captured[0]["options"]["num_ctx"] == 12288
+        assert captured[0]["options"]["num_ctx"] == 8192
         assert captured[0]["options"]["temperature"] == 0
 
 
@@ -286,7 +286,7 @@ def test_chat_window_is_fixed_and_never_silently_grows(monkeypatch):
 
 @pytest.mark.parametrize(
     ("plan_window", "global_window", "expected"),
-    [(None, "32768", 12288), ("16384", "32768", 16384), ("16384", "8192", 8192)],
+    [(None, "32768", 8192), ("16384", "32768", 16384), ("16384", "8192", 8192)],
 )
 def test_plan_calls_reuse_fixed_window_without_dropping_context(
     monkeypatch, plan_window, global_window, expected

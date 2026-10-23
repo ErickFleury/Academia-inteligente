@@ -444,7 +444,7 @@ class _Provider:
                     # and reloads the model between calls on memory-limited GPUs.
                     # This is a capacity setting, not a token estimate: Ollama
                     # checks the full prompt; overflow/partial output fails closed.
-                    allocated = min(window, int(os.getenv(window_setting, "12288")))
+                    allocated = min(window, int(os.getenv(window_setting, "8192")))
                     body["options"] = {
                         "num_predict": reserved,
                         "num_ctx": allocated,
