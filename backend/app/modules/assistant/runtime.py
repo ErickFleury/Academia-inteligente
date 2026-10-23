@@ -36,6 +36,7 @@ from app.modules.assistant.client_questions import (
     question_catalog,
     render_questions,
 )
+from app.modules.assistant.presentation import client_message, exposes_retrieval
 from app.modules.clients.models import Client
 from app.modules.knowledge.prescription_evidence import allocation_options, source_parameters
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
@@ -46,6 +47,7 @@ from app.modules.memory.service import (
     proposal_evidence,
     utc,
 )
+from app.modules.onboarding import health_updates
 from app.modules.onboarding.models import Onboarding, OnboardingAiMessage
 from app.modules.training.models import TrainingAiMessage, TrainingPlan, TrainingPlanVersion
 
@@ -98,6 +100,7 @@ class Route(BaseModel):
     answer_updates: list[AnswerUpdate] = Field(default_factory=list, max_length=13)
     plan_action: Literal["none", "generate_initial_plan", "edit_draft"] = "none"
     draft_followup_action: Literal["resume", "replace", "cancel", "chat"] | None = None
+    health_update: health_updates.HealthUpdate | None = None
 
 
 class PlanRoute(Route):
@@ -131,8 +134,9 @@ def prescription_clarification(fields):
     gaps = [label for key, label in labels.items() if key in fields]
     return Clarification(
         reason="unsupported_guidance",
-        explanation="Ainda não encontrei apoio suficiente nas referências para estes pontos "
-        "do treino: " + ", ".join(gaps) + ".",
+        explanation="Não consegui definir com segurança estes pontos do treino: "
+        + ", ".join(gaps)
+        + ".",
         next_step="Um instrutor precisa avaliar esses pontos do treino.",
     )
 
@@ -477,7 +481,8 @@ Responda à mensagem atual em pt-BR, com frases ou itens breves, sem introduçã
 Limite-se ao que foi perguntado: uma pergunta sobre duração pede duração, sem
 acrescentar recomendações de intensidade, progressão ou outros assuntos não pedidos.
 Use o histórico, resumo e memórias como contexto datado; só fatos do próprio cliente.
-Correções explícitas atualizam o relato, nunca o onboarding ou plano autorizado.
+Correções de saúde no cadastro passam pelo fluxo confirmado do backend; planos
+aprovados permanecem inalterados. O cadastro atual prevalece sobre relatos anteriores.
 Não invente lembranças, diagnósticos, tratamentos ou orientações de medicação.
 Equipamentos da academia vêm de active_equipment_models; não invente disponibilidade
 nem ocupação. Referências gerais não comprovam que a academia possui um aparelho.
@@ -490,6 +495,47 @@ indique Meu treino; caso contrário ofereça gerar uma proposta com uma única p
 de confirmação. Responda perguntas técnicas diretamente, sem oferecer planos à toa.
 Campos grounding e citation_ids pertencem somente ao JSON externo, nunca à mensagem.
 """
+
+_HEALTH_ROUTING = """ Há um fluxo próprio para revisar dados de saúde concluídos.
+authoritative_health_records contém o cadastro ATUAL, não uma proibição de corrigir
+informações. Para um relato explícito que o altera, preencha health_update.action=propose,
+field com a categoria afetada, kind=corrected (registro errado), resolved (problema
+anterior passou) ou changed (outra mudança). present e details descrevem a categoria
+INTEIRA após a mudança; preserve outras queixas/medicamentos/condições ainda presentes.
+quote é um trecho literal completo da mensagem atual. Não infira cura, diagnóstico
+ou suspensão de tratamento. 'Melhorou' não significa 'passou'. 'Nenhum movimento
+difícil' ou 'não tenho limitações' não elimina dor específica: use action=clarify e
+pergunte sobre a diferença. 'Não sinto mais dor no joelho' permite propor atualização.
+O backend mostra a alteração completa e exige confirmação antes de salvar.
+Se houver pending_health_update, interprete a resposta livremente: confirm apenas
+para consentimento claro ao conteúdo exibido; cancel para desistência; clarify
+para dúvida; propose para uma correção adicional (mostre uma nova proposta).
+Em confirm, quote deve conter a mensagem atual COMPLETA, não apenas um 'sim' isolado.
+Nunca use confirm sem proposta pendente. Cancelamento ou mudança de assunto não
+autoriza alterar saúde. Use null se a mensagem não trata da atualização de saúde.
+Não confunda confirmação de saúde com nova autorização de treino; um pedido de edição
+já pendente pode continuar depois dessa confirmação. Não substitua a atualização por
+uma simples memory_change quando a pessoa corrige explicitamente o cadastro.
+Na geração inicial já solicitada, correções e confirmações de saúde mantêm
+followup_action=resume, salvo quando a pessoa cancelar o pedido de treino.
+"""
+
+_CLIENT_PRESENTATION = """ A mensagem ao cliente deve ser natural e direta.
+Não mencione fontes, livros, referências, citações, trechos recuperados, vetores,
+buscas ou verificações internas. Mantenha grounding e citation_ids no JSON interno.
+Explique a limitação prática e o próximo passo, sem revelar a implementação:
+'Não consigo definir essa duração com segurança. O instrutor precisa revisar esse
+ajuste.' Não invente uma contraindicação nem oculte uma precaução real para evitar
+falar de fontes. Dados de saúde anteriores são históricos quando contradizem uma
+atualização explicitamente confirmada em authoritative_health_records; não ressuscite
+a queixa antiga a partir de memória ou conversa. Uma ausência de dor relatada não é
+liberação médica, e restrições do plano aprovado continuam sob revisão do instrutor.
+"""
+_ROUTING += _CLIENT_PRESENTATION
+_PLAN_ROUTING += _CLIENT_PRESENTATION
+_GROUNDING += _CLIENT_PRESENTATION
+_REVIEW += _CLIENT_PRESENTATION
+_READ_ONLY_CHAT += _CLIENT_PRESENTATION
 
 
 def enabled(client_id):
@@ -607,6 +653,8 @@ class AssistantRun:
         self.references, self.citations = [], []
         self.context = {}
         self.plan_brief = {}
+        self.health_reply = None
+        self.health_change = None
 
     def reference_labels(self):
         return {ref["passage_id"]: f"R{i}" for i, ref in enumerate(self.references, 1)}
@@ -689,6 +737,7 @@ class AssistantRun:
                     "health_conditions",
                 )
             }
+            self.context["health_record_updated_at"] = utc(onboarding.updated_at).isoformat()
         if self.snapshot["event_after"]:
             # Only new source events may write memory. Historical summaries are
             # unnecessary once compact facts exist, and could restore corrections.
@@ -711,6 +760,21 @@ class AssistantRun:
                 raise AssistantError("memory_event_expired", 409)
         if self.source is not None:
             self.context["current_user_message"] = self.source.content
+        if (
+            self.role in {"training_chat", "initial_plan"}
+            and self.source
+            and self.context.get("pending_health_update")
+        ):
+            try:
+                self.context["pending_health_update"] = health_updates.pending_update(
+                    self.session,
+                    self.client_id,
+                    self.source,
+                    self.context["pending_health_update"],
+                    self.snapshot["event_after"],
+                )
+            except health_updates.HealthUpdateError as error:
+                raise AssistantError(error.code, error.status) from None
         routing_context = {
             "allowed_specialist": self.role,
             "current_user_message": self.source.content
@@ -719,6 +783,8 @@ class AssistantRun:
             or self.context.get("reason", "Gerar proposta confirmada"),
             "recent_messages": self.context.get("recent_messages", []),
             "client_memory": self.snapshot["facts"],
+            "authoritative_health_records": self.context.get("authoritative_health_records", {}),
+            "health_record_updated_at": self.context.get("health_record_updated_at"),
             "current_date": self.context["current_date"],
             "memory_writes": self.source is not None
             and self.role in {"onboarding", "training_chat"},
@@ -744,6 +810,14 @@ class AssistantRun:
         plan = self.role in {"initial_plan", "adaptation"}
         route_type = PlanRoute if plan else Route
         routing_instructions = _ROUTING
+        health_allowed = (
+            self.role in {"training_chat", "initial_plan"}
+            and self.source is not None
+            and onboarding
+            and onboarding.status == "completed"
+        )
+        if health_allowed:
+            routing_context["pending_health_update"] = self.context.get("pending_health_update")
         if routing_context.get("pending_draft_edit"):
             routing_instructions += _DRAFT_FOLLOWUP
         if plan:
@@ -762,6 +836,8 @@ class AssistantRun:
                 self.role == "initial_plan" and self.context.get("resume_initial_plan")
             )
             routing_instructions = _PLAN_ROUTING
+        if health_allowed:
+            routing_instructions += _HEALTH_ROUTING
         self.context["client_answers"] = client_answers(self.context)
         self.context["question_catalog"] = question_catalog(self.context)
         # Carry one compact answer state, not a copy of it inside every past
@@ -769,6 +845,7 @@ class AssistantRun:
         for message in self.context.get("recent_messages", []):
             if message.get("clarification"):
                 message["clarification"].pop("client_answers", None)
+                message["clarification"].pop("pending_health_update", None)
                 if message["clarification"].get("reason") != "missing_client_information":
                     # A failed suggestion is neither a requested exercise nor
                     # evidence. Keep its outcome without feeding rejected prose
@@ -786,6 +863,9 @@ class AssistantRun:
         # This same call may correct or withdraw an earlier answer. Constrain
         # the questions after interpreting those updates, not to stale gaps.
         route_schema = strict_schema(route_type.model_json_schema())
+        if not health_allowed:
+            route_schema["properties"].pop("health_update")
+            route_schema["required"].remove("health_update")
         if self.role == "training_chat" and self.context.get("editable_training_draft"):
             route_schema["properties"]["plan_action"]["enum"] = ["none", "edit_draft"]
         if not routing_context.get("pending_draft_edit"):
@@ -896,6 +976,19 @@ class AssistantRun:
             }
         if self.route.specialist not in {self.role, "clarify"}:
             raise AssistantError("delegation_not_allowed", 422)
+        if self.route.health_update:
+            if not health_allowed:
+                raise AssistantError("health_update_not_allowed", 422)
+            self._prepare_health_update()
+            if self.health_reply:
+                if (
+                    self.route.plan_action == "generate_initial_plan"
+                    and not self.context.get("current_training_plan")
+                    and not self.context.get("editable_training_draft")
+                ):
+                    self.clarification["initial_plan_requested"] = True
+                self.route.plan_action = "none"
+                return
         if self.role == "training_chat":
             if self.context.get("pending_draft_edit"):
                 action = self.route.draft_followup_action
@@ -1006,6 +1099,91 @@ class AssistantRun:
             ]
         self.context["unanswered_client_fields"] = self.unanswered_client_fields
 
+    def _prepare_health_update(self):
+        """Stage a confirmed health revision, or interrupt with a reviewable proposal."""
+        update = self.route.health_update
+        self.route.memory_changes = []
+        if self.context.get("pending_draft_edit") and self.route.draft_followup_action == "resume":
+            self.context["rules"]["may_update_ai_draft"] = True
+        pending = health_updates.pending_update(
+            self.session,
+            self.client_id,
+            self.source,
+            self.context.get("pending_health_update"),
+            self.snapshot["event_after"],
+        )
+        message = ""
+        try:
+            if update.action == "propose":
+                pending = health_updates.proposal(self.session, self.client_id, self.source, update)
+                if pending:
+                    message = health_updates.confirmation_message(pending)
+                else:
+                    message = (
+                        "Para atualizar seu cadastro sem apagar outra informação: "
+                        "o registro anterior estava errado, o problema passou completamente "
+                        "ou ainda existe alguma queixa? Diga o que mudou."
+                    )
+            elif update.action == "confirm" and pending:
+                if health_updates.normalized(update.quote) != health_updates.normalized(
+                    self.source.content
+                ):
+                    raise health_updates.HealthUpdateError()
+                if health_updates.confirmation(self.source.content):
+                    self.health_change = pending
+                    proposal = health_updates.HealthUpdate.model_validate(pending["proposal"])
+                    changes = {
+                        proposal.field: proposal.present,
+                        health_updates.PAIRS[proposal.field]: proposal.details,
+                    }
+                    self.context["authoritative_health_records"].update(changes)
+                    self.context["health_record_updated_at"] = datetime.now(UTC).isoformat()
+                    for key in ("relevant_onboarding", "completed_onboarding"):
+                        if key in self.context:
+                            self.context[key].update(changes)
+                    self.context["confirmed_health_update"] = changes
+                    self._refresh_unanswered_fields()
+                    if self.role == "initial_plan":
+                        return
+                    # Continue only an already authorized draft operation, with
+                    # the effective new health state. Finalization is atomic.
+                    if (
+                        self.context.get("pending_draft_edit")
+                        and self.route.draft_followup_action == "resume"
+                    ):
+                        return
+                    message = "Atualizei seu cadastro de saúde conforme você confirmou."
+                    pending = None
+                else:
+                    message = (
+                        "Ainda não alterei seu cadastro. "
+                        "Diga o que precisa ser corrigido ou confirme a alteração apresentada."
+                    )
+            elif update.action == "cancel":
+                pending = None
+                message = "Tudo bem, mantive seu cadastro de saúde como estava."
+            elif pending:
+                message = health_updates.confirmation_message(pending)
+            else:
+                previous = self.context.get("authoritative_health_records", {}).get(
+                    health_updates.PAIRS[update.field]
+                )
+                message = (
+                    (f"Você informou antes: {previous}. " if previous else "")
+                    + "Esse registro estava errado, o problema passou completamente "
+                    "ou ainda existe alguma queixa? Diga o que mudou para eu atualizar."
+                )
+        except health_updates.HealthUpdateError as error:
+            raise AssistantError(error.code, error.status) from None
+        self.health_reply = message
+        self.clarification = {
+            "reason": "missing_client_information",
+            "stage": "router",
+            "explanation": "",
+            "next_step": message,
+            **({"pending_health_update": pending} if pending else {}),
+        }
+
     def _question_schema(self, schema):
         schema = strict_schema(schema)
         definition = schema.get("$defs", {}).get("Clarification", schema)
@@ -1025,17 +1203,15 @@ class AssistantRun:
                     or "Qual informação do seu pedido precisa ser revista?",
                 ),
                 "insufficient_evidence": (
-                    "A busca não retornou trechos que fundamentem esta orientação."
-                    if stage == "retrieval"
-                    else "Os trechos recuperados não deram apoio suficiente a esta orientação.",
-                    "Peça ao instrutor para avaliar essa orientação e as referências necessárias.",
+                    "Não consigo definir essa orientação com segurança.",
+                    "Peça ao instrutor para avaliar esse ajuste antes de prosseguir.",
                 ),
                 "conflicting_evidence": (
-                    "A verificação identificou orientações incompatíveis nos trechos recuperados.",
+                    "Não consegui determinar qual orientação se aplica ao seu caso.",
                     "Consulte o instrutor para esclarecer a divergência antes de prosseguir.",
                 ),
                 "unsupported_guidance": (
-                    "A orientação não passou pela verificação de apoio nas fontes e de precauções.",
+                    "Não consegui confirmar que essa orientação é adequada ao seu caso.",
                     "Consulte o instrutor para revisar a orientação; "
                     "nenhuma mudança no treino foi salva.",
                 ),
@@ -1075,6 +1251,12 @@ class AssistantRun:
                     next_step="Não consegui identificar o que falta para continuar. "
                     "Tente novamente ou peça ajuda ao instrutor.",
                 )
+        elif exposes_retrieval(detail.message()):
+            detail = Clarification(
+                reason=detail.reason,
+                explanation="Não consegui definir esse ajuste com segurança.",
+                next_step="Peça ao instrutor para revisar esse ajuste antes de prosseguir.",
+            )
         self.clarification = {**detail.model_dump(), "stage": stage}
         if not self.clarification["questions"]:
             self.clarification.pop("questions")
@@ -1118,6 +1300,15 @@ class AssistantRun:
         return bool(additional)
 
     def specialist(self):
+        if self.health_reply:
+            if self.role == "initial_plan":
+                raise AssistantError(
+                    "assistant_clarification_required", 422, clarification=self.clarification
+                )
+            # Model replies have a 600-character limit. The caller renders the
+            # complete server-built health comparison, which may include two
+            # validated 2,000-character fields; never truncate reviewed data.
+            return ai.AiTrainingChatResponse(assistant_message="Confira a atualização do cadastro.")
         if self.route.specialist == "clarify" or (
             self.route.needs_references and not self.references
         ):
@@ -1167,7 +1358,8 @@ class AssistantRun:
                 "assistant_message. Use client_answers e o histórico; não pergunte o que "
                 "já foi respondido. pending_draft_edit.request identifica o pedido original "
                 "a retomar após esclarecimentos, preservando os itens não afetados. "
-                "Novos relatos nunca apagam restrições do onboarding."
+                "Use o cadastro atual em authoritative_health_records; uma revisão confirmada "
+                "pelo backend pode atualizar queixas anteriores. Planos aprovados não mudam."
             )
         if self.role == "initial_plan":
             # Generated dose strings must begin with a quantity (count, range
@@ -1550,6 +1742,8 @@ class AssistantRun:
                     if review.relevant_conflict or review.conflicting_statements
                     else "unsupported_guidance",
                 )
+        if hasattr(output.result, "assistant_message"):
+            output.result.assistant_message = client_message(output.result.assistant_message)
         return output.result
 
     def finalize(self):
@@ -1587,6 +1781,10 @@ class AssistantRun:
                 if latest != self.source.id:
                     raise AssistantError("assistant_state_conflict", 409)
             self.knowledge.validate_citations(self.session, self.citations)
+            if self.health_change:
+                health_updates.apply_confirmed(
+                    self.session, self.client_id, self.source, self.health_change
+                )
             if self.source is not None and self.role in {
                 "onboarding",
                 "training_chat",
@@ -1609,7 +1807,7 @@ class AssistantRun:
                     self.session, self.client_id, self.snapshot["revision"]
                 )
             self.budget.remaining()
-        except (MemoryError, KnowledgeError) as error:
+        except (MemoryError, KnowledgeError, health_updates.HealthUpdateError) as error:
             raise AssistantError(error.code, error.status) from None
         except BudgetExceeded as error:
             raise AssistantError(str(error)) from None

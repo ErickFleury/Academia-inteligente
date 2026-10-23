@@ -268,7 +268,9 @@ class TrainingChatService:
                 # Save verified personal answers, never its rejected plan.
                 run.finalize()
             response = AiTrainingChatResponse(
-                assistant_message=" ".join(
+                assistant_message="Confira a atualização do cadastro."
+                if run and run.health_reply
+                else " ".join(
                     part
                     for part in (clarification["explanation"], clarification["next_step"])
                     if part
@@ -282,7 +284,7 @@ class TrainingChatService:
         claimed = session.get(TrainingAiMessage, user.id, populate_existing=True)
         if claimed is None or claimed.processing_token != token or not self._processing(claimed):
             raise ConcurrentTrainingUpdateError
-        content = response.assistant_message
+        content = run.health_reply if run and run.health_reply else response.assistant_message
         if response.draft_update is not None:
             if editable_draft is not None and context["rules"]["may_update_ai_draft"]:
                 self._apply_draft_update(
@@ -337,6 +339,8 @@ class TrainingChatService:
                 "draft_revision": draft_revision,
                 "request_event_id": pending["request_event_id"] if pending else str(user.id),
             }
+        if run and run.health_change and not run.health_reply:
+            content = "Atualizei seu cadastro de saúde conforme você confirmou. " + content
         assistant = TrainingAiMessage(
             conversation_id=conversation.id,
             role="assistant",
@@ -506,6 +510,11 @@ class TrainingChatService:
         )
         return {
             "pending_draft_edit": pending_edit,
+            "pending_health_update": (
+                (history[-1].clarification or {}).get("pending_health_update")
+                if history and history[-1].role == "assistant"
+                else None
+            ),
             "resume_initial_plan": resume_initial_plan,
             "current_user_message": message,
             "current_event_id": str(message_id),
@@ -628,7 +637,16 @@ class TrainingChatService:
         except InvalidTrainingGenerationError:
             raise TrainingChatDraftUpdateError from None
         record_turn(outcome="draft_saved")
-        return "Criei seu rascunho. Confira em Meu treino; ele aguarda aprovação do instrutor."
+        run = context.get("_initial_plan_run")
+        updated = (
+            "Atualizei seu cadastro de saúde conforme você confirmou. "
+            if run and run.health_change
+            else ""
+        )
+        return (
+            updated
+            + "Criei seu rascunho. Confira em Meu treino; ele aguarda aprovação do instrutor."
+        )
 
     @staticmethod
     def _initial_plan_guidance(context: dict) -> str:

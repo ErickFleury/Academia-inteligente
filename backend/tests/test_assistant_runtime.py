@@ -630,7 +630,9 @@ def test_grounding_review_and_saved_reply_receive_only_clean_prose(database_sess
     state = TrainingChatService(provider).submit_for_subject(
         session, "owner", message="Explique o treino.", client_request_id=uuid4()
     )
-    assert state.messages[-1].content == "Pratique conforme o guia."
+    assert "guia" not in state.messages[-1].content
+    assert "grounding" not in state.messages[-1].content
+    assert state.messages[-1].reference_citations
     assert provider.calls[-1][1]["answer"]["assistant_message"] == "Pratique conforme o guia."
 
 

@@ -132,6 +132,7 @@ class InitialTrainingGenerationService:
                         "recalled_messages",
                         "conversation_summary",
                         "resume_initial_plan",
+                        "pending_health_update",
                     )
                     if key in chat_context
                 }

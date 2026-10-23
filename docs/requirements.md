@@ -2292,10 +2292,12 @@ The owner approved the following design decisions:
   must reject deleted citations before committing. Unrelated sources, client
   records and existing compact citation metadata in saved conversations/plans
   remain intact. The UI uses pt-BR confirmation, progress and failure feedback.
-- Expose compact supporting references for substantive knowledge-based training
-  guidance. Missing or conflicting evidence requires clarification or instructor
-  referral. Ordinary conversation and explanations of saved plans need not
-  require a document citation.
+- Retain compact supporting references internally for substantive knowledge-based
+  training guidance. The 2026-10-23 owner amendment removes citation footers and
+  source/retrieval commentary from client chat and training-plan screens. Missing
+  or conflicting evidence still requires plain-language clarification or instructor
+  referral. Ordinary conversation and explanations of saved plans need not require
+  a document citation. Administrative source management is unchanged.
 - Run orchestration and specialists inside the existing FastAPI modular
   monolith, retaining provider-independent OpenAI/Ollama adapters.
 - Use PostgreSQL full-text search plus pgvector semantic retrieval for shared
@@ -2406,3 +2408,40 @@ unverified. Supporting rationale:
 [ADR 0002](adr/0002-durable-client-memory.md), plus
 [ADR 0003](adr/0003-postgresql-reference-retrieval.md) and
 [ADR 0004](adr/0004-local-operation-and-optional-hosted-ai.md).
+
+### Confirmed health corrections and client reply presentation — 2026-10-23
+
+Scope: owner-approved refinement of RF-12, RF-16, RF-18/RF-19 and the RAG/memory
+amendment. This adds an explicit revision workflow for completed client-reported
+health data; it does not reopen onboarding or authorize AI plan approval.
+
+- The chat may propose a correction to an erroneous health report, a report that
+  a prior complaint has resolved, or another current-status change. Interpret
+  free-form input, but distinguish complete resolution from partial improvement
+  and generic answers about mobility. Ask a targeted clarification when unclear.
+- Before changing completed health data, show the previous and proposed complete
+  value of the affected health category and ask for explicit client confirmation.
+  The proposal is bound to an actual message in that client's conversation and
+  the current health-record revision. A confirmation cannot change the displayed
+  proposal. Further corrections require a new proposal. Other health categories,
+  completion status and date, and approved/current plans remain unchanged.
+- Cancellation, topic changes, uncertain/negative answers, stale record revisions,
+  forgetting cutoffs, expired messages, or another client's source cannot authorize
+  a health revision. Keep confirmation metadata within existing chat retention.
+- Validate the completed-health schema and persist the confirmed revision, a
+  non-content audit entry identifying the affected fields and correction kind,
+  and the reply in one transaction. Replays are idempotent; failures preserve the
+  prior health record. Current confirmed health takes precedence over older
+  conversational reports without implying clinical clearance. Instructor approval
+  remains mandatory for plan activation.
+- Keep evidence checks and compact citation metadata internally. Remove citation
+  footers from client chat, draft, current-plan and adaptation displays. Client
+  replies explain practical limits and next steps without discussing retrieval,
+  references or source excerpts. Missing evidence still prevents unsupported
+  prescriptions; administrative reference management is unchanged.
+
+Acceptance: regression coverage demonstrates confirmation/reload/retry, correction
+versus resolution, partial changes preserving unrelated facts, cancellation,
+uncertainty, stale/foreign/expired proposals, transaction rollback, use of updated
+health on later turns, and continuation of a pending draft edit. Client UI tests
+verify hidden references; evidence-rejection tests continue to enforce grounding.

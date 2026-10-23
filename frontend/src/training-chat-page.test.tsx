@@ -27,7 +27,8 @@ test('sends a Portuguese client training-chat message with a frontend UUID', asy
   fireEvent.change(screen.getByLabelText('Escreva sua pergunta'), { target: { value: 'Como faço o agachamento?' } })
   fireEvent.keyDown(screen.getByLabelText('Escreva sua pergunta'), { key: 'Enter' })
   expect(await screen.findByText('Faça com controle.')).toBeInTheDocument()
-  expect(screen.getByLabelText('Referências de apoio')).toHaveTextContent('Manual de exercícios · versão 2 · página 3 · trecho 4')
+  expect(screen.queryByLabelText('Referências de apoio')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Manual de exercícios/)).not.toBeInTheDocument()
   expect(fetchMock.mock.calls[3][0]).toBe('http://localhost:8000/training/chat/messages')
   expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({
     message: 'Como faço o agachamento?', client_request_id: '00000000-0000-4000-8000-000000000016',

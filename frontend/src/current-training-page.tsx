@@ -2,7 +2,6 @@ import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from
 import { useEffect, useState } from 'react'
 
 import { ClientShell } from './components/application-shell'
-import { SupportingReferences } from './components/supporting-references'
 import { RouterButtonLink } from './components/router-button-link'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { createInitialTrainingProposal, getCurrentTrainingPlan, getOwnTrainingDrafts, type CurrentTrainingPlan, type TrainingPlanDraft } from './training-plan'
@@ -90,7 +89,6 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                   <Typography color="primary.main" variant="overline">Plano atual</Typography>
                   <Typography component="h2" variant="h3" sx={{ overflowWrap: 'anywhere' }}>{plan.name}</Typography>
                   <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{plan.objective}</Typography>
-                  <SupportingReferences references={plan.reference_citations} />
                   <Typography variant="body2">Instrutor responsável: {plan.responsible_instructor_name ?? 'Não informado'}</Typography>
                   <Typography color="text.secondary" variant="body2">Data de aprovação: {plan.approved_at ? new Date(plan.approved_at).toLocaleDateString('pt-BR') : 'Não informada'}</Typography>
                 </Stack>
@@ -129,7 +127,6 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                 </Stack>
                 <Typography component="h2" sx={{ overflowWrap: 'anywhere' }} variant="h3">{draft.name}</Typography>
                 <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{draft.objective}</Typography>
-                <SupportingReferences references={draft.reference_citations} />
                 <StatusNotice severity="info">Este é apenas um rascunho. Seu instrutor precisa revisar, aprovar e ativar a ficha antes que ela se torne seu treino atual.</StatusNotice>
                 <Stack divider={<Divider flexItem />} spacing={0}>
                   {draft.items.map((item) => <Box component="article" key={item.position} sx={{ minWidth: 0, py: 1.5 }}>

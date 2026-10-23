@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import { WorkspaceIcon } from './components/workspace-presentation'
 import { ClientShell } from './components/application-shell'
-import { SupportingReferences } from './components/supporting-references'
 import { RouterButtonLink } from './components/router-button-link'
 import { ChatMessage, EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { getOwnTrainingChat, sendTrainingChatMessage, type TrainingChat } from './training-chat'
@@ -150,7 +149,7 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
         <Stack aria-live="polite" aria-relevant="additions" spacing={1.5} sx={{ minHeight: 280, p: { xs: 1, sm: 2 }, borderRadius: 3, bgcolor: 'rgba(16,24,27,0.35)' }}>
           {chat.messages.length === 0 && !unsaved
             ? <EmptyState description="Pergunte sobre os exercícios, séries, repetições ou orientações do seu treino atual." title="Seu espaço para tirar dúvidas" />
-            : chat.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role} footer={<SupportingReferences references={item.reference_citations} />}>{item.content}</ChatMessage>)}
+            : chat.messages.map((item, index) => <ChatMessage key={`${item.created_at}-${index}`} role={item.role}>{item.content}</ChatMessage>)}
           {unsaved && !chat.messages.some((item) => item.client_request_id === unsaved.id) && <ChatMessage role="user">{unsaved.message}</ChatMessage>}
           {busy && <Box role="status" aria-label="Status da solicitação"><StatusNotice severity="info">{pollError ? 'Não foi possível verificar o andamento. Tentando reconectar…' : processing ? 'O assistente está processando sua solicitação. Você pode atualizar a página; a resposta aparecerá aqui.' : 'Enviando sua mensagem… Aguardando confirmação do recebimento.'}</StatusNotice></Box>}
         </Stack>
@@ -175,7 +174,6 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
         {adaptations.map((proposal) => <Card component="section" key={proposal.id}><CardContent><Stack spacing={1}>
           <Typography component="h2" variant="h3">Proposta de alteração</Typography>
           <Typography>{proposal.explanation}</Typography>
-          <SupportingReferences references={proposal.reference_citations} />
           <Typography color="text.secondary" variant="body2">Status: {proposal.status === 'proposed' ? 'Aguardando sua revisão' : proposal.status === 'pending_instructor_review' ? 'Aguardando revisão do instrutor' : proposal.status === 'client_rejected' ? 'Você recusou esta proposta' : proposal.status}</Typography>
           {proposal.status === 'proposed' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button onClick={() => void reviewProposal(proposal.id, true)} variant="contained">Aceitar para revisão profissional</Button><Button onClick={() => void reviewProposal(proposal.id, false)} variant="outlined">Recusar</Button></Stack>}
         </Stack></CardContent></Card>)}

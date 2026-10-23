@@ -349,3 +349,45 @@ Operational rollback: set `AI_PROVIDER=ollama` in the local `.env` and run
 `docker compose up -d --no-deps --force-recreate backend`. The existing local
 model configuration and model volumes were retained. Git checkout alone does
 not revert the ignored deployment configuration.
+
+### Confirmed health corrections and client presentation (2026-10-23)
+
+The owner approved correcting outdated completed health information through chat
+and hiding source details from clients. Checkpoint: `5df79c8`. Canonical scope and
+acceptance are recorded in the corresponding amendment to `docs/requirements.md`.
+
+The router now sees the current health record and can propose a correction,
+resolved complaint, or changed status using an actual current-message quotation.
+The backend shows the complete previous/proposed health category and requests
+confirmation. It rechecks the original own-conversation source, record snapshot
+and revision, forgetting cutoff, expiry, and full confirmation utterance. Free-form
+intent interpretation remains model-driven; ambiguity or denial cannot clear the
+record. Another correction starts a new reviewable proposal. Long health fields
+are displayed completely rather than truncated to the model's short-reply limit.
+
+Confirmed changes use completed-onboarding validation and a non-content audit
+entry, preserving unrelated categories, completion date, and approved/current
+plans. Persistence shares the reply transaction and existing client lock, domain
+revision check, request fencing and idempotency. Current health is used by later
+turns and by a resumed draft edit or initial plan request. Pending metadata uses
+existing expiring chat storage; no migration, dependency or data backfill is needed.
+The correction is a client report, not medical clearance. Existing saved records
+are not automatically rewritten when this code is deployed.
+
+Client chat, adaptation and plan screens no longer display citation footers.
+Prompts and controlled fallback replies omit source/retrieval commentary while
+the grounding checks and stored compact citations remain intact. Administrative
+reference management remains available. Previously saved prose is not rewritten.
+
+Validation: **849 backend tests passed**, including isolated PostgreSQL reload,
+retry and concurrent-update checks; **16 client UI tests passed**, frontend build,
+Ruff lint/format and Git whitespace checks passed. Two existing Alembic warnings
+and the existing frontend bundle-size warning remain. The full suite requires its
+isolated rollout/CORS settings instead of inheriting the LAN deployment values.
+OpenAI credentials were removed from test processes; no paid live evaluations or
+production account health/chat changes were performed. Live Luna interpretation
+and end-to-end answer quality still require user testing.
+
+The backend was recreated and returned HTTP 200 from `/health`; the loaded router
+includes health corrections. Runtime remains OpenAI `gpt-6-luna`, local Ollama
+`embeddinggemma`, and system-wide RAG. The secret-bearing `.env` is not committed.

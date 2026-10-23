@@ -112,7 +112,8 @@ def test_empty_retrieval_returns_explanation_instead_of_failed_request(database_
     assert state.pending_request is None
     assert state.messages[-1].clarification["reason"] == "insufficient_evidence"
     assert state.messages[-1].clarification["stage"] == "retrieval"
-    assert "busca" in state.messages[-1].content
+    assert "segurança" in state.messages[-1].content
+    assert "busca" not in state.messages[-1].content
     assert "instrutor" in state.messages[-1].content
     assert len(agent.calls) == 1
 
@@ -157,6 +158,8 @@ def test_review_explanation_replaces_rejected_prescription(database_session, rol
     )
     assert state.messages[-1].clarification == {
         **detail,
+        "explanation": "Não consegui definir esse ajuste com segurança.",
+        "next_step": "Peça ao instrutor para revisar esse ajuste antes de prosseguir.",
         "stage": "review",
         "initial_plan_requested": True,
     }
