@@ -336,3 +336,28 @@ def test_video_mentions_in_contents_do_not_become_exercise_headings():
     assert not chunks[0][2].startswith("Seção:")
     assert chunks[1][2].startswith("Seção: Split Jerk\n")
     assert not chunks[2][2].startswith("Seção:")
+
+
+def test_search_aliases_preserve_variation_original_terms_and_input_bound():
+    from app.modules.knowledge.search_terms import expand_search_terms
+
+    query = "Supino inclinado com barra ajudante"
+    expanded = expand_search_terms(query)
+    assert expanded.startswith(query)
+    assert "incline bench press" in expanded and "barbell" in expanded and "spotter" in expanded
+    assert "flat" not in expanded and expanded.count("bench press") == 1
+    assert expand_search_terms("hipertrofia séries") == "hipertrofia séries hypertrophy sets"
+    assert expand_search_terms("modelo Lótus F02") == "modelo Lótus F02"
+    assert expand_search_terms("English exercise name") == "English exercise name"
+    long_query = "supino " + "x" * 493
+    assert expand_search_terms(long_query) == long_query
+
+
+def test_bibliography_penalty_preserves_prose_and_measurements_cover_both_languages():
+    from app.modules.knowledge.service import bibliography_weight, measurement_terms
+
+    assert bibliography_weight("A study (2026) discusses 10 sets weekly.") == 1
+    assert bibliography_weight("Training. Journal. 2026;58(4):851. Other. 2024;21:10.") < 1
+    assert "weekly" in measurement_terms("frequência semanal")
+    assert "semana" in measurement_terms("weekly frequency")
+    assert "minute" in measurement_terms("minutos por dia")

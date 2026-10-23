@@ -590,8 +590,15 @@ def test_grounding_review_and_saved_reply_receive_only_clean_prose(database_sess
     assert provider.calls[-1][1]["answer"]["assistant_message"] == "Pratique conforme o guia."
 
 
+@pytest.mark.parametrize(
+    "query,content",
+    [
+        ("treino", "Orientação do manual."),
+        ("supino reto flat barbell bench press spotter rack", "Keep the bar secure on the rack."),
+    ],
+)
 def test_short_model_citations_resolve_to_real_ids_and_keep_source_identity(
-    database_session, rollout
+    database_session, rollout, query, content
 ):
     session = database_session
     owner(session)
@@ -605,10 +612,10 @@ def test_short_model_citations_resolve_to_real_ids_and_keep_source_identity(
             "title": "Manual",
             "version": 1,
             "location": "page:1",
-            "content": "Orientação do manual.",
+            "content": content,
         }
     ]
-    provider = Agent(route={"query": "treino", "needs_references": True})
+    provider = Agent(route={"query": query, "needs_references": True})
     provider.citations = ["R1"]
     state = TrainingChatService(provider).submit_for_subject(
         session, "owner", message="Explique o treino.", client_request_id=uuid4()
@@ -618,6 +625,9 @@ def test_short_model_citations_resolve_to_real_ids_and_keep_source_identity(
     assert context["reference_passages"][0]["passage_id"] == "R1"
     assert context["reference_sources"] == {"S1": {"title": "Manual", "version": 1}}
     assert "title" not in context["reference_passages"][0]
+    assert context["reference_passages"][0]["content"] == content
+    assert rollout.queries == [query]
+    assert [call[0] for call in provider.calls] == ["orchestrator", "training_chat", "orchestrator"]
 
 
 def test_plan_review_receives_backend_proposal_status_without_approving_plan(

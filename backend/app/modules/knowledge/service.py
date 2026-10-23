@@ -23,6 +23,7 @@ from app.integrations.document_text import (
 )
 from app.integrations.embeddings import EmbeddingProvider, HttpEmbeddingProvider
 from app.modules.knowledge.models import ReferencePassage, ReferenceSource, ReferenceVersion
+from app.modules.knowledge.search_terms import expand_search_terms
 
 
 class KnowledgeError(Exception):
@@ -210,13 +211,31 @@ def section_match(content, query):
 def measurement_terms(query):
     """Recall measurement-bearing passages when repeated headings dominate overlap."""
     terms = section_terms(query)
-    if terms & {"minuto", "hora", "tempo", "duracao", "segundo"}:
-        return "minuto hora segundo"
-    if terms & {"frequencia", "freq", "dia", "semana", "vez", "veze"}:
-        return "dia semana vez"
+    if terms & {"minuto", "hora", "tempo", "duracao", "segundo", "minute", "duration"}:
+        return "minuto hora segundo minute hour second"
+    if terms & {
+        "frequencia",
+        "freq",
+        "dia",
+        "semana",
+        "vez",
+        "veze",
+        "frequency",
+        "weekly",
+        "week",
+        "set",
+        "serie",
+    }:
+        return "dia semana vez day week weekly wk session set"
     if terms & {"carga", "quilo", "kg", "quilograma"}:
         return "quilo kg quilograma"
     return ""
+
+
+def bibliography_weight(content):
+    # A list of papers often repeats the question's vocabulary but supplies no
+    # guidance. Downrank multiple journal year/volume citations, never delete it.
+    return 0.2 if len(re.findall(r"\b(?:19|20)\d{2};\s*\d+", content)) >= 2 else 1.0
 
 
 class KnowledgeService:
@@ -430,6 +449,7 @@ class KnowledgeService:
     def search(self, session: Session, query: str, *, timeout: float = 10, limit: int = 5):
         if not query.strip() or len(query) > 500 or not 1 <= limit <= 10:
             raise KnowledgeError("reference_query_invalid")
+        query = expand_search_terms(query)
         base = (
             select(ReferencePassage)
             .join(ReferenceVersion)
@@ -449,7 +469,11 @@ class KnowledgeService:
             terms = func.replace(plain.cast(Text), " & ", " | ").cast(TSQUERY)
             lexical = session.scalars(
                 base.where(document.op("@@")(terms))
-                .order_by(func.ts_rank_cd(document, terms).desc(), ReferencePassage.id)
+                .order_by(
+                    func.ts_rank_cd(document, terms).desc(),
+                    ReferenceVersion.source_id,
+                    ReferencePassage.position,
+                )
                 .limit(20)
             ).all()
             if units := measurement_terms(query):
@@ -457,7 +481,11 @@ class KnowledgeService:
                 unit_terms = func.replace(unit_query.cast(Text), " & ", " | ").cast(TSQUERY)
                 focused = session.scalars(
                     base.where(document.op("@@")(terms), document.op("@@")(unit_terms))
-                    .order_by(func.ts_rank_cd(document, terms).desc(), ReferencePassage.id)
+                    .order_by(
+                        func.ts_rank_cd(document, terms).desc(),
+                        ReferenceVersion.source_id,
+                        ReferencePassage.position,
+                    )
                     .limit(20)
                 ).all()
         else:
@@ -487,8 +515,8 @@ class KnowledgeService:
                     else_=None,
                 )
                 semantic = session.scalars(
-                    compatible.where(distance <= 0.45)
-                    .order_by(distance, ReferencePassage.id)
+                    compatible.where(distance <= 0.60)
+                    .order_by(distance, ReferenceVersion.source_id, ReferencePassage.position)
                     .limit(20)
                 ).all()
             else:
@@ -500,12 +528,14 @@ class KnowledgeService:
                     )
 
                 semantic = sorted(
-                    (r for r in session.scalars(compatible) if distance(r) <= 0.45), key=distance
+                    (r for r in session.scalars(compatible) if distance(r) <= 0.60), key=distance
                 )[:20]
         except AiProviderError:
             pass  # Explicit lexical-only degradation; never switch provider.
         scores, candidates = {}, {}
-        for ranking, weight in ((lexical, 1), (semantic, 1), (focused, 2)):
+        # Cross-language evidence has less token overlap. Give the multilingual
+        # semantic ranking enough weight to survive incidental Portuguese words.
+        for ranking, weight in ((lexical, 1), (semantic, 4), (focused, 2)):
             for rank, passage in enumerate(ranking, 1):
                 candidates[passage.id] = passage
                 scores[passage.id] = scores.get(passage.id, 0) + weight / (60 + rank)
@@ -514,7 +544,13 @@ class KnowledgeService:
         ranked = sorted(
             scores,
             key=lambda key: (
-                -(scores[key] * (1 + 0.5 * min(3, section_match(candidates[key].content, query)))),
+                -(
+                    scores[key]
+                    * (1 + 0.5 * min(3, section_match(candidates[key].content, query)))
+                    * bibliography_weight(candidates[key].content)
+                ),
+                candidates[key].position,
+                str(candidates[key].version_id),
                 str(key),
             ),
         )

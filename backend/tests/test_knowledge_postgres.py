@@ -158,3 +158,61 @@ def test_duration_query_retrieves_measurements_not_repeated_population_headers(p
     with postgres_sessions() as session:
         refs = service.search(session, "minutos atividade física por dia jovens 6 a 17 anos")
         assert any("60 minutos" in r["content"] for r in refs)
+
+
+def test_cross_language_semantic_evidence_survives_portuguese_keyword_noise(postgres_sessions):
+    from app.integrations.embeddings import EmbeddingConfig
+
+    class BilingualEmbedding:
+        config = EmbeddingConfig(dimensions=2)
+
+        def embed(self, texts, *, purpose, timeout=None):
+            if purpose == "query":
+                return [[1.0, 0.0] for _ in texts]
+            return [[0.5, 0.8660254] if "Lat Pulldown" in value else [0.0, 1.0] for value in texts]
+
+    service = KnowledgeService(BilingualEmbedding())
+    english = upload(
+        postgres_sessions, service, body=("# Lat Pulldown\nLower the bar toward the upper chest.")
+    )
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, english)
+    noise = upload(
+        postgres_sessions,
+        service,
+        body="\n".join(
+            f"# Parte {i}\nCrianças brincam na parte superior da casa." for i in range(8)
+        ),
+    )
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, noise)
+    with postgres_sessions() as session:
+        hits = service.search(session, "puxada alta até parte superior do peito")
+        assert hits[0]["version_id"] == str(english["id"])
+        # Orthogonal embeddings without lexical overlap remain absent.
+        assert all("Crianças" not in hit["content"] for hit in service.search(session, "clavícula"))
+
+
+def test_equal_relevance_uses_document_order_instead_of_random_passage_ids(postgres_sessions):
+    from uuid import UUID
+
+    from sqlalchemy import select
+
+    from app.modules.knowledge.models import ReferencePassage
+
+    provider = FakeEmbedding()
+    service = KnowledgeService(provider)
+    version = upload(
+        postgres_sessions,
+        service,
+        body="\n".join(f"# Ajustes\nBanco etiqueta {i}." for i in range(10)),
+    )
+    service.import_next(postgres_sessions)
+    activate(postgres_sessions, service, version)
+    with postgres_sessions() as session:
+        for passage in session.scalars(select(ReferencePassage)):
+            passage.id = UUID(int=100 - passage.position)
+        session.commit()
+        provider.fail = True
+        hits = service.search(session, "banco")
+        assert [hit["location"] for hit in hits] == [f"text;passage:{i}" for i in range(1, 6)]
