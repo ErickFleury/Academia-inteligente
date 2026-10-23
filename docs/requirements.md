@@ -625,6 +625,30 @@ other answers across reload/context-window changes; corrections and topic change
 do not restart the interview; invented or other-client evidence cannot authorize
 generation; source-grounding, call/deadline limits and instructor approval remain.
 
+**Fluid training control (RF-15/RF-18, owner request 2026-10-23):** the chat
+interprets natural requests to generate a plan or modify the sole editable draft.
+Questions are relevant personal questions written by the model, not a fixed
+catalog or a required interview. Stable topic keys and backend validation retain
+answers across paraphrases, partial replies and corrections. Technical doses,
+exercise instructions and precautions must come from active reference evidence;
+never ask the client to supply a prescription to compensate for missing sources.
+Recall bounded earlier messages from the same retained conversation when useful,
+with original user-message provenance; summaries are not extraction evidence.
+Current, validated personal answers may become compact dated memory, including
+when the successful chat result is a clarification about missing evidence. This
+extends the temporary-only answer policy above: transcripts and temporary quotes
+still expire, while normalized facts follow the approved durable-memory lifecycle.
+Do not backfill old messages automatically, save rejected plan changes, restore
+forgotten facts, or let reports remove authoritative restrictions.
+Acceptance: relevant questions outside the legacy catalog work; natural explicit
+requests invoke generation/editing within lifecycle gates; earlier own answers
+are reused; current answers survive transcript expiration; corrections, manual
+edits and forgetting invalidate stale interpretations; uncertainty, provider
+failures, concurrent changes and retries cannot corrupt memory or plans. A source
+gap identifies the actual missing technical support without restarting a personal
+interview. Choose supported plan options when available, combining compatible
+programming and technique passages without inventing prescription parameters.
+
 **Approved interaction amendment (Task 17):** the assistant may proactively
 recognize from the authenticated client's own training conversation that a
 change could be useful and offer a non-binding draft suggestion. The client

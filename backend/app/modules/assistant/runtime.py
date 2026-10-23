@@ -29,8 +29,10 @@ from app.modules.assistant.answer_interpretation import (
 )
 from app.modules.assistant.client_questions import (
     ClientField,
+    ClientQuestion,
     available_fields,
     client_answers,
+    question_catalog,
     render_questions,
 )
 from app.modules.clients.models import Client
@@ -76,6 +78,7 @@ class Clarification(BaseModel):
     explanation: str = Field(max_length=500)
     next_step: str = Field(min_length=1, max_length=800)
     missing_fields: list[ClientField] = Field(default_factory=list, max_length=10)
+    questions: list[ClientQuestion] = Field(default_factory=list, max_length=6)
 
     def message(self):
         return " ".join(part for part in (self.explanation, self.next_step) if part)
@@ -90,6 +93,7 @@ class Route(BaseModel):
     clarification: str | None = Field(default=None, max_length=400)
     clarification_detail: Clarification | None = None
     answer_updates: list[AnswerUpdate] = Field(default_factory=list, max_length=13)
+    plan_action: Literal["none", "generate_initial_plan", "edit_draft"] = "none"
 
 
 class PlanRoute(Route):
@@ -151,6 +155,16 @@ durável: retorne memory_changes=[] para esses pedidos. Não confunda objetivos 
 de treino com comandos de alteração do plano. Onboarding só coleta dados pessoais,
 portanto não consulta documentos nem fornece orientação de exercícios."""
 
+_ROUTING += """ Interprete a intenção livremente. Em training_chat, plan_action=
+generate_initial_plan quando a pessoa pede para montar seu treino, inclusive por
+paráfrase; edit_draft quando pede uma alteração concreta no rascunho existente;
+none para dúvidas, hipóteses, cancelamentos e conversa comum. Uma pergunta sobre
+como gerar um plano não é um pedido para gerá-lo. plan_state informa os limites
+reais. Não peça confirmação extra de um pedido claro. O backend valida os estados.
+Para generate_initial_plan, escolha training_chat, query=null e needs_references=false:
+o especialista de geração fará a busca. Nunca transforme uma preferência isolada
+em autorização para criar ou editar treino."""
+
 _PLAN_ROUTING = """Você é o orquestrador da Academia Inteligente. Escolha somente
 allowed_specialist ou clarify se precisar esclarecer algo em português brasileiro.
 Não execute ações, não aprove treinos. Retorne somente o JSON do esquema, com
@@ -169,10 +183,11 @@ Não presuma idade, gestação ou população saudável a partir de dados ausent
 Restrições são relatos, nunca diagnósticos inferidos. Preserve nomes de exercícios
 solicitados em adaptações. Para planos, needs_references=true. Se faltar informação
 essencial, escolha clarify. Você escolhe buscas, não exercícios nem prescrições.
-Exemplo de busca de prescrição: 'prescrição treinamento resistido séries repetições descanso'.
-Inclua o nível de experiência quando relevante. Para treino inicial sem exercício
-escolhido, a busca complementar deve tratar das precauções para os relatos, não
-escolher um exercício novo. Não transforme sintomas em diagnósticos."""
+Não limite toda busca a musculação: escolha modalidades pertinentes ao objetivo.
+Use a segunda busca para complementar uma lacuna diferente: dosagem, técnica ou
+precauções aplicáveis. Inclua experiência quando relevante. Evite buscas só de
+definições. Não transforme sintomas em diagnósticos nem selecione um exercício
+específico que o cliente não pediu antes de consultar as fontes."""
 
 _PLAN_ROUTING += """ Se resume_initial_plan=true, já existe um pedido de plano
 aguardando respostas às perguntas da última mensagem. Preencha followup_action:
@@ -193,7 +208,12 @@ ausente, peça esclarecimento. Os relatos pessoais fundamentam objetivos/restri�
 não comprovam eficácia ou segurança de exercícios. Se faltar apoio, retorne
 result=null, citation_ids=[], grounding=clarification; NÃO invente um plano para
 preencher o esquema. Quando houver apoio, gere somente detalhes sustentados e cite
-os trechos correspondentes. Em repetitions, escreva somente a quantidade/faixa ou
+os trechos correspondentes. Combine orientações gerais de programação e instruções
+de execução quando forem compatíveis e aplicáveis: não exija que todos os parâmetros
+apareçam no mesmo trecho ou que o livro descreva este cliente individualmente.
+Escolha exercícios sustentados; um exercício sem apoio não impede outras opções
+adequadas às fontes e restrições. Nunca complete doses ausentes por conta própria.
+Em repetitions, escreva somente a quantidade/faixa ou
 duração indicada pela fonte, em pt-BR, sem prefixos, códigos ou palavras inventadas.
 Em load_guidance, preserve também as precauções e condições de parada do trecho.
 Não acrescente promessas de segurança ou benefícios não sustentados.
@@ -286,14 +306,17 @@ insufficient_evidence para apoio insuficiente nos trechos recuperados;
 conflicting_evidence para fontes aplicáveis incompatíveis; unsupported_guidance
 para uma resposta que acrescentou orientação sem apoio. explanation identifica
 concretamente a lacuna em pt-BR, em uma frase curta apenas quando necessária.
-Para missing_client_information, use explanation="" e selecione em missing_fields
-TODOS os campos pessoais essenciais ainda ausentes, dentre unanswered_client_fields.
-O backend escreve as perguntas diretamente ao cliente; next_step pode ser 'Responder
-às perguntas'. Não selecione todos os campos disponíveis por padrão: somente os
-necessários para o pedido. Dados presentes, inclusive experiência none e respostas
+Para missing_client_information, use explanation="", missing_fields=[] e questions
+com todas as perguntas pessoais essenciais ainda ausentes, até seis. Cada pergunta
+tem field (chave estável em inglês snake_case) e text (pergunta direta em pt-BR).
+question_catalog e unanswered_client_fields são exemplos e contexto, NÃO um formulário
+obrigatório nem limite de assuntos. Reutilize a chave para uma informação já conhecida;
+crie uma chave para outro assunto pertinente, como training_location. Não peça dados
+sem utilidade para o pedido. next_step pode ser 'Responder às perguntas'.
+Dados presentes, inclusive experiência none e respostas
 de saúde false, já foram respondidos. current_limitation_impact pergunta o impacto
 atual de uma limitação registrada, não repete seu histórico; use só se esse impacto
-for necessário e desconhecido. Para os outros motivos, missing_fields=[].
+for necessário e desconhecido. Para os outros motivos, missing_fields=[], questions=[].
 Pergunte só o que falta no contexto: não repita informações nem faça uma entrevista
 de uma pergunta por mensagem. Para lacuna de evidência, next_step orienta levar
 a lacuna específica ao instrutor. Não peça confirmação para retomar um plano já
@@ -308,15 +331,11 @@ esses relatos nunca removem restrições do onboarding ou do plano autorizado.
 Ausência de séries, repetições, carga ou descanso NAS FONTES é insufficient_evidence,
 NUNCA missing_client_information. O cliente não precisa fornecer uma prescrição
 nem instruções técnicas. Não peça intensidade desejada para substituir evidência.
-Exemplo: pedido de agachamento e fonte só sobre benefícios gerais ->
-{"reason":"insufficient_evidence","missing_fields":[],
-"explanation":"Os trechos recuperados não trazem
-os parâmetros necessários para propor o agachamento.","next_step":"Peça ao instrutor
-para avaliar a prescrição desse exercício e as referências necessárias."}
-Exemplo: a fonte se aplica só a adultos e a idade realmente não consta no contexto ->
-missing_client_information, missing_fields=["age"], explanation="";
-se o histórico já informa a idade,
-não repita essa pergunta. Se não identificar o motivo, use unspecified e diga isso."""
+Uma lacuna técnica deve identificar apenas o parâmetro realmente ausente, sem listar
+novas perguntas pessoais já respondidas. Se a fonte contém séries, não declare que
+faltam séries. Para informação pessoal ausente, formule a pergunta em questions;
+se o histórico já informa a resposta, não repita. Se não identificar o motivo,
+use unspecified e diga isso."""
 
 _ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
 _PLAN_ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
@@ -370,8 +389,10 @@ def valid_reference_query(query):
 def valid_plan_reference_query(query):
     # Personal measurements distracted retrieval from prescription evidence in
     # the reproduced failure. Do not send a rejected query to embeddings.
-    return valid_reference_query(query) and not re.search(
-        r"\b(?:altura|peso|height|weight)\s*[:=]?\s*\d", query, re.I
+    return (
+        valid_reference_query(query)
+        and "?" not in query
+        and not re.search(r"\b(?:altura|peso|height|weight)\s*[:=]?\s*\d", query, re.I)
     )
 
 
@@ -509,6 +530,8 @@ class AssistantRun:
             if self.source is not None
             else datetime.now(UTC).isoformat()
         )
+        if self.source is not None:
+            self.context["current_event_id"] = str(self.source.id)
         # Full authoritative restrictions are loaded independently of lexical or
         # vector similarity. The old heuristic health-term filter cannot omit them.
         onboarding = self.session.scalar(
@@ -534,7 +557,7 @@ class AssistantRun:
             self.context.pop("conversation_summary", None)
             cutoff = utc(self.snapshot["event_after"])
             self.context["answer_event_after"] = cutoff.isoformat()
-            for key in ("recent_messages", "conversation"):
+            for key in ("recent_messages", "recalled_messages", "conversation"):
                 if key in self.context:
                     self.context[key] = [
                         item
@@ -564,6 +587,11 @@ class AssistantRun:
             "has_saved_plan": bool(
                 self.context.get("current_training_plan") or self.context.get("base_plan")
             ),
+            "plan_state": {
+                "onboarding_completed": self.context.get("onboarding_completed", False),
+                "has_current_plan": bool(self.context.get("current_training_plan")),
+                "has_editable_draft": bool(self.context.get("editable_training_draft")),
+            },
         }
         plan = self.role in {"initial_plan", "adaptation"}
         route_type = PlanRoute if plan else Route
@@ -585,16 +613,24 @@ class AssistantRun:
             )
             routing_instructions = _PLAN_ROUTING
         self.context["client_answers"] = client_answers(self.context)
+        self.context["question_catalog"] = question_catalog(self.context)
         # Carry one compact answer state, not a copy of it inside every past
         # clarification. The persisted messages retain their own expiring state.
         for message in self.context.get("recent_messages", []):
             if message.get("clarification"):
                 message["clarification"].pop("client_answers", None)
+                if message["clarification"].get("reason") != "missing_client_information":
+                    # A failed suggestion is neither a requested exercise nor
+                    # evidence. Keep its outcome without feeding rejected prose
+                    # back to the model as a template for the next answer.
+                    message["content"] = "Tentativa anterior sem proposta salva."
+                    message["clarification"] = {"reason": message["clarification"]["reason"]}
         sources = answer_sources(self.context) if self.role != "onboarding" else []
         routing_context["answer_sources"] = sources
         if sources:
             routing_instructions += INTERPRET_ANSWERS
         routing_context["client_answers"] = self.context["client_answers"]
+        routing_context["question_catalog"] = self.context["question_catalog"]
         self._refresh_unanswered_fields()
         routing_context["unanswered_client_fields"] = self.unanswered_client_fields
         # This same call may correct or withdraw an earlier answer. Constrain
@@ -638,7 +674,10 @@ class AssistantRun:
                 if self.role == "onboarding" and self.route.answer_updates:
                     raise InvalidAnswerInterpretation("onboarding_uses_own_extraction")
                 self.context["client_answers"] = apply_interpretations(
-                    self.context["client_answers"], self.route.answer_updates, sources
+                    self.context["client_answers"],
+                    self.route.answer_updates,
+                    sources,
+                    self.context["question_catalog"],
                 )
             except InvalidAnswerInterpretation as error:
                 if attempt:
@@ -652,12 +691,18 @@ class AssistantRun:
             routing_context["client_answers"] = self.context["client_answers"]
             routing_context["unanswered_client_fields"] = self.unanswered_client_fields
             detail = self.route.clarification_detail
+            if detail and detail.questions:
+                self.context["question_catalog"].update({q.field: q.text for q in detail.questions})
+                self._refresh_unanswered_fields()
+            requested_fields = (
+                [*detail.missing_fields, *(q.field for q in detail.questions)] if detail else []
+            )
             if (
                 self.route.specialist == "clarify"
                 and detail
                 and detail.reason == "missing_client_information"
-                and detail.missing_fields
-                and not set(detail.missing_fields) & set(self.unanswered_client_fields)
+                and requested_fields
+                and not set(requested_fields) & set(self.unanswered_client_fields)
             ):
                 if attempt:
                     raise AssistantError("malformed_structured_output", 422)
@@ -687,6 +732,18 @@ class AssistantRun:
             }
         if self.route.specialist not in {self.role, "clarify"}:
             raise AssistantError("delegation_not_allowed", 422)
+        if self.role == "training_chat":
+            if self.route.plan_action == "generate_initial_plan" and not self.context.get(
+                "current_training_plan"
+            ):
+                # Preserve the original deadline origin and consumed calls. The
+                # caller still enforces onboarding, ownership and single draft.
+                self.budget.plan = True
+                return
+            if self.route.plan_action == "edit_draft" and self.context.get(
+                "editable_training_draft"
+            ):
+                self.context["rules"]["may_update_ai_draft"] = True
         if plan:
             # A proposed prescription cannot bypass evidence by claiming it is
             # merely an explanation of saved records.
@@ -788,10 +845,15 @@ class AssistantRun:
             }[reason]
             detail = Clarification(reason=reason, explanation=explanation, next_step=next_step)
         if detail.reason == "missing_client_information":
+            catalog = question_catalog(self.context)
+            catalog.update({question.field: question.text for question in detail.questions})
+            self.context["question_catalog"] = catalog
+            if detail.questions:
+                self._refresh_unanswered_fields()
             fields = list(
                 dict.fromkeys(
                     field
-                    for field in detail.missing_fields
+                    for field in [*detail.missing_fields, *(q.field for q in detail.questions)]
                     if field in self.unanswered_client_fields
                 )
             )
@@ -800,7 +862,8 @@ class AssistantRun:
                     reason=detail.reason,
                     explanation="",
                     missing_fields=fields,
-                    next_step=render_questions(fields),
+                    next_step=render_questions(fields, catalog),
+                    questions=[q for q in detail.questions if q.field in fields],
                 )
             else:
                 # Do not publish internal prose or fabricate a missing personal fact.
@@ -811,6 +874,8 @@ class AssistantRun:
                     "Tente novamente ou peça ajuda ao instrutor.",
                 )
         self.clarification = {**detail.model_dump(), "stage": stage}
+        if not self.clarification["questions"]:
+            self.clarification.pop("questions")
         if self.context.get("client_answers"):
             self.clarification["client_answers"] = self.context["client_answers"]
         self.citations = []
@@ -887,6 +952,10 @@ class AssistantRun:
             },
             "required": ["result", "citation_ids", "grounding", "clarification"],
         }
+        # JSON Schema refs resolve from the document root, not the nested
+        # clarification object (both adapters consume this same schema).
+        detail_schema = schema["properties"]["clarification"]["anyOf"][0]
+        schema["$defs"] = detail_schema.pop("$defs", {})
         if self.route.needs_references or plan:
             schema["properties"]["grounding"]["enum"] = ["references", "clarification"]
         if self.references:
@@ -923,10 +992,31 @@ class AssistantRun:
             output.result.assistant_message = clean_reference_suffix(
                 output.result.assistant_message, output.citation_ids, output.grounding
             )
+            if output.result.draft_update is not None:
+                before = self.context.get("editable_training_draft") or {}
+                keys = (
+                    "exercise_name",
+                    "sets",
+                    "repetitions",
+                    "rest_seconds",
+                    "load_guidance",
+                    "equipment_model_id",
+                )
+                before_items = [
+                    tuple(item.get(key) for key in keys) for item in before.get("items", [])
+                ]
+                after_items = [
+                    tuple(item.get(key) for key in keys)
+                    for item in output.result.draft_update.get("items", [])
+                ]
+                if before_items != after_items and not self.citations:
+                    return self._clarify("specialist", reason="insufficient_evidence")
         if self.references and (
             self.citations or self.route.needs_references or output.grounding == "references"
         ):
-            proposal = self.role in {"initial_plan", "adaptation"}
+            proposal = self.role in {"initial_plan", "adaptation"} or (
+                self.role == "training_chat" and output.result.draft_update is not None
+            )
             review = self._call(
                 {
                     **({"delivery_kind": "plan_proposal_pending_approval"} if proposal else {}),
@@ -934,6 +1024,9 @@ class AssistantRun:
                         {
                             "client_constraints": {
                                 **self.plan_brief,
+                                "authoritative_health_records": self.context.get(
+                                    "authoritative_health_records", {}
+                                ),
                                 "client_memory": self.snapshot["facts"],
                                 "client_answers": self.context["client_answers"],
                             }
@@ -1020,7 +1113,11 @@ class AssistantRun:
             self.budget.remaining()
             if domain_revision(self.session, self.client_id) != self.domain:
                 raise AssistantError("assistant_state_conflict", 409)
-            if self.source is not None and self.role in {"onboarding", "training_chat"}:
+            if self.source is not None and self.role in {
+                "onboarding",
+                "training_chat",
+                "initial_plan",
+            }:
                 model = OnboardingAiMessage if self.role == "onboarding" else TrainingAiMessage
                 latest = self.session.scalar(
                     select(model.id)
@@ -1033,7 +1130,11 @@ class AssistantRun:
                 if latest != self.source.id:
                     raise AssistantError("assistant_state_conflict", 409)
             self.knowledge.validate_citations(self.session, self.citations)
-            if self.source is not None and self.role in {"onboarding", "training_chat"}:
+            if self.source is not None and self.role in {
+                "onboarding",
+                "training_chat",
+                "initial_plan",
+            }:
                 self.memory.apply(
                     self.session,
                     self.client_id,
@@ -1042,6 +1143,9 @@ class AssistantRun:
                     event_id=self.source.id,
                     occurred_at=self.source.created_at,
                     message=self.source.content,
+                    answers=self.context.get("client_answers", {})
+                    if self.role != "onboarding"
+                    else {},
                 )
             else:
                 self.memory.validate_revision(

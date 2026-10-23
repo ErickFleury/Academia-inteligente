@@ -3,23 +3,35 @@
 import re
 import unicodedata
 from datetime import UTC, date, datetime
-from typing import Literal
+from typing import Annotated
 
-ClientField = Literal[
-    "age",
-    "training_goal",
-    "training_experience",
-    "height_cm",
-    "weight_kg",
-    "limitations_or_complaints",
-    "medications",
-    "health_conditions",
-    "weekly_availability",
-    "session_duration",
-    "current_limitation_impact",
-    "equipment_restrictions",
-    "target_exercise",
-]
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+
+ClientField = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,47}$")]
+
+
+class ClientQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    field: ClientField
+    text: str = Field(min_length=5, max_length=200)
+
+    @field_validator("text")
+    @classmethod
+    def personal_question(cls, value):
+        text = _normalized(value)
+        if (
+            not value.endswith("?")
+            or "\n" in value
+            or re.search(
+                r"peca ao cliente|confirme com o cliente|os trechos|"
+                r"quant[oa]s? (?:series|repeticoes)|intensidade desejada|"
+                r"(?:carga|descanso) (?:devo|devemos|recomendada|ideal)|%.*1rm",
+                text,
+            )
+        ):
+            raise ValueError("Ask the client a personal question, not for technical prescription")
+        return value
+
 
 QUESTIONS = {
     "age": "Qual é sua idade?",
@@ -61,8 +73,24 @@ def _answer_value(field, raw):
         minutes = float(match[1].replace(",", ".")) * (60 if match[2].startswith("h") else 1)
         return int(minutes) if minutes.is_integer() and 1 <= minutes <= 1440 else None
     if field in {"current_limitation_impact", "equipment_restrictions", "target_exercise"}:
-        return raw.strip() if len(raw) <= 300 else None
+        # Arbitrary prose needs semantic interpretation. A continuation command
+        # or topic change is not an answer merely because it is one line.
+        return raw.strip() if value in {"nenhum", "nenhuma", "nao"} else None
     return None
+
+
+def question_catalog(context):
+    """Legacy wording is a fallback, not the list of topics the model can discuss."""
+    catalog = {**QUESTIONS, **context.get("question_catalog", {})}
+    for fact in context.get("client_memory", []):
+        if fact.get("answer_data"):
+            catalog[fact["answer_data"]["field"]] = fact["answer_data"]["question"]
+    for item in context.get("recent_messages", []):
+        for question in (item.get("clarification") or {}).get("questions", []):
+            catalog[question["field"]] = question["text"]
+    for key, answer in context.get("client_answers", {}).items():
+        catalog.setdefault(key, answer.get("question", "Contexto informado"))
+    return catalog
 
 
 def client_answers(context):
@@ -77,15 +105,25 @@ def client_answers(context):
             "role": "user",
             "content": context.get("current_user_message", ""),
             "created_at": context.get("current_message_created_at", context.get("current_date")),
+            "event_id": context.get("current_event_id"),
         },
     ]
-    answers = {}
+    answers = {
+        fact["answer_data"]["field"]: {
+            **{key: value for key, value in fact["answer_data"].items() if key != "field"},
+            "reported_at": fact["reported_at"],
+            "attribution": "client_reported",
+        }
+        for fact in context.get("client_memory", [])
+        if fact.get("answer_data")
+    }
+    catalog = question_catalog(context)
     for previous, reply in zip(history, history[1:]):
         if previous.get("role") != "assistant" or reply.get("role") != "user":
             continue
         detail = previous.get("clarification") or {}
         for field, report in detail.get("client_answers", {}).items():
-            if field not in QUESTIONS or not isinstance(report, dict):
+            if not isinstance(report, dict):
                 continue
             cutoff = context.get("answer_event_after")
             if cutoff:
@@ -95,14 +133,16 @@ def client_answers(context):
                 reported = reported.replace(tzinfo=reported.tzinfo or UTC)
                 if reported <= datetime.fromisoformat(cutoff):
                     continue
-            answers[field] = report
+            existing = answers.get(field)
+            if not existing or (report.get("reported_at") or "") >= existing["reported_at"]:
+                answers[field] = report
         fields = detail.get("missing_fields", [])
         if (
             detail.get("reason") != "missing_client_information"
             or not fields
             or len(fields) != len(set(fields))
-            or any(field not in QUESTIONS for field in fields)
-            or previous.get("content") != render_questions(fields)
+            or any(field not in catalog for field in fields)
+            or previous.get("content") != render_questions(fields, catalog)
         ):
             continue
         lines = reply.get("content", "").strip().splitlines()
@@ -118,12 +158,18 @@ def client_answers(context):
             continue  # Do not shift an incomplete or mixed-format answer list.
         for field, raw in pairs:
             raw = re.sub(r"^\s*[-*]\s+", "", raw).strip()
+            value = _answer_value(field, raw)
+            if value is None and not re.search(
+                r"\b(?:talvez|acho|nao sei|nao lembro)\b", _normalized(raw)
+            ):
+                continue
             answers[field] = {
-                "question": QUESTIONS[field],
-                "value": _answer_value(field, raw),
+                "question": catalog[field],
+                "value": value,
                 "source_text": raw,
                 "reported_at": reply.get("created_at"),
                 "attribution": "client_reported",
+                "source_event_id": reply.get("event_id"),
                 **({"unit": "minutes"} if field == "session_duration" else {}),
             }
     return answers
@@ -137,7 +183,8 @@ def available_fields(context, plan_brief):
         **plan_brief,
         **context.get("authoritative_health_records", {}),
     }
-    known = {key for key in QUESTIONS if records.get(key) not in (None, "")}
+    catalog = question_catalog(context)
+    known = {key for key in catalog if records.get(key) not in (None, "")}
     for flag, detail in (
         ("has_limitations_or_complaints", "limitations_or_complaints"),
         ("uses_medications", "medications"),
@@ -181,13 +228,19 @@ def available_fields(context, plan_brief):
     if records.get("has_limitations_or_complaints") is not True:
         known.add("current_limitation_impact")
     for field, answer in context.get("client_answers", {}).items():
+        # Durable reports remain useful context, but old reports may need a
+        # relevant confirmation before a consequential new prescription.
+        if answer.get("reported_at"):
+            reported = datetime.fromisoformat(answer["reported_at"]).date()
+            if (today - reported).days > 30:
+                continue
         if answer["value"] is not None:
             known.add(field)
         elif field not in records:
             known.discard(field)
-    return [field for field in QUESTIONS if field not in known]
+    return [field for field in catalog if field not in known]
 
 
-def render_questions(fields):
-    questions = [QUESTIONS[field] for field in dict.fromkeys(fields)]
+def render_questions(fields, catalog=None):
+    questions = [(catalog or QUESTIONS)[field] for field in dict.fromkeys(fields)]
     return questions[0] if len(questions) == 1 else "\n".join(f"- {q}" for q in questions)

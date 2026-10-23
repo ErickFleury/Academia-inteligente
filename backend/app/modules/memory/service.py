@@ -120,6 +120,7 @@ class MemoryService:
                     "attribution": f.attribution,
                     "reported_at": utc(f.reported_at).isoformat(),
                     "updated_at": utc(f.updated_at).isoformat(),
+                    "answer_data": f.answer_data,
                 }
                 for f in facts
             ],
@@ -171,12 +172,15 @@ class MemoryService:
                 if not value or len(value) > 400:
                     raise MemoryError("memory_invalid", 422)
                 fact.text, fact.attribution = value, "client_edit"
+                fact.answer_data = None
                 fact.updated_at, fact.reported_at, fact.source_event_id = now, now, None
                 self._capacity(facts)
         session.commit()
         return self.snapshot(session, client_id)
 
-    def apply(self, session, client_id, revision, changes, *, event_id, occurred_at, message):
+    def apply(
+        self, session, client_id, revision, changes, *, event_id, occurred_at, message, answers=None
+    ):
         """Stage changes in the caller's transaction; rollback never leaves partial facts.
 
         Only whole, extractive first-person sentences from this new user event
@@ -226,6 +230,78 @@ class MemoryService:
                     fact.id = uuid4()
                     facts[str(fact.id)] = fact
                 fact.text, fact.category, fact.attribution = value, change.category, "client_report"
+                fact.answer_data = None
                 fact.source_event_id, fact.reported_at, fact.updated_at = event_id, occurred_at, now
+            # Only interpretations of THIS authenticated source event become
+            # durable. Older retained messages are context, never backfilled.
+            for key, report in (answers or {}).items():
+                if report.get("source_event_id") != str(event_id):
+                    continue
+                quote = report.get("source_text", "")
+                if not quote or quote not in message:
+                    raise MemoryError("memory_evidence_invalid", 422)
+                if any(change.action == "forget" for change in changes):
+                    continue
+                existing = next(
+                    (
+                        f
+                        for f in facts.values()
+                        if f.answer_data and f.answer_data.get("field") == key
+                    ),
+                    None,
+                )
+                value = report.get("value")
+                if value is None:
+                    # A withdrawn/uncertain answer must not remain a known value.
+                    if existing:
+                        session.delete(existing)
+                        del facts[str(existing.id)]
+                    continue
+                question = report.get("question", "Contexto informado")
+                unit = report.get("unit")
+                readable = f"{question} {value}" + (" minutos" if unit == "minutes" else "")
+                if len(readable) > 400:
+                    raise MemoryError("memory_invalid", 422)
+                if not existing:
+                    existing = next(
+                        (
+                            f
+                            for f in facts.values()
+                            if f.source_event_id == event_id
+                            and f.text == quote
+                            and not f.answer_data
+                        ),
+                        None,
+                    )
+                    if not existing:
+                        existing = ClientMemoryFact(id=uuid4(), client_id=client_id)
+                        session.add(existing)
+                        facts[str(existing.id)] = existing
+                existing.answer_data = {
+                    "field": key,
+                    "question": question,
+                    "value": value,
+                    **({"unit": unit} if unit else {}),
+                }
+                existing.text = readable
+                existing.category = (
+                    "health_report"
+                    if key
+                    in {
+                        "age",
+                        "height_cm",
+                        "weight_kg",
+                        "medications",
+                        "health_conditions",
+                        "limitations_or_complaints",
+                        "current_limitation_impact",
+                    }
+                    else "training_goal"
+                    if key == "training_goal"
+                    else "preference"
+                )
+                existing.attribution = "client_report"
+                existing.source_event_id = event_id
+                existing.reported_at, existing.updated_at = occurred_at, now
             self._capacity(facts)
             session.flush()

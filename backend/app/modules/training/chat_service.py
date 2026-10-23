@@ -78,6 +78,7 @@ class TrainingChatMessage:
     adaptation_reason: str | None
     reference_citations: list[dict] = field(default_factory=list)
     clarification: dict | None = None
+    event_id: UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -236,9 +237,23 @@ class TrainingChatService:
                     # Retain retry input, release the client lock during inference.
                     session.commit()
                     run.prepare(context)
-                    response = run.specialist()
-                    run.finalize()
-                    clarification = run.clarification
+                    if (
+                        run.route.plan_action == "generate_initial_plan"
+                        and context["current_training_plan"] is None
+                    ):
+                        context["model_requested_initial_plan"] = True
+                        initial_reply = self._initial_plan_reply(
+                            session, subject, client_id, context
+                        )
+                        response = AiTrainingChatResponse(assistant_message=initial_reply)
+                        run = None
+                    else:
+                        context["rules"]["may_update_ai_draft"] = run.context["rules"][
+                            "may_update_ai_draft"
+                        ]
+                        response = run.specialist()
+                        run.finalize()
+                        clarification = run.clarification
                 else:
                     response = self._retry(lambda: self._provider.training_chat(context))
         except AssistantError as error:
@@ -246,7 +261,11 @@ class TrainingChatService:
             if error.code != "assistant_clarification_required" or error.clarification is None:
                 raise
             clarification = error.clarification
-            run = None
+            run = context.get("_initial_plan_run") or run
+            if run:
+                # A valid clarification is a successful conversational result.
+                # Save verified personal answers, never its rejected plan.
+                run.finalize()
             response = AiTrainingChatResponse(
                 assistant_message=" ".join(
                     part
@@ -407,8 +426,37 @@ class TrainingChatService:
         message: str,
         message_id: UUID,
     ) -> dict[str, object]:
-        history = self._messages(session, conversation.id, message_id)[
-            -self._recent_message_limit :
+        retained = self._messages(session, conversation.id, message_id)
+        history = retained[-self._recent_message_limit :]
+        # Recall a bounded set of older own-client statements, with their actual
+        # question and provenance. A generated summary is never extraction evidence.
+        older = retained[: -self._recent_message_limit]
+        terms = {word for word in re.findall(r"\w+", self._normalized(message)) if len(word) > 3}
+        candidates = [
+            (index, item)
+            for index, item in enumerate(older)
+            if item.role == "user" and len(item.content) <= 500
+        ]
+        candidates.sort(
+            key=lambda pair: (
+                len(terms & set(re.findall(r"\w+", self._normalized(pair[1].content)))),
+                pair[0],
+            ),
+            reverse=True,
+        )
+        recalled = [
+            {
+                "role": "user",
+                "content": item.content,
+                "created_at": item.created_at.isoformat(),
+                "event_id": str(item.event_id),
+                "preceding_question": (
+                    older[index - 1].content[:800]
+                    if index and older[index - 1].role == "assistant"
+                    else None
+                ),
+            }
+            for index, item in sorted(candidates[:4])
         ]
         current_plan = self._current_plan(session, client_id)
         draft = self._editable_ai_draft(session, client_id)
@@ -439,12 +487,15 @@ class TrainingChatService:
         return {
             "resume_initial_plan": resume_initial_plan,
             "current_user_message": message,
+            "current_event_id": str(message_id),
+            "recalled_messages": recalled,
             "conversation_summary": self._bounded_summary(session, conversation.id, message_id),
             "recent_messages": [
                 {
                     "role": item.role,
                     "content": item.content,
                     "created_at": item.created_at.isoformat(),
+                    "event_id": str(item.event_id),
                     "clarification": item.clarification if item.role == "assistant" else None,
                 }
                 for item in history
@@ -476,8 +527,12 @@ class TrainingChatService:
         if context["current_training_plan"] is not None:
             return None  # Existing-plan changes keep the adaptation/review flow.
         resuming = context.get("resume_initial_plan", False)
-        if not resuming and not self._requests_initial_plan(
-            context["current_user_message"], context["recent_messages"]
+        if (
+            not resuming
+            and not context.get("model_requested_initial_plan")
+            and not self._requests_initial_plan(
+                context["current_user_message"], context["recent_messages"]
+            )
         ):
             return None
         if resuming and re.fullmatch(
@@ -503,6 +558,7 @@ class TrainingChatService:
                 session, subject, commit=False, chat_context=context
             )
         except InitialPlanFollowup as decision:
+            context.pop("_initial_plan_run", None)
             if decision.action == "cancel":
                 return "Tudo bem, cancelei a criação do rascunho."
             return None
@@ -865,6 +921,7 @@ class TrainingChatService:
                 adaptation_reason=message.adaptation_reason,
                 reference_citations=message.reference_citations or [],
                 clarification=message.clarification,
+                event_id=message.id,
             )
             for message in session.scalars(statement.order_by(TrainingAiMessage.sequence)).all()
         ]

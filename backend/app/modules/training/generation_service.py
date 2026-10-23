@@ -19,6 +19,7 @@ from app.modules.onboarding.draft_service import (
     OnboardingDraftService,
 )
 from app.modules.onboarding.models import Onboarding
+from app.modules.training.models import TrainingAiConversation, TrainingAiMessage
 from app.modules.training.schema import TrainingPlanVersionInput
 from app.modules.training.service import (
     ActiveTrainingProposalExistsError,
@@ -72,8 +73,25 @@ class InitialTrainingGenerationService:
         commit: bool = True,
         chat_context: dict | None = None,
     ):
+        source = None
+        if chat_context and chat_context.get("current_event_id"):
+            from uuid import UUID
+
+            source = session.scalar(
+                select(TrainingAiMessage)
+                .join(TrainingAiConversation)
+                .where(
+                    TrainingAiConversation.client_id == scope.client_id,
+                    TrainingAiMessage.id == UUID(chat_context["current_event_id"]),
+                    TrainingAiMessage.role == "user",
+                )
+            )
+            if source is None:
+                raise InvalidTrainingGenerationError
         run = (
-            AssistantRun(session, scope.client_id, "initial_plan", provider=self._provider)
+            AssistantRun(
+                session, scope.client_id, "initial_plan", source=source, provider=self._provider
+            )
             if enabled(scope.client_id)
             else None
         )
@@ -111,6 +129,7 @@ class InitialTrainingGenerationService:
                     for key in (
                         "current_user_message",
                         "recent_messages",
+                        "recalled_messages",
                         "conversation_summary",
                         "resume_initial_plan",
                     )
@@ -118,6 +137,8 @@ class InitialTrainingGenerationService:
                 }
             )
         if run:
+            if chat_context is not None:
+                chat_context["_initial_plan_run"] = run
             # A caller using commit=False owns its transaction/savepoint.
             # Closing it here breaks chat generation and its atomic reply.
             if commit:

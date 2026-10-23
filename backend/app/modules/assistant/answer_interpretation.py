@@ -14,7 +14,7 @@ class AnswerUpdate(BaseModel):
     field: ClientField
     status: Literal["answered", "uncertain"]
     value: str | None = Field(default=None, max_length=300)
-    source_index: int = Field(ge=0, le=6)
+    source_index: int = Field(ge=0, le=10)
     quote: str = Field(min_length=1, max_length=500)
 
 
@@ -29,13 +29,15 @@ def answer_sources(context):
             "role": "user",
             "content": context.get("current_user_message", ""),
             "created_at": context.get("current_message_created_at", datetime.now(UTC).isoformat()),
+            "event_id": context.get("current_event_id"),
         },
     ]
-    return [
+    sources = [
         {
             "index": index,
             "text": item["content"],
             "reported_at": item.get("created_at"),
+            "event_id": item.get("event_id"),
             "preceding_question": history[index - 1].get("content")
             if index and history[index - 1].get("role") == "assistant"
             else None,
@@ -43,6 +45,18 @@ def answer_sources(context):
         for index, item in enumerate(history)
         if item.get("role") == "user" and item.get("content")
     ]
+    recalled = [
+        {
+            "index": 7 + index,
+            "text": item["content"],
+            "reported_at": item.get("created_at"),
+            "event_id": item.get("event_id"),
+            "preceding_question": item.get("preceding_question"),
+        }
+        for index, item in enumerate(context.get("recalled_messages", [])[:4])
+        if item.get("role") == "user" and item.get("content")
+    ]
+    return recalled + sources
 
 
 def _stamp(value):
@@ -63,12 +77,18 @@ def _evidence_context(text, quote):
     return _normalized(prefix + quote + suffix)
 
 
-def apply_interpretations(previous, updates, sources):
+def apply_interpretations(previous, updates, sources, catalog=None):
     """The model handles meaning; enforce provenance, uncertainty, bounds and chronology."""
     answers = {**previous}
     sources = {source["index"]: source for source in sources}
     seen = set()
-    for update in sorted(updates, key=lambda item: item.source_index):
+    for update in sorted(
+        updates,
+        key=lambda item: (
+            _stamp(sources.get(item.source_index, {}).get("reported_at")),
+            item.source_index,
+        ),
+    ):
         source = sources.get(update.source_index)
         if source is None or (update.source_index, update.field) in seen:
             raise InvalidAnswerInterpretation("invalid_answer_source")
@@ -127,11 +147,12 @@ def apply_interpretations(previous, updates, sources):
         if existing and _stamp(existing.get("reported_at")) > _stamp(source.get("reported_at")):
             continue
         answers[update.field] = {
-            "question": QUESTIONS[update.field],
+            "question": (catalog or QUESTIONS).get(update.field, "Contexto informado"),
             "value": value,
             "source_text": update.quote,
             "reported_at": source.get("reported_at"),
             "attribution": "client_reported",
+            "source_event_id": source.get("event_id"),
             **({"unit": "minutes"} if update.field == "session_duration" else {}),
         }
     return answers

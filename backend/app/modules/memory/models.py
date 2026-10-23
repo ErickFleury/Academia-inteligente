@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, String, Uuid
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -17,5 +17,6 @@ class ClientMemoryFact(Base):
     text: Mapped[str] = mapped_column(String(400))
     attribution: Mapped[str] = mapped_column(String(24))
     source_event_id: Mapped[UUID | None] = mapped_column(Uuid)
+    answer_data: Mapped[dict | None] = mapped_column(JSON)
     reported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
