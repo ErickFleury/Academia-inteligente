@@ -34,12 +34,12 @@ test('sends a Portuguese client training-chat message with a frontend UUID', asy
   })
 })
 
-test('reuses its client request UUID for a retry and explains the draft-review boundary', async () => {
+test.each([503, 500])('allows retry after HTTP %s with the same UUID and an editable composer', async (status) => {
   const fetchMock = vi.fn()
     .mockResolvedValueOnce({ ok: true, json: async () => ({ messages: [] }) })
     .mockResolvedValueOnce({ ok: true, json: async () => [] })
     .mockResolvedValueOnce({ ok: true, json: async () => ({ plan: null }) })
-    .mockResolvedValueOnce({ ok: false, status: 503 })
+    .mockResolvedValueOnce({ ok: false, status })
     .mockResolvedValueOnce({ ok: true, json: async () => ({ messages: [] }) })
   vi.stubGlobal('fetch', fetchMock)
   vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000017' })
@@ -49,12 +49,19 @@ test('reuses its client request UUID for a retry and explains the draft-review b
   expect(screen.getByText(/Seu plano atual só muda após revisão profissional/)).toBeInTheDocument()
   fireEvent.change(screen.getByLabelText('Escreva sua pergunta'), { target: { value: 'Troque meu exercício' } })
   fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
-  expect(await screen.findByText('O assistente de treino está indisponível no momento. Tente novamente.')).toBeInTheDocument()
+  expect(await screen.findByText(status === 503
+    ? 'O assistente de treino está indisponível no momento. Tente novamente.'
+    : 'Não foi possível enviar sua mensagem. Tente novamente.')).toBeInTheDocument()
+  expect(screen.getByLabelText('Escreva sua pergunta')).toBeEnabled()
+  expect(screen.getByLabelText('Escreva sua pergunta')).toHaveValue('Troque meu exercício')
+  expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
   await screen.findByText('Seu espaço para tirar dúvidas')
   expect(JSON.parse(fetchMock.mock.calls[3][1].body).client_request_id).toBe(
     JSON.parse(fetchMock.mock.calls[4][1].body).client_request_id,
   )
+  await waitFor(() => expect(screen.getByLabelText('Escreva sua pergunta')).toHaveValue(''))
+  expect(screen.getByLabelText('Escreva sua pergunta')).toBeEnabled()
 })
 
 test('offers an AI-detected change for client confirmation before creating a proposal', async () => {

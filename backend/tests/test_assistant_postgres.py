@@ -20,11 +20,152 @@ from app.integrations.ai_budget import current_budget
 from app.modules.assistant.runtime import AssistantError
 from app.modules.clients.models import Client
 from app.modules.memory.service import MemoryService
-from app.modules.training.chat_service import TrainingChatService
+from app.modules.training.chat_service import TrainingChatDraftUpdateError, TrainingChatService
 from app.modules.training.generation_service import InitialTrainingGenerationService
-from app.modules.training.models import TrainingAiMessage
+from app.modules.training.models import TrainingAiMessage, TrainingPlan, TrainingPlanVersion
 from app.modules.training.schema import TrainingPlanVersionInput
 from app.modules.training.service import TrainingLifecycleService
+
+
+@pytest.fixture
+def plan_chat(postgres_sessions, rollout):
+    with postgres_sessions() as session:
+        owner(session)
+        complete_onboarding(session, "owner")
+    rollout.passages = [
+        {
+            "passage_id": str(uuid4()),
+            "version_id": str(uuid4()),
+            "source_id": str(uuid4()),
+            "title": "Manual de treinamento",
+            "version": 1,
+            "location": "text",
+            "content": "Toda proposta exige aprovação do instrutor.",
+        }
+    ]
+    agent = Agent(route={"query": "treino", "needs_references": True})
+    agent.citations = ["R1"]
+    service = TrainingChatService(
+        agent, generation_service=InitialTrainingGenerationService(provider=agent)
+    )
+    return service, agent
+
+
+def test_rag_plan_request_from_chat_commits_reply_and_one_proposal(postgres_sessions, plan_chat):
+    service, agent = plan_chat
+    request_id = uuid4()
+    with postgres_sessions() as session:
+        state = service.submit_for_subject(
+            session, "owner", message="Quero criar um novo treino", client_request_id=request_id
+        )
+        assert "Criei seu rascunho" in state.messages[-1].content
+    with postgres_sessions() as session:
+        replay = service.submit_for_subject(
+            session, "owner", message="Ignored retry", client_request_id=request_id
+        )
+        assert replay == state
+        drafts = session.scalars(select(TrainingPlanVersion)).all()
+        assert len(drafts) == 1 and drafts[0].status == "proposal"
+        assert drafts[0].reference_citations
+        assert len(session.scalars(select(TrainingAiMessage)).all()) == 2
+    assert [call[0] for call in agent.calls] == ["orchestrator", "initial_plan", "orchestrator"]
+
+
+@pytest.mark.parametrize("failure", ["provider", "equipment", "reply"])
+def test_rag_plan_chat_failure_is_atomic_and_retryable(
+    postgres_sessions, plan_chat, monkeypatch, failure
+):
+    service, agent = plan_chat
+    request_id = uuid4()
+    original_structured = agent.structured
+
+    def structured(*args, **kwargs):
+        output = original_structured(*args, **kwargs)
+        if failure == "equipment" and kwargs["role"] == "initial_plan":
+            output.result.plan["items"][0]["equipment_model_id"] = str(uuid4())
+            output.result.plan["items"][0]["equipment_requirement"] = "Unavailable equipment"
+        return output
+
+    original_summary = service._bounded_summary
+
+    def summary(session, conversation_id, exclude=None):
+        if failure == "reply" and exclude is None:
+            raise RuntimeError("simulated reply persistence failure")
+        return original_summary(session, conversation_id, exclude)
+
+    monkeypatch.setattr(agent, "structured", structured)
+    monkeypatch.setattr(service, "_bounded_summary", summary)
+    agent.fail = failure == "provider"
+    error = {
+        "provider": AssistantError,
+        "equipment": TrainingChatDraftUpdateError,
+        "reply": RuntimeError,
+    }[failure]
+    with postgres_sessions() as session:
+        with pytest.raises(error):
+            service.submit_for_subject(
+                session, "owner", message="Quero criar um novo treino", client_request_id=request_id
+            )
+        session.rollback()
+    with postgres_sessions() as session:
+        assert not session.scalars(select(TrainingPlan)).all()
+        assert not session.scalars(select(TrainingPlanVersion)).all()
+        messages = session.scalars(select(TrainingAiMessage)).all()
+        assert len(messages) == 1 and messages[0].role == "user"
+        assert messages[0].client_request_id == request_id
+    agent.fail = False
+    monkeypatch.setattr(agent, "structured", original_structured)
+    monkeypatch.setattr(service, "_bounded_summary", original_summary)
+    with postgres_sessions() as session:
+        service.submit_for_subject(
+            session, "owner", message="Ignored retry", client_request_id=request_id
+        )
+    with postgres_sessions() as session:
+        assert len(session.scalars(select(TrainingPlanVersion)).all()) == 1
+        assert len(session.scalars(select(TrainingAiMessage)).all()) == 2
+
+
+def test_rag_plan_chat_releases_lock_and_rejects_concurrent_memory_edit(
+    postgres_sessions, plan_chat
+):
+    service, agent = plan_chat
+    with postgres_sessions() as session:
+        client_id = session.scalar(select(Client.id))
+        initial = add(session, client_id, occurred_at=datetime.now(UTC) - timedelta(days=1))
+    entered, resume = Event(), Event()
+
+    def hold_inference():
+        entered.set()
+        assert resume.wait(8)
+
+    agent.hook = hold_inference
+
+    def conversation():
+        with postgres_sessions() as session:
+            return service.submit_for_subject(
+                session, "owner", message="Quero criar um novo treino", client_request_id=uuid4()
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        task = executor.submit(conversation)
+        assert entered.wait(5)
+        try:
+            with postgres_sessions() as direct:
+                MemoryService().edit(
+                    direct,
+                    client_id,
+                    initial["facts"][0]["id"],
+                    initial["revision"],
+                    "Prefiro treinar à tarde.",
+                )
+        finally:
+            resume.set()
+        with pytest.raises(AssistantError, match="memory_conflict"):
+            task.result(timeout=5)
+    with postgres_sessions() as session:
+        assert not session.scalars(select(TrainingPlanVersion)).all()
+        messages = session.scalars(select(TrainingAiMessage)).all()
+        assert len(messages) == 1 and messages[0].role == "user"
 
 
 @pytest.mark.parametrize("change", ["memory", "plan"])

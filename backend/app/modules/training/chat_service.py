@@ -338,6 +338,10 @@ class TrainingChatService:
             )
         if not context["onboarding_completed"]:
             return self._initial_plan_guidance(context)
+        if enabled(client_id):
+            # Preserve retry input and release the client lock before inference,
+            # before opening the savepoint owned by this chat request.
+            session.commit()
         try:
             # Keep the proposal, reply and request UUID atomic. A failed
             # generation rolls back only its savepoint, preserving the message.

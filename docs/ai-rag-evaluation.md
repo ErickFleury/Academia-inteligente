@@ -601,3 +601,46 @@ remains active at version 2 with 130 passages. The final production retrieval
 replay retained **10/12** exact target matches, and ten freshly regenerated sample
 vectors matched their stored vectors with cosine similarity **1.0**. RAG remains
 enabled for `*`, using local Ollama generation and embeddings.
+
+## RAG plan-generation requests failing in chat — 2026-10-22
+
+Scope: RF-18 request handling and its RF-15 initial-generation dependency,
+including atomic proposal/reply persistence, retry idempotency, client isolation,
+and mandatory instructor review. Checkpoint `d90a8e0` precedes this correction.
+
+The reported inability to send followed explicit initial-plan requests. Backend
+logs at 22:05–22:06 São Paulo time showed HTTP 500 and SQLAlchemy
+`InvalidRequestError: Can't operate on closed transaction inside context manager`.
+Chat opened a savepoint and called generation with `commit=False`, but enabled
+RAG generation committed the entire session before preparing the model context.
+The next database read therefore used a closed savepoint. This failure happened
+before inference; reference quality and OCR were not the cause.
+
+Chat now persists only its retry input and releases the client lock before
+opening the savepoint. Generation honors caller transaction ownership when
+`commit=False`, including on invalid content. A proposal and its assistant reply
+still commit together; failures preserve the original input without a partial
+plan. Concurrent memory changes during inference remain possible and invalidate
+stale proposals before persistence. Standalone generation retains its own commit
+behavior. No models, providers, reference indexes or approval rules changed.
+
+Four real-PostgreSQL regressions first reproduced the exact exception. The
+corrected runs cover successful cited generation, cached retry, provider failure,
+invalid equipment, reply-persistence failure, and a concurrent memory edit.
+**112 related backend tests passed**, including existing chat, generation and
+orchestration tests. **7 frontend tests passed**, verifying that both HTTP 500
+and 503 leave the composer editable and preserve the retry UUID. No frontend
+production-code change was needed. The first frontend run inherited `/api`
+from deployment and failed an existing localhost URL assertion; rerunning with
+the test-only `VITE_API_BASE_URL=http://localhost:8000` override passed.
+Ruff lint/format, TypeScript lint and Git whitespace checks passed.
+
+Changed files: `backend/app/modules/training/chat_service.py`,
+`backend/app/modules/training/generation_service.py`,
+`backend/tests/test_assistant_postgres.py`,
+`frontend/src/training-chat-page.test.tsx`, and this record.
+After deployment the backend health endpoint returned `ok`; orchestration remains
+enabled for `*` with Ollama. Regression tests used controlled providers and
+disposable database schemas; no real client plan or conversation was generated
+by verification. Live model accuracy and the separately identified recognition
+of the shorter wording “quero um novo treino” remain outside this transaction fix.

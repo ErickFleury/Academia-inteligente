@@ -91,7 +91,10 @@ class InitialTrainingGenerationService:
             },
         }
         if run:
-            session.commit()  # In chat, this preserves the original message only.
+            # A caller using commit=False owns its transaction/savepoint.
+            # Closing it here breaks chat generation and its atomic reply.
+            if commit:
+                session.commit()
             run.prepare(context)
             response = run.specialist()
         else:
@@ -126,7 +129,7 @@ class InitialTrainingGenerationService:
                 return existing
             raise
         except InvalidTrainingContentError:
-            if run:
+            if run and commit:
                 session.rollback()
             raise InvalidTrainingGenerationError from None
 
