@@ -101,6 +101,26 @@ class Agent:
         )
 
 
+def grounded_plan_agent(references):
+    """Controlled positive evidence fixture for lifecycle tests, not a live evaluation."""
+    references.passages = [
+        {
+            "passage_id": str(uuid4()),
+            "version_id": str(uuid4()),
+            "source_id": str(uuid4()),
+            "title": "Synthetic plan reference",
+            "version": 1,
+            "location": "text",
+            "content": (
+                "Exemplo sintético: agachamento, 3 séries de 8 repetições, descanso de 90 segundos."
+            ),
+        }
+    ]
+    provider = Agent(route={"query": "agachamento séries repetições descanso"})
+    provider.citations = ["R1"]
+    return provider
+
+
 @pytest.fixture(autouse=True)
 def rollout(monkeypatch):
     monkeypatch.setenv("AI_ORCHESTRATION_ENABLED", "true")
@@ -267,30 +287,30 @@ def test_onboarding_derives_memory_text_from_verified_quote(database_session):
     assert len(MemoryService.snapshot(session, client.id)["facts"]) == 1
 
 
-def test_initial_generation_stays_a_single_unapproved_proposal(database_session):
+def test_initial_generation_stays_a_single_unapproved_proposal(database_session, rollout):
     session = database_session
     owner(session)
     complete_onboarding(session, "owner")
-    provider = Agent()
+    provider = grounded_plan_agent(rollout)
     service = InitialTrainingGenerationService(provider=provider)
     result = service.generate_for_subject(session, "owner")
     assert result.status == "proposal"
     assert result.approved_by is None
     assert service.generate_for_subject(session, "owner").id == result.id
-    assert [call[0] for call in provider.calls] == ["orchestrator", "initial_plan"]
+    assert [call[0] for call in provider.calls] == ["orchestrator", "initial_plan", "orchestrator"]
     assert (
-        provider.calls[-1][1]["authoritative_health_records"]["limitations_or_complaints"]
+        provider.calls[1][1]["authoritative_health_records"]["limitations_or_complaints"]
         == "Joelho sensível"
     )
 
 
-def test_adaptation_retains_client_confirmation_and_instructor_review(database_session):
+def test_adaptation_retains_client_confirmation_and_instructor_review(database_session, rollout):
     session = database_session
     client = owner(session)
     base = current_plan(session, client)
     id_ = uuid4()
     source_message(session, client, id_)
-    provider = Agent()
+    provider = grounded_plan_agent(rollout)
     result = TrainingAdaptationService(provider).generate(
         session,
         "owner",
@@ -300,7 +320,7 @@ def test_adaptation_retains_client_confirmation_and_instructor_review(database_s
     )
     assert result.status == "proposed"
     assert session.get(TrainingPlanVersion, base.id).status == "current"
-    assert [call[0] for call in provider.calls] == ["orchestrator", "adaptation"]
+    assert [call[0] for call in provider.calls] == ["orchestrator", "adaptation", "orchestrator"]
 
 
 @pytest.mark.parametrize("plan_role", ["initial_plan", "adaptation"])

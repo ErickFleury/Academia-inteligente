@@ -836,3 +836,80 @@ sources active). No application code, source activation, embeddings, saved
 messages, client memory or training plans changed. No automated regression
 suite was run because this task only records diagnostic findings. The sole
 changed tracked file is this evaluation record.
+
+## Plan evidence selection and abstention correction — 2026-10-22
+
+Scope: owner-authorized corrections to RF-15/RF-18 initial generation and the
+shared RF-19 adaptation evidence path. Checkpoint: `077b270`. The reproduced
+failure was a personal-measurement query retrieving broad benefits, followed
+by an obligatory non-null result schema encouraging unsupported prescriptions.
+
+Plan routing now has a dedicated concise instruction set and an own-client
+brief with authoritative goal, experience and health restrictions. Height and
+weight are not added to that brief. Dated memory remains available, while
+queries containing labeled personal measurements are rejected before embedding
+and get at most one correction. Both queries also retain the existing contact,
+identifier and length guards. Population is explicitly unestablished by the
+structured onboarding (which has no age/population field); instructions forbid
+assuming a healthy/adult/pregnant population from absent data or transferring
+special-population recommendations without support.
+
+The router may choose one programming query and one complementary technique or
+precaution query. Both share the existing maximum of two retrieval rounds and
+the total deadline. Duplicate queries run once; results are interleaved and
+deduplicated into at most five passages, retaining source/version provenance
+and stable citation labels. An explicit clarification route does not search.
+No new embeddings or source reindexing are required.
+
+Initial plans and adaptations now always require reference evidence. The
+specialist may return `result=null` with `grounding=clarification`, avoiding a
+fabricated placeholder proposal. A null result claiming support is rejected;
+existing cited-proposal review and final revalidation remain mandatory. The
+review receives the same client's authoritative restrictions and dated memory,
+distinguishes personal goals from scientific claims, and is told not to invent
+missing source conditions. Approval by an instructor remains required and does
+not substitute for grounding.
+
+Live supported-fixture evaluation additionally reproduced nonsense repetition
+strings (`gym:8` and an English phrase) despite numeric source evidence. Initial
+AI plan dose strings now must start with a numeric count/range/duration and
+contain 1–100 characters on one line, enforced in both the generation schema
+and backend before review. A fully anchored schema pattern was needed for the
+local grammar implementation. Instructions preserve source precautions in load
+guidance and use actual JSON null for absent equipment. Instructor-authored
+free text, saved plans, public API schemas and the legacy provider path are
+unchanged. This syntax guard is not a substitute for factual review.
+
+Verification: eight initial regression cases and three malformed-dose cases
+failed before their fixes. The full isolated backend suite passed **734 tests**
+(two existing Alembic warnings); after the final full-string pattern correction,
+**90 focused tests passed**, including evidence selection, bounded query
+correction, safe abstention, supported proposal lifecycle, final-review
+rejection, concurrent edit invalidation, and adapter budgets. Ruff lint/format
+and Git whitespace checks passed. Positive lifecycle fixtures now supply
+explicit evidence instead of bypassing grounding as `record`.
+
+Live read-only replays on the test account changed from a generic personal
+measurement query and invented plan to a prescription query retrieving the
+already-active ACSM document. An intermediate two-query run also selected
+technique passages from the NSCA manual, confirming that branch works. The
+final measured run returned a controlled null-plan clarification in **6.19
+seconds**, rather than generating the prior unsupported exercises. No client
+message, plan or memory was saved.
+
+A separate supported synthetic fixture (no database access) produced the exact
+two sets, eight repetitions, 90-second rest and source stopping precaution;
+equipment values were JSON null and the final reviewer accepted it. Generation
+plus review took **9.49 seconds**. This verifies a non-abstaining path against
+explicit fixture evidence, not clinical accuracy or the sufficiency of the
+uploaded library for the real client's restrictions. Separate synthetic
+general-benefit-only and explicitly wrong-population fixtures correctly
+abstained in **1.60** and **1.42 seconds**, respectively. The original test case
+still needs applicable supporting evidence or clarification before a plan can
+be delivered. Overall human grounding acceptance, cold-start latency and
+laptop performance remain open; cache precision, model and deadlines were not
+changed.
+
+Changed files: `backend/app/modules/assistant/runtime.py`,
+`backend/tests/test_plan_evidence.py`, `backend/tests/test_assistant_runtime.py`,
+`backend/tests/test_assistant_postgres.py`, and this evaluation record.

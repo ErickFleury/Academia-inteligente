@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
-from test_assistant_runtime import Agent, owner
+from test_assistant_runtime import Agent, grounded_plan_agent, owner
 from test_assistant_runtime import rollout as rollout
 from test_knowledge_postgres import postgres_sessions as postgres_sessions
 from test_knowledge_postgres import pytestmark as pytestmark
@@ -169,15 +169,17 @@ def test_rag_plan_chat_releases_lock_and_rejects_concurrent_memory_edit(
 
 
 @pytest.mark.parametrize("change", ["memory", "plan"])
-def test_concurrent_edit_finishes_during_inference_and_invalidates_reply(postgres_sessions, change):
+def test_concurrent_edit_finishes_during_inference_and_invalidates_reply(
+    postgres_sessions, change, rollout
+):
     with postgres_sessions() as session:
         client = owner(session)
         client_id = client.id
         initial = add(session, client_id, occurred_at=datetime.now(UTC) - timedelta(days=1))
         complete_onboarding(session, "owner")
-        draft = InitialTrainingGenerationService(provider=Agent()).generate_for_subject(
-            session, "owner"
-        )
+        draft = InitialTrainingGenerationService(
+            provider=grounded_plan_agent(rollout)
+        ).generate_for_subject(session, "owner")
         plan_id, revision = draft.plan_id, draft.revision
         initial = MemoryService.snapshot(session, client_id)
     entered, resume = Event(), Event()
