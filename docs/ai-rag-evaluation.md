@@ -467,3 +467,137 @@ and laptop/CPU performance acceptance remain outside this correction.
 After restart the backend health endpoint returned `ok`;
 `AI_ORCHESTRATION_ENABLED=true`, the client allowlist `*`, provider `ollama`
 and the 12,288-token chat window were verified in the running container.
+
+## English PDF context and bilingual retrieval correction — 2026-10-22
+
+Scope: the shared-reference ingestion/retrieval dependencies of EXT-RF-AI-01,
+RF-15, RF-18 and RF-19. OCR remains deferred by the owner. Baseline checkpoint
+`7fc7b37` precedes parser commit `b1ff845` and retrieval commit `7054337`.
+
+The NSCA exercise manual (366 physical PDF pages) and ACSM position paper
+(22 physical PDF pages) had valid, reproducible embeddings. Their problems were
+missing exercise context on continuation passages and weak cross-language
+ranking, rather than a failed vectorization job. Sparse/image-only pages are
+still outside text extraction; notably, the manual's image-only exercise/muscle
+table remains unavailable without OCR. PDF page locations remain physical page
+numbers, not the publication's printed page numbers.
+
+The parser now carries explicit numbered exercise/video titles across chunks
+and continuation pages, resets at the next exercise or chapter/part, and ignores
+non-title video mentions. It repairs line-wrap hyphenation only when the intact
+word occurs in the document; otherwise it preserves the compound hyphen.
+Numeric ranges and authored Markdown remain unchanged. Passages retain their
+1,000-character bound. The manual produces 525 passages instead of 463; the
+paper still produces 133.
+
+Retrieval keeps the existing exact pgvector/full-text architecture. It admits
+semantic candidates up to cosine distance 0.60 (previously 0.45), uses semantic
+RRF weight 4 alongside lexical 1 and measurement-focused 2, and expands a bounded
+list of common Portuguese training terms with English search aliases. The
+original query remains intact and the expanded query stays within 500 characters.
+This is limited vocabulary support, not a general translation service. No model
+call, dependency, provider switch, or paid service was added. Measurement recall
+covers both languages. Multiple journal year/volume citations lower a passage's
+ranking so bibliography lists do not dominate instructional text. Equal-score
+ordering uses document positions rather than random passage UUIDs. Specialist
+and review instructions explicitly check exercise/population headings and permit
+faithful English-to-Portuguese grounding.
+
+Validation used local Ollama `embeddinggemma` and disposable schemas or
+transactions rolled back after substituting freshly parsed/embedded chunks.
+No application-client conversations, health records, memories or plans were
+changed by the probes. Full PDFs, extracted passages, vectors and generated
+answers remain only in ignored `.deployment/debug/reference-audit-20261022/`.
+
+- **688 backend tests passed**, including PostgreSQL tests, with only the two
+  existing Alembic deprecation warnings. Ruff lint/format and Git whitespace
+  checks passed. Test subprocesses use `AI_ORCHESTRATION_ENABLED=false` and
+  localhost CORS defaults; enabled-workflow tests opt in explicitly. An initial
+  suite invocation inherited deployment settings and failed legacy-provider/CORS
+  expectations; the corrected run passed without changing deployment flags.
+- The existing **41-case synthetic retrieval benchmark** retained **37/37
+  answerable cases** with a relevant source in the first five results, for both
+  hybrid and lexical retrieval. The absent-evidence case returned no passages;
+  conflicting-reference cases retained both sources. These are retrieval scores,
+  not generation or human citation-grounding acceptance.
+- The stricter uploaded-PDF diagnostic improved from **2/12 to 10/12** exact
+  page-and-phrase matches in the first five results: **5/6 English and 5/6
+  Portuguese**. Remaining misses are the English bench-reracking continuation
+  and Portuguese hypertrophy-volume target. Some other retrieved pages contain
+  related guidance, but that does not count as passing the predefined checks.
+- The first full-conversation probe exposed lost container GPU access: host
+  NVIDIA inspection worked while container NVML failed, and Ollama loaded the
+  chat model on CPU. Recreating only the existing Ollama service restored GPU
+  access. The subsequent model used mixed CPU/GPU execution under current VRAM
+  usage. This incident did not require changing models, budgets or providers.
+
+The full human accuracy/grounding gate remains open. In particular, retrieving
+an appropriate page does not establish that the model preserves precise
+anatomical groupings, exercise variants or every necessary condition. The narrow
+PDF retrieval benchmark also remains below the general 90% pilot target and must
+not be represented as complete corpus acceptance. Laptop/CPU latency acceptance
+and OCR remain unverified/deferred.
+
+The final six synthetic conversations against the replacement chunks all
+completed in **19.80–27.60 seconds**, using **three generation calls and one
+retrieval round** each. Four returned cited guidance; weekly frequency and
+hypertrophy volume returned controlled instructor referrals. These are completion
+results, **not six accuracy passes**. A spot check still found imprecise grouping
+of the bench-contact points and a leg-press answer citing a knee-extension
+passage alongside the applicable leg-press passage. The existing model review
+did not reject those cases. Further answer-grounding work is necessary; the
+retrieval correction and prompt clarification do not resolve that acceptance gate.
+
+A final parser boundary check found that publisher/author back matter inherited
+the final exercise heading. Commit `c1451c1` resets context at explicit back-matter
+headings; all four new regression cases first failed and then passed. This
+requires one further manual replacement after the initial two-PDF reindex.
+
+## Permanent reference deletion — 2026-10-22
+
+The owner additionally requested a button to remove uploaded materials and their
+vectorized versions. Commit `dcc7c1d` implements the corresponding owner-approved
+amendment in `docs/requirements.md`. Each reference card offers **Excluir
+referência**. The accessible pt-BR confirmation explicitly names the material and
+states that all versions, uploaded files, extracted text and search data will be
+permanently removed. Existing withdrawal remains available separately.
+
+`DELETE /ai/references/sources/{source_id}` requires administrator authorization
+and a source revision in the JSON body. The service removes passages/embeddings,
+all version rows (including their original bytes) and the source in one database
+transaction. The catalog/source/version locks serialize administrative changes
+and citation validation; workers cannot publish another batch after deletion.
+A replacement upload now advances the source revision, invalidating a previously
+opened deletion confirmation. Saved compact citation metadata and client records
+are outside source deletion; they contain no extracted passage text or vectors.
+No schema migration or dependency was needed.
+
+Verification: **700 backend tests passed**, including real PostgreSQL deletion
+versus citation-lock behavior and deletion during embedding. The **8 targeted
+frontend tests** passed, covering confirmation/cancellation, all-version removal,
+permission/error feedback and HTTP 204 handling. Frontend production build and
+TypeScript lint passed; the existing large-chunk build notice remains. Ruff and
+Git whitespace checks passed. After backend restart, health returned `ok`, OpenAPI
+advertised the DELETE route, an unauthenticated live deletion request returned
+401, and the HTTPS frontend served the new delete action. Runtime RAG remains
+enabled system-wide with local generation/embedding providers. Tests deleted only
+synthetic references, not the owner's uploaded materials. Browser visual testing
+was unavailable; the dialog reuses the existing MUI components, bounded responsive
+width, wrapping text/actions, accessible labels and keyboard focus behavior.
+
+Files changed for these corrections and the new action:
+`backend/app/modules/knowledge/{service,search_terms,router}.py`,
+`backend/app/modules/assistant/runtime.py`,
+`backend/tests/{test_knowledge,test_knowledge_postgres,test_assistant_runtime}.py`,
+`frontend/src/{ai-reference-page.tsx,ai-references.ts,ai-reference-page.test.tsx,ai-references.test.ts}`,
+`docs/requirements.md`, and this evaluation record.
+
+Final deployed reference state: **NSCA manual version 3, 526 passages**;
+**ACSM paper version 2, 133 passages**. Both are active at 100% with no import
+error. Each replacement preserved the exact original PDF bytes and was activated
+only after checking every chunk and vector against the verified parser/embedding
+output. Previous versions remain withdrawn for rollback; the Brazilian guide
+remains active at version 2 with 130 passages. The final production retrieval
+replay retained **10/12** exact target matches, and ten freshly regenerated sample
+vectors matched their stored vectors with cosine similarity **1.0**. RAG remains
+enabled for `*`, using local Ollama generation and embeddings.
