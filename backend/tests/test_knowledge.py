@@ -14,7 +14,7 @@ from app.integrations.embeddings import EmbeddingConfig
 from app.main import create_app
 from app.modules.identity.router import get_authenticated_identity
 from app.modules.identity.service import AuthenticatedIdentity
-from app.modules.knowledge.models import ReferencePassage, ReferenceVersion
+from app.modules.knowledge.models import ReferencePassage, ReferenceSource, ReferenceVersion
 from app.modules.knowledge.router import get_knowledge_service
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService, passages
 
@@ -378,3 +378,75 @@ def test_exercise_context_stops_at_back_matter(heading):
     )
     assert chunks[0][2].startswith("Seção: Dumbbell Renegade Row\n")
     assert "Seção:" not in chunks[-1][2]
+
+
+def test_delete_removes_all_versions_raw_files_and_vectors_but_preserves_other_sources(setup):
+    sessions, service, _ = setup
+    first = upload(sessions, service)
+    service.import_next(sessions)
+    activate(sessions, service, first)
+    second = upload(sessions, service, first["source_id"])
+    service.import_next(sessions)
+    activate(sessions, service, second)
+    pending = upload(sessions, service, first["source_id"])
+    other = upload(sessions, service)
+    with sessions() as session:
+        citations = service.search(session, "força")
+        service.delete_source(session, first["source_id"], pending["revision"])
+        assert session.get(ReferenceSource, first["source_id"]) is None
+        assert session.scalars(select(ReferencePassage)).all() == []
+        assert [v.id for v in session.scalars(select(ReferenceVersion))] == [other["id"]]
+        with pytest.raises(KnowledgeError, match="reference_conflict"):
+            service.validate_citations(session, citations)
+
+
+def test_new_upload_invalidates_old_deletion_confirmation(setup):
+    sessions, service, _ = setup
+    first = upload(sessions, service)
+    upload(sessions, service, first["source_id"])
+    with sessions() as session, pytest.raises(KnowledgeError, match="reference_conflict"):
+        service.delete_source(session, first["source_id"], first["revision"])
+    with sessions() as session:
+        assert len(session.scalars(select(ReferenceVersion)).all()) == 2
+
+
+def test_import_cannot_recreate_a_deleted_reference(setup):
+    sessions, service, provider = setup
+    item = upload(sessions, service)
+    original = provider.embed
+
+    def delete_during_embedding(*args, **kwargs):
+        with sessions() as session:
+            service.delete_source(session, item["source_id"], item["revision"])
+        return original(*args, **kwargs)
+
+    provider.embed = delete_during_embedding
+    assert service.import_next(sessions)
+    with sessions() as session:
+        assert service.list(session) == []
+        assert session.scalars(select(ReferencePassage)).all() == []
+
+
+@pytest.mark.parametrize("role,expected", [("admin", 204), ("client", 403), ("instructor", 403)])
+def test_reference_deletion_requires_admin(setup, role, expected):
+    from test_profile_presence import request as json_request
+
+    sessions, service, _ = setup
+    item = upload(sessions, service)
+    app = create_app()
+    with sessions() as session:
+        app.dependency_overrides[get_database_session] = lambda: session
+        app.dependency_overrides[get_knowledge_service] = lambda: service
+        app.dependency_overrides[get_authenticated_identity] = lambda: AuthenticatedIdentity(
+            "test", "test@example.test", (role,)
+        )
+        assert (
+            json_request(
+                app,
+                "DELETE",
+                f"/ai/references/sources/{item['source_id']}",
+                {"revision": item["revision"]},
+            )[0]
+            == expected
+        )
+        assert bool(service.list(session)) == (role != "admin")

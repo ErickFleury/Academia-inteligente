@@ -2163,6 +2163,18 @@ The owner approved the following design decisions:
   feedback. Activate replacements atomically; a failed replacement preserves
   the previous active version unless explicitly withdrawn. Imports run as
   tracked background work with progress and retry.
+- Owner-approved reference deletion (2026-10-22): administrators may permanently
+  delete an uploaded reference from the reference-management screen. Confirmation
+  names the reference and states that every version, original uploaded file,
+  extracted passage and embedding will be removed. Withdrawal remains a separate
+  reversible lifecycle action. Acceptance: deletion is backend-authorized for
+  administrators only; it removes the entire source and all versions/derived data
+  atomically, including pending or failed imports; stale confirmations cannot
+  delete a source changed by another administrative action or new upload;
+  in-flight import work cannot recreate deleted content, and in-flight AI work
+  must reject deleted citations before committing. Unrelated sources, client
+  records and existing compact citation metadata in saved conversations/plans
+  remain intact. The UI uses pt-BR confirmation, progress and failure feedback.
 - Expose compact supporting references for substantive knowledge-based training
   guidance. Missing or conflicting evidence requires clarification or instructor
   referral. Ordinary conversation and explanations of saved plans need not

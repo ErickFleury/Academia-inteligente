@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { uploadReference } from './ai-references'
+import { deleteReference, uploadReference } from './ai-references'
 
 afterEach(() => { vi.unstubAllGlobals() })
 
@@ -20,4 +20,16 @@ describe('reference upload size', () => {
     expect(() => uploadReference('test-token', 'Manual', file)).toThrow('até 35 MB')
     expect(fetchMock).not.toHaveBeenCalled()
   })
+})
+
+it('deletes the whole source with its revision and accepts an empty 204 response', async () => {
+  const json = vi.fn().mockRejectedValue(new Error('empty response'))
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204, json })
+  vi.stubGlobal('fetch', fetchMock)
+  await deleteReference('test-token', { source_id: 'source-id', revision: 3 })
+  expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/ai/references/sources/source-id'), expect.objectContaining({
+    method: 'DELETE', body: JSON.stringify({ revision: 3 }),
+    headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+  }))
+  expect(json).not.toHaveBeenCalled()
 })

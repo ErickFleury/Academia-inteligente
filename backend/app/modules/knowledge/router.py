@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
@@ -66,6 +66,26 @@ class ReferenceAction(BaseModel):
     model_config = ConfigDict(extra="forbid")
     action: Literal["activate", "withdraw", "retry"]
     revision: int = Field(ge=1)
+
+
+class ReferenceDeletion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+
+
+@router.delete("/sources/{source_id}", status_code=204)
+def delete_reference_source(
+    source_id: UUID,
+    body: ReferenceDeletion,
+    session: Database,
+    administrator: Administrator,
+    service: Service,
+):
+    try:
+        service.delete_source(session, source_id, body.revision)
+    except KnowledgeError as error:
+        raise HTTPException(error.status, error.code) from None
+    return Response(status_code=204)
 
 
 @router.post("/{version_id}/actions")

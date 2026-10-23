@@ -1,8 +1,8 @@
-import { Alert, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, LinearProgress, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { AdminShell } from './components/application-shell'
 import { EmptyState, LoadingState, PageHeader } from './components/ui'
-import { listReferences, previewReference, referenceAction, uploadReference, type ReferencePreview, type ReferenceVersion } from './ai-references'
+import { deleteReference, listReferences, previewReference, referenceAction, uploadReference, type ReferencePreview, type ReferenceVersion } from './ai-references'
 
 const statuses: Record<string, string> = { pending: 'Na fila', processing: 'Processando', ready: 'Pronta para ativar', active: 'Ativa', withdrawn: 'Retirada', failed: 'Falha no processamento' }
 const extractionErrors: Record<string, string> = {
@@ -22,6 +22,7 @@ export function AiReferencePage({ accessToken, onSignOut }: { accessToken: strin
   const [preview, setPreview] = useState<{ item: ReferenceVersion; passages: ReferencePreview[]; offset: number } | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [confirmation, setConfirmation] = useState<ReferenceVersion | null>(null)
+  const [deletion, setDeletion] = useState<ReferenceVersion | null>(null)
   const requestId = useRef(0)
   const previewId = useRef(0)
   const working = useRef(false)
@@ -53,7 +54,7 @@ export function AiReferencePage({ accessToken, onSignOut }: { accessToken: strin
   return <AdminShell onSignOut={onSignOut}>
     <PageHeader eyebrow="Assistente" title="Referências do assistente" description="Envie materiais de fontes confiáveis e confira o texto antes de ativá-los." />
     <Stack spacing={2}>
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && !deletion && <Alert severity="error">{error}</Alert>}
       {notice && <Alert severity="success">{notice}</Alert>}
       <Card variant="outlined" sx={{ p: 2 }}><Stack spacing={2}>
         <Typography variant="h6">{replacement ? `Nova versão: ${replacement.title}` : 'Adicionar referência'}</Typography>
@@ -77,6 +78,7 @@ export function AiReferencePage({ accessToken, onSignOut }: { accessToken: strin
           {item.active && <Button color="warning" disabled={busy} onClick={() => setConfirmation(item)}>Retirar referência</Button>}
           <Button disabled={busy} onClick={() => { setReplacement(item); setTitle(item.title); setFile(null) }}>Enviar nova versão</Button>
           {item.status === 'failed' && <Button disabled={busy} onClick={() => void perform(async () => { await referenceAction(accessToken, item, 'retry') })}>Tentar processamento novamente</Button>}
+          <Button color="error" disabled={busy} onClick={() => { setError(null); setDeletion(item) }}>Excluir referência</Button>
         </Stack>
       </Stack></Card>)}
     </Stack>
@@ -98,6 +100,28 @@ export function AiReferencePage({ accessToken, onSignOut }: { accessToken: strin
       <DialogActions><Button disabled={busy} onClick={() => setConfirmation(null)}>Cancelar</Button><Button disabled={busy} color="warning" onClick={() => void perform(async () => {
         await referenceAction(accessToken, confirmation!, 'withdraw'); setConfirmation(null); setNotice('Referência retirada.')
       })}>Retirar</Button></DialogActions>
+    </Dialog>
+    <Dialog open={Boolean(deletion)} onClose={() => !busy && setDeletion(null)} fullWidth maxWidth="sm" aria-labelledby="excluir-referencia-titulo" aria-describedby="excluir-referencia-descricao">
+      <DialogTitle id="excluir-referencia-titulo">Excluir referência permanentemente?</DialogTitle>
+      <DialogContent><Stack spacing={2}>
+        <DialogContentText id="excluir-referencia-descricao" sx={{ overflowWrap: 'anywhere' }}>
+          Excluir “{deletion?.title}” e todas as versões? Os arquivos enviados, o texto extraído e os dados de busca do assistente serão removidos permanentemente. Esta ação não pode ser desfeita.
+        </DialogContentText>
+        {busy && <LinearProgress aria-label="Excluindo referência" />}
+        {error && <Alert severity="error">{error}</Alert>}
+      </Stack></DialogContent>
+      <DialogActions sx={{ flexWrap: 'wrap' }}>
+        <Button autoFocus disabled={busy} onClick={() => setDeletion(null)}>Cancelar</Button>
+        <Button color="error" disabled={busy} onClick={() => void perform(async () => {
+          const sourceId = deletion!.source_id
+          await deleteReference(accessToken, deletion!)
+          requestId.current++
+          setItems((current) => current.filter((item) => item.source_id !== sourceId))
+          if (preview?.item.source_id === sourceId) { previewId.current++; setPreview(null) }
+          if (replacement?.source_id === sourceId) { setReplacement(null); setTitle(''); setFile(null) }
+          setDeletion(null); setNotice('Referência e todas as versões excluídas permanentemente.')
+        })}>{busy ? 'Excluindo…' : 'Excluir permanentemente'}</Button>
+      </DialogActions>
     </Dialog>
   </AdminShell>
 }

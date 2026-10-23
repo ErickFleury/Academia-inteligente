@@ -216,3 +216,70 @@ def test_equal_relevance_uses_document_order_instead_of_random_passage_ids(postg
         provider.fail = True
         hits = service.search(session, "banco")
         assert [hit["location"] for hit in hits] == [f"text;passage:{i}" for i in range(1, 6)]
+
+
+def test_deletion_waits_for_citation_validation_and_invalidates_later_replies(postgres_sessions):
+    from concurrent.futures import ThreadPoolExecutor
+    from queue import Queue
+    from time import monotonic, sleep
+
+    from app.modules.knowledge.service import KnowledgeError
+
+    service = KnowledgeService(FakeEmbedding())
+    item = upload(postgres_sessions, service)
+    service.import_next(postgres_sessions)
+    active = activate(postgres_sessions, service, item)
+    worker_pid = Queue()
+
+    def erase():
+        with postgres_sessions() as session:
+            worker_pid.put(session.scalar(text("select pg_backend_pid()")))
+            service.delete_source(session, item["source_id"], active["revision"])
+
+    with ThreadPoolExecutor(max_workers=1) as pool, postgres_sessions() as reader:
+        refs = service.search(reader, "força")
+        service.validate_citations(reader, refs)
+        future = pool.submit(erase)
+        try:
+            pid = worker_pid.get(timeout=5)
+            with postgres_sessions() as observer:
+                deadline = monotonic() + 3
+                while monotonic() < deadline:
+                    waiting = observer.scalar(
+                        text("select wait_event_type from pg_stat_activity where pid = :pid"),
+                        {"pid": pid},
+                    )
+                    observer.rollback()
+                    if waiting == "Lock":
+                        break
+                    sleep(0.02)
+                else:
+                    pytest.fail("deletion did not wait for citation validation")
+        finally:
+            reader.commit()
+        future.result(timeout=5)
+        with pytest.raises(KnowledgeError, match="reference_conflict"):
+            service.validate_citations(reader, refs)
+        assert service.search(reader, "força") == []
+
+
+def test_deleted_import_cannot_publish_vectors_in_postgres(postgres_sessions):
+    from sqlalchemy import select
+
+    from app.modules.knowledge.models import ReferencePassage, ReferenceVersion
+
+    provider = FakeEmbedding()
+    service = KnowledgeService(provider)
+    item = upload(postgres_sessions, service)
+    embed = provider.embed
+
+    def deleting_embed(*args, **kwargs):
+        with postgres_sessions() as session:
+            service.delete_source(session, item["source_id"], item["revision"])
+        return embed(*args, **kwargs)
+
+    provider.embed = deleting_embed
+    assert service.import_next(postgres_sessions)
+    with postgres_sessions() as session:
+        assert session.scalars(select(ReferenceVersion)).all() == []
+        assert session.scalars(select(ReferencePassage)).all() == []

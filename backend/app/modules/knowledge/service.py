@@ -265,9 +265,11 @@ class KnowledgeService:
             session.add(source)
             session.flush()
         else:
-            source = session.get(ReferenceSource, source_id)
+            source = session.get(ReferenceSource, source_id, populate_existing=True)
             if source is None:
                 raise KnowledgeError("reference_not_found", 404)
+            # Adding a version changes the scope of a source-wide deletion.
+            source.revision += 1
         number = (
             session.scalar(
                 select(func.max(ReferenceVersion.number)).where(
@@ -366,6 +368,36 @@ class KnowledgeService:
         source.revision += 1
         session.commit()
         return self.describe(session, version)
+
+    def delete_source(self, session, source_id, revision):
+        """Erase uploaded bytes and every derived version, serialized with imports/citations."""
+        catalog_lock(session)
+        source = session.scalar(
+            select(ReferenceSource)
+            .where(ReferenceSource.id == source_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if source is None:
+            raise KnowledgeError("reference_not_found", 404)
+        if source.revision != revision:
+            raise KnowledgeError("reference_conflict", 409)
+        version_ids = list(
+            session.scalars(
+                select(ReferenceVersion.id)
+                .where(ReferenceVersion.source_id == source_id)
+                .order_by(ReferenceVersion.id)
+                .with_for_update()
+            )
+        )
+        session.execute(
+            delete(ReferencePassage).where(ReferencePassage.version_id.in_(version_ids))
+        )
+        session.execute(delete(ReferenceVersion).where(ReferenceVersion.source_id == source_id))
+        session.delete(source)
+        session.commit()
+        # A worker embedding outside the transaction observes the missing version
+        # before inserting its next batch. Citation validation rejects missing IDs.
 
     def import_next(self, sessions) -> bool:
         """Claim one persisted job. Another process can recover an expired lease."""
