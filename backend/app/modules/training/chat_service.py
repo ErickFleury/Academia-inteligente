@@ -445,6 +445,7 @@ class TrainingChatService:
                     "role": item.role,
                     "content": item.content,
                     "created_at": item.created_at.isoformat(),
+                    "clarification": item.clarification if item.role == "assistant" else None,
                 }
                 for item in history
             ],

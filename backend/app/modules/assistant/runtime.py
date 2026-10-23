@@ -20,7 +20,12 @@ from sqlalchemy.exc import DBAPIError
 from app.integrations import ai
 from app.integrations.ai_budget import BudgetExceeded, ExecutionBudget, current_budget
 from app.integrations.ai_diagnostics import record_turn
-from app.modules.assistant.client_questions import ClientField, available_fields, render_questions
+from app.modules.assistant.client_questions import (
+    ClientField,
+    available_fields,
+    client_answers,
+    render_questions,
+)
 from app.modules.clients.models import Client
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
 from app.modules.memory.service import (
@@ -257,6 +262,17 @@ clarification; caso contrário, use null. Fale diretamente com a pessoa que est�
 lendo, nunca com outro agente. Não escreva 'peça ao cliente', 'confirme com o cliente'
 ou instruções internas. Dados pessoais vêm do onboarding, histórico e memória,
 NUNCA das referências: um livro não precisa informar a idade ou experiência do cliente.
+client_answers contém respostas curtas associadas às perguntas anteriores pelo backend,
+com valor, unidade, texto de origem e data. Use esses relatos para continuar sem repetir
+perguntas respondidas. Valor null significa resposta ainda ambígua. Um relato de nenhum
+movimento limitado hoje NÃO apaga lesões ou restrições do onboarding. Esses relatos
+não são evidência científica e não substituem a verificação das referências.
+Interprete cada resposta no escopo de question: 'nenhum' sobre movimentos difíceis
+significa nenhum movimento específico relatado, NÃO ausência de dor ou lesão. Isso
+não contradiz dor registrada no onboarding; mantenha essa precaução na proposta.
+'Não' sobre equipamentos significa nenhuma restrição de equipamento relatada.
+Não peça novamente esses mesmos dados nem a resolução da dor para apagar o registro:
+prossiga com as restrições registradas e verifique se há apoio documental para elas.
 reason: missing_client_information para informação essencial ausente do cliente;
 insufficient_evidence para apoio insuficiente nos trechos recuperados;
 conflicting_evidence para fontes aplicáveis incompatíveis; unsupported_guidance
@@ -554,6 +570,8 @@ class AssistantRun:
                 self.role == "initial_plan" and self.context.get("resume_initial_plan")
             )
             routing_instructions = _PLAN_ROUTING
+        self.context["client_answers"] = client_answers(self.context)
+        routing_context["client_answers"] = self.context["client_answers"]
         self.unanswered_client_fields = available_fields(self.context, self.plan_brief)
         if self.role == "initial_plan":
             # Selecting exercises is part of creating the requested plan.
@@ -849,6 +867,7 @@ class AssistantRun:
                             "client_constraints": {
                                 **self.plan_brief,
                                 "client_memory": self.snapshot["facts"],
+                                "client_answers": self.context["client_answers"],
                             }
                         }
                         if proposal

@@ -1073,3 +1073,53 @@ Verification:
 
 No frontend changes or database migration are needed. Previously saved messages
 are preserved; the new rendering applies to subsequent replies.
+
+## Ordered clarification answers — 2026-10-23
+
+Scope: RF-15/RF-18 direct conversation and plan continuation.
+Rollback checkpoint: `8ba614d`.
+
+The preceding fix rendered grouped questions but failed to bind short ordered
+answers to those questions. The synthetic service regression reproduced the
+reported loop: five lines of answers were followed by all five questions again.
+The generation context omitted persisted clarification metadata, and recognition
+only understood selected self-contained phrases. Routing itself could resume.
+
+Recent own-client history now carries the saved clarification metadata. Short
+replies are paired with the immediately preceding backend-rendered question list
+only when the line count/order is unambiguous; explicit numbered partial answers
+use their question indexes. Numeric values are bounded and durations require
+units. Uncertain, invalid or third-party numeric answers stay unresolved. Later
+answers to a clarification replace earlier interpretations. The full original
+message still reaches the model for free-form interpretation; this deterministic
+recovery is not a general semantic extraction system.
+
+The router, specialist and final plan review receive the interpreted answers,
+exact question, source text, units and report date. These are temporary,
+client-reported context reconstructed from bounded retained history, not changes
+to completed onboarding or extra durable medical records. A report that no
+movement is difficult does not establish that recorded pain has resolved.
+Missing-field options exclude valid answers, while partial clarification retains
+the original authorized plan request. No additional model call was introduced.
+
+Validation:
+
+- The original service regression changed from repeating all five questions to
+  creating one proposal. Tests also cover reload, UUID replay, partial recovery,
+  exact question association, malformed/mixed lists, numbered subsets, ambiguous
+  values, corrections and unchanged authoritative health restrictions.
+- Full backend suite with PostgreSQL checks: **766 passed**, two existing Alembic
+  warnings. Final focused clarification/continuation checks: **30 passed**.
+- Read-only replay of the explicitly authorized test-account exchange recognized
+  all five answers and selected `resume`. The first replay exposed another model
+  interpretation problem: it treated no difficult movements as resolution of a
+  recorded symptom. Supplying the exact question and clarifying that distinction
+  advanced the next replay through proposal generation to final grounding review.
+  The review rejected unsupported guidance after **51.07 seconds**; no message,
+  memory or plan was saved. The repeated-question symptom was resolved in this
+  replay, but this does not establish that a grounded plan can be generated from
+  the retrieved passages. Existing human grounding acceptance remains open.
+
+The fixed question catalog and limited deterministic recognition still constrain
+conversation flexibility. This correction supports ordered short replies; it does
+not claim comprehensive understanding of arbitrary phrasing.
