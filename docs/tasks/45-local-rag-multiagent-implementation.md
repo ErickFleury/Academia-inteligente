@@ -214,3 +214,34 @@ quality limitation; the passing synthetic control does not resolve it. The final
 8,192-token probe showed **89% GPU / 11% CPU** residency, rather than the earlier
 100% GPU observation, so full GPU residency is not guaranteed under current
 desktop memory pressure. No paid model or deadline relaxation was introduced.
+
+### Follow-up: preserve source alternatives and intensity conditions
+
+The next replay exposed a more specific false positive: the model paired the
+vigorous-activity weekly quantity with moderate-activity wording. A deterministic
+regression reproduced that error. Source extraction now retains explicit intensity
+conditions beside each weekly quantity, preserving ordinary commas while still
+recognizing decimal commas. The backend rejects a mismatched or omitted intensity
+when allocating a conditioned weekly dose. Ambiguous clauses do not become
+allocation candidates. Quantity values still come from the references.
+
+When retrieved passages support continuous-activity alternatives but provide no
+resistance doses, the generation schema permits one documented alternative, with
+its supported name, quantities and explained weekly allocation. It still permits
+clarification when none meets the request or client conditions; this is not a
+required personal questionnaire or a replacement for a requested resistance plan.
+Sources with resistance doses retain the general plan schema. Semantic review and
+instructor approval remain required.
+
+Final verification after this correction: **807 backend tests passed**, including
+PostgreSQL tests, with two existing Alembic warnings. Ruff lint and formatting of
+changed files passed. The final read-only test-account replay reused all five
+answers and produced a single-activity proposal with matching source duration and
+intensity in **24.06 seconds**, passing the numerical guard and model review. This
+supersedes the earlier failed replay for that case; it is not a full-corpus human
+accuracy result or medical clearance. No account messages, memories or plans were
+saved by the replay. GPU residency remained 89% in the final probe.
+
+Deployment uses migration `20261023_38`, system-wide RAG (`true` / `*`), and the
+8,192-token chat/plan windows. Conversation/memory, grounding, and context-allocation
+checkpoints are `d48643b`, `4b2db0b`, and `e1e27c3`; this follow-up has its own commit.

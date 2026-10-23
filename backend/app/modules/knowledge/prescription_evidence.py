@@ -64,7 +64,8 @@ def normalized(value):
     text = "".join(
         c for c in unicodedata.normalize("NFKD", value.lower()) if not unicodedata.combining(c)
     )
-    text = text.replace("–", "-").replace("−", "-").replace(",", ".")
+    text = text.replace("–", "-").replace("−", "-")
+    text = re.sub(r"(?<=\d),(?=\d)", ".", text)
     return " ".join(text.split())
 
 
@@ -118,6 +119,39 @@ def exercise_present(name, text):
     return True
 
 
+def intensities(text):
+    patterns = {
+        "moderada": r"\b(?:moderad[oa]s?|moderate)\b",
+        "vigorosa": r"\b(?:vigoros[oa]s?|vigorous)\b",
+        "leve": r"\b(?:leves?|light)\b",
+    }
+    return {label for label, pattern in patterns.items() if re.search(pattern, normalized(text))}
+
+
+def weekly_prescriptions(content):
+    """Retain explicit intensity conditions in the same dose clause.
+
+    Ambiguous clauses are not allocation candidates. This recognizes a limited
+    textual pattern; semantic review still checks other conditions/populations.
+    """
+    text = numbers(content)
+    result = []
+    for match in re.finditer(NUMBER + rf"\s*(?P<unit>{TIME})\b", text):
+        before = re.split(r"[.!?;]|\b(?:ou|or)\b", text[: match.start()])[-1]
+        after = re.split(r"[.!?;]|\b(?:ou|or)\b", text[match.end() :])[0]
+        if not re.search(r"\b(?:por semana|per week|semanais|weekly)\b", after[:120]):
+            continue
+        labels = intensities(before[-180:] + " " + after[:120])
+        result.append(
+            {
+                "seconds": bounds(match, time_factor(match["unit"])),
+                "intensity": next(iter(labels)) if len(labels) == 1 else None,
+                "ambiguous_intensity": len(labels) > 1,
+            }
+        )
+    return result
+
+
 def parameters(content):
     timing = list(times(numbers(content)))
     return {
@@ -126,6 +160,7 @@ def parameters(content):
         "rest_seconds": [value for value, rest, _ in timing if rest],
         "duration_seconds": [value for value, rest, weekly in timing if not rest and not weekly],
         "weekly_seconds": [value for value, rest, weekly in timing if not rest and weekly],
+        "weekly_prescriptions": weekly_prescriptions(content),
     }
 
 
@@ -231,6 +266,18 @@ def prescription_gaps(items, citations, *, context, objective=""):
             supported = bool(match and contains(bounds(match), rep_ranges))
         if not supported:
             fields.append("repetitions_supported")
+        if allocation:
+            matched = [
+                row
+                for row in ranges("weekly_prescriptions")
+                if contains((total, total), [row["seconds"]])
+            ]
+            conditioned = [row for row in matched if row["intensity"]]
+            stated = intensities(item.get("load_guidance", ""))
+            if (conditioned and not any(stated == {row["intensity"]} for row in conditioned)) or (
+                matched and all(row["ambiguous_intensity"] for row in matched)
+            ):
+                fields.append("load_supported")
         rest = item["rest_seconds"]
         if not (continuous and rest == 0) and not contains((rest, rest), rest_ranges):
             fields.append("rest_supported")
@@ -249,6 +296,7 @@ def prescription_gaps(items, citations, *, context, objective=""):
                 "sets_supported": "sets",
                 "repetitions_supported": "repetitions",
                 "rest_supported": "rest_seconds",
+                "load_supported": "load_guidance",
             }
             fields = [
                 field
@@ -276,9 +324,13 @@ def allocation_options(references, context):
     names = {"caminhada": "Caminhada", "ciclismo": "Ciclismo", "danca": "Dança"}
     options = []
     for dose in rows:
-        for (daily, upper), (weekly, _) in zip(
-            dose.get("daily_minutes_if_divided", []), dose.get("weekly_minutes", [])
-        ):
+        if "allocation_days_per_week" not in dose:
+            continue
+        for prescription in dose["weekly_prescriptions"]:
+            if prescription["ambiguous_intensity"]:
+                continue
+            weekly, maximum = (value / 60 for value in prescription["seconds"])
+            daily, upper = weekly / days, maximum / days
             if daily != upper or (isinstance(available, (int, float)) and daily > available):
                 continue
             for name, label in names.items():
@@ -292,8 +344,15 @@ def allocation_options(references, context):
                             "rest_seconds": 0,
                             "objective": (
                                 f"{weekly:g} minutos por semana em {days} dias "
-                                f"de {daily:g} minutos."
+                                f"de {daily:g} minutos"
+                                + (
+                                    f", em intensidade {prescription['intensity']}"
+                                    if prescription["intensity"]
+                                    else ""
+                                )
+                                + "."
                             ),
+                            "intensity": prescription["intensity"],
                             "supporting_passages": list(
                                 dict.fromkeys(
                                     [dose["passage_id"], activity["passage_id"], division]

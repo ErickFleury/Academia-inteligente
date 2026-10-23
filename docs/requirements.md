@@ -654,6 +654,12 @@ even when an overall model verdict says the plan is supported. Simple weekly
 allocation may use the client's availability when the source permits distribution;
 its arithmetic must be correct and explained in the proposal. Unchanged values
 in an existing draft may use that saved record; new prescriptions require sources.
+Duration and explicitly documented intensity conditions must stay associated;
+one intensity's weekly amount cannot support a different intensity. If retrieved
+evidence supports only continuous-activity alternatives, structured generation
+may be constrained to one documented alternative. It must still decline when
+that option does not meet the client's request or applicable conditions, and must
+not substitute an aerobic proposal for an explicit resistance-training request.
 Additional retrieval and one proposal correction share the existing call, token,
 retrieval and deadline ceilings. A failed check must not become another request
 for personal facts already supplied or for technical instructions from the client.

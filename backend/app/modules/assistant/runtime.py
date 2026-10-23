@@ -1097,6 +1097,33 @@ class AssistantRun:
             self.context["source_allocation_options"] = allocation_options(
                 self.context["reference_passages"], self.context
             )
+            options = self.context["source_allocation_options"]
+            parameters = self.context["source_prescription_parameters"]
+            if (
+                self.role == "initial_plan"
+                and options
+                and not any(row["sets"] or row["repetitions"] for row in parameters)
+            ):
+                # When retrieved evidence only supports continuous activity,
+                # constrain its representation instead of asking the model to
+                # avoid invented resistance doses or summing alternatives.
+                properties = result_schema["properties"]["plan"]["properties"]
+                properties["items"]["maxItems"] = 1
+                properties["objective"]["enum"] = list(
+                    dict.fromkeys(option["objective"] for option in options)
+                )
+                fields = properties["items"]["items"]["properties"]
+                for key in ("exercise_name", "sets", "repetitions", "rest_seconds"):
+                    fields[key]["enum"] = list(dict.fromkeys(option[key] for option in options))
+                instructions += (
+                    " As fontes recuperadas oferecem alternativas de atividade contínua, "
+                    "sem doses de musculação. O esquema permite UMA alternativa documentada. "
+                    "Escolha somente se ela atende ao pedido e às condições do cliente; "
+                    "caso contrário, retorne clarification. Não transforme um pedido "
+                    "específico de musculação em outro objetivo. O objetivo, duração e "
+                    "intensidade devem corresponder à MESMA alternativa e sua fonte. "
+                    "Não some alternativas nem acrescente aquecimento ou alongamento sem apoio."
+                )
         if plan:
             instructions = instructions.replace("somente o onboarding", "o contexto")
             instructions += _PLAN_GROUNDING

@@ -64,7 +64,13 @@ def test_weekly_allocation_requires_exact_arithmetic_and_visible_explanation():
     context = {
         "client_answers": {"weekly_availability": {"value": 3}, "session_duration": {"value": 60}}
     }
-    walking = item(exercise_name="Caminhada", sets=1, repetitions="50 minutos", rest_seconds=0)
+    walking = item(
+        exercise_name="Caminhada",
+        sets=1,
+        repetitions="50 minutos",
+        rest_seconds=0,
+        load_guidance="Intensidade moderada.",
+    )
     objective = "150 minutos por semana em 3 dias de 50 minutos."
     assert prescription_gaps([walking], source, context=context, objective=objective) == []
     assert prescription_gaps([walking], source, context=context)
@@ -130,3 +136,64 @@ def test_allocation_options_preserve_source_support_and_client_availability():
     assert allocation_options(sources, context) == []
     assert allocation_options(sources, {}) == []
     assert allocation_options(sources[:1], context) == []
+
+
+def test_weekly_duration_cannot_borrow_another_intensity_condition():
+    sources = [
+        {
+            "passage_id": "R1",
+            "content": "Se preferir atividades vigorosas, pratique 75 minutos por semana. "
+            "Pode dividir a prática. Você pode caminhar.",
+        },
+        {
+            "passage_id": "R2",
+            "content": "Se preferir atividades moderadas, pratique 150 minutos por semana.",
+        },
+    ]
+    context = {
+        "client_answers": {"weekly_availability": {"value": 3}, "session_duration": {"value": 60}}
+    }
+    walking = item(
+        exercise_name="Caminhada",
+        sets=1,
+        repetitions="25 minutos",
+        rest_seconds=0,
+        load_guidance="Ritmo moderado.",
+    )
+    objective = "75 minutos por semana em 3 dias de 25 minutos."
+    gaps = prescription_gaps([walking], sources, context=context, objective=objective)
+    assert "load_supported" in gaps[0]["fields"]
+    walking["load_guidance"] = "Intensidade vigorosa."
+    assert prescription_gaps([walking], sources, context=context, objective=objective) == []
+    walking["load_guidance"] = "Ritmo confortável."
+    assert prescription_gaps([walking], sources, context=context, objective=objective)
+    walking.update(repetitions="50 minutos", load_guidance="Intensidade moderada.")
+    objective = "150 minutos por semana em 3 dias de 50 minutos."
+    assert prescription_gaps([walking], sources, context=context, objective=objective) == []
+    options = allocation_options(sources, context)
+    assert {(o["repetitions"], o["intensity"]) for o in options} == {
+        ("25 minutos", "vigorosa"),
+        ("50 minutos", "moderada"),
+    }
+    assert all(o["intensity"] in o["objective"] for o in options)
+
+
+def test_english_intensity_clauses_and_decimal_commas_keep_their_conditions():
+    sources = refs(
+        "Walking: 150 minutes of moderate activity per week or 75 minutes of vigorous "
+        "activity per week. You can divide the practice."
+    )
+    rows = source_parameters(sources, 3)[0]["weekly_prescriptions"]
+    assert [(r["seconds"], r["intensity"]) for r in rows] == [
+        ((9000, 9000), "moderada"),
+        ((4500, 4500), "vigorosa"),
+    ]
+    source = refs("Agachamento: 2 séries de 8 repetições, descanso de 1,5 minutos.")
+    assert prescription_gaps([item()], source, context={}) == []
+    ambiguous = refs(
+        "150 minutos de atividade moderada e vigorosa por semana. Pode dividir e caminhar."
+    )
+    assert (
+        allocation_options(ambiguous, {"client_answers": {"weekly_availability": {"value": 3}}})
+        == []
+    )

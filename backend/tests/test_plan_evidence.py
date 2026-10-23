@@ -436,3 +436,71 @@ def test_real_source_guard_overrides_a_model_that_approves_invented_doses(
     assert "quantidade de séries" in run.clarification["explanation"]
     assert "intervalos de descanso" in run.clarification["explanation"]
     assert not run.citations
+
+
+@pytest.mark.parametrize("with_resistance_doses", [False, True])
+def test_continuous_only_evidence_cannot_generate_a_bundle_of_alternatives(
+    database_session, rollout, with_resistance_doses
+):
+    from app.modules.assistant.client_questions import render_questions
+
+    client = owner(database_session)
+    content = "Você pode caminhar. Faça 150 minutos por semana. Pode dividir a prática."
+    if with_resistance_doses:
+        content += " Agachamento: 2 séries de 8 repetições, descanso de 90 segundos."
+    rollout.passages = [passage(content)]
+
+    class InspectingAgent(Agent):
+        def structured(self, context, instructions, schema, type_, *, role):
+            if role == "initial_plan":
+                properties = schema["properties"]["result"]["anyOf"][0]["properties"]["plan"][
+                    "properties"
+                ]
+                if with_resistance_doses:
+                    assert properties["items"]["maxItems"] == 100
+                    assert "enum" not in properties["objective"]
+                else:
+                    assert properties["items"]["maxItems"] == 1
+                    fields = properties["items"]["items"]["properties"]
+                    assert fields["exercise_name"]["enum"] == ["Caminhada"]
+                    assert fields["repetitions"]["enum"] == ["50 minutos"]
+                    assert properties["objective"]["enum"] == [
+                        "150 minutos por semana em 3 dias de 50 minutos."
+                    ]
+                    # A source-backed candidate remains optional: refusal is
+                    # available when it does not fit the goal or restrictions.
+                    assert {"type": "null"} in schema["properties"]["result"]["anyOf"]
+                return type_.model_validate(
+                    {
+                        "result": None,
+                        "grounding": "clarification",
+                        "citation_ids": [],
+                        "clarification": None,
+                    }
+                )
+            return super().structured(context, instructions, schema, type_, role=role)
+
+    run = AssistantRun(
+        database_session,
+        client.id,
+        "initial_plan",
+        provider=InspectingAgent(route={"query": "atividade física duração intensidade"}),
+    )
+    fields = ["weekly_availability", "session_duration"]
+    run.prepare(
+        {
+            "current_user_message": "3\n60 minutos",
+            "recent_messages": [
+                {
+                    "role": "assistant",
+                    "content": render_questions(fields),
+                    "clarification": {
+                        "reason": "missing_client_information",
+                        "missing_fields": fields,
+                    },
+                }
+            ],
+        }
+    )
+    with pytest.raises(AssistantError, match="assistant_clarification_required"):
+        run.specialist()
