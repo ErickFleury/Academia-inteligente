@@ -245,3 +245,33 @@ saved by the replay. GPU residency remained 89% in the final probe.
 Deployment uses migration `20261023_38`, system-wide RAG (`true` / `*`), and the
 8,192-token chat/plan windows. Conversation/memory, grounding, and context-allocation
 checkpoints are `d48643b`, `4b2db0b`, and `e1e27c3`; this follow-up has its own commit.
+
+### Draft-edit request budget correction (2026-10-23)
+
+Baseline: `b9489fc`. The owner-reported draft substitution failed with
+`input_token_limit` after routing recognized `edit_draft`: it still used the
+ordinary-chat budget. A read-only replay reproduced the failure before the
+specialist call. The conservative cumulative reservation was 32,711 against
+the 32,000 chat ceiling; this was an application budget failure, not a source
+refusal or proof of model-context overflow.
+
+Authorized edits of an owned editable draft now use the existing plan limits:
+60 seconds, six model calls and 64,000/12,000 aggregate input/output ceilings.
+Promotion retains the request start time and every consumed counter, both for
+edits recognized before routing and for semantic edit intent recognized by the
+orchestrator. Ordinary chat and requests without an editable draft keep chat
+limits. The 8,192-token local context window and source/instructor checks remain.
+
+Draft prompts omit unused initial-plan allocation/quantity derivatives and the
+duplicate conversation-style instructions, removing 1,747 UTF-8 bytes in the
+reproduction. Complete source passages, personal answers, saved draft and client
+restrictions remain available; no truncation or larger model window was added.
+
+Validation: five new regression cases first reproduced three failures, then
+passed. The full backend suite passed **812 tests**, including PostgreSQL tests,
+with two existing Alembic warnings; Ruff lint and changed-file formatting passed.
+The same real-account request completed generation and review in read-only replays
+of 32.44 and 28.74 seconds without the budget error. The inspected reply asked
+about limitations relevant to stair climbing and returned no draft update.
+This verifies the technical failure is removed, not that the substitution has
+been applied. Replays saved no account messages, memories or plan changes.

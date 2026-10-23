@@ -2293,9 +2293,9 @@ The owner approved the following design decisions:
   state and retries cannot apply changes twice. Direct memory-screen edits
   remain independent of AI-provider availability.
 - Set provisional total request deadlines of 30 seconds for conversation and
-  60 seconds for plan generation/adaptation, retaining individual adapter
-  timeout/retry limits. Delegation cannot extend the total budget indefinitely;
-  exhaustion must produce a controlled response.
+  60 seconds for plan generation/adaptation (including authorized draft edits),
+  retaining individual adapter timeout/retry limits. Delegation cannot extend the
+  total budget indefinitely; exhaustion must produce a controlled response.
 - Initially use the existing configured chat model for all agents, with optional
   configuration overrides per role. Do not automatically switch to a more
   expensive model or another provider.
@@ -2346,6 +2346,10 @@ The owner approved the following design decisions:
   retrieval rounds. Aggregate input/output token ceilings are 32,000/4,000 for
   conversation and 64,000/12,000 for plans. Stop at any applicable limit, including
   the total deadline; required restrictions must not be truncated to fit.
+  Authorized edits of an existing editable draft use the plan limits, including
+  when the orchestrator recognizes the edit after routing. Promotion retains the
+  same request start time and consumed calls, retrievals and input/output counts;
+  ordinary conversation and requests without an editable draft keep chat limits.
 - If embeddings are unavailable, attempt PostgreSQL full-text retrieval. Answer
   with citations only when sufficiently relevant supporting evidence is found;
   otherwise explain that the guidance cannot be substantiated. Failure of a

@@ -634,8 +634,19 @@ class AssistantRun:
                     raise AssistantError(str(error)) from None
         raise AssistantError("assistant_unavailable")
 
+    def _promote_draft_budget(self):
+        if (
+            self.role == "training_chat"
+            and self.context.get("editable_training_draft")
+            and self.context.get("rules", {}).get("may_update_ai_draft")
+        ):
+            # Editing a proposal uses plan limits, retaining the same elapsed
+            # time, calls, retrievals and token counters as its routing step.
+            self.budget.plan = True
+
     def prepare(self, context):
         self.context = copy.deepcopy(context)
+        self._promote_draft_budget()
         self.context["client_memory"] = self.snapshot["facts"]
         self.context["current_date"] = datetime.now(UTC).date().isoformat()
         self.context["current_message_created_at"] = (
@@ -861,6 +872,7 @@ class AssistantRun:
                 "editable_training_draft"
             ):
                 self.context["rules"]["may_update_ai_draft"] = True
+            self._promote_draft_budget()
         if plan:
             # A proposed prescription cannot bypass evidence by claiming it is
             # merely an explanation of saved records.
@@ -1066,6 +1078,9 @@ class AssistantRun:
                 return self._clarify("router", self.route.clarification_detail)
             return self._clarify("retrieval", reason="insufficient_evidence")
         type_, schema_factory, instructions = _SPECIALISTS[self.role]
+        if self.role == "training_chat":
+            # The shared grounding instructions already include this style.
+            instructions = instructions.removesuffix(ai._CONVERSATIONAL_STYLE)
         if self.role == "onboarding":
             return self._call(
                 self.context,
@@ -1089,7 +1104,10 @@ class AssistantRun:
             # or duration). Instructor-authored free text remains unchanged.
             item_schema = result_schema["properties"]["plan"]["properties"]["items"]["items"]
             item_schema["properties"]["repetitions"]["pattern"] = r"^[0-9].{0,99}$"
-        if plan or self.context.get("rules", {}).get("may_update_ai_draft"):
+        if plan:
+            # These initial-plan/adaptation aids repeat source quantities and
+            # alternatives. Draft editing reads the full passages and saved
+            # draft directly; its backend source checks remain independent.
             self.context["source_prescription_parameters"] = source_parameters(
                 self.context["reference_passages"],
                 self.context.get("client_answers", {}).get("weekly_availability", {}).get("value"),
