@@ -1176,3 +1176,54 @@ Files: `backend/app/modules/assistant/answer_interpretation.py`, `runtime.py`,
 `test_ordered_client_answers.py`; canonical requirements and this evaluation.
 The clarification-topic catalog remains bounded; this change removes reliance
 on fixed answer phrasing, not the catalog itself.
+
+## Hosted fluid-chat investigation — 2026-10-24
+
+Scope: RF-15/RF-18/RF-19 and the approved RAG extension. Implementation checkpoint:
+`2c8c40a`. This is a progress record, not closure of the human accuracy gate.
+
+The fixes improve compound exercise matching, technique-result diversity, damaged
+table filtering, bounded table/context expansion, and retention of general
+programming alongside worked examples. Known exercise variants can constrain
+initial-plan names; unfamiliar technique headings remain available. Numerical,
+equipment, applicability, citation, ownership and independent review checks remain
+required. Uploaded files and stored vectors were not rewritten by these filters.
+
+Routing now receives known onboarding goals/experience and compact validated
+answers. Ordinary technical replies can retain complete conditions within 2,000
+characters. Their review distinguishes saved-plan facts from new technical advice.
+Optional low reasoning effort applies only to routing and ordinary reply generation;
+plan generation, draft editing and all grounding reviews retain the provider default.
+The owner approved deployment limits of 90 seconds per plan turn, 40 seconds per
+provider call and a 95-second processing lease; ordinary chat remains 30 seconds.
+Call, token, model and retrieval ceilings are unchanged.
+
+Validation uses fictional SQLite clients, actual Luna calls, local embeddings and
+read-only access to the active reference corpus. It does not alter real client
+conversations, plans, health records or sources. Automated tests use fake providers.
+
+- Full backend suite, including isolated PostgreSQL checks: **1,004 passed**,
+  with two existing Alembic configuration warnings. Ruff and Git diff checks passed.
+- Earlier live attempts saved grounded proposals in 57.13, 58.31 and 64.49 seconds.
+  These successes did not establish consistent plan-generation reliability.
+- A clean natural-language request with partial information asked only for the
+  missing session duration (6.83 seconds). Answering in free form retained the
+  previous facts and resumed generation. The first attempt reached the 90-second
+  deadline during independent review and saved no draft. Retrying the same request
+  UUID completed in **62.14 seconds**, saved one proposal, and passed reload/replay
+  checks without another provider call or duplicate draft.
+- A subsequent frequency correction completed in **7.53 seconds**, incremented
+  that same draft's revision once, and preserved all exercise items exactly.
+- A follow-up recall question answered the corrected three-session frequency and
+  the earlier one-hour availability in **4.52 seconds**, with no draft revision.
+- An earlier sourced ordinary technical reply completed generation and independent
+  review in 13.5 seconds, without changing the draft. Separate review probes accepted
+  a faithful answer and rejected an invented load/progression and reversed procedure.
+
+Unresolved: live refusals still occur over whether example-derived repetition
+ranges apply to an initial strength-learning phase. The corpus contains damaged
+tables and passages whose scope requires surrounding context. Adding general
+programming to retrieval alone did not eliminate that refusal. Plan-call latency is
+also variable, as the timeout followed by successful replay demonstrates. Do not
+equate automated-test counts, one successful retry or successful service health with
+completion of the fluid-chat reliability or human accuracy acceptance gates.
