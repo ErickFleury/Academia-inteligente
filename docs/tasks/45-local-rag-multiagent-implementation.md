@@ -539,3 +539,54 @@ and budget promotion. No frontend/API migration or new dependency was required.
 Backend recreation completed; `/health` returned HTTP 200 and runtime inspection
 confirmed the new action, `gpt-6-luna` and the 25-second provider timeout. Deployment
 did not replay the account's request or rewrite its existing draft/history.
+
+### Complementary plan evidence and private operational tracing
+
+Owner-approved scope: RF-15/RF-18 generation and rebuild evidence selection,
+with shared RF-19 review and RN-23 log privacy. Checkpoint: `7dc753e`.
+The latest reported turn retained the personal answers and completed its provider
+calls, but its reviewed candidate and correction ended in an evidence clarification.
+Historical passage selection and the precise review rationale were not retained;
+the original refusal's exact cause cannot be reconstructed from the old logs.
+
+A deterministic retrieval regression demonstrates a concrete weakness: repeated
+programming passages crowd an applicable execution passage out of the first five.
+The complementary technique search now prioritizes one explicitly headed movement
+instruction already present in its bounded relevant candidate pool. The ordinary
+programming search retains its ranking. Interleaving still passes at most five
+unique passages to generation, with at most two retrieval rounds. There is no
+source quota, extra embedding call, reindexing, random exercise insertion or
+automatic conclusion that a selected exercise is appropriate for a client.
+
+The review rubric now explicitly matches generation's permission to combine
+compatible cited programming and technique evidence. It checks the applicable
+population, experience, modality, variant and period; each item still requires
+supported quantities, equipment and applicability. An unrelated general modality
+recommendation is not an invented requirement for a bounded proposal. This does
+not permit incomplete content to claim it fulfills a broader requested plan.
+
+Backend `ai_evidence` events identify retrieved passages, actual generation
+context, candidate citations, deterministic prescription gaps, review input and
+review results. A random `trace_id` correlates these with provider and final turn
+events without logging account/message IDs. Metadata is restricted to shared
+source/version/passage UUIDs, bounded counts and allowlisted validation flags and
+reasons. Queries, source text, client answers/health, prompts and model explanations
+are excluded. These diagnostics are not exposed through client APIs or citations.
+
+Synthetic checks cover ranked technique selection, lexical fallback, PostgreSQL,
+absence/withdrawal, bounded merging, compatible evidence composition, missing or
+invented quantities, full draft-rebuild stage tracing, negative review outcomes,
+privacy and concurrent trace isolation. Generic local-only embedding searches
+against the active corpus confirm that a dose query retrieves programming material
+and a technique query retrieves execution sections. A dose-only query can still
+have no technique candidate; the ranking hint cannot manufacture absent evidence.
+No paid generation call or live account replay was performed. The original model's
+interpretation and final plan adequacy still require normal user testing; the new
+trace makes any next refusal diagnosable at the evidence/check level.
+
+Validation: **899 backend tests passed**, including isolated PostgreSQL tests;
+Ruff lint/format and Git whitespace checks passed. Two existing Alembic
+configuration deprecation warnings remain. Backend recreation completed and
+`/health` returned HTTP 200. Runtime inspection confirmed the new ranking/trace
+code, `gpt-6-luna`, the 25-second timeout and local Ollama embeddings. No dependency,
+schema migration, frontend change or secret configuration edit was needed.

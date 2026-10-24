@@ -58,6 +58,58 @@ def activate(sessions, service, version):
         return service.transition(session, current["id"], "activate", current["revision"])
 
 
+def test_complementary_search_preserves_technique_amid_programming_results(setup):
+    sessions, service, provider = setup
+    body = "\n".join(
+        f"# Programação {index}\n"
+        "Resistance training sets repetitions rest: 3 sets of 8 repetitions."
+        for index in range(8)
+    )
+    body += (
+        "\n# Seated Row\nResistance training. Starting Position: sit upright. "
+        "Backward Movement: pull the handles toward the torso."
+    )
+    version = upload(sessions, service, body=body)
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        ordinary = service.search(session, "resistance training sets repetitions rest")
+        assert all("Seated Row" not in row["content"] for row in ordinary)
+        focused = service.search(
+            session, "resistance training sets repetitions rest", prefer_technique=True
+        )
+        assert "Seated Row" in focused[0]["content"]
+        assert len(focused) == 5
+        assert any("Programação" in row["content"] for row in focused)
+        provider.fail = True
+        assert (
+            "Seated Row"
+            in service.search(
+                session, "resistance training sets repetitions rest", prefer_technique=True
+            )[0]["content"]
+        )
+
+
+def test_technique_preference_does_not_add_unmatched_or_withdrawn_sources(setup):
+    sessions, service, provider = setup
+    general = upload(sessions, service, body="Benefícios da caminhada para adultos.")
+    service.import_next(sessions)
+    activate(sessions, service, general)
+    technique = upload(
+        sessions,
+        service,
+        body="# Seated Row\nStarting Position: sit upright. Backward Movement: pull handles.",
+    )
+    service.import_next(sessions)
+    active = activate(sessions, service, technique)
+    provider.fail = True
+    with sessions() as session:
+        hits = service.search(session, "caminhada adultos", prefer_technique=True)
+        assert len(hits) == 1 and hits[0]["version_id"] == str(general["id"])
+        service.transition(session, active["id"], "withdraw", active["revision"])
+        assert service.search(session, "seated row", prefer_technique=True) == []
+
+
 def test_import_requires_explicit_activation_and_preserves_citations(setup):
     sessions, service, provider = setup
     version = upload(sessions, service)

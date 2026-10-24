@@ -5,6 +5,7 @@ import logging
 from contextvars import ContextVar
 from functools import wraps
 from time import perf_counter
+from uuid import UUID, uuid4
 
 # Inherit the application's existing console configuration under Uvicorn.
 logger = logging.getLogger("uvicorn.error.ai")
@@ -66,6 +67,24 @@ _REASONS = {
 _PATHS = {"none", "model", "direct", "confirmation", "cached"}
 _OPERATIONS = {"onboarding", "training_chat", "training_generation", "training_adaptation"}
 _ROLES = {"orchestrator", "onboarding", "training_chat", "initial_plan", "adaptation"}
+_EVIDENCE_STAGES = {
+    "retrieval",
+    "generation",
+    "candidate",
+    "backend_check",
+    "review_input",
+    "review_result",
+    "clarification",
+}
+_CHECKS = {
+    "exercise_supported",
+    "sets_supported",
+    "repetitions_supported",
+    "rest_supported",
+    "load_supported",
+    "equipment_appropriate",
+    "applicable",
+}
 
 
 def _allowed(value, choices, default):
@@ -96,6 +115,89 @@ def record_retry(reason: str, will_retry: bool):
         current["retry_count"] += 1
 
 
+def record_evidence(
+    *,
+    stage,
+    role,
+    references=(),
+    citations=(),
+    checks=(),
+    reason="none",
+    supported=None,
+    relevant_conflict=None,
+    retrieval_round=None,
+    unsupported_count=None,
+    missing_condition_count=None,
+    conflict_count=None,
+):
+    """Backend-only trace of shared reference IDs and validation flags.
+
+    Never accept query text, model explanations, personal fields or account/event
+    IDs. The random turn ID correlates stages without identifying the client.
+    """
+    current = _turn.get()
+    if current is None:
+        return
+
+    def reference_ids(reference):
+        result = {}
+        if not isinstance(reference, dict):
+            return result
+        for key in ("source_id", "version_id", "passage_id"):
+            try:
+                result[key] = str(UUID(str(reference[key])))
+            except (KeyError, TypeError, ValueError, AttributeError):
+                pass
+        return result
+
+    safe_references = [reference_ids(row) for row in references[:10]]
+    safe_checks = []
+    for check in checks[:100]:
+        if not isinstance(check, dict):
+            continue
+        position = check.get("item_position")
+        if type(position) is not int or not 1 <= position <= 100:
+            continue
+        safe_checks.append(
+            {
+                "item_position": position,
+                **{
+                    key: value
+                    for key, value in check.items()
+                    if key in _CHECKS and type(value) is bool
+                },
+            }
+        )
+    metadata = {
+        "event": "ai_evidence",
+        "trace_id": current["trace_id"],
+        "stage": _allowed(stage, _EVIDENCE_STAGES, "unknown"),
+        "role": _allowed(role, _ROLES, "unknown"),
+        "reason": _allowed(reason, _REASONS, "unclassified"),
+        "references": [row for row in safe_references if "passage_id" in row],
+        "cited_passage_ids": list(
+            dict.fromkeys(
+                row["passage_id"]
+                for citation in citations[:10]
+                if "passage_id" in (row := reference_ids(citation))
+            )
+        ),
+        "checks": safe_checks,
+    }
+    for key, value in (("supported", supported), ("relevant_conflict", relevant_conflict)):
+        if type(value) is bool:
+            metadata[key] = value
+    for key, value, maximum in (
+        ("retrieval_round", retrieval_round, 2),
+        ("unsupported_count", unsupported_count, 5),
+        ("missing_condition_count", missing_condition_count, 5),
+        ("conflict_count", conflict_count, 5),
+    ):
+        if type(value) is int:
+            metadata[key] = min(maximum, max(0, value))
+    logger.info(json.dumps(metadata, separators=(",", ":")))
+
+
 def observe_turn(operation: str):
     def decorate(function):
         @wraps(function)
@@ -103,6 +205,7 @@ def observe_turn(operation: str):
             started = perf_counter()
             metadata = {
                 "event": "ai_turn",
+                "trace_id": uuid4().hex,
                 "operation": _allowed(operation, _OPERATIONS, "unknown"),
                 "outcome": "answered",
                 "path": "none",
@@ -169,6 +272,8 @@ def observe_provider_call(function):
         }
         if "role" in kwargs:
             metadata["role"] = _allowed(kwargs["role"], _ROLES, "unknown")
+        if current := _turn.get():
+            metadata["trace_id"] = current["trace_id"]
         try:
             return function(provider, context, instructions, schema, response_type, **kwargs)
         except Exception as error:

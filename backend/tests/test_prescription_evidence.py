@@ -30,6 +30,28 @@ def test_explicit_portuguese_and_english_doses_are_recognized():
         assert prescription_gaps([item()], refs(source), context={}) == []
 
 
+def test_programming_quantities_and_named_technique_can_supply_complementary_evidence():
+    sources = [
+        {
+            "passage_id": "R1",
+            "content": "For resistance exercises: 2 sets of 8 repetitions, "
+            "rest 90 seconds between sets.",
+        },
+        {
+            "passage_id": "R2",
+            "content": "Seção: Squat\nStarting Position: stand upright. "
+            "Downward Movement: bend the knees.",
+        },
+    ]
+    assert prescription_gaps([item()], sources, context={}) == []
+    assert "exercise_supported" in prescription_gaps([item()], sources[:1], context={})[0]["fields"]
+    assert "sets_supported" in prescription_gaps([item()], sources[1:], context={})[0]["fields"]
+    assert (
+        "rest_supported"
+        in prescription_gaps([item(rest_seconds=60)], sources, context={})[0]["fields"]
+    )
+
+
 def test_guideline_ranges_support_values_inside_but_not_outside_them():
     source = refs("Squat: one to four sets, eight to twenty repetitions, 2–3 min rest.")
     assert (

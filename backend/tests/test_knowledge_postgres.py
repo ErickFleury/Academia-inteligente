@@ -57,6 +57,17 @@ def test_vector_and_lexical_queries_use_real_postgres(postgres_sessions):
         assert service.search(session, "sem correspondência") == []
 
 
+def test_complementary_technique_search_in_postgres(postgres_sessions):
+    from test_knowledge import (
+        test_complementary_search_preserves_technique_amid_programming_results,
+    )
+
+    provider = FakeEmbedding()
+    test_complementary_search_preserves_technique_amid_programming_results(
+        (postgres_sessions, KnowledgeService(provider), provider)
+    )
+
+
 def test_portuguese_lexemes_are_not_stemmed_twice(postgres_sessions):
     provider = FakeEmbedding()
     service = KnowledgeService(provider)

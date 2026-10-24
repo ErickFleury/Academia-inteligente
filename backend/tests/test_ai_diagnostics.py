@@ -99,18 +99,60 @@ def test_diagnostic_contexts_are_isolated_and_unknown_metadata_is_discarded(capl
 
     @observe_turn("training_chat")
     def turn(index):
+        from app.integrations.ai_diagnostics import record_evidence
+
         record_turn(path="direct" if index else "model", reason="SENSITIVE" if index else "none")
         if index:
             record_retry("timeout_or_network", True)
         barrier.wait(timeout=10)
+        record_evidence(stage="generation", role="initial_plan", supported=bool(index))
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         list(pool.map(turn, range(2)))
-    by_path = {item["path"]: item for item in events(caplog)}
+    by_path = {item["path"]: item for item in events(caplog) if item["event"] == "ai_turn"}
     assert by_path["direct"]["retry_count"] == 1
     assert by_path["model"]["retry_count"] == 0 and by_path["model"]["reason"] == "none"
     assert "SENSITIVE" not in caplog.text
+    evidence = {
+        item["supported"]: item for item in events(caplog) if item["event"] == "ai_evidence"
+    }
+    assert evidence[True]["trace_id"] == by_path["direct"]["trace_id"]
+    assert evidence[False]["trace_id"] == by_path["model"]["trace_id"]
+    assert evidence[True]["trace_id"] != evidence[False]["trace_id"]
     record_turn(reason="unsupported_answer")  # Outside a turn is harmless and produces no event.
+    assert len(events(caplog)) == 4
+
+
+def test_evidence_trace_only_records_reference_ids_and_bounded_checks(caplog):
+    from uuid import uuid4
+
+    from app.integrations.ai_diagnostics import record_evidence
+
+    caplog.set_level(logging.INFO, logger="uvicorn.error.ai")
+    reference = {key: str(uuid4()) for key in ("source_id", "version_id", "passage_id")}
+    private = "PRIVATE_CLIENT_HEALTH_AND_MESSAGE"
+
+    @observe_turn("training_chat")
+    def turn():
+        record_evidence(
+            stage="review_result",
+            role="initial_plan",
+            references=[{**reference, "content": private, "title": private}],
+            citations=[reference, {"passage_id": private}],
+            checks=[{"item_position": 1, "sets_supported": False, "gap": private}],
+            reason=private,
+            supported=False,
+        )
+
+    turn()
+    evidence, completion = events(caplog)
+    assert evidence["trace_id"] == completion["trace_id"]
+    assert evidence["references"] == [reference]
+    assert evidence["cited_passage_ids"] == [reference["passage_id"]]
+    assert evidence["checks"] == [{"item_position": 1, "sets_supported": False}]
+    assert evidence["reason"] == "unclassified"
+    assert private not in caplog.text
+    record_evidence(stage="generation", role="initial_plan", references=[reference])
     assert len(events(caplog)) == 2
 
 

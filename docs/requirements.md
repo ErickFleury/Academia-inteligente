@@ -2327,6 +2327,20 @@ The owner approved the following design decisions:
   during the pilot. The owner approves the pgvector server extension and its
   Python integration; exact versions and deployment compatibility require
   verification before implementation changes.
+- Owner-approved evidence diagnostics and complementary retrieval (2026-10-23):
+  plan generation/rebuild uses its complementary technique query to prioritize
+  an explicit execution passage already in the relevant candidate pool, retaining
+  the five-passage context and two-search budget. This is a ranking hint, never
+  proof of applicability or permission to invent missing prescriptions. Generation
+  and review may combine compatible cited programming and technique passages;
+  each exercise, dose, equipment and applicability check remains mandatory.
+  Backend-only diagnostics correlate retrieval, generation, checks and review
+  through a random per-turn ID. Log only shared source/version/passage IDs,
+  bounded counts, allowlisted reasons and validation flags; exclude queries,
+  client/account/message IDs, source prose, prompts, answers and health details.
+  Acceptance: complementary evidence survives bounded selection, inactive or
+  unmatched sources are not injected, absent/unsupported doses remain blocked,
+  concurrent traces remain separate and client responses expose no trace/citations.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

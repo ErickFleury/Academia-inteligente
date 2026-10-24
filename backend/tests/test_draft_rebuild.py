@@ -86,7 +86,11 @@ def submit(service, session, message, request_id=None):
     )
 
 
-def test_new_plan_rebuilds_same_draft_and_replay_is_idempotent(database_session, rollout):
+def test_new_plan_rebuilds_same_draft_and_replay_is_idempotent(database_session, rollout, caplog):
+    import json
+    import logging
+
+    caplog.set_level(logging.INFO, logger="uvicorn.error.ai")
     session = database_session
     draft, agent, service = setup(session, rollout)
     submit(TrainingChatService(Agent()), session, "Quero trocar caminhada por escadas.")
@@ -105,6 +109,31 @@ def test_new_plan_rebuilds_same_draft_and_replay_is_idempotent(database_session,
     assert len(agent.calls) == 4
     assert all(budget is agent.budgets[0] for budget in agent.budgets)
     assert agent.budgets[0].plan is True
+    events = [
+        json.loads(record.message) for record in caplog.records if record.name == "uvicorn.error.ai"
+    ]
+    evidence = [
+        event
+        for event in events
+        if event["event"] == "ai_evidence" and event["role"] == "initial_plan"
+    ]
+    assert [event["stage"] for event in evidence] == [
+        "retrieval",
+        "generation",
+        "candidate",
+        "backend_check",
+        "review_input",
+        "review_result",
+    ]
+    assert len({event["trace_id"] for event in evidence}) == 1
+    assert all(
+        event["references"][0]["passage_id"] == rollout.passages[0]["passage_id"]
+        for event in evidence
+    )
+    assert evidence[-1]["checks"][0]["sets_supported"] is True
+    assert "Joelho sensível" not in caplog.text
+    assert "então me faça" not in caplog.text
+    assert "Synthetic supported prescription" not in caplog.text
 
 
 def test_confirmed_health_change_resumes_rebuild_with_updated_record(database_session, rollout):

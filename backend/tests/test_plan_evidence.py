@@ -50,6 +50,7 @@ def test_two_plan_queries_merge_unique_evidence_with_stable_bounded_labels(datab
     class Search(ReferenceTool):
         def search(self, session, query, **kwargs):
             self.queries.append(query)
+            assert kwargs["prefer_technique"] is (len(self.queries) == 2)
             return first if len(self.queries) == 1 else second
 
     search = Search()

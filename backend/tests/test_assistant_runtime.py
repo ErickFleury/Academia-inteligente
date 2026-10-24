@@ -514,8 +514,11 @@ def test_reference_withdrawal_before_commit_discards_answer(database_session, ro
     ],
 )
 def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
-    database_session, rollout, supported, conflict, missing, contradictions, unsupported
+    database_session, rollout, supported, conflict, missing, contradictions, unsupported, caplog
 ):
+    import logging
+
+    caplog.set_level(logging.INFO, logger="uvicorn.error.ai")
     session = database_session
     owner(session)
     rollout.passages = [
@@ -543,6 +546,20 @@ def test_final_orchestrator_review_replaces_unsupported_or_conflicting_guidance(
     assert "Consulte o instrutor" in state.messages[-1].content
     assert state.messages[-1].reference_citations == []
     assert [call[0] for call in provider.calls] == ["orchestrator", "training_chat", "orchestrator"]
+    evidence = [
+        json.loads(record.message)
+        for record in caplog.records
+        if record.name == "uvicorn.error.ai" and '"event":"ai_evidence"' in record.message
+    ]
+    review = next(event for event in evidence if event["stage"] == "review_result")
+    assert review["supported"] is supported
+    assert review["relevant_conflict"] is conflict
+    assert review["missing_condition_count"] == len(missing)
+    assert review["unsupported_count"] == len(unsupported)
+    assert review["conflict_count"] == len(contradictions)
+    assert review["cited_passage_ids"] == [rollout.passages[0]["passage_id"]]
+    assert evidence[-1]["stage"] == "clarification"
+    assert not any(value in caplog.text for value in missing + contradictions + unsupported)
 
 
 def test_expired_budget_cannot_commit_reply_or_memory(database_session):

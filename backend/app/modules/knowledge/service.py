@@ -214,6 +214,33 @@ def section_match(content, query):
     return len(section_terms(heading) & section_terms(query))
 
 
+def technique_passage(content):
+    """Recognize explicit execution sections, not generic benefits or definitions.
+
+    This is a retrieval hint only. Applicability, exercise variants and quantities
+    still require the independent prescription and model checks.
+    """
+    if not content.startswith("Seção: "):
+        return False
+    body = content.partition("\n")[2].casefold()
+    return any(
+        marker in body
+        for marker in (
+            "starting position",
+            "backward movement",
+            "forward movement",
+            "upward movement",
+            "downward movement",
+            "pushing movement",
+            "pulling movement",
+            "posição inicial",
+            "fase concêntrica",
+            "fase excêntrica",
+            "execução do movimento",
+        )
+    )
+
+
 def measurement_terms(query):
     """Recall measurement-bearing passages when repeated headings dominate overlap."""
     terms = section_terms(query)
@@ -543,6 +570,7 @@ class KnowledgeService:
         timeout: float = 10,
         limit: int = 5,
         include_activity_options: bool = False,
+        prefer_technique: bool = False,
     ):
         if not query.strip() or len(query) > 500 or not 1 <= limit <= 10:
             raise KnowledgeError("reference_query_invalid")
@@ -685,6 +713,22 @@ class KnowledgeService:
                     selected = [key for key in selected if key != candidate]
                     selected.insert(min(2, len(selected)), candidate)
                     selected = selected[:limit]
+        if prefer_technique:
+            # The complementary search must not return only another set of
+            # programming abstracts. Promote a relevant execution passage from
+            # the SAME bounded candidate pool; never fetch a random exercise or
+            # impose a source quota. Preserve ordinary ranking for other slots.
+            candidate = next(
+                (
+                    key
+                    for key in ranked
+                    if technique_passage(candidates[key].content)
+                    and population_weight(candidates[key].content, query) == 1
+                ),
+                None,
+            )
+            if candidate is not None:
+                selected = [candidate, *(key for key in selected if key != candidate)][:limit]
         results = []
         for key in selected:
             passage = candidates[key]

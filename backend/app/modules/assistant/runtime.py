@@ -20,7 +20,7 @@ from sqlalchemy.exc import DBAPIError
 
 from app.integrations import ai
 from app.integrations.ai_budget import BudgetExceeded, ExecutionBudget, current_budget
-from app.integrations.ai_diagnostics import record_turn
+from app.integrations.ai_diagnostics import record_evidence, record_turn
 from app.modules.assistant.answer_interpretation import (
     INTERPRET_ANSWERS,
     AnswerUpdate,
@@ -403,6 +403,16 @@ na mesma ordem, com item_position começando em 1. Compare SEPARADAMENTE o nome 
 exercício, séries, repetições/duração, descanso, carga, equipamento e aplicabilidade.
 Não complete detalhes usando seu conhecimento. Uma fonte sobre musculação em geral
 não sustenta automaticamente agachamento, flexão ou outro exercício específico.
+Avalie os trechos CITADOS em conjunto: a técnica e o nome podem vir de um manual,
+enquanto séries, repetições, descanso e carga vêm de uma orientação de programação
+compatível. Não exija que cada trecho isolado contenha toda a prescrição. Confira
+que a orientação realmente abrange esse exercício, modalidade, experiência e
+população, respeitando seu período de aplicação e suas condições. A combinação
+não autoriza transferir doses entre modalidades, variantes ou populações distintas.
+Uma recomendação geral de outra modalidade não obriga acrescentá-la ao pedido,
+salvo quando for condição explícita para a orientação proposta. Não transforme
+uma proposta de escopo delimitado em promessa de programa completo; confira o
+escopo solicitado e o que o objetivo e os itens efetivamente oferecem.
 Uma fonte que permite 2–3 minutos de descanso NÃO sustenta 60 segundos.
 Uma quantidade semanal NÃO sustenta uma duração diária arbitrária: confira a
 distribuição informada no objetivo e a aritmética com os dias disponíveis.
@@ -1096,7 +1106,14 @@ class AssistantRun:
                         query,
                         timeout=min(10, self.budget.remaining()),
                         include_activity_options=self.role == "initial_plan",
+                        prefer_technique=bool(plan and query == self.route.technique_query),
                     )
+                )
+                record_evidence(
+                    stage="retrieval",
+                    role=self.role,
+                    references=rankings[-1],
+                    retrieval_round=self.budget.retrievals,
                 )
                 self.budget.remaining()
             except BudgetExceeded as error:
@@ -1397,6 +1414,13 @@ class AssistantRun:
                 next_step="Peça ao instrutor para revisar esse ajuste antes de prosseguir.",
             )
         self.clarification = {**detail.model_dump(), "stage": stage}
+        record_evidence(
+            stage="clarification",
+            role=self.role,
+            references=self.references,
+            citations=self.citations,
+            reason=detail.reason,
+        )
         if not self.clarification["questions"]:
             self.clarification.pop("questions")
         self.clarification.pop("evidence_query")
@@ -1426,6 +1450,12 @@ class AssistantRun:
             self.budget.remaining()
         except (KnowledgeError, BudgetExceeded) as error:
             raise AssistantError(getattr(error, "code", str(error))) from None
+        record_evidence(
+            stage="retrieval",
+            role=self.role,
+            references=additional,
+            retrieval_round=self.budget.retrievals,
+        )
         combined, seen = [], set()
         for group in zip_longest(additional, self.references):
             for reference in group:
@@ -1608,6 +1638,7 @@ class AssistantRun:
                 self.reference_labels().values()
             )
         specialist_started = monotonic()
+        record_evidence(stage="generation", role=self.role, references=self.references)
         output = self._call(self.context, instructions + _GROUNDING, schema, envelope, self.role)
         specialist_seconds = monotonic() - specialist_started
         if output.grounding == "clarification":
@@ -1666,6 +1697,12 @@ class AssistantRun:
         ):
             raise AssistantError("citation_required", 422)
         self.citations = [allowed[id_] for id_ in dict.fromkeys(canonical_ids)]
+        record_evidence(
+            stage="candidate",
+            role=self.role,
+            references=self.references,
+            citations=self.citations,
+        )
         if self.role == "training_chat":
             output.result.assistant_message = clean_reference_suffix(
                 output.result.assistant_message, output.citation_ids, output.grounding
@@ -1714,6 +1751,20 @@ class AssistantRun:
                     )
                 except (KeyError, TypeError, ValueError):
                     raise AssistantError("malformed_structured_output", 422) from None
+                record_evidence(
+                    stage="backend_check",
+                    role=self.role,
+                    references=self.references,
+                    citations=self.citations,
+                    supported=not source_gaps,
+                    checks=[
+                        {
+                            "item_position": gap["item_position"],
+                            **dict.fromkeys(gap["fields"], False),
+                        }
+                        for gap in source_gaps
+                    ],
+                )
                 if source_gaps:
                     # Do not spend a model review on quantities already disproved
                     # by the cited text. One correction still shares the budget.
@@ -1762,6 +1813,12 @@ class AssistantRun:
                 },
             }
             review_started = monotonic()
+            record_evidence(
+                stage="review_input",
+                role=self.role,
+                references=self.references,
+                citations=self.citations,
+            )
             review = self._call(
                 {
                     **({"delivery_kind": "plan_proposal_pending_approval"} if proposal else {}),
@@ -1857,6 +1914,19 @@ class AssistantRun:
                                 if key not in {"item_position", "gap"} and not value
                             }
                         )
+            record_evidence(
+                stage="review_result",
+                role=self.role,
+                references=self.references,
+                citations=self.citations,
+                checks=[check.model_dump() for check in review.prescription_checks],
+                supported=review.supported,
+                relevant_conflict=review.relevant_conflict,
+                unsupported_count=len(review.unsupported_claims),
+                missing_condition_count=len(review.missing_conditions),
+                conflict_count=len(review.conflicting_statements),
+                reason=review.clarification.reason if review.clarification else "none",
+            )
             if (
                 not review.supported
                 or review.unsupported_claims
