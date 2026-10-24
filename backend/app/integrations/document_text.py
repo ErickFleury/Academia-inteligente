@@ -16,7 +16,7 @@ def reference_limit(name: str, ceiling: int) -> int:
 
 MAX_UPLOAD_BYTES = reference_limit("AI_REFERENCE_MAX_UPLOAD_MIB", 150) * 1024 * 1024
 MAX_TEXT_CHARACTERS = reference_limit("AI_REFERENCE_MAX_CHARACTERS", 2_000_000)
-MAX_PAGES = reference_limit("AI_REFERENCE_MAX_PDF_PAGES", 500)
+MAX_PAGES = reference_limit("AI_REFERENCE_MAX_PDF_PAGES", 1000)
 MEDIA_TYPES = {"application/pdf", "text/plain", "text/markdown"}
 
 
@@ -35,6 +35,8 @@ def extract_document(raw: bytes, media_type: str) -> list[dict[str, str]]:
             timeout=25,
             check=False,
         )
+        if result.returncode == 2:
+            raise DocumentError("document_page_limit")
         if result.returncode or len(result.stdout) > 16_000_000:
             raise DocumentError("document_extraction_failed")
         pages = json.loads(result.stdout)
@@ -58,8 +60,11 @@ def _main():
         from pypdf import PdfReader
 
         reader = PdfReader(BytesIO(raw), strict=True)
-        if reader.is_encrypted or len(reader.pages) > MAX_PAGES:
+        if reader.is_encrypted:
             raise ValueError
+        if len(reader.pages) > MAX_PAGES:
+            # Reserved child exit code; do not expose parser errors or document text.
+            sys.exit(2)
         pages = []
         total = 0
         for index, page in enumerate(reader.pages):

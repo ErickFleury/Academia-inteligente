@@ -6,6 +6,7 @@ import { deleteReference, listReferences, previewReference, referenceAction, upl
 
 const statuses: Record<string, string> = { pending: 'Na fila', processing: 'Processando', ready: 'Pronta para ativar', active: 'Ativa', withdrawn: 'Retirada', failed: 'Falha no processamento' }
 const extractionErrors: Record<string, string> = {
+  document_page_limit: 'O PDF excede o limite de páginas configurado. Divida o documento em arquivos menores; o limite máximo é de 1.000 páginas por PDF.',
   document_no_text: 'Nenhum texto legível encontrado. Envie um PDF com texto selecionável ou um arquivo TXT/Markdown.',
   document_extraction_failed: 'Não foi possível ler este documento. Confira se não está protegido, digitalizado ou acima dos limites.',
   timeout_or_network: 'O serviço de processamento está indisponível. Você pode tentar novamente.',
@@ -60,7 +61,7 @@ export function AiReferencePage({ accessToken, onSignOut }: { accessToken: strin
         <Typography variant="h6">{replacement ? `Nova versão: ${replacement.title}` : 'Adicionar referência'}</Typography>
         <TextField label="Título da referência" value={title} onChange={(e) => setTitle(e.target.value)} disabled={busy || Boolean(replacement)} slotProps={{ htmlInput: { maxLength: 200 } }} />
         <Button component="label" variant="outlined" disabled={busy}>Escolher documento<input hidden type="file" accept=".pdf,.md,.txt" onChange={(e) => setFile(e.target.files?.[0] || null)} /></Button>
-        <Typography variant="body2">{file?.name || 'PDF com texto selecionável, Markdown ou TXT. Até 150 MB e 500 páginas.'}</Typography>
+        <Typography variant="body2">{file?.name || 'PDF com texto selecionável, Markdown ou TXT. Até 150 MB e 1.000 páginas.'}</Typography>
         <Stack direction="row" spacing={1}>
           <Button disabled={busy || !title.trim() || !file} onClick={() => void perform(async () => {
             await uploadReference(accessToken, title.trim(), file!, replacement?.source_id)
