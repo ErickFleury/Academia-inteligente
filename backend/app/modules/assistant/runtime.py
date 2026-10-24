@@ -464,6 +464,14 @@ Se answer.plan ou answer.draft_update está presente, é obrigatório verificar 
 item mesmo quando nenhum detalhe tem apoio. Somente para conversa sem plano nem
 rascunho, prescription_checks=[]."""
 
+_PRESCRIPTION_REVIEW += """ Apoio semântico não exige redação idêntica. Uma paráfrase
+fiel e aplicação direta de orientação geral à modalidade e fase corretas são válidas.
+Por exemplo, se os trechos orientam determinar carga pela faixa de repetições e
+priorizar boa técnica durante a aprendizagem, isso apoia escolher carga compatível
+com essa faixa preservando a técnica. Não exija peso em kg ou teste de força máxima
+que a proposta não prescreve. Isso não permite inventar doses, métodos de teste,
+progressão ou condições clínicas que as fontes não descrevem."""
+
 _PRESCRIPTION_REVIEW += """ A ficha não precisa ser um tutorial completo: a seleção
 pode se apoiar no exercício explicitamente nomeado em um programa aplicável,
 combinado com doses compatíveis. Não rejeite apenas por faltar uma descrição de
