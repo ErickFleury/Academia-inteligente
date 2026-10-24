@@ -73,8 +73,8 @@ def test_valid_upload_is_preserved_and_response_cannot_be_cached():
     assert dict(sent[0]["headers"])[b"x-content-type-options"] == b"nosniff"
 
 
-def test_reference_upload_accepts_35_mib_intact():
-    body = b"a" * (35 * 1024 * 1024)
+def test_reference_upload_accepts_150_mib_intact():
+    body = b"a" * (150 * 1024 * 1024)
     sent, _, received = exercise(
         "/ai/references",
         [{"type": "http.request", "body": body, "more_body": False}],
@@ -86,8 +86,8 @@ def test_reference_upload_accepts_35_mib_intact():
 
 
 @pytest.mark.parametrize("declared", [False, True])
-def test_reference_upload_rejects_one_byte_over_35_mib(declared):
-    limit = 35 * 1024 * 1024
+def test_reference_upload_rejects_one_byte_over_150_mib(declared):
+    limit = 150 * 1024 * 1024
     sent, reads, received = exercise(
         "/ai/references",
         []
