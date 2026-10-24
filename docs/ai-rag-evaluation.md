@@ -1227,3 +1227,17 @@ programming to retrieval alone did not eliminate that refusal. Plan-call latency
 also variable, as the timeout followed by successful replay demonstrates. Do not
 equate automated-test counts, one successful retry or successful service health with
 completion of the fluid-chat reliability or human accuracy acceptance gates.
+
+Deployment: backend recreated with the existing base, LAN HTTPS and GPU Compose
+overrides. Health returned HTTP 200. Safe configuration checks confirmed Luna,
+system-wide orchestration, local `embeddinggemma`, plan/provider limits of 90/40
+seconds and low effort only for routing/ordinary generation. No active real chat
+request was present before the restart. Fictional evidence was copied to host
+`/tmp/fluid-rag-evidence-20261024` before recreation.
+
+A post-deployment ordinary technical question completed in 16.75 seconds but was
+rejected by grounding review: the generated leg-press setup answer described even
+support on the pads without explicitly retaining the source's centered positioning.
+The rejection preserved the draft and survived replay. This is additional evidence
+that ordinary sourced-answer reliability remains open; successful deployment is
+not resolution of all refusals.
