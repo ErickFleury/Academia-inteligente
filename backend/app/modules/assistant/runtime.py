@@ -601,6 +601,23 @@ fala diretamente com o cliente, sem fontes, IDs, instruções internas nem doses
 rejeitadas. Não afirme que o livro inteiro carece de algo: você só viu estes trechos.
 Sem lacuna essencial, clarification=null e produza a proposta solicitada."""
 )
+_READ_ONLY_GROUNDING = (
+    _GROUNDING
+    + """ Se faltar informação essencial, preencha
+clarification; caso contrário, null. Dados pessoais vêm de client_answers, histórico
+e cadastro, nunca dos documentos. Respeite o escopo da pergunta original e as
+restrições atuais; respostas como 'nenhum' não apagam outras queixas. Não repita
+informações já respondidas, inclusive false e experiência none. Agrupe as perguntas
+pessoais ainda necessárias em questions, com field estável e text direto, usando
+reason=missing_client_information e explanation="". Não há formulário obrigatório.
+Lacunas técnicas usam insufficient_evidence, questions=[] e missing_fields=[];
+use evidence_query enquanto houver busca. Sem apoio após a busca, explique somente
+a limitação concreta e o próximo passo com o instrutor. Fontes incompatíveis para
+a mesma situação usam conflicting_evidence. Não peça doses ou conhecimento técnico
+ao cliente nem transforme falta de apoio em contraindicação. Não diga que o livro
+inteiro carece de algo. Fale diretamente com o cliente, sem instruções internas,
+prescrições rejeitadas ou promessas de mudanças salvas."""
+)
 _GROUNDING += _CLARIFICATION
 _GROUNDING += ai._CONVERSATIONAL_STYLE
 _REVIEW += _CLARIFICATION
@@ -1907,7 +1924,7 @@ class AssistantRun:
         specialist_started = monotonic()
         record_evidence(stage="generation", role=self.role, references=self.references)
         model_context = self.context
-        if self.role == "initial_plan":
+        if self.role == "initial_plan" or (self.role == "training_chat" and not editing):
             # Routing already interpreted answers. Preserve all source text and
             # unique facts while avoiding a second copy of normalized memory.
             model_context = {
@@ -1924,13 +1941,21 @@ class AssistantRun:
                     and data.get("unit") == answers[data["field"]].get("unit")
                 )
             ]
-            model_context["source_prescription_parameters"] = [
-                {key: value for key, value in row.items() if value}
-                for row in self.context["source_prescription_parameters"]
-            ]
+            if "source_prescription_parameters" in self.context:
+                model_context["source_prescription_parameters"] = [
+                    {key: value for key, value in row.items() if value}
+                    for row in self.context["source_prescription_parameters"]
+                ]
         output = self._call(
             model_context,
-            instructions + (_PLAN_OUTPUT_RULES if self.role == "initial_plan" else _GROUNDING),
+            instructions
+            + (
+                _PLAN_OUTPUT_RULES
+                if self.role == "initial_plan"
+                else _READ_ONLY_GROUNDING
+                if self.role == "training_chat" and not editing
+                else _GROUNDING
+            ),
             schema,
             envelope,
             self.role,
@@ -2191,7 +2216,12 @@ class AssistantRun:
                     ),
                 },
                 (_PLAN_REVIEW if self.role == "initial_plan" or editing else _REVIEW)
-                + _PRESCRIPTION_REVIEW
+                + (
+                    _PRESCRIPTION_REVIEW
+                    if proposal
+                    else " Sem plano ou rascunho nesta resposta, prescription_checks=[]. "
+                    "Confira todas as afirmações, condições e conflitos da orientação."
+                )
                 + (
                     "\nO backend informa que esta saída é somente uma proposta pendente "
                     "de aprovação, não um treino autorizado para execução. As confirmações "

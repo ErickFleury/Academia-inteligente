@@ -277,26 +277,28 @@ def test_known_table_number_sequence_is_not_a_phone_number(database_session):
             run._prepare_evidence_query(prohibited)
 
 
-def test_plan_prompt_omits_duplicate_metadata_without_dropping_source_or_client_facts(
-    database_session, rollout
+@pytest.mark.parametrize("role", ["initial_plan", "training_chat"])
+def test_prompt_omits_duplicate_metadata_without_dropping_source_or_client_facts(
+    database_session, rollout, role
 ):
     client = owner(database_session)
     rollout.passages = [passage("Squat: 3 sets of 8 repetitions, rest 90 seconds.")]
     provider = Agent(route={"query": "squat sets repetitions rest"})
     provider.citations = ["R1"]
-    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    run = AssistantRun(database_session, client.id, role, provider=provider)
     run.prepare({})
     duplicate = {"answer_data": {"field": "age", "value": 19}, "text": "Age 19"}
     preference = {"text": "Prefers mornings"}
     run.context["client_answers"] = {"age": {"value": 19, "reported_at": "2026-10-24"}}
     run.context["client_memory"] = [duplicate, preference]
     run.specialist()
-    sent = next(context for role, context, _ in provider.calls if role == "initial_plan")
+    sent = next(context for call_role, context, _ in provider.calls if call_role == role)
     assert sent["client_memory"] == [preference]
     assert sent["client_answers"] == run.context["client_answers"]
     assert sent["reference_passages"] == run.context["reference_passages"]
     assert "question_catalog" not in sent
-    assert "duration_seconds" not in sent["source_prescription_parameters"][0]
+    if role == "initial_plan":
+        assert "duration_seconds" not in sent["source_prescription_parameters"][0]
     assert run.context["client_memory"] == [duplicate, preference]
 
 
@@ -683,3 +685,66 @@ def test_current_goal_interpretation_controls_plan_scope_without_rewriting_onboa
         run.context["authoritative_health_records"]["limitations_or_complaints"]
         == "Joelho sensível"
     )
+
+
+def test_readonly_rag_generation_and_review_fit_shared_budget(
+    database_session, rollout, monkeypatch
+):
+    import json
+    from io import BytesIO
+
+    from app.integrations import ai
+
+    client = owner(database_session)
+    rollout.passages = [
+        passage("Seção: Leg Press\n" + "Keep feet supported and preserve controlled motion. " * 20)
+        for _ in range(5)
+    ]
+    responses = [
+        {"specialist": "training_chat", "query": "leg press technique", "needs_references": True},
+        {
+            "result": {"assistant_message": "Mantenha os pés apoiados e controle o movimento."},
+            "citation_ids": ["R1"],
+            "grounding": "references",
+        },
+        {
+            "supported": True,
+            "relevant_conflict": False,
+            "prescription_checks": [],
+            "unsupported_claims": [],
+            "missing_conditions": [],
+            "conflicting_statements": [],
+        },
+    ]
+    calls = []
+
+    def respond(request, timeout):
+        calls.append(json.loads(request.data))
+        return BytesIO(
+            json.dumps(
+                {
+                    "output": [
+                        {
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": json.dumps(responses[len(calls) - 1]),
+                                }
+                            ]
+                        }
+                    ],
+                    "usage": {"input_tokens": 5700, "output_tokens": 100},
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    provider = ai.OpenAiResponsesOnboardingProvider(ai.OpenAiConfig("test", "test", 10))
+    run = AssistantRun(database_session, client.id, "training_chat", provider=provider)
+    run.prepare({"current_user_message": "Como faço o leg press? Não altere o treino."})
+    reply = run.specialist()
+    assert reply.assistant_message == "Mantenha os pés apoiados e controle o movimento."
+    assert reply.draft_update is None
+    assert len(calls) == 3
+    assert run.budget.input_tokens == 17100
+    assert len(run.references) == 5
