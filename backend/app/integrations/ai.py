@@ -63,7 +63,7 @@ class AiTrainingChatResponse(BaseModel):
     """Client-facing reply with an optional, non-binding adaptation suggestion."""
 
     model_config = ConfigDict(extra="forbid")
-    assistant_message: str = Field(min_length=1, max_length=600)
+    assistant_message: str = Field(min_length=1, max_length=2000)
     adaptation_suggested: bool = False
     adaptation_reason: str | None = Field(default=None, max_length=300)
     draft_update: dict[str, Any] | None = None
@@ -304,7 +304,7 @@ def _training_chat_schema() -> dict[str, object]:
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 600},
+            "assistant_message": {"type": "string", "minLength": 1, "maxLength": 2000},
             "adaptation_suggested": {"type": "boolean"},
             "adaptation_reason": {"type": ["string", "null"], "maxLength": 300},
             "draft_update": {"anyOf": [draft, {"type": "null"}]},

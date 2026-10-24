@@ -613,6 +613,12 @@ introductions, profile recaps, or routine explanations. Group all currently
 identifiable essential missing information into one short message; retain known
 answers and ask only what remains. A clarification can contain questions without
 an introductory explanation. Preserve relevant precautions and grounding checks.
+Technical training-chat replies may use up to 2,000 characters to preserve complete
+instructions and necessary conditions; ordinary replies remain concise. Read-only
+generation and review omit duplicate answer metadata and plan-only instructions,
+without dropping unique client facts, source text, or grounding checks. Existing
+turn budgets remain unchanged. Acceptance: a sourced technical answer longer than
+600 characters can complete generation/review without truncation or draft mutation.
 After an explicit initial-plan request, a backend-marked clarification for missing
 client information keeps that request authorized: the next relevant answer
 resumes generation, and sufficient information/evidence produces the draft

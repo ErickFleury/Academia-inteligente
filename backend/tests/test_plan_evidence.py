@@ -687,8 +687,9 @@ def test_current_goal_interpretation_controls_plan_scope_without_rewriting_onboa
     )
 
 
+@pytest.mark.parametrize("detail", [False, True])
 def test_readonly_rag_generation_and_review_fit_shared_budget(
-    database_session, rollout, monkeypatch
+    database_session, rollout, monkeypatch, detail
 ):
     import json
     from io import BytesIO
@@ -700,10 +701,11 @@ def test_readonly_rag_generation_and_review_fit_shared_budget(
         passage("Seção: Leg Press\n" + "Keep feet supported and preserve controlled motion. " * 20)
         for _ in range(5)
     ]
+    answer = "Mantenha os pés apoiados e controle o movimento." * (20 if detail else 1)
     responses = [
         {"specialist": "training_chat", "query": "leg press technique", "needs_references": True},
         {
-            "result": {"assistant_message": "Mantenha os pés apoiados e controle o movimento."},
+            "result": {"assistant_message": answer},
             "citation_ids": ["R1"],
             "grounding": "references",
         },
@@ -743,7 +745,7 @@ def test_readonly_rag_generation_and_review_fit_shared_budget(
     run = AssistantRun(database_session, client.id, "training_chat", provider=provider)
     run.prepare({"current_user_message": "Como faço o leg press? Não altere o treino."})
     reply = run.specialist()
-    assert reply.assistant_message == "Mantenha os pés apoiados e controle o movimento."
+    assert reply.assistant_message == answer
     assert reply.draft_update is None
     assert len(calls) == 3
     assert run.budget.input_tokens == 17100

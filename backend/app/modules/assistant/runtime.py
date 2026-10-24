@@ -620,7 +620,9 @@ prescrições rejeitadas ou promessas de mudanças salvas."""
 )
 _GROUNDING += _CLARIFICATION
 _GROUNDING += ai._CONVERSATIONAL_STYLE
-_READ_ONLY_REVIEW = _REVIEW + """ Se houver uma lacuna, clarification identifica
+_READ_ONLY_REVIEW = (
+    _REVIEW
+    + """ Se houver uma lacuna, clarification identifica
 somente a falha concreta em uma frase curta em pt-BR, diretamente ao cliente.
 Use reason=unsupported_guidance para orientação sem apoio, conflicting_evidence
 para conflito relevante e insufficient_evidence para evidência insuficiente.
@@ -629,6 +631,7 @@ Se reference_searches_remaining > 0, evidence_query pode buscar a lacuna especí
 com até 12 palavras e sem dados pessoais. Sem lacuna, clarification=null.
 Não imponha requisitos ausentes nas fontes e não transforme falta de evidência
 em contraindicação. Preserve toda condição realmente necessária ao procedimento."""
+)
 _REVIEW += _CLARIFICATION
 
 _SPECIALISTS = {
@@ -640,6 +643,8 @@ _SPECIALISTS = {
 
 _READ_ONLY_CHAT = """Você é o assistente de treino da Academia Inteligente.
 Responda à mensagem atual em pt-BR, com frases ou itens breves, sem introdução.
+Use o espaço necessário para completar as condições e etapas solicitadas; nunca
+corte uma frase ou omita uma condição necessária para encurtar a resposta.
 Limite-se ao que foi perguntado: uma pergunta sobre duração pede duração, sem
 acrescentar recomendações de intensidade, progressão ou outros assuntos não pedidos.
 Use o histórico, resumo e memórias como contexto datado; só fatos do próprio cliente.
@@ -1723,7 +1728,7 @@ class AssistantRun:
                 raise AssistantError(
                     "assistant_clarification_required", 422, clarification=self.clarification
                 )
-            # Model replies have a 600-character limit. The caller renders the
+            # Model replies have a 2,000-character limit. The caller renders the
             # complete server-built health comparison, which may include two
             # validated 2,000-character fields; never truncate reviewed data.
             return ai.AiTrainingChatResponse(assistant_message="Confira a atualização do cadastro.")
