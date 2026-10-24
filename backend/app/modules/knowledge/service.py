@@ -242,7 +242,7 @@ def technique_passage(content):
     return any(marker in body for marker in _TECHNIQUE_MARKERS)
 
 
-def technique_subject_match(content, query):
+def technique_subject_terms(content):
     """A technique promotion must match a subject, not a generic chapter label."""
     heading = content.split("\n", 1)[0][7:].rsplit(" / ", 1)[-1]
     generic = section_terms(
@@ -250,7 +250,42 @@ def technique_subject_match(content, query):
         "treinamento musculação força técnica execução exercício movimento programação "
         "starting position posição inicial beginner novice adult iniciante adulto"
     )
-    return len((section_terms(heading) - generic) & section_terms(query))
+    return section_terms(heading) - generic
+
+
+def technique_subject_match(content, query):
+    return len(technique_subject_terms(content) & section_terms(query))
+
+
+def unusable_table(content):
+    """Exclude clearly broken numeric layouts, never reconstruct their doses.
+
+    A conservative retrieval guard, not an OCR accuracy score. Preserve prose,
+    labelled rows and structured Markdown tables; retain the original in storage.
+    """
+    if not re.search(r"\b(?:table|tabela)\b", content, re.I):
+        return False
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    if len(lines) < 8:
+        return False
+    if any(re.fullmatch(r"\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?", line) for line in lines):
+        return False
+    opaque = sum(
+        bool(re.search(r"\d", line)) and not re.search(r"[^\W\d_]{3,}", line) for line in lines
+    )
+    return opaque >= 6 and opaque / len(lines) >= 0.45
+
+
+def distinct_technique_rows(rows, *, limit=20):
+    selected, seen = [], set()
+    for row in rows:
+        heading = row.content.split("\n", 1)[0].casefold()
+        if heading not in seen and technique_passage(row.content):
+            selected.append(row)
+            seen.add(heading)
+        if len(selected) == limit:
+            break
+    return selected
 
 
 def merge_plan_references(additional, previous, *, limit=5):
@@ -466,7 +501,7 @@ class KnowledgeService:
         for seed in seeds:
             for delta in (-1, 1) if continued(seed) else (1, -1):
                 row = neighbors.get((seed.version_id, seed.position + delta))
-                if row is None or row.id in seen:
+                if row is None or row.id in seen or unusable_table(row.content):
                     continue
                 seed_page = re.match(r"page:(\d+)", seed.location)
                 row_page = re.match(r"page:(\d+)", row.location)
@@ -746,6 +781,28 @@ class KnowledgeService:
             .join(ReferenceVersion)
             .where(ReferenceVersion.active.is_(True), ReferenceVersion.status == "active")
         )
+
+        def technique_candidates(statement, relevance):
+            # Diversity must happen before LIMIT: otherwise repeated pages of
+            # one exercise consume the entire focused candidate pool.
+            grouped = statement.with_only_columns(
+                ReferencePassage.id.label("passage_id"),
+                relevance.label("relevance"),
+                func.row_number()
+                .over(
+                    partition_by=func.split_part(ReferencePassage.content, "\n", 1),
+                    order_by=(relevance, ReferenceVersion.source_id, ReferencePassage.position),
+                )
+                .label("subject_rank"),
+            ).subquery()
+            return session.scalars(
+                select(ReferencePassage)
+                .join(grouped, grouped.c.passage_id == ReferencePassage.id)
+                .where(grouped.c.subject_rank == 1)
+                .order_by(grouped.c.relevance, ReferencePassage.position, ReferencePassage.id)
+                .limit(20)
+            ).all()
+
         focused, technique_lexical, technique_semantic = [], [], []
         if session.bind.dialect.name == "postgresql":
             document = func.to_tsvector(
@@ -768,15 +825,10 @@ class KnowledgeService:
                 .limit(20)
             ).all()
             if technique_focus:
-                technique_lexical = session.scalars(
-                    base.where(document.op("@@")(terms), *technique_filter)
-                    .order_by(
-                        func.ts_rank_cd(document, terms).desc(),
-                        ReferenceVersion.source_id,
-                        ReferencePassage.position,
-                    )
-                    .limit(5)
-                ).all()
+                technique_lexical = technique_candidates(
+                    base.where(document.op("@@")(terms), *technique_filter),
+                    -func.ts_rank_cd(document, terms),
+                )
             if units := measurement_terms(query):
                 unit_query = func.plainto_tsquery(text("'portuguese'::regconfig"), units)
                 unit_terms = func.replace(unit_query.cast(Text), " & ", " | ").cast(TSQUERY)
@@ -799,9 +851,7 @@ class KnowledgeService:
             )
             lexical = lexical_candidates[:20]
             if technique_focus:
-                technique_lexical = [
-                    row for row in lexical_candidates if technique_passage(row.content)
-                ][:5]
+                technique_lexical = distinct_technique_rows(lexical_candidates)
         semantic = []
         try:
             query_vector = self.provider.embed([query], purpose="query", timeout=timeout)[0]
@@ -829,11 +879,9 @@ class KnowledgeService:
                     # Reuse the same query vector and distance threshold. An
                     # execution passage must survive candidate selection even
                     # when twenty programming passages rank ahead of it.
-                    technique_semantic = session.scalars(
-                        compatible.where(distance <= 0.60, *technique_filter)
-                        .order_by(distance, ReferenceVersion.source_id, ReferencePassage.position)
-                        .limit(5)
-                    ).all()
+                    technique_semantic = technique_candidates(
+                        compatible.where(distance <= 0.60, *technique_filter), distance
+                    )
             else:
 
                 def distance(row):
@@ -847,9 +895,7 @@ class KnowledgeService:
                 )
                 semantic = semantic_candidates[:20]
                 if technique_focus:
-                    technique_semantic = [
-                        row for row in semantic_candidates if technique_passage(row.content)
-                    ][:5]
+                    technique_semantic = distinct_technique_rows(semantic_candidates)
         except AiProviderError:
             pass  # Explicit lexical-only degradation; never switch provider.
         semantic_ranks = {}
@@ -877,6 +923,8 @@ class KnowledgeService:
             (technique_semantic, 1),
         ):
             for rank, passage in enumerate(ranking, 1):
+                if unusable_table(passage.content):
+                    continue
                 if ranking is semantic:
                     rank = semantic_ranks[passage.id]
                 candidates[passage.id] = passage
@@ -942,13 +990,19 @@ class KnowledgeService:
                 and population_weight(candidates[key].content, query) == 1
                 and technique_subject_match(candidates[key].content, query) > 0
             ]
-            candidate = max(
-                matches,
-                key=lambda key: technique_subject_match(candidates[key].content, query),
-                default=None,
-            )
-            if candidate is not None:
-                selected = [candidate, *(key for key in selected if key != candidate)][:limit]
+            covered, diverse = set(), []
+            subjects = {
+                key: technique_subject_terms(candidates[key].content) & section_terms(query)
+                for key in matches
+            }
+            while matches and len(diverse) < limit:
+                candidate = max(matches, key=lambda key: len(subjects[key] - covered))
+                if not subjects[candidate] - covered:
+                    break
+                diverse.append(candidate)
+                covered.update(subjects[candidate])
+                matches.remove(candidate)
+            selected = [*diverse, *(key for key in selected if key not in diverse)][:limit]
         results = []
         for key in selected:
             passage = candidates[key]

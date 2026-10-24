@@ -2404,6 +2404,21 @@ The owner approved the following design decisions:
   privacy-invalid queries never reach embeddings; failed repairs cannot loop or
   exceed budgets; generic technique queries do not force an unrelated exercise;
   named technique searches still retrieve active, relevant execution passages.
+- Retrieval coverage and table-quality recovery (2026-10-24): technique candidate
+  selection must diversify by explicit exercise heading before applying its cap,
+  so repeated pages of one exercise cannot exclude all other requested subjects.
+  Each focused lexical/semantic pool may contain up to twenty distinct headings,
+  superseding the earlier five-candidate focused cap; reuse the same embedding
+  and preserve active-version, namespace, relevance and execution-budget checks.
+  Final selection prioritizes coverage of requested exercise subjects before
+  redundant continuation passages. The final five/twelve-passage limits remain.
+  Clearly broken numeric table fragments are excluded from retrieval and neighbor
+  expansion without deleting or rewriting stored source text, vectors or files.
+  Preserve readable labelled/structured tables and prose; do not reconstruct
+  uncertain dose relationships. Acceptance: multi-exercise requests retain the
+  requested subjects despite repeated higher-ranked sections; known corrupt
+  numeric layouts cannot return through neighbor expansion; readable tables,
+  conditions, provenance and grounding checks remain intact.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits
