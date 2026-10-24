@@ -285,12 +285,20 @@ def unusable_table(content):
     A conservative retrieval guard, not an OCR accuracy score. Preserve prose,
     labelled rows and structured Markdown tables; retain the original in storage.
     """
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    if any(re.fullmatch(r"\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?", line) for line in lines):
+        return False
+    if lines:
+        headings = Counter(re.findall(r"[a-z]{2,}", lines[0].lower()))
+        dense = sum(
+            len(re.findall(r"\d+", line)) >= 12 and len(re.findall(r"[^\W\d_]{3,}", line)) <= 1
+            for line in lines[1:]
+        )
+        if dense >= 3 and max(headings.values(), default=0) >= 3:
+            return True  # Repeated column groups with lost caption/cell boundaries.
     if not re.search(r"\b(?:table|tabela)\b", content, re.I):
         return False
-    lines = [line.strip() for line in content.splitlines() if line.strip()]
     if len(lines) < 8:
-        return False
-    if any(re.fullmatch(r"\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?", line) for line in lines):
         return False
     opaque = sum(
         bool(re.search(r"\d", line)) and not re.search(r"[^\W\d_]{3,}", line) for line in lines
@@ -329,7 +337,8 @@ def merge_plan_references(additional, previous, *, limit=5):
     if len(ordered) <= limit or limit == 1:
         return ordered[:limit]
     facets = {}
-    for reference, parameters in zip(ordered, source_parameters(ordered), strict=True):
+    extracted = source_parameters(ordered)
+    for reference, parameters in zip(ordered, extracted, strict=True):
         kinds = {
             key
             for key in ("sets", "repetitions", "rest_seconds", "duration_seconds", "weekly_seconds")
@@ -345,6 +354,34 @@ def merge_plan_references(additional, previous, *, limit=5):
             kinds.add("distribution")
         facets[reference["passage_id"]] = kinds
     selected = {ranking[0]["passage_id"] for ranking in (additional, previous) if ranking}
+    if (
+        limit >= 3
+        and previous
+        and re.search(
+            r"\b(?:sample|example|in this case|exemplo|neste caso)\b", previous[0]["content"], re.I
+        )
+    ):
+        # General programming must not disappear merely because a worked
+        # example already supplies quantities of the same kinds. Keep at most
+        # one already-ranked complete guideline for applicability/conflict review.
+        previous_ids = {row["passage_id"] for row in previous}
+        for reference, parameters in zip(ordered, extracted, strict=True):
+            if (
+                reference["passage_id"] in previous_ids
+                and all(parameters[key] for key in ("sets", "repetitions", "rest_seconds"))
+                and re.search(
+                    r"\b(?:guidelines?|recommend\w*|diretrizes|recomenda\w*)\b",
+                    reference["content"],
+                    re.I,
+                )
+                and not re.search(
+                    r"\b(?:sample|example|in this case|exemplo|neste caso)\b",
+                    reference["content"],
+                    re.I,
+                )
+            ):
+                selected.add(reference["passage_id"])
+                break
     covered = set().union(*(facets[key] for key in selected))
     remaining = [reference for reference in ordered if reference["passage_id"] not in selected]
     while len(selected) < limit and remaining:

@@ -102,6 +102,10 @@ def test_corrupt_table_is_excluded_from_search_and_neighbors(setup):
     [
         "Table 1\nExercise Sets Repetitions Rest\n" + "Squat 2 10 60\n" * 10,
         "Table 1\n| Sets | Reps | Rest |\n| --- | --- | --- |\n" + "| 2 | 10 | 60 |\n" * 10,
+        "| Reps | Load | Reps | Load | Reps | Load | Reps | Load |\n"
+        "| --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        + "| 10–12 | 40–50 | 10–12 | 40–50 | 10–12 | 40–50 | 10–12 | 40–50 |\n"
+        * 3,
         "Table 1 summarizes the results.\n" + "Beginners can use two sets when appropriate.\n" * 10,
         "Starting Position\n" + "\n".join(f"{i}. Keep the body supported." for i in range(12)),
     ],
@@ -254,3 +258,14 @@ def test_compound_coverage_retains_an_explicit_subject_outside_known_aliases(set
     with sessions() as session:
         hits = service.search(session, "bench press pallof press technique", prefer_technique=True)
     assert any("Pallof Press" in row["content"].split("\n")[0] for row in hits)
+
+
+def test_dense_broken_table_continuation_without_caption_is_excluded():
+    from app.modules.knowledge.service import unusable_table
+
+    content = (
+        "Reps VL TI Reps VL TI Reps VL TI Reps VL TI\n"
+        + ("1 120 18150 151 180 24750 138 120 16800 140 180 22200 123\n" * 4)
+        + "Reps = repetitions; VL = volume load.\nGeneral discussion continues below."
+    )
+    assert unusable_table(content)

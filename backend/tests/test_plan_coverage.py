@@ -332,3 +332,27 @@ def test_gap_search_preserves_quantities_and_named_activities_in_generation_cont
     assert run._search_for_evidence("strength prescription technique")
     assert run.specialist().plan["items"]
     assert run.budget.retrievals == 2
+
+
+def test_merge_keeps_general_programming_alongside_a_worked_example():
+    example = passage(
+        "Example novice program: Bench press and leg press, "
+        "2 sets of 15 repetitions; rest 30 seconds."
+    )
+    general = passage(
+        "Guidelines for adults recommend one to four sets of eight to twenty repetitions, "
+        "with 2–3 minutes rest between sets."
+    )
+    techniques = [
+        passage(f"Seção: {name}\nStarting Position: keep control.")
+        for name in (
+            "Incline Bench Press",
+            "Leg Press",
+            "Seated Row",
+            "Shoulder Press",
+            "Flat Bench Press",
+        )
+    ]
+    result = merge_plan_references(techniques, [example, general], limit=5)
+    assert techniques[0] in result and example in result and general in result
+    assert len(result) == 5
