@@ -26,6 +26,76 @@ def passage(content):
     }
 
 
+@pytest.mark.parametrize("changed_duration", [False, True])
+def test_exact_backend_allocation_retains_its_derivation_citations(
+    database_session, rollout, changed_duration
+):
+    from app.modules.assistant.client_questions import render_questions
+    from app.modules.knowledge.prescription_evidence import prescription_gaps
+
+    client = owner(database_session)
+    rollout.prescription_gaps = prescription_gaps
+    rollout.passages = [
+        passage("Faça 150 minutos de atividade física moderada por semana."),
+        passage("Você pode caminhar."),
+        passage("Você pode dividir a sua prática em pequenos blocos de tempo."),
+    ]
+
+    class AllocationAgent(Agent):
+        def structured(self, context, instructions, schema, type_, *, role):
+            result = super().structured(context, instructions, schema, type_, role=role)
+            if role == "initial_plan":
+                option = context["source_allocation_options"][0]
+                result.result.plan = {
+                    "name": "Caminhada moderada",
+                    "objective": option["objective"],
+                    "items": [
+                        {
+                            key: option[key]
+                            for key in ("exercise_name", "sets", "repetitions", "rest_seconds")
+                        }
+                        | {
+                            "repetitions": "49 minutos" if changed_duration else "50 minutos",
+                            "load_guidance": "Intensidade moderada.",
+                            "equipment_requirement": None,
+                            "equipment_model_id": None,
+                        }
+                    ],
+                }
+            return result
+
+    provider = AllocationAgent(route={"query": "atividade física duração intensidade"})
+    provider.citations = ["R1", "R2"]  # Model omitted only the division paragraph.
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    fields = ["weekly_availability", "session_duration"]
+    run.prepare(
+        {
+            "current_user_message": "3\n120 minutos",
+            "recent_messages": [
+                {
+                    "role": "assistant",
+                    "content": render_questions(fields),
+                    "clarification": {
+                        "reason": "missing_client_information",
+                        "missing_fields": fields,
+                    },
+                }
+            ],
+        }
+    )
+    if changed_duration:
+        with pytest.raises(AssistantError, match="assistant_clarification_required"):
+            run.specialist()
+        assert not any("cited_passages" in context for _, context, _ in provider.calls)
+    else:
+        assert run.specialist().plan["items"][0]["repetitions"] == "50 minutos"
+        review = next(c for _, c, _ in provider.calls if "cited_passages" in c)
+        assert {p["passage_id"] for p in review["cited_passages"]} == {"R1", "R2", "R3"}
+        assert {p["passage_id"] for p in run.citations} == {
+            p["passage_id"] for p in rollout.passages
+        }
+
+
 def test_plan_router_uses_own_goal_experience_and_restrictions_not_measurements(database_session):
     client = owner(database_session)
     complete_onboarding(database_session, "owner")
@@ -633,16 +703,23 @@ def test_real_source_guard_overrides_a_model_that_approves_invented_doses(
     assert not run.citations
 
 
-@pytest.mark.parametrize("with_resistance_doses", [False, True])
+@pytest.mark.parametrize(
+    "resistance_text,with_resistance_doses",
+    [
+        ("", False),
+        (" Um exemplo de circuito menciona 10 a 20 repetições.", False),
+        (" Fortalecimento: 2 séries de 8 repetições, sem orientação de descanso.", False),
+        (" Agachamento: 2 séries de 8 repetições, descanso de 90 segundos.", True),
+    ],
+)
 def test_continuous_only_evidence_cannot_generate_a_bundle_of_alternatives(
-    database_session, rollout, with_resistance_doses
+    database_session, rollout, resistance_text, with_resistance_doses
 ):
     from app.modules.assistant.client_questions import render_questions
 
     client = owner(database_session)
     content = "Você pode caminhar. Faça 150 minutos por semana. Pode dividir a prática."
-    if with_resistance_doses:
-        content += " Agachamento: 2 séries de 8 repetições, descanso de 90 segundos."
+    content += resistance_text
     rollout.passages = [passage(content)]
 
     class InspectingAgent(Agent):

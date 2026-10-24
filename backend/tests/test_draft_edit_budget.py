@@ -34,7 +34,7 @@ def test_draft_edit_promotes_existing_budget_without_reset(database_session, pre
     assert budget.started == started and budget.calls == 2
     assert budget.retrievals == 1
     assert budget.input_tokens > 1000 and budget.output_tokens == 75
-    assert 50 < budget.remaining() <= 55
+    assert budget.plan_seconds - 10 < budget.remaining() <= budget.plan_seconds - 5
     # This input exceeds the conversation ceiling but fits the plan ceiling.
     budget.reserve(33000, 100)
     assert budget.calls == 3

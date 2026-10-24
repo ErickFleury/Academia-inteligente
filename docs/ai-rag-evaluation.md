@@ -1241,3 +1241,37 @@ support on the pads without explicitly retaining the source's centered positioni
 The rejection preserved the draft and survived replay. This is additional evidence
 that ordinary sourced-answer reliability remains open; successful deployment is
 not resolution of all refusals.
+
+## Draft-rebuild refusal investigation — 2026-10-24
+
+An authorized read-only replay reproduced the existing draft-rebuild refusal.
+The observed production attempt completed in 54.24 seconds and failed necessary
+backend prescription checks; it was not a provider outage or deadline failure.
+No client draft or conversation was modified by the replay.
+
+Corrections:
+
+- Extend the existing single refusal-reconsideration allowance to source-derived
+  continuous-activity allocations, without changing any execution ceiling.
+- Do not let incidental resistance counts disable the structured continuous
+  representation when complete resistance dose fields are absent.
+- Remove allocation options that fail the same necessary arithmetic checks used
+  on generated proposals before applying the option cap. Rounded repeating
+  durations had displaced representable alternatives.
+- Prefer activity/distribution passages from the dosage guideline's own version
+  when present, retaining complementary cross-source fallback and conflict review.
+- Retain the original derivation citations when a candidate exactly selects a
+  backend-computed allocation. Changed quantities do not inherit that support;
+  independent review still checks all actual claims, intensity and applicability.
+- Instruct generation to describe an activity/phase in the title instead of
+  converting a personal goal into an unsupported efficacy claim. Budget tests now
+  respect both default and deployed deadlines rather than assuming 60 seconds.
+
+Regression cases failed before their fixes and passed afterward. Live replay
+advanced from refusal/malformed duration/missing derivation support to independent
+semantic review. That review still rejected walking-only proposals on scope or
+applicability grounds. These changes do not establish reliable complete gym-plan
+generation; the distinction between a requested full gym routine and a limited
+aerobic proposal remains material. Model, source-grounding and instructor approval
+requirements remain unchanged. No higher model or additional production call
+allowance was enabled.

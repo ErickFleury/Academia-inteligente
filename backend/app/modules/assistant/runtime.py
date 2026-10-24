@@ -348,6 +348,9 @@ Não acrescente um componente que a pessoa excluiu do pedido atual. Também não
 apresente apenas atividade aeróbica como se fosse a musculação solicitada.
 
 Havendo apoio suficiente, preencha result e citation_ids e grounding=references.
+O nome da ficha descreve a atividade ou fase proposta. Não transforme o objetivo
+pessoal em uma alegação de eficácia no título: "Caminhada moderada" descreve a
+atividade; associar sua dose a emagrecimento exige apoio específico citado.
 Seja conciso: não duplique os mesmos itens para representar dias iguais. Não
 descreva passos de execução não solicitados. load_guidance reúne carga e condições
 necessárias, sem repetir cadastro, frequência semanal ou objetivo em cada item.
@@ -1894,8 +1897,12 @@ class AssistantRun:
             if (
                 self.role == "initial_plan"
                 and options
-                and not any(row["sets"] or row["repetitions"] for row in parameters)
+                and not all(
+                    any(row[field] for row in parameters)
+                    for field in ("sets", "repetitions", "rest_seconds")
+                )
             ):
+                # Isolated repetitions/sets are not a complete resistance dose.
                 # When retrieved evidence only supports continuous activity,
                 # constrain its representation instead of asking the model to
                 # avoid invented resistance doses or summing alternatives.
@@ -2138,6 +2145,23 @@ class AssistantRun:
         canonical_ids = [labels.get(id_, id_) for id_ in output.citation_ids]
         if any(id_ not in allowed for id_ in canonical_ids):
             raise AssistantError("citation_invalid", 422)
+        if self.role == "initial_plan" and output.citation_ids:
+            plan_content = output.result.plan
+            items = plan_content.get("items", [])
+            for option in self.context.get("source_allocation_options", []):
+                if (
+                    len(items) == 1
+                    and plan_content.get("objective") == option["objective"]
+                    and all(
+                        items[0].get(key) == option[key]
+                        for key in ("exercise_name", "sets", "repetitions", "rest_seconds")
+                    )
+                ):
+                    # Keep the provenance of arithmetic computed by this backend.
+                    # Only the exact option inherits its supporting passages;
+                    # doses, intensity and applicability still undergo review.
+                    canonical_ids.extend(labels[id_] for id_ in option["supporting_passages"])
+                    break
         if (
             (output.grounding == "references" or self.route.needs_references)
             and not output.citation_ids

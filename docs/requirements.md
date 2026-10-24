@@ -2475,7 +2475,13 @@ The owner approved the following design decisions:
   not a phone number. Unknown numeric sequences and contact data remain blocked.
   The existing single correction allowance can recheck an evidence refusal when
   named exercises and candidate dose fields are present; these hints never prove
-  applicability. A repeated refusal ends the attempt, and any resulting candidate
+  applicability. This includes source-derived continuous-activity allocations;
+  isolated resistance counts must not disable their structured representation
+  when a complete resistance prescription is absent. Exclude allocation options
+  whose rounded arithmetic fails the backend's own necessary checks before the
+  option cap. An exactly selected backend-computed allocation retains its original
+  derivation citations for validation and independent review; changed quantities
+  do not inherit that support. A repeated refusal ends the attempt, and any resulting candidate
   still requires backend checks and independent review. Existing call, token,
   retrieval and time ceilings remain. Plan prompts omit duplicate normalized
   memory and empty metadata fields, retaining complete source text, current

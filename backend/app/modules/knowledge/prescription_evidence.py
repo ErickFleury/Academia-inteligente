@@ -356,19 +356,30 @@ def allocation_options(references, context):
     days = context.get("client_answers", {}).get("weekly_availability", {}).get("value")
     available = context.get("client_answers", {}).get("session_duration", {}).get("value")
     rows = source_parameters(references, days)
-    division = next(
-        (
-            ref["passage_id"]
-            for ref in references
-            if re.search(r"dividir|distribu|spread|divide", normalized(ref["content"]))
-        ),
-        None,
-    )
+    by_id = {ref["passage_id"]: ref for ref in references}
+    parameters_by_id = {row["passage_id"]: row for row in rows}
+
+    def source_key(ref):
+        return ref.get("version_id") or ref.get("source")
+
     names = {"caminhada": "Caminhada", "ciclismo": "Ciclismo", "danca": "Dança"}
     options = []
     for dose in rows:
         if "allocation_days_per_week" not in dose:
             continue
+        # Prefer the guideline's own activity examples and distribution rule
+        # over a different book's illustrative case. Other sources remain
+        # available as complementary evidence and for independent conflict review.
+        source = source_key(by_id[dose["passage_id"]])
+        related = sorted(references, key=lambda ref: not (source and source_key(ref) == source))
+        division = next(
+            (
+                ref["passage_id"]
+                for ref in related
+                if re.search(r"dividir|distribu|spread|divide", normalized(ref["content"]))
+            ),
+            None,
+        )
         for prescription in dose["weekly_prescriptions"]:
             if prescription["ambiguous_intensity"]:
                 continue
@@ -377,7 +388,14 @@ def allocation_options(references, context):
             if daily != upper or (isinstance(available, (int, float)) and daily > available):
                 continue
             for name, label in names.items():
-                activity = next((row for row in rows if name in row["named_activities"]), None)
+                activity = next(
+                    (
+                        parameters_by_id[ref["passage_id"]]
+                        for ref in related
+                        if name in parameters_by_id[ref["passage_id"]]["named_activities"]
+                    ),
+                    None,
+                )
                 if activity and division:
                     options.append(
                         {
@@ -403,4 +421,16 @@ def allocation_options(references, context):
                             ),
                         }
                     )
-    return options[:6]
+    # A rounded allocation that our own arithmetic check rejects must not
+    # displace a representable option. This is only a necessary evidence check;
+    # the specialist and reviewer still decide scope and applicability.
+    return [
+        option
+        for option in options
+        if not prescription_gaps(
+            [{**option, "load_guidance": option["intensity"] or ""}],
+            [by_id[id_] for id_ in option["supporting_passages"]],
+            context=context,
+            objective=option["objective"],
+        )
+    ][:6]

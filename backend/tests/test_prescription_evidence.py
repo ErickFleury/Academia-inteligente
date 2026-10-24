@@ -129,6 +129,52 @@ def test_source_allocation_is_exposed_in_minutes_without_new_prescription_rules(
     assert "daily_minutes_if_divided" not in source_parameters(source)[0]
 
 
+def test_allocation_cap_does_not_hide_valid_durations_behind_rounded_invalid_options():
+    sources = [
+        {"passage_id": "R1", "content": "Faça 75 minutos de atividade vigorosa por semana."},
+        {"passage_id": "R2", "content": "Faça 250 minutos de atividade moderada por semana."},
+        {"passage_id": "R3", "content": "Faça 150 minutos de atividade moderada por semana."},
+        {
+            "passage_id": "R4",
+            "content": "Você pode caminhar, pedalar ou dançar. Pode dividir a prática em blocos.",
+        },
+    ]
+    context = {
+        "client_answers": {"weekly_availability": {"value": 3}, "session_duration": {"value": 120}}
+    }
+    options = allocation_options(sources, context)
+    assert any(option["repetitions"] == "50 minutos" for option in options)
+    assert len(options) <= 6
+    for option in options:
+        cited = [ref for ref in sources if ref["passage_id"] in option["supporting_passages"]]
+        assert (
+            prescription_gaps(
+                [{**option, "load_guidance": option["intensity"]}],
+                cited,
+                context=context,
+                objective=option["objective"],
+            )
+            == []
+        )
+
+
+def test_allocation_prefers_activity_and_division_from_the_dose_source():
+    context = {"client_answers": {"weekly_availability": {"value": 3}}}
+    sources = [
+        {"passage_id": "other", "source": "S2", "content": "You can walk and divide activity."},
+        {"passage_id": "dose", "source": "S1", "content": "Faça 150 minutos por semana."},
+        {"passage_id": "activity", "source": "S1", "content": "Você pode caminhar."},
+        {"passage_id": "division", "source": "S1", "content": "Pode dividir a prática."},
+    ]
+    assert allocation_options(sources, context)[0]["supporting_passages"] == [
+        "dose",
+        "activity",
+        "division",
+    ]
+    # Provenance preference does not prohibit complementary cross-source evidence.
+    assert allocation_options(sources[:2], context)[0]["supporting_passages"] == ["dose", "other"]
+
+
 def test_unchanged_draft_values_use_the_record_but_new_doses_need_sources():
     previous = item()
     context = {"editable_training_draft": {"items": [previous]}}
