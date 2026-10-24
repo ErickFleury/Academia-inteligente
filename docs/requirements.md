@@ -2481,9 +2481,13 @@ The owner approved the following design decisions:
   state and retries cannot apply changes twice. Direct memory-screen edits
   remain independent of AI-provider availability.
 - Set provisional total request deadlines of 30 seconds for conversation and
-  60 seconds for plan generation/adaptation (including authorized draft edits),
-  retaining individual adapter timeout/retry limits. Delegation cannot extend the
-  total budget indefinitely; exhaustion must produce a controlled response.
+  60 seconds by default for plan generation/adaptation (including authorized draft
+  edits). The owner-approved hosted deployment override (2026-10-24) is 90 seconds
+  for plans, 40 seconds per provider call, and a matching 95-second processing
+  lease. Ordinary conversation remains capped at 30 seconds; every provider call
+  is bounded by the turn's remaining time. Token, call-count and retrieval ceilings
+  remain unchanged. Delegation cannot extend the total budget indefinitely;
+  exhaustion must produce a controlled response.
 - Initially use the existing configured chat model for all agents, with optional
   configuration overrides per role. Do not automatically switch to a more
   expensive model or another provider.
