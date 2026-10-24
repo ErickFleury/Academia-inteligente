@@ -239,3 +239,18 @@ def test_compound_exercise_queries_do_not_promote_unrequested_shared_words(setup
         any(subject in title for title in headings)
         for subject in ("Flat Barbell Bench Press", "Seated Leg Press", "Seated Row")
     )
+
+
+def test_compound_coverage_retains_an_explicit_subject_outside_known_aliases(setup):
+    sessions, service, _ = setup
+    for title in ("Pallof Press", "Bench Press", "Seated Shoulder Press"):
+        version = upload(
+            sessions,
+            service,
+            body=f"# {title}\nStarting Position: stand still. Movement: control {title}.",
+        )
+        service.import_next(sessions)
+        activate(sessions, service, version)
+    with sessions() as session:
+        hits = service.search(session, "bench press pallof press technique", prefer_technique=True)
+    assert any("Pallof Press" in row["content"].split("\n")[0] for row in hits)

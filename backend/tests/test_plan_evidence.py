@@ -785,3 +785,31 @@ def test_chat_router_knows_completed_training_profile_without_exposing_measureme
         "training_experience": onboarding.training_experience,
     }
     assert "height_cm" not in context["known_training_profile"]
+
+
+@pytest.mark.parametrize("unknown", [False, True])
+def test_initial_plan_names_follow_recognized_evidence_without_closing_unknown_exercises(
+    database_session, rollout, unknown
+):
+    client = owner(database_session)
+    title = "Pallof Press" if unknown else "Incline Barbell Bench Press"
+    rollout.passages = [
+        passage(
+            f"Seção: {title}\nStarting Position: set up. "
+            "Use two sets of ten repetitions; rest 90 seconds."
+        )
+    ]
+    provider = Agent(route={"query": "beginner technique"})
+    provider.citations = ["R1"]
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    run.prepare({})
+    run.specialist()
+    schema = provider.schemas[1]["properties"]["result"]["anyOf"][0]
+    names = schema["properties"]["plan"]["properties"]["items"]["items"]["properties"][
+        "exercise_name"
+    ]
+    if unknown:
+        assert "enum" not in names
+    else:
+        assert "Supino inclinado com barra" in names["enum"]
+        assert "Supino reto com barra" not in names["enum"]

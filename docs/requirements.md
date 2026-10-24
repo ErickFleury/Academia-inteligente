@@ -2410,6 +2410,15 @@ The owner approved the following design decisions:
   privacy-invalid queries never reach embeddings; failed repairs cannot loop or
   exceed budgets; generic technique queries do not force an unrelated exercise;
   named technique searches still retrieve active, relevant execution passages.
+  Compound exercise queries match complete recognized subjects rather than shared
+  words such as "press" or "seated". Explicit complete headings outside the alias
+  vocabulary remain retrievable. When every retrieved technique heading is
+  recognized, initial-plan structured output may constrain exercise names to the
+  recognized options in those sources, preventing invented variants before a
+  redraft is needed. Unknown technique headings retain open-name generation.
+  These selection constraints never establish dose, equipment, clinical
+  applicability, or citation support; backend validation and independent review
+  remain mandatory.
 - Retrieval coverage and table-quality recovery (2026-10-24): technique candidate
   selection must diversify by explicit exercise heading before applying its cap,
   so repeated pages of one exercise cannot exclude all other requested subjects.

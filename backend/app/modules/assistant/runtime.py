@@ -43,7 +43,12 @@ from app.modules.knowledge.prescription_evidence import (
     duration_block_items,
     source_parameters,
 )
-from app.modules.knowledge.service import KnowledgeError, KnowledgeService, merge_plan_references
+from app.modules.knowledge.service import (
+    KnowledgeError,
+    KnowledgeService,
+    merge_plan_references,
+    technique_passage,
+)
 from app.modules.memory.service import (
     MemoryChange,
     MemoryError,
@@ -1861,6 +1866,31 @@ class AssistantRun:
             )
             options = self.context["source_allocation_options"]
             parameters = self.context["source_prescription_parameters"]
+            if self.role == "initial_plan":
+                techniques = [
+                    {**ref, "content": ref["content"].split("\n", 1)[0]}
+                    for ref in self.context["reference_passages"]
+                    if technique_passage(ref["content"])
+                ]
+                recognized = source_parameters(techniques)
+                if recognized and all(row["named_activities"] for row in recognized):
+                    # Prevent a familiar but absent variant from causing an
+                    # avoidable full redraft. Unknown technique headings retain
+                    # open generation; this is not a closed exercise catalog.
+                    spelling = {"natacao": "natação", "danca": "dança", "flexoes": "flexões"}
+                    names = list(
+                        dict.fromkeys(
+                            spelling.get(name, name).capitalize()
+                            for row in parameters
+                            for name in row["named_activities"]
+                        )
+                    )
+                    item_schema["properties"]["exercise_name"]["enum"] = names
+                    instructions += (
+                        " O esquema limita os nomes às opções reconhecidas nestas fontes. "
+                        "Escolha a variante documentada, com equipamento compatível, e cite "
+                        "seu apoio. O nome permitido não comprova dose ou aplicabilidade."
+                    )
             if (
                 self.role == "initial_plan"
                 and options

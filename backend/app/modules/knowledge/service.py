@@ -265,7 +265,13 @@ def technique_subject_coverage(content, query):
     names = [name for name in names if not any(other.startswith(name + " ") for other in names)]
     if names:
         heading = content.split("\n", 1)[0][7:].rsplit(" / ", 1)[-1]
-        return {name for name in names if exercise_present(name, normalized(heading))}
+        matched = {name for name in names if exercise_present(name, normalized(heading))}
+        terms = technique_subject_terms(content)
+        # Aliases are recall aids, not a closed exercise catalog. A complete
+        # explicit heading in the query also identifies a requested subject.
+        if not matched and len(terms) >= 2 and terms <= section_terms(query):
+            matched.add("heading:" + " ".join(sorted(terms)))
+        return matched
     return technique_subject_terms(content) & section_terms(query)
 
 
