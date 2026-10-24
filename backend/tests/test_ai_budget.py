@@ -58,6 +58,52 @@ def test_provider_wait_cannot_extend_deadline():
     sleep(0.11)  # Let the bounded worker release its slot for other tests.
 
 
+def test_optional_plan_deadline_is_bounded_without_extending_conversation(monkeypatch):
+    monkeypatch.delenv("AI_PLAN_DEADLINE_SECONDS", raising=False)
+    with pytest.raises(BudgetExceeded, match="deadline_exceeded"):
+        ExecutionBudget(plan=True, started=monotonic() - 61).remaining()
+    monkeypatch.setenv("AI_PLAN_DEADLINE_SECONDS", "90")
+    assert 28 < ExecutionBudget(plan=True, started=monotonic() - 61).remaining() <= 29
+    with pytest.raises(BudgetExceeded, match="deadline_exceeded"):
+        ExecutionBudget(started=monotonic() - 31).remaining()
+    with pytest.raises(BudgetExceeded, match="deadline_exceeded"):
+        ExecutionBudget(plan=True, started=monotonic() - 91).remaining()
+    monkeypatch.setenv("AI_PLAN_DEADLINE_SECONDS", "999999")
+    assert ExecutionBudget(plan=True).remaining() <= 90
+
+
+def test_plan_review_has_output_room_within_the_shared_turn_ceiling(monkeypatch):
+    captured = []
+
+    def response(request, timeout):
+        body = json.loads(request.data)
+        captured.append(body["max_output_tokens"])
+        return BytesIO(
+            json.dumps(
+                {
+                    "output": [
+                        {"content": [{"type": "output_text", "text": '{"answer":"reviewed"}'}]}
+                    ],
+                    "usage": {"input_tokens": 100, "output_tokens": 2500},
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(ai, "urlopen", response)
+    provider = OpenAiResponsesOnboardingProvider(OpenAiConfig("test", "test", 10))
+    budget = ExecutionBudget(plan=True)
+    with budget.scope():
+        result = provider.structured(
+            {"cited_passages": []},
+            "Review",
+            Result.model_json_schema(),
+            Result,
+            role="orchestrator",
+        )
+    assert result.answer == "reviewed"
+    assert captured == [4000] and budget.output_tokens == 2500
+
+
 @pytest.mark.parametrize("hosted", [False, True])
 def test_adapter_caps_output_and_uses_explicit_role_model(monkeypatch, hosted):
     captured = []

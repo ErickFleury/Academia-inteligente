@@ -1,5 +1,6 @@
 """Request-local ceilings and bounded HTTP waiting shared by all agent roles."""
 
+import os
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from contextlib import contextmanager
@@ -11,6 +12,14 @@ from time import monotonic
 
 class BudgetExceeded(Exception):
     pass
+
+
+def plan_deadline_seconds():
+    """Keep the existing default; the optional extended mode cannot exceed 90s."""
+    try:
+        return min(90, max(60, int(os.getenv("AI_PLAN_DEADLINE_SECONDS", "60"))))
+    except ValueError:
+        return 60
 
 
 current_budget: ContextVar["ExecutionBudget | None"] = ContextVar("ai_budget", default=None)
@@ -49,9 +58,10 @@ class ExecutionBudget:
     retrievals: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    plan_seconds: int = field(default_factory=plan_deadline_seconds)
 
     def remaining(self):
-        remaining = (60 if self.plan else 30) - (monotonic() - self.started)
+        remaining = (self.plan_seconds if self.plan else 30) - (monotonic() - self.started)
         if remaining <= 0:
             raise BudgetExceeded("deadline_exceeded")
         return remaining

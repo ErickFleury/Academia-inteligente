@@ -21,7 +21,7 @@ from app.integrations.ai import (
     TrainingChatProvider,
     training_chat_provider_from_environment,
 )
-from app.integrations.ai_budget import ExecutionBudget
+from app.integrations.ai_budget import ExecutionBudget, plan_deadline_seconds
 from app.integrations.ai_diagnostics import observe_turn, record_retry, record_turn
 from app.modules.assistant.runtime import (
     AssistantError,
@@ -177,9 +177,11 @@ class TrainingChatService:
             raise ConcurrentTrainingUpdateError
         token = uuid4()
         user.processing_token = token
-        # Covers the maximum 60s plan budget plus bounded finalization. A server
+        # Covers the configured plan budget plus bounded finalization. A server
         # restart cannot leave the UI permanently busy; late attempts are fenced.
-        user.processing_expires_at = datetime.now(UTC) + timedelta(seconds=65)
+        user.processing_expires_at = datetime.now(UTC) + timedelta(
+            seconds=plan_deadline_seconds() + 5
+        )
         user.failure_code = None
         session.commit()
         user_id = user.id

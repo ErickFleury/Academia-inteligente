@@ -21,9 +21,11 @@ from app.modules.training.service import ConcurrentTrainingUpdateError
 
 
 @pytest.mark.parametrize("plan", [False, True])
+@pytest.mark.parametrize("deadline", [60, 90])
 def test_refresh_during_inference_recovers_message_and_processing_status(
-    postgres_sessions, plan_chat, plan
+    postgres_sessions, plan_chat, plan, deadline, monkeypatch
 ):
+    monkeypatch.setenv("AI_PLAN_DEADLINE_SECONDS", str(deadline))
     service, agent = plan_chat if plan else (TrainingChatService(), Agent())
     if not plan:
         service = TrainingChatService(agent)
@@ -54,6 +56,14 @@ def test_refresh_during_inference_recovers_message_and_processing_status(
                 assert state.messages[-1].content == message
                 assert state.pending_request.status == "processing"
                 assert state.pending_request.client_request_id == request_id
+                pending = refresh.scalar(
+                    select(TrainingAiMessage).where(
+                        TrainingAiMessage.client_request_id == request_id
+                    )
+                )
+                assert (
+                    pending.processing_expires_at - pending.created_at
+                ).total_seconds() == pytest.approx(deadline + 5, abs=1)
                 refresh.rollback()
                 other = service.state_for_subject(refresh, "other")
                 assert other.messages == [] and other.pending_request is None
