@@ -2425,6 +2425,16 @@ health data; it does not reopen onboarding or authorize AI plan approval.
   the current health-record revision. A confirmation cannot change the displayed
   proposal. Further corrections require a new proposal. Other health categories,
   completion status and date, and approved/current plans remain unchanged.
+- A retry or follow-up may propose a correction from the client's bounded retained
+  messages, including the original health report rather than the retry wording.
+  Recheck ownership, availability, retention, forgetting and newer health updates.
+  The retry itself is not consent: confirmation still requires the current reply
+  to the displayed proposal. Invalid model evidence or inconsistent proposed fields
+  produces clarification without changing health data or breaking the chat turn.
+- Present structured compact-memory answers as standalone client statements when
+  their wording is self-contained. Preserve context for short answers and numbers,
+  attribution and dates, and verbatim manual edits. Existing structured memories
+  receive this display formatting without rewriting their stored evidence.
 - Cancellation, topic changes, uncertain/negative answers, stale record revisions,
   forgetting cutoffs, expired messages, or another client's source cannot authorize
   a health revision. Keep confirmation metadata within existing chat retention.

@@ -337,8 +337,10 @@ def test_invented_proposal_evidence_cannot_be_saved(database_session, rollout):
         return output
 
     agent.structured = forged
-    with pytest.raises(AssistantError, match="health_update_invalid"):
-        submit(service, session, "Gostaria de conversar sobre minha dor no joelho.")
+    result = submit(service, session, "Gostaria de conversar sobre minha dor no joelho.")
+    assert result.pending_request is None
+    assert "pending_health_update" not in result.messages[-1].clarification
+    assert "Não alterei" in result.messages[-1].content
     record = session.scalar(select(Onboarding).where(Onboarding.client_id == client.id))
     assert record.has_limitations_or_complaints
 

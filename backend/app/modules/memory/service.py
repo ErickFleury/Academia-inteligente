@@ -76,6 +76,20 @@ def proposal_evidence(message):
     ]
 
 
+def readable_answer(answer, fallback):
+    """Display standalone client statements without their eliciting question.
+
+    Keep context for short answers and measurements, and preserve manual edits
+    (which have no structured answer). This is presentation, not interpretation.
+    """
+    value = (answer or {}).get("value")
+    if not isinstance(value, str) or not reported_statement(value.strip()):
+        return fallback
+    value = value.strip()
+    value = value[0].upper() + value[1:]
+    return value if value.endswith((".", "!", "?")) else value + "."
+
+
 def utc(value):
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
@@ -116,7 +130,7 @@ class MemoryService:
                 {
                     "id": str(f.id),
                     "category": f.category,
-                    "text": f.text,
+                    "text": readable_answer(f.answer_data, f.text),
                     "attribution": f.attribution,
                     "reported_at": utc(f.reported_at).isoformat(),
                     "updated_at": utc(f.updated_at).isoformat(),
@@ -267,6 +281,7 @@ class MemoryService:
                 question = report.get("question", "Contexto informado")
                 unit = report.get("unit")
                 readable = f"{question} {value}" + (" minutos" if unit == "minutes" else "")
+                readable = readable_answer(report, readable)
                 if len(readable) > 400:
                     raise MemoryError("memory_invalid", 422)
                 if not existing:

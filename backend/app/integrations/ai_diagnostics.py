@@ -58,6 +58,8 @@ _REASONS = {
     "memory_evidence_uncertain",
     "memory_conflict",
     "memory_event_expired",
+    "health_update_invalid",
+    "health_update_not_allowed",
 }
 _PATHS = {"none", "model", "direct", "confirmation", "cached"}
 _OPERATIONS = {"onboarding", "training_chat", "training_generation", "training_adaptation"}

@@ -15,11 +15,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
 from app.modules.clients.models import Client
-from app.modules.memory.service import utc
+from app.modules.memory.service import source_sentences, utc
 from app.modules.onboarding.draft_service import ClientOnboardingScope, OnboardingDraftService
 from app.modules.onboarding.models import Onboarding
 from app.modules.onboarding.schema import OnboardingCompletionData
-from app.modules.training.models import TrainingAiMessage
+from app.modules.training.models import TrainingAiConversation, TrainingAiMessage
 
 PAIRS = {
     "has_limitations_or_complaints": "limitations_or_complaints",
@@ -135,14 +135,49 @@ def pending_update(session, client_id, source, metadata, cutoff=None):
     return metadata
 
 
-def proposal(session, client_id, source, update):
+def report_source(session, client_id, source, quote, record, sources, cutoff):
+    """Resolve model evidence only within the bounded, backend-owned chat context."""
+    event_ids = {source.id}
+    for item in sources:
+        try:
+            event_ids.add(UUID(str(item.get("event_id"))))
+        except (ValueError, TypeError):
+            continue
+    events = session.scalars(
+        select(TrainingAiMessage)
+        .join(TrainingAiConversation)
+        .where(
+            TrainingAiConversation.client_id == client_id,
+            TrainingAiMessage.conversation_id == source.conversation_id,
+            TrainingAiMessage.id.in_(event_ids),
+            TrainingAiMessage.role == "user",
+            TrainingAiMessage.sequence <= source.sequence,
+        )
+        .order_by(TrainingAiMessage.sequence.desc())
+    )
+    for event in events:
+        if (
+            utc(event.created_at) <= datetime.now(UTC) - timedelta(days=30)
+            or (cutoff and utc(event.created_at) <= utc(cutoff))
+            or (event.id != source.id and utc(event.created_at) < utc(record.updated_at))
+        ):
+            continue
+        # Whole sentences retain negation and uncertainty. The entire message
+        # remains the ambiguity check, including qualifications in another sentence.
+        candidates = [normalized(event.content), *source_sentences(event.content)]
+        for value in candidates:
+            if quote.rstrip(" .!") == value.rstrip(" .!"):
+                return event, value
+    raise HealthUpdateError()
+
+
+def proposal(session, client_id, source, update, *, sources=(), cutoff=None):
     record = current_record(session, client_id)
     quote = normalized(update.quote)
-    if quote not in normalized(source.content):
-        raise HealthUpdateError()
+    source, quote = report_source(session, client_id, source, quote, record, sources, cutoff)
     update = update.model_copy(update={"quote": quote})
-    if ambiguous(quote) or re.search(
-        r"\b(minha mae|meu pai|meu amigo|minha amiga)\b", folded(quote)
+    if ambiguous(source.content) or re.search(
+        r"\b(minha mae|meu pai|meu amigo|minha amiga)\b", folded(source.content)
     ):
         return None
     # A generic answer to a mobility question cannot silently mean a named

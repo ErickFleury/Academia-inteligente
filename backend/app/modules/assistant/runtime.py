@@ -502,7 +502,10 @@ informações. Para um relato explícito que o altera, preencha health_update.ac
 field com a categoria afetada, kind=corrected (registro errado), resolved (problema
 anterior passou) ou changed (outra mudança). present e details descrevem a categoria
 INTEIRA após a mudança; preserve outras queixas/medicamentos/condições ainda presentes.
-quote é um trecho literal completo da mensagem atual. Não infira cura, diagnóstico
+quote é uma frase literal completa da mensagem atual ou de uma mensagem anterior
+do próprio cliente disponível em answer_sources. Em retomadas como 'tente novamente',
+use o relato original disponível; não use resumos, falas do assistente ou texto inventado.
+Uma retomada não é confirmação da alteração. Não infira cura, diagnóstico
 ou suspensão de tratamento. 'Melhorou' não significa 'passou'. 'Nenhum movimento
 difícil' ou 'não tenho limitações' não elimina dor específica: use action=clarify e
 pergunte sobre a diferença. 'Não sinto mais dor no joelho' permite propor atualização.
@@ -1115,7 +1118,14 @@ class AssistantRun:
         message = ""
         try:
             if update.action == "propose":
-                pending = health_updates.proposal(self.session, self.client_id, self.source, update)
+                pending = health_updates.proposal(
+                    self.session,
+                    self.client_id,
+                    self.source,
+                    update,
+                    sources=answer_sources(self.context),
+                    cutoff=self.snapshot["event_after"],
+                )
                 if pending:
                     message = health_updates.confirmation_message(pending)
                 else:
@@ -1174,7 +1184,21 @@ class AssistantRun:
                     "ou ainda existe alguma queixa? Diga o que mudou para eu atualizar."
                 )
         except health_updates.HealthUpdateError as error:
-            raise AssistantError(error.code, error.status) from None
+            if error.code != "health_update_invalid" or error.status != 422:
+                raise AssistantError(error.code, error.status) from None
+            # Invalid model evidence is a request for clarification, never a
+            # health write or a broken chat turn. Do not retain an older proposal
+            # when the model tried to replace it with an unverifiable correction.
+            self.health_change = None
+            if update.action == "propose":
+                pending = None
+            message = "Não alterei seu cadastro. " + (
+                health_updates.confirmation_message(pending)
+                if pending
+                else f"Qual é a informação atual sobre {health_updates.LABELS[update.field]}? "
+                "Diga o que mudou e se ainda existe alguma outra queixa nessa categoria."
+            )
+            record_turn(outcome="clarification", reason=error.code)
         self.health_reply = message
         self.clarification = {
             "reason": "missing_client_information",

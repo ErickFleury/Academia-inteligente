@@ -391,3 +391,43 @@ and end-to-end answer quality still require user testing.
 The backend was recreated and returned HTTP 200 from `/health`; the loaded router
 includes health corrections. Runtime remains OpenAI `gpt-6-luna`, local Ollama
 `embeddinggemma`, and system-wide RAG. The secret-bearing `.env` is not committed.
+
+### Health retry recovery and readable memory statements (2026-10-23)
+
+Scope: RF-12, RF-16, RF-18/RF-19 and the confirmed-health/RAG-memory amendment.
+Checkpoint: `da2d6ca`. The latest observed chat failure followed a successful
+OpenAI response (about 8.5 seconds) with backend HTTP 422 validation failure.
+The original structured response was not logged, so its exact rejected field
+cannot be reconstructed. A synthetic regression reproduced rejection when a
+retry quoted an earlier own health report instead of the current retry message.
+
+The router and backend now permit a proposal from the bounded retained own user
+messages supplied in context. Database validation checks actual ownership, role,
+sequence, context availability, expiry, forgetting cutoff and newer health-record
+updates. Whole source sentences preserve negation, and surrounding uncertainty
+still prevents a proposal. Pending confirmation remains bound to the original
+report and current health revision. A retry never supplies consent; only the
+current reply to the displayed proposal can authorize persistence.
+
+Invalid health evidence or inconsistent model-proposed fields now asks for
+clarification without breaking the chat turn or changing health data. Allowlisted
+health error codes improve diagnostics without logging personal content.
+
+Structured compact memories display self-contained statements without repeating
+their eliciting question, with initial capitalization and terminal punctuation.
+New structured memories use the same formatting. Existing rows are formatted on
+read; evidence, attribution and dates remain unchanged. Short contextual answers,
+measurements and manual edits retain their wording. A scoped read-only check
+confirmed the requested display for the test account without modifying its data.
+
+Automatic approval review rejected a live replay because it would transmit the
+account's health/chat context externally. The replay was not performed; diagnosis
+and verification used synthetic providers. Live model interpretation still needs
+user testing, and the original payload-specific diagnosis remains unverified.
+
+Validation: **870 backend tests passed**, including isolated PostgreSQL checks;
+Ruff lint/format and Git whitespace checks passed. The two existing Alembic
+configuration deprecation warnings remain. The backend was recreated and its
+health endpoint returned HTTP 200. Runtime remains OpenAI `gpt-6-luna` with local
+Ollama `embeddinggemma` and enabled orchestration. No production health records
+were edited, and no paid model evaluations were performed for this fix.

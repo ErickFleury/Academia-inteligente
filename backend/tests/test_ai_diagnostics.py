@@ -114,7 +114,15 @@ def test_diagnostic_contexts_are_isolated_and_unknown_metadata_is_discarded(capl
     assert len(events(caplog)) == 2
 
 
-@pytest.mark.parametrize("code", ["memory_evidence_invalid", "PRIVATE_UNRECOGNIZED_ERROR"])
+@pytest.mark.parametrize(
+    "code",
+    [
+        "memory_evidence_invalid",
+        "health_update_invalid",
+        "health_update_not_allowed",
+        "PRIVATE_UNRECOGNIZED_ERROR",
+    ],
+)
 def test_assistant_validation_logs_allowlisted_reason_without_private_error(caplog, code):
     from app.modules.assistant.runtime import AssistantError
 
@@ -128,7 +136,5 @@ def test_assistant_validation_logs_allowlisted_reason_without_private_error(capl
         turn()
     item = events(caplog)[-1]
     assert item["outcome"] == "validation_failure"
-    assert item["reason"] == (
-        "memory_evidence_invalid" if code == "memory_evidence_invalid" else "unclassified"
-    )
+    assert item["reason"] == ("unclassified" if code == "PRIVATE_UNRECOGNIZED_ERROR" else code)
     assert "PRIVATE_UNRECOGNIZED_ERROR" not in caplog.text
