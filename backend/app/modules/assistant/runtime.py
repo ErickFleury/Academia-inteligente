@@ -43,7 +43,7 @@ from app.modules.knowledge.prescription_evidence import (
     duration_block_items,
     source_parameters,
 )
-from app.modules.knowledge.service import KnowledgeError, KnowledgeService
+from app.modules.knowledge.service import KnowledgeError, KnowledgeService, merge_plan_references
 from app.modules.memory.service import (
     MemoryChange,
     MemoryError,
@@ -1500,13 +1500,16 @@ class AssistantRun:
             references=additional,
             retrieval_round=self.budget.retrievals,
         )
-        combined, seen = [], set()
-        for group in zip_longest(additional, self.references):
-            for reference in group:
-                if reference and reference["passage_id"] not in seen:
-                    combined.append(reference)
-                    seen.add(reference["passage_id"])
-        self.references = combined[:5]
+        if self.role == "initial_plan":
+            self.references = merge_plan_references(additional, self.references)
+        else:
+            combined, seen = [], set()
+            for group in zip_longest(additional, self.references):
+                for reference in group:
+                    if reference and reference["passage_id"] not in seen:
+                        combined.append(reference)
+                        seen.add(reference["passage_id"])
+            self.references = combined[:5]
         self.context["reference_passages"] = self.model_references(self.references)
         self.context["reference_sources"] = self.model_sources()
         self.context["reference_searches_remaining"] = 0

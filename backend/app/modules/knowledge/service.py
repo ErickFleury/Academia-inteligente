@@ -7,6 +7,7 @@ import re
 import unicodedata
 from collections import Counter
 from datetime import UTC, datetime, timedelta
+from itertools import zip_longest
 from uuid import UUID
 
 from sqlalchemy import Float, Text, case, delete, func, literal_column, or_, select, text
@@ -239,6 +240,47 @@ def technique_passage(content):
         return False
     body = content.partition("\n")[2].casefold()
     return any(marker in body for marker in _TECHNIQUE_MARKERS)
+
+
+def merge_plan_references(additional, previous):
+    """Preserve complementary evidence when two ranked lists must fit five slots.
+
+    Keep each search's leading result and use remaining slots for missing evidence
+    types before redundant background. These are coverage hints, not assertions
+    that quantities apply to an exercise/client. Preserve full text and rank order
+    so conditions and provenance remain available to semantic review.
+    """
+    ordered, seen = [], set()
+    for pair in zip_longest(additional, previous):
+        for reference in pair:
+            if reference and reference["passage_id"] not in seen:
+                ordered.append(reference)
+                seen.add(reference["passage_id"])
+    if len(ordered) <= 5:
+        return ordered
+    facets = {}
+    for reference, parameters in zip(ordered, source_parameters(ordered), strict=True):
+        kinds = {
+            key
+            for key in ("sets", "repetitions", "rest_seconds", "duration_seconds", "weekly_seconds")
+            if parameters[key]
+        }
+        kinds.update(f"activity:{name}" for name in parameters["named_activities"])
+        if technique_passage(reference["content"]):
+            kinds.add("technique")
+        if re.search(r"dividir|distribu|spread|divide", reference["content"], re.I):
+            kinds.add("distribution")
+        facets[reference["passage_id"]] = kinds
+    selected = {ranking[0]["passage_id"] for ranking in (additional, previous) if ranking}
+    covered = set().union(*(facets[key] for key in selected))
+    remaining = [reference for reference in ordered if reference["passage_id"] not in selected]
+    while len(selected) < 5 and remaining:
+        # max preserves the existing rank order on equal coverage gains.
+        best = max(remaining, key=lambda row: len(facets[row["passage_id"]] - covered))
+        selected.add(best["passage_id"])
+        covered.update(facets[best["passage_id"]])
+        remaining.remove(best)
+    return [reference for reference in ordered if reference["passage_id"] in selected]
 
 
 def measurement_terms(query):

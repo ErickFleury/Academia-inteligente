@@ -647,3 +647,39 @@ configuration deprecation warnings remain. Backend recreation completed and
 `/health` returned HTTP 200. Runtime inspection confirmed the shared duration
 contract, `gpt-6-luna`, the 25-second provider timeout and local Ollama embeddings.
 No migration, dependency, frontend or secret-configuration change was required.
+
+### Preserve evidence coverage when merging the two retrieval rounds
+
+Follow-up to the same RF-15/RF-18 denial investigation; checkpoint: `e3eb6cb`.
+The next recorded turn completed both searches and both specialist calls without
+provider failure, then stopped in the specialist before final review. The second
+search successfully found NSCA technique material and the programming paper.
+However, blind interleaving followed by truncation discarded the programming
+paragraph containing sets/repetitions/rest and the first search's named activity
+examples. The specialist received technique, general volume discussion, definitions
+and weekly-dose guidance without those complementary passages.
+
+Initial-plan/rebuild merging now deduplicates both lists and preserves each list's
+first result. Remaining slots prioritize passages adding uncovered prescription
+quantities, named activities, technique or distribution guidance; ties preserve
+the original interleaved ranking. Complete source text and provenance remain
+unchanged. There are still at most five passages, two retrievals and the same
+model-call/time budgets. This selection policy is not an applicability judgment:
+historical guidance, experience/population limits and other conditions remain
+visible and subject to review. Adaptation merging is unchanged.
+
+A synthetic runtime regression reproduces the exact missing-evidence pattern
+with two five-passage rankings, verifies the model actually receives prescription
+quantities and activity examples, and checks source allocation remains available.
+Additional checks preserve ranked anchors, full conditional text, deterministic
+ties, deduplication and the context cap. A read-only re-selection of the actual
+recorded reference IDs retains the previously dropped prescription and activity
+passages. This runs the local selection code only: no model call, client-context
+replay, database mutation or paid request is involved. Actual plan suitability
+and the model's next response remain subject to normal live verification.
+
+Validation: **913 backend tests passed**, including isolated PostgreSQL checks;
+Ruff lint/format and Git whitespace checks passed. The two existing Alembic
+configuration warnings remain. Backend recreation completed; `/health` returned
+HTTP 200 and runtime inspection confirmed the new merge, `gpt-6-luna` and the
+25-second provider timeout. No schema, frontend, dependency or secret change.

@@ -2359,6 +2359,11 @@ The owner approved the following design decisions:
   can be filled before referral, relevant technique survives programming-heavy
   candidate pools, genuine gaps remain blocked, and continuous-activity review
   receives explicit representation semantics without overriding failed checks.
+  Combining retrieval rounds must also preserve complementary evidence within
+  the context limit: retain each search's leading result, then prefer passages
+  adding missing quantities, named activities, technique or distribution guidance
+  over redundant background. Keep complete passage text, conditions and provenance;
+  these selection hints do not establish applicability or waive grounding checks.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

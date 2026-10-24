@@ -8,6 +8,31 @@ from test_plan_evidence import passage
 
 from app.modules.assistant.runtime import AssistantError, AssistantRun
 from app.modules.knowledge.prescription_evidence import duration_block_items, prescription_gaps
+from app.modules.knowledge.service import merge_plan_references
+
+
+def test_reference_merge_preserves_ranked_anchors_full_conditions_and_stable_ties():
+    first = [passage(f"Initial background {index}.") for index in range(5)]
+    second = [passage(f"Additional background {index}.") for index in range(5)]
+    assert merge_plan_references(second, first) == [
+        second[0],
+        first[0],
+        second[1],
+        first[1],
+        second[2],
+    ]
+    assert merge_plan_references([], first) == first
+    assert merge_plan_references(first[:1], first) == first
+    conditional = passage("Only for experienced adults: 3 sets of 8 repetitions; rest 90 seconds.")
+    second[-1] = conditional
+    selected = merge_plan_references(second, first)
+    assert conditional in selected
+    assert selected[0] is second[0] and selected[1] is first[0]
+    assert (
+        next(row for row in selected if row["passage_id"] == conditional["passage_id"])
+        is conditional
+    )
+    assert len({row["passage_id"] for row in selected}) == len(selected) == 5
 
 
 def test_rebuild_fills_evidence_gap_and_saves_only_the_owned_draft(database_session, monkeypatch):
@@ -202,3 +227,66 @@ def test_duration_block_metadata_does_not_classify_repetition_sets_or_intervals(
         {"sets": 1, "repetitions": "1 hora", "rest_seconds": 0},
     ]
     assert duration_block_items(items) == [1, 5]
+
+
+def test_gap_search_preserves_quantities_and_named_activities_in_generation_context(
+    database_session,
+):
+    client = owner(database_session)
+    weekly = passage("Adults: 75 minutes of vigorous activity per week. You may divide the time.")
+    activities = passage("You can walk, cycle or dance.")
+    first = [
+        weekly,
+        passage("150 minutes of moderate activity per week."),
+        activities,
+        passage("General benefits."),
+        passage("General wellbeing."),
+    ]
+    technique = passage("Seção: Seated Row\nStarting Position: sit upright. Pull the handles.")
+    dose = passage("For applicable adults: 2 sets of 8 repetitions, rest 90 seconds between sets.")
+    second = [
+        technique,
+        passage("More sets may improve strength."),
+        passage("Definitions of set structure and movement technique."),
+        passage("Seção: Other Row\nStarting Position: stand upright."),
+        dose,
+    ]
+
+    class Search(ReferenceTool):
+        def search(self, session, query, **kwargs):
+            self.queries.append(query)
+            return first if len(self.queries) == 1 else second
+
+    search = Search()
+
+    class InspectingAgent(Agent):
+        def structured(self, context, instructions, schema, type_, *, role):
+            if role == "initial_plan":
+                contents = {row["content"] for row in context["reference_passages"]}
+                assert {
+                    weekly["content"],
+                    activities["content"],
+                    technique["content"],
+                    dose["content"],
+                } <= contents
+                assert len(contents) == 5
+                assert context["source_allocation_options"]
+                assert any(
+                    row["sets"] and row["repetitions"] and row["rest_seconds"]
+                    for row in context["source_prescription_parameters"]
+                )
+            return super().structured(context, instructions, schema, type_, role=role)
+
+    agent = InspectingAgent(route={"query": "adult physical activity"})
+    agent.citations = ["R1"]
+    run = AssistantRun(
+        database_session, client.id, "initial_plan", provider=agent, knowledge=search
+    )
+    run.prepare({})
+    run.context["client_answers"] = {
+        "weekly_availability": {"value": 2},
+        "session_duration": {"value": 60},
+    }
+    assert run._search_for_evidence("strength prescription technique")
+    assert run.specialist().plan["items"]
+    assert run.budget.retrievals == 2
