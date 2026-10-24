@@ -187,6 +187,10 @@ def parameters(content):
 
 def source_parameters(references, days_per_week=None):
     activities = [
+        "supino reto com barra",
+        "supino inclinado com barra",
+        "supino declinado com barra",
+        "desenvolvimento de ombros sentado com barra",
         "supino reto",
         "supino inclinado",
         "supino declinado",

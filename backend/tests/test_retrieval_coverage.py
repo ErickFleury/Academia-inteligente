@@ -149,3 +149,50 @@ def test_rest_interval_table_is_not_misread_as_exercise_duration():
     assert (120.0, 300.0) in fields["rest_seconds"]
     assert (120.0, 300.0) not in fields["duration_seconds"]
     assert (600.0, 600.0) in fields["duration_seconds"]
+
+
+def test_linked_table_preserves_nearby_prose_that_conditions_its_application(setup):
+    sessions, service, _ = setup
+    version = upload(
+        sessions,
+        service,
+        body=(
+            "# Sample plan\nBased on table 3.1, select a dose.\n"
+            "# Other material\nUnrelated background.\n"
+            "# More background\nA different subject.\n"
+            "# Introduction\nBefore using table 3.1, novices must learn proper technique.\n"
+            "# Table 3.1\nGoal-specific programming: two sets of ten repetitions.\n"
+            "# Other text\nAn unrelated topic."
+        ),
+    )
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        seed = next(
+            r for r in service.search(session, "sample plan") if "Based on table" in r["content"]
+        )
+        refs = service.expand_plan_context(session, [seed], limit=3)
+        assert any("Goal-specific programming" in r["content"] for r in refs)
+        assert any("novices must learn" in r["content"] for r in refs)
+
+
+def test_continued_table_recovers_its_example_scope(setup):
+    sessions, service, _ = setup
+    version = upload(
+        sessions,
+        service,
+        body=(
+            "# TABLE 4.2 Example program for endurance\nThis case is an endurance circuit.\n"
+            "# Other material\nBackground text.\n"
+            "# More background\nAnother subject.\n"
+            "# TABLE 4.2 (continued)\nRest 30 seconds in this case."
+        ),
+    )
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        seed = next(
+            r for r in service.search(session, "rest seconds") if "(continued)" in r["content"]
+        )
+        refs = service.expand_plan_context(session, [seed], limit=2)
+        assert any("This case is an endurance circuit" in r["content"] for r in refs)

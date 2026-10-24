@@ -2436,6 +2436,23 @@ The owner approved the following design decisions:
   rest-table quantities are classified correctly without absorbing later activity
   durations; current scope corrections reach generation/review while stored
   onboarding and health records remain unchanged.
+- Evidence applicability and draft scope (2026-10-24): reserve context space for
+  linked tables and their introductory conditions, including explicit references
+  within two preceding passage positions in the same active version. Continued
+  tables also retain their opening caption/scope, so a worked example is not
+  mistaken for a universal rule. Reuse the
+  bounded table lookup; total context remains twelve passages. Preserve distinct
+  exercise subjects when merging technique evidence. Faithful translations must
+  retain implement and position qualifiers; OCR-joined words and explicit RM
+  repetition notation must not produce false unsupported-prescription failures.
+  A plan draft is not required to reproduce a complete exercise tutorial: an
+  exercise explicitly selected in applicable programming can support selection,
+  combined with compatible doses. Every execution instruction actually supplied
+  still needs evidence, and relevant conditions cannot be omitted. This does not
+  authorize invented exercise variants, doses, equipment or clinical suitability.
+  Acceptance: linked applicability prose survives bounded context selection;
+  translated variants remain distinct; a supported concise proposal can pass
+  without inventing a tutorial, while unsupported instructions remain rejected.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

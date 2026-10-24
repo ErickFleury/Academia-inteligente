@@ -481,7 +481,7 @@ def test_search_aliases_preserve_variation_original_terms_and_input_bound():
     query = "Supino inclinado com barra ajudante"
     expanded = expand_search_terms(query)
     assert expanded.startswith(query)
-    assert "incline bench press" in expanded and "barbell" in expanded and "spotter" in expanded
+    assert "incline barbell bench press" in expanded and "spotter" in expanded
     assert "flat" not in expanded and expanded.count("bench press") == 1
     assert expand_search_terms("hipertrofia séries") == "hipertrofia séries hypertrophy sets"
     assert expand_search_terms("modelo Lótus F02") == "modelo Lótus F02"

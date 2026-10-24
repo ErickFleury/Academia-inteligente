@@ -6,6 +6,11 @@ import unicodedata
 # Longer phrases take precedence, preserving exercise variations. These aliases
 # add retrieval terms only; they make no prescription or applicability claim.
 ALIASES = {
+    "supino reto com barra": "flat barbell bench press",
+    "supino inclinado com barra": "incline barbell bench press",
+    "supino declinado com barra": "decline barbell bench press",
+    "desenvolvimento de ombros sentado com barra": "seated barbell shoulder press",
+    "desenvolvimento sentado com barra": "seated barbell shoulder press",
     "supino reto": "flat bench press",
     "supino inclinado": "incline bench press",
     "supino declinado": "decline bench press",

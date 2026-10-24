@@ -321,9 +321,17 @@ Para cada exercício, combine: seleção/execução documentada, programação a
 à população e experiência, equipamento disponível e condições necessárias. Doses
 GERAIS aplicáveis podem sustentar vários exercícios; não exija que cada trecho de
 técnica repita séries, repetições e descanso. Preserve variantes e condições.
+Uma ficha não é um tutorial completo de execução. Um exercício nomeado num programa
+aplicável pode apoiar sua seleção. Não exija todas as fases do movimento quando a
+proposta só informa seleção, dose e condições; se descrever uma execução, cada
+instrução precisa de apoio. Não invente etapas ausentes nem omita condições relevantes.
 source_prescription_parameters ajuda a localizar quantidades, mas não é exaustivo
 nem um veredito de aplicação: confira o texto completo. Escolha dentro das faixas
 sustentadas, sem inventar números nem copiar cargas pessoais de exemplos.
+Prefira os nomes específicos reconhecidos em named_activities. Não acrescente
+uma variante pelo nome do equipamento disponível: uma fonte de supino inclinado
+não apoia supino reto. Se a variante escolhida não aparece, escolha a documentada
+com equipamento compatível ou outra opção apoiada.
 
 Um iniciante querendo ganhar força pode começar por uma fase documentada de
 aprendizagem. Declare esse escopo no objetivo; não exija força máxima, periodização
@@ -333,6 +341,9 @@ Não acrescente um componente que a pessoa excluiu do pedido atual. Também não
 apresente apenas atividade aeróbica como se fosse a musculação solicitada.
 
 Havendo apoio suficiente, preencha result e citation_ids e grounding=references.
+Seja conciso: não duplique os mesmos itens para representar dias iguais. Não
+descreva passos de execução não solicitados. load_guidance reúne carga e condições
+necessárias, sem repetir cadastro, frequência semanal ou objetivo em cada item.
 Na ficha, use nomes e quantidades em pt-BR. repetitions começa pela quantidade ou
 faixa; load_guidance preserva a orientação de carga, precauções e condições de
 parada aplicáveis. Use somente equipamentos disponíveis, com UUID exato, ou null
@@ -370,6 +381,14 @@ Ao explicar como executar um procedimento, comece pelas condições necessárias
 para realizá-lo antes de listar as etapas. Não omita condições de parada,
 desligamento, ausência de carga ou autorização presentes no trecho aplicável.
 Use IDs de trechos somente em citation_ids, nunca no texto apresentado ao cliente."""
+
+_GROUNDING += """ Antes de declarar conflito, compare as condições de aplicação:
+população, objetivo, fase de aprendizagem, protocolo (por exemplo, circuito ou séries
+convencionais) e se o texto é uma recomendação geral ou um caso ilustrativo.
+Valores diferentes para condições diferentes não são contradição. Um exemplo
+individual não torna sua dose obrigatória para todos. Use a orientação explicitamente
+aplicável ao escopo escolhido; não invente prioridade entre fontes que realmente
+discordam para a mesma situação."""
 
 _GROUNDING += """ Confira o título Seção de cada trecho: ele identifica o exercício
 ou a população ao qual a instrução pertence, inclusive em páginas de continuação.
@@ -444,6 +463,20 @@ adequação a uma queixa clínica; não infira diagnóstico ou resolução de qu
 Se answer.plan ou answer.draft_update está presente, é obrigatório verificar CADA
 item mesmo quando nenhum detalhe tem apoio. Somente para conversa sem plano nem
 rascunho, prescription_checks=[]."""
+
+_PRESCRIPTION_REVIEW += """ A ficha não precisa ser um tutorial completo: a seleção
+pode se apoiar no exercício explicitamente nomeado em um programa aplicável,
+combinado com doses compatíveis. Não rejeite apenas por faltar uma descrição de
+todas as fases de execução que a ficha não afirma ensinar. Toda instrução que ela
+de fato fornece e toda condição necessária continuam exigindo apoio; não presuma
+variantes, equipamentos ou aplicabilidade clínica."""
+
+_PRESCRIPTION_REVIEW += """ Diferencie recomendações gerais, fases de aprendizagem,
+protocolos e casos ilustrativos. Uma dose de um exemplo de circuito não contradiz
+automaticamente uma recomendação para séries convencionais; objetivos distintos
+também podem usar doses distintas. Verifique as condições explícitas de cada trecho
+antes de marcar conflito. Não invente prioridade se as fontes realmente discordam
+sobre a mesma população, objetivo, fase e protocolo."""
 
 _PRESCRIPTION_REVIEW += """ Se faltar apoio e reference_searches_remaining > 0,
 preencha clarification.evidence_query com termos para buscar a evidência ausente,
@@ -524,6 +557,21 @@ use unspecified e diga isso."""
 
 _ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
 _PLAN_ROUTING += _CLARIFICATION.replace("preencha\nclarification", "preencha\nclarification_detail")
+_PLAN_OUTPUT_RULES = (
+    _GROUNDING
+    + """ Se precisar esclarecer, use result=null e
+grounding=clarification. Para dados pessoais essenciais ausentes, reason=
+missing_client_information, explanation="", e questions com field estável em inglês
+e text direto em pt-BR; agrupe o que falta e use as respostas já conhecidas.
+Para uma lacuna técnica, reason=insufficient_evidence; para fontes aplicáveis
+incompatíveis, conflicting_evidence. Identifique somente a lacuna concreta em uma
+frase curta, questions=[] e missing_fields=[]. Use evidence_query se ainda houver
+busca; esgotadas as buscas, next_step orienta revisão da lacuna pelo instrutor.
+Nunca peça ao cliente uma prescrição técnica ou acesso administrativo. A explicação
+fala diretamente com o cliente, sem fontes, IDs, instruções internas nem doses
+rejeitadas. Não afirme que o livro inteiro carece de algo: você só viu estes trechos.
+Sem lacuna essencial, clarification=null e produza a proposta solicitada."""
+)
 _GROUNDING += _CLARIFICATION
 _GROUNDING += ai._CONVERSATIONAL_STYLE
 _REVIEW += _CLARIFICATION
@@ -1553,7 +1601,14 @@ class AssistantRun:
         )
         if self.role == "initial_plan":
             previous_ids = {row["passage_id"] for row in self.references}
-            self.references = merge_plan_references(additional, self.references, limit=10)
+            # Linked tables need room for scope and conditions, not just cells.
+            table_context = any(
+                re.search(r"\b(?:table|tabela)\s+\d+\.\d+\b", row["content"], re.I)
+                for row in [*additional, *self.references]
+            )
+            self.references = merge_plan_references(
+                additional, self.references, limit=6 if table_context else 10
+            )
             try:
                 self.references = self.knowledge.expand_plan_context(
                     self.session, self.references, limit=12
@@ -1753,7 +1808,13 @@ class AssistantRun:
             )
         specialist_started = monotonic()
         record_evidence(stage="generation", role=self.role, references=self.references)
-        output = self._call(self.context, instructions + _GROUNDING, schema, envelope, self.role)
+        output = self._call(
+            self.context,
+            instructions + (_PLAN_OUTPUT_RULES if self.role == "initial_plan" else _GROUNDING),
+            schema,
+            envelope,
+            self.role,
+        )
         specialist_seconds = monotonic() - specialist_started
         if output.grounding == "clarification":
             detail = output.clarification

@@ -316,6 +316,9 @@ def merge_plan_references(additional, previous, *, limit=5):
         kinds.update(f"activity:{name}" for name in parameters["named_activities"])
         if technique_passage(reference["content"]):
             kinds.add("technique")
+            kinds.add(
+                "technique:" + " ".join(sorted(technique_subject_terms(reference["content"])))
+            )
         if re.search(r"dividir|distribu|spread|divide", reference["content"], re.I):
             kinds.add("distribution")
         facets[reference["passage_id"]] = kinds
@@ -479,12 +482,17 @@ class KnowledgeService:
         seeds.sort(key=lambda seed: order[seed.id])
         links = []
         for seed in seeds:
-            for number in re.findall(
+            numbers = re.findall(
                 r"\b(?:based on|see|conforme|ver|and|e|basead[oa]s? n[ao])\s+"
                 r"(?:table|tabela)\s+(\d{1,3}\.\d{1,3})\b",
                 seed.content,
                 re.I,
-            ):
+            ) + re.findall(
+                r"(?im)^\s*(?:#{1,6}\s*)?(?:table|tabela)\s+(\d{1,3}\.\d{1,3})"
+                r"\s*\((?:continued|continua[çc][ãa]o)\)",
+                seed.content,
+            )
+            for number in numbers:
                 if not any(
                     item[0].version_id == seed.version_id and item[1] == number for item in links
                 ):
@@ -493,7 +501,7 @@ class KnowledgeService:
                     break
             if len(links) == 4:
                 break
-        result, seen = list(references), set(by_id)
+        result, seen, tables = list(references), set(by_id), []
         if links:
             linked = session.scalars(
                 select(ReferencePassage)
@@ -539,9 +547,38 @@ class KnowledgeService:
                         }
                     )
                     seen.add(row.id)
+                    tables.append((seed, number, row))
                     if len(result) == limit:
                         return result
                     break
+            # A table's nearby introduction may qualify when its numbers apply.
+            # Reuse bounded lookup candidates; follow explicit mentions only
+            # within two positions of the actual table in the same version.
+            for seed, number, table in tables:
+                for row in linked:
+                    if (
+                        row.version_id != table.version_id
+                        or row.id in seen
+                        or not 0 < table.position - row.position <= 2
+                        or unusable_table(row.content)
+                        or not re.search(
+                            r"\b(?:table|tabela)\s+" + re.escape(number) + r"\b",
+                            row.content,
+                            re.I,
+                        )
+                    ):
+                        continue
+                    result.append(
+                        {
+                            **by_id[seed.id],
+                            "passage_id": str(row.id),
+                            "location": row.location,
+                            "content": row.content,
+                        }
+                    )
+                    seen.add(row.id)
+                    if len(result) == limit:
+                        return result
         nearby = session.scalars(
             select(ReferencePassage)
             .join(ReferenceVersion)

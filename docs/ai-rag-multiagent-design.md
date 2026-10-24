@@ -246,6 +246,13 @@ Overlong follow-up queries are compacted or repaired once within the same budget
 invalid tool syntax is not reported as absent evidence. Technique promotion matches
 a specific subject heading, and gap queries use exercise names already found in
 the retrieved evidence instead of requesting generic strength technique.
+When numbered tables are involved, bounded merging reserves space for their
+opening scope and nearby explicit applicability references. Repeated technique
+subjects do not displace distinct exercises. Generation receives faithful
+translated exercise names and explicit repetition/rest metadata; these remain
+navigation aids, not applicability verdicts. Plan prompts distinguish a concise
+draft from a full execution tutorial, and genuine conflicts from differently
+conditioned examples. Independent review and numerical/variant guards remain.
 
 ## Verification and evaluation rubric
 

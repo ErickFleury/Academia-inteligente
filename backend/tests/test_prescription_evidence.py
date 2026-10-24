@@ -2,6 +2,8 @@
 
 from app.modules.knowledge.prescription_evidence import (
     allocation_options,
+    exercise_present,
+    normalized,
     prescription_gaps,
     source_parameters,
 )
@@ -254,3 +256,17 @@ def test_source_activity_hints_include_joined_exercise_names_without_inventing_v
         row["named_activities"]
     )
     assert "supino inclinado" not in row["named_activities"]
+
+
+def test_complete_exercise_translations_preserve_implement_and_position():
+    pairs = [
+        ("Supino inclinado com barra", "Incline Barbell Bench Press"),
+        ("Supino reto com barra", "Flat Barbell Bench Press"),
+        ("Desenvolvimento de ombros sentado com barra", "Seated Barbell Shoulder Press"),
+    ]
+    for portuguese, english in pairs:
+        assert exercise_present(portuguese, normalized(english))
+        assert normalized(portuguese) in source_parameters(refs(english))[0]["named_activities"]
+        assert not exercise_present(portuguese, normalized(english.replace("Barbell", "Dumbbell")))
+    assert not exercise_present("Supino reto com barra", normalized("Incline Barbell Bench Press"))
+    assert not exercise_present("Supino reto com barra", normalized("Bench Press"))
