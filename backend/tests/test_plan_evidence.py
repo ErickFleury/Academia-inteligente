@@ -750,3 +750,21 @@ def test_readonly_rag_generation_and_review_fit_shared_budget(
     assert len(calls) == 3
     assert run.budget.input_tokens == 17100
     assert len(run.references) == 5
+
+
+def test_readonly_review_receives_saved_current_plan_for_factual_explanation(
+    database_session, rollout
+):
+    client = owner(database_session)
+    rollout.passages = [passage("Leg press: keep feet supported.")]
+    provider = Agent(route={"query": "leg press technique", "needs_references": True})
+    provider.citations = ["R1"]
+    saved = {"items": [{"exercise_name": "Leg press", "repetitions": "10–15"}]}
+    run = AssistantRun(database_session, client.id, "training_chat", provider=provider)
+    health = {"has_limitations_or_complaints": True, "limitations_or_complaints": "Joelho sensível"}
+    run.prepare({"current_training_plan": saved, "authoritative_health_records": health})
+    run.specialist()
+    review = next(context for _, context, _ in provider.calls if "cited_passages" in context)
+    assert review["current_training_plan"] == saved
+    assert review["authoritative_health_records"] == health
+    assert review["answer"]["draft_update"] is None
