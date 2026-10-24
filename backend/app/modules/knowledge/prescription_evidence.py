@@ -95,12 +95,30 @@ def time_factor(unit):
 
 
 def times(text):
+    rest_rows, offset, in_rest_table = [], 0, False
+    for line in text.splitlines(keepends=True):
+        if re.search(
+            r"\b(?:table|tabela)\s+\d+(?:\.\d+)?[^\n]*"
+            r"(?:rest interval|intervalos? de descanso)",
+            line,
+        ):
+            in_rest_table = True
+        elif in_rest_table:
+            if (
+                not line.strip()
+                or len(line.strip()) > 180
+                or re.match(r"\s*(?:note\b|nota\b|based on\b|table\b|tabela\b|#)", line)
+            ):
+                in_rest_table = False
+            else:
+                rest_rows.append((offset, offset + len(line)))
+        offset += len(line)
     for match in re.finditer(NUMBER + rf"\s*(?P<unit>{TIME})\b", text):
         before, after = (
             text[max(0, match.start() - 45) : match.start()],
             text[match.end() : match.end() + 120],
         )
-        rest = bool(
+        rest = any(start <= match.start() < end for start, end in rest_rows) or bool(
             re.search(r"(?:rest|descanso)(?:\s+[a-z]+){0,4}\s*$", before)
             or re.match(r"\s*(?:de |of )?(?:rest|descanso|between sets|entre series)\b", after)
         )
@@ -112,7 +130,8 @@ def exercise_present(name, text):
     for alternative in re.split(r"\s+ou\s+|\s*/\s*", normalized(name)):
         candidates = [alternative, *EXERCISES.get(alternative, [])]
         if not any(
-            re.search(r"(?<!\w)" + re.escape(candidate) + r"(?!\w)", text)
+            # OCR can join words, but every word/variant qualifier must remain.
+            re.search(r"(?<!\w)" + r"\s*".join(map(re.escape, candidate.split())) + r"(?!\w)", text)
             for candidate in candidates
         ):
             return False
@@ -153,10 +172,12 @@ def weekly_prescriptions(content):
 
 
 def parameters(content):
-    timing = list(times(numbers(content)))
+    # Preserve row boundaries: a rest-table column applies to its rows, not to
+    # the unrelated prose following its note/caption.
+    timing = list(times("\n".join(numbers(line) for line in content.splitlines())))
     return {
         "sets": counts(numbers(content), r"sets?|series?"),
-        "repetitions": counts(numbers(content), r"repetitions?|repeticoes|reps?"),
+        "repetitions": counts(numbers(content), r"(?:rm\s*)?(?:repetitions?|repeticoes|reps?)"),
         "rest_seconds": [value for value, rest, _ in timing if rest],
         "duration_seconds": [value for value, rest, weekly in timing if not rest and not weekly],
         "weekly_seconds": [value for value, rest, weekly in timing if not rest and weekly],
@@ -173,7 +194,10 @@ def source_parameters(references, days_per_week=None):
         "puxada alta",
         "levantamento terra",
         "agachamento",
+        "leg press",
+        "remada sentada",
         "remada",
+        "desenvolvimento de ombros",
         "rosca direta",
         "caminhada",
         "corrida",

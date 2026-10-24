@@ -475,6 +475,73 @@ class KnowledgeService:
         ).all()
         if len(seeds) != len(by_id):
             raise KnowledgeError("reference_conflict", 409)
+        order = {key: index for index, key in enumerate(by_id)}
+        seeds.sort(key=lambda seed: order[seed.id])
+        links = []
+        for seed in seeds:
+            for number in re.findall(
+                r"\b(?:based on|see|conforme|ver|and|e|basead[oa]s? n[ao])\s+"
+                r"(?:table|tabela)\s+(\d{1,3}\.\d{1,3})\b",
+                seed.content,
+                re.I,
+            ):
+                if not any(
+                    item[0].version_id == seed.version_id and item[1] == number for item in links
+                ):
+                    links.append((seed, number))
+                if len(links) == 4:
+                    break
+            if len(links) == 4:
+                break
+        result, seen = list(references), set(by_id)
+        if links:
+            linked = session.scalars(
+                select(ReferencePassage)
+                .join(ReferenceVersion)
+                .where(
+                    ReferenceVersion.active.is_(True),
+                    ReferenceVersion.status == "active",
+                    or_(
+                        *[
+                            (ReferencePassage.version_id == seed.version_id)
+                            & or_(
+                                ReferencePassage.content.ilike(f"%table {number}%"),
+                                ReferencePassage.content.ilike(f"%tabela {number}%"),
+                            )
+                            for seed, number in links
+                        ]
+                    ),
+                )
+                .order_by(ReferencePassage.position, ReferencePassage.id)
+                .limit(24)
+            ).all()
+            for seed, number in links:
+                for row in linked:
+                    if (
+                        row.version_id != seed.version_id
+                        or row.id in seen
+                        or unusable_table(row.content)
+                        or not re.search(
+                            r"(?im)^\s*(?:#{1,6}\s*)?(?:table|tabela)\s+"
+                            + re.escape(number)
+                            + r"\b(?!\s+(?:presents?|shows?|provides?|summarizes?|"
+                            r"apresenta|mostra|resume)\b)",
+                            row.content,
+                        )
+                    ):
+                        continue
+                    result.append(
+                        {
+                            **by_id[seed.id],
+                            "passage_id": str(row.id),
+                            "location": row.location,
+                            "content": row.content,
+                        }
+                    )
+                    seen.add(row.id)
+                    if len(result) == limit:
+                        return result
+                    break
         nearby = session.scalars(
             select(ReferencePassage)
             .join(ReferenceVersion)
@@ -491,13 +558,11 @@ class KnowledgeService:
             )
         ).all()
         neighbors = {(row.version_id, row.position): row for row in nearby}
-        order = {key: index for index, key in enumerate(by_id)}
 
         def continued(seed):
             return bool(re.search(r"\bcontinued\b|\bcontinua[çc][ãa]o\b", seed.content[:100], re.I))
 
         seeds.sort(key=lambda seed: (not continued(seed), order[seed.id]))
-        result, seen = list(references), set(by_id)
         for seed in seeds:
             for delta in (-1, 1) if continued(seed) else (1, -1):
                 row = neighbors.get((seed.version_id, seed.position + delta))

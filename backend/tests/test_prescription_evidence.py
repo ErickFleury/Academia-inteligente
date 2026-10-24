@@ -219,3 +219,38 @@ def test_english_intensity_clauses_and_decimal_commas_keep_their_conditions():
         allocation_options(ambiguous, {"client_answers": {"weekly_availability": {"value": 3}}})
         == []
     )
+
+
+def test_explicit_rm_repetition_range_and_translated_seated_row_are_supported():
+    source = refs(
+        "Seated row: novice repetition range is 10-15RM reps; one to three sets. Rest 120 seconds."
+    )
+    assert (
+        prescription_gaps(
+            [item(exercise_name="Remada sentada", repetitions="10-15", rest_seconds=120)],
+            source,
+            context={},
+        )
+        == []
+    )
+    assert prescription_gaps(
+        [item(exercise_name="Remada sentada", repetitions="20", rest_seconds=120)],
+        source,
+        context={},
+    )
+    # A load expressed as a fraction of one-repetition maximum is not a rep prescription.
+    assert source_parameters(refs("Use 70% of 1RM for this exercise."))[0]["repetitions"] == []
+
+
+def test_joined_ocr_exercise_words_do_not_authorize_different_variants():
+    source = refs("Seatedrow: 2 sets of 8 repetitions; rest 90 seconds.")
+    assert prescription_gaps([item(exercise_name="Remada sentada")], source, context={}) == []
+    assert prescription_gaps([item(exercise_name="Remada em pé")], source, context={})
+
+
+def test_source_activity_hints_include_joined_exercise_names_without_inventing_variants():
+    row = source_parameters(refs("Bench press; Legpress; Seatedrow; Shoulder press."))[0]
+    assert {"supino", "leg press", "remada sentada", "desenvolvimento de ombros"} <= set(
+        row["named_activities"]
+    )
+    assert "supino inclinado" not in row["named_activities"]

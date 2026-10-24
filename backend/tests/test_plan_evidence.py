@@ -508,3 +508,37 @@ def test_continuous_only_evidence_cannot_generate_a_bundle_of_alternatives(
     )
     with pytest.raises(AssistantError, match="assistant_clarification_required"):
         run.specialist()
+
+
+def test_current_goal_interpretation_controls_plan_scope_without_rewriting_onboarding(
+    database_session,
+):
+    client = owner(database_session)
+    complete_onboarding(database_session, "owner")
+    onboarding = database_session.scalar(select(Onboarding))
+    onboarding.training_goal = "Força e condicionamento geral"
+    database_session.commit()
+    message = "Quero apenas musculação neste plano."
+    provider = Agent(
+        route={
+            "query": "musculação iniciantes",
+            "answer_updates": [
+                {
+                    "field": "training_goal",
+                    "status": "answered",
+                    "value": "Apenas musculação",
+                    "source_index": 0,
+                    "quote": message,
+                }
+            ],
+        }
+    )
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    run.prepare({"current_user_message": message})
+    assert run.context["current_plan_preferences"]["training_goal"] == "Apenas musculação"
+    assert run.plan_brief["training_goal"] == "Apenas musculação"
+    assert onboarding.training_goal == "Força e condicionamento geral"
+    assert (
+        run.context["authoritative_health_records"]["limitations_or_complaints"]
+        == "Joelho sensível"
+    )

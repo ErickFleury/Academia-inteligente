@@ -110,3 +110,42 @@ def test_readable_tables_and_procedures_are_not_excluded(content):
     from app.modules.knowledge.service import unusable_table
 
     assert not unusable_table(content)
+
+
+def test_plan_expansion_follows_explicit_tables_within_active_version(setup):
+    sessions, service, _ = setup
+    version = upload(
+        sessions,
+        service,
+        body=(
+            "# General guidance\nBased on table 3.1 and table 3.2, choose the appropriate range.\n"
+            "# Unrelated neighbor\nA different topic.\nTable 3.2 presents recommended rest.\n"
+            "# Table 3.1\nBeginners: 2 sets of 10 repetitions, only after learning the movement.\n"
+            "# Table 3.2\nRest: 90 seconds; increase rest if technique declines."
+        ),
+    )
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        seeds = service.search(session, "general guidance")
+        seed = next(r for r in seeds if "Based on table" in r["content"])
+        refs = service.expand_plan_context(session, [seed], limit=3)
+        assert len(refs) == 3
+        assert any("only after learning" in r["content"] for r in refs)
+        assert any("increase rest" in r["content"] for r in refs)
+        assert all(r["version_id"] == seed["version_id"] for r in refs)
+
+
+def test_rest_interval_table_is_not_misread_as_exercise_duration():
+    from app.modules.knowledge.prescription_evidence import source_parameters
+
+    content = (
+        "TABLE 7.2 Rest Interval Recommendations\nTraining goal | Rest interval length\n"
+        "Strength | 2-5 min\nPower | 2-5 min\n"
+        "Note: Increase rest if technique declines.\n"
+        "A separate activity lasts 10 minutes.\n"
+    )
+    fields = source_parameters([{"passage_id": "R1", "content": content}])[0]
+    assert (120.0, 300.0) in fields["rest_seconds"]
+    assert (120.0, 300.0) not in fields["duration_seconds"]
+    assert (600.0, 600.0) in fields["duration_seconds"]

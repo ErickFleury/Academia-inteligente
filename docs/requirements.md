@@ -2419,6 +2419,23 @@ The owner approved the following design decisions:
   requested subjects despite repeated higher-ranked sections; known corrupt
   numeric layouts cannot return through neighbor expansion; readable tables,
   conditions, provenance and grounding checks remain intact.
+- Context completion and current scope (2026-10-24): within the existing plan
+  context limit, expansion may follow up to four explicit numbered-table links
+  in the same active source version (at most twenty-four lookup candidates),
+  prioritizing actual table headings over prose that merely mentions a table.
+  Preserve complete source text and conditions; do not reconstruct damaged cells.
+  Recognize explicitly labelled rest-table rows as rest intervals, not activity
+  durations, stopping at notes or unrelated prose. Current validated goal and
+  experience answers take precedence over older onboarding preferences for the
+  plan being requested, without rewriting onboarding or authoritative health data.
+  A source-supported introductory learning phase may serve a beginner's strength
+  goal when explicitly described as such; a request to start training does not
+  inherently demand maximal-strength optimization or advanced periodization.
+  Exercise, dose, applicability, equipment and instructor checks still apply.
+  Acceptance: linked tables retain provenance and active-version isolation;
+  rest-table quantities are classified correctly without absorbing later activity
+  durations; current scope corrections reach generation/review while stored
+  onboarding and health records remain unchanged.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits
