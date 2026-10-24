@@ -24,7 +24,12 @@ from app.integrations.document_text import (
 )
 from app.integrations.embeddings import EmbeddingProvider, HttpEmbeddingProvider
 from app.modules.knowledge.models import ReferencePassage, ReferenceSource, ReferenceVersion
-from app.modules.knowledge.prescription_evidence import prescription_gaps, source_parameters
+from app.modules.knowledge.prescription_evidence import (
+    exercise_present,
+    normalized,
+    prescription_gaps,
+    source_parameters,
+)
 from app.modules.knowledge.search_terms import expand_search_terms
 
 
@@ -253,8 +258,19 @@ def technique_subject_terms(content):
     return section_terms(heading) - generic
 
 
+def technique_subject_coverage(content, query):
+    names = source_parameters([{"passage_id": "query", "content": query}])[0]["named_activities"]
+    # A generic substring cannot authorize a different explicitly requested
+    # variant. Match complete exercise phrases, not shared words such as press.
+    names = [name for name in names if not any(other.startswith(name + " ") for other in names)]
+    if names:
+        heading = content.split("\n", 1)[0][7:].rsplit(" / ", 1)[-1]
+        return {name for name in names if exercise_present(name, normalized(heading))}
+    return technique_subject_terms(content) & section_terms(query)
+
+
 def technique_subject_match(content, query):
-    return len(technique_subject_terms(content) & section_terms(query))
+    return len(technique_subject_coverage(content, query))
 
 
 def unusable_table(content):
@@ -1102,8 +1118,7 @@ class KnowledgeService:
             ]
             covered, diverse = set(), []
             subjects = {
-                key: technique_subject_terms(candidates[key].content) & section_terms(query)
-                for key in matches
+                key: technique_subject_coverage(candidates[key].content, query) for key in matches
             }
             while matches and len(diverse) < limit:
                 candidate = max(matches, key=lambda key: len(subjects[key] - covered))
@@ -1112,7 +1127,24 @@ class KnowledgeService:
                 diverse.append(candidate)
                 covered.update(subjects[candidate])
                 matches.remove(candidate)
-            selected = [*diverse, *(key for key in selected if key not in diverse)][:limit]
+            # Once subjects are covered, prefer a distinct matching variant over
+            # another continuation of one heading or an unrequested movement.
+            headings = {
+                frozenset(technique_subject_terms(candidates[key].content)) for key in diverse
+            }
+            for key in matches:
+                if len(diverse) >= limit:
+                    break
+                heading = frozenset(technique_subject_terms(candidates[key].content))
+                if heading not in headings:
+                    diverse.append(key)
+                    headings.add(heading)
+            if diverse:
+                selected = [
+                    *diverse,
+                    *(key for key in matches if key not in diverse),
+                    *(key for key in selected if not technique_passage(candidates[key].content)),
+                ][:limit]
         results = []
         for key in selected:
             passage = candidates[key]

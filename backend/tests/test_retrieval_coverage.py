@@ -208,3 +208,34 @@ def test_continued_table_recovers_its_example_scope(setup):
         )
         refs = service.expand_plan_context(session, [seed], limit=2)
         assert any("This case is an endurance circuit" in r["content"] for r in refs)
+
+
+def test_compound_exercise_queries_do_not_promote_unrequested_shared_words(setup):
+    sessions, service, _ = setup
+    for title, count in (
+        ("Seated Barbell Shoulder Press", 12),
+        ("Incline Barbell Bench Press", 3),
+        ("Flat Barbell Bench Press", 3),
+        ("Seated Leg Press", 1),
+        ("Seated Row", 1),
+    ):
+        version = upload(
+            sessions,
+            service,
+            body="\n".join(
+                f"# {title}\nStarting Position: set up for {title}. Move slowly. Step {i}."
+                for i in range(count)
+            ),
+        )
+        service.import_next(sessions)
+        activate(sessions, service, version)
+    with sessions() as session:
+        hits = service.search(
+            session, "barbell bench press leg press seated row technique", prefer_technique=True
+        )
+    headings = [r["content"].split("\n")[0] for r in hits]
+    assert not any("Shoulder" in title for title in headings)
+    assert all(
+        any(subject in title for title in headings)
+        for subject in ("Flat Barbell Bench Press", "Seated Leg Press", "Seated Row")
+    )
