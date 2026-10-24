@@ -383,6 +383,12 @@ def test_missing_evidence_returns_controlled_referral(database_session, rollout)
 def test_invalid_query_has_one_bounded_correction_without_retrieving_it(database_session, rollout):
     class CorrectingAgent(Agent):
         def structured(self, context, *args, **kwargs):
+            if "query_to_shorten" in context:
+                budget = current_budget.get()
+                reserved = budget.reserve(100, 256)
+                budget.reconcile_output(reserved, 20)
+                self.calls.append((kwargs["role"], context, args[0]))
+                return args[2].model_validate({"query": "banco inclinação"})
             self.route = {"query": "termo " * 13, "needs_references": True}
             if context.get("validation_feedback"):
                 self.route["query"] = "banco inclinação"

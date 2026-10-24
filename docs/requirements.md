@@ -2453,6 +2453,23 @@ The owner approved the following design decisions:
   Acceptance: linked applicability prose survives bounded context selection;
   translated variants remain distinct; a supported concise proposal can pass
   without inventing a tutorial, while unsupported instructions remain rejected.
+- Bounded generation recovery (2026-10-24): resolve explicit missing table context
+  before spending a call drafting from incomplete evidence. Routing and follow-up
+  queries share grammatical compaction and one bounded repair; a sequence of
+  numbered tables already present in retrieved sources is technical metadata,
+  not a phone number. Unknown numeric sequences and contact data remain blocked.
+  The existing single correction allowance can recheck an evidence refusal when
+  named exercises and candidate dose fields are present; these hints never prove
+  applicability. A repeated refusal ends the attempt, and any resulting candidate
+  still requires backend checks and independent review. Existing call, token,
+  retrieval and time ceilings remain. Plan prompts omit duplicate normalized
+  memory and empty metadata fields, retaining complete source text, current
+  restrictions, validated answers and unique facts. Acceptance: no premature
+  table-based draft, no query-repair loops or contact leakage, no rejected-plan
+  persistence, and no skipped review following reconsideration.
+  Hosted plan reviews may reserve up to 4,000 output tokens within the unchanged
+  12,000-token plan-turn ceiling; ordinary routing retains its smaller allowance.
+  Incomplete output still fails closed and cannot persist a partial proposal.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

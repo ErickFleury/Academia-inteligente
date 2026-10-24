@@ -422,10 +422,10 @@ class _Provider:
                 )
                 desired = 1000 if role == "orchestrator" else (7000 if budget.plan else 3000)
                 if role == "orchestrator" and "messages" not in body:
-                    # Hosted routing includes a large structured contract. Leave
-                    # room beyond the old 1k cap; reserve() still enforces the
-                    # shared turn ceiling and actual usage funds later stages.
-                    desired = 2000
+                    # Reviews include per-item checks and may need more output
+                    # than routing. reserve() still enforces the shared ceiling;
+                    # actual usage funds later stages.
+                    desired = 4000 if budget.plan and "cited_passages" in context else 2000
                 result_schema = schema.get("properties", {}).get("result", {})
                 if role == "training_chat" and result_schema.get("properties", {}).get(
                     "draft_update"

@@ -314,7 +314,7 @@ def test_gap_search_preserves_quantities_and_named_activities_in_generation_cont
                 assert len(contents) == 10
                 assert context["source_allocation_options"]
                 assert any(
-                    row["sets"] and row["repetitions"] and row["rest_seconds"]
+                    row.get("sets") and row.get("repetitions") and row.get("rest_seconds")
                     for row in context["source_prescription_parameters"]
                 )
             return super().structured(context, instructions, schema, type_, role=role)

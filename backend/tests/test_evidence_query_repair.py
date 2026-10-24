@@ -15,6 +15,18 @@ LONG_QUERY = (
 COMPACT_QUERY = "programação técnica força adultos iniciantes dose condicionamento cardiovascular"
 
 
+@pytest.mark.parametrize("role", ["initial_plan", "training_chat"])
+def test_routing_queries_use_the_same_bounded_compaction(database_session, role):
+    search = ReferenceTool()
+    agent = Agent(route={"query": LONG_QUERY})
+    run = AssistantRun(
+        database_session, owner(database_session).id, role, provider=agent, knowledge=search
+    )
+    run.prepare({})
+    assert search.queries == [COMPACT_QUERY]
+    assert run.budget.calls == 1
+
+
 def test_observed_thirteen_word_gap_query_retrieves_and_resumes_plan(database_session):
     class Search(ReferenceTool):
         def search(self, session, query, **kwargs):

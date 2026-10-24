@@ -192,6 +192,60 @@ def test_null_plan_cannot_claim_to_be_grounded(database_session, rollout, ground
         run.specialist()
 
 
+@pytest.mark.parametrize(
+    "repeated_refusal,review_supported,invalid_dose",
+    [(False, True, False), (True, True, False), (False, False, False), (False, True, True)],
+)
+def test_evidence_refusal_gets_one_bounded_recheck_and_still_requires_review(
+    database_session, rollout, repeated_refusal, review_supported, invalid_dose
+):
+    from app.modules.knowledge.prescription_evidence import prescription_gaps
+
+    client = owner(database_session)
+    rollout.prescription_gaps = prescription_gaps
+    rollout.passages = [
+        passage(f"Squat: {2 if invalid_dose else 3} sets of 8 repetitions, rest 90 seconds.")
+    ]
+
+    class Reconsidering(Agent):
+        def structured(self, context, instructions, schema, type_, *, role):
+            result = super().structured(context, instructions, schema, type_, role=role)
+            if role == "initial_plan" and (
+                repeated_refusal or not context.get("plan_review_feedback")
+            ):
+                return type_.model_validate(
+                    {
+                        "result": None,
+                        "grounding": "clarification",
+                        "citation_ids": [],
+                        "clarification": {
+                            "reason": "insufficient_evidence",
+                            "explanation": "Faltam doses.",
+                            "next_step": "Revisar.",
+                        },
+                    }
+                )
+            return result
+
+    provider = Reconsidering(route={"query": "squat sets repetitions rest"})
+    provider.citations = ["R1"]
+    provider.review_supported = review_supported
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    run.prepare({})
+    run._search_for_evidence("squat technique")
+    if repeated_refusal or not review_supported or invalid_dose:
+        with pytest.raises(AssistantError, match="assistant_clarification_required"):
+            run.specialist()
+    else:
+        assert run.specialist().plan
+    assert sum(role == "initial_plan" for role, _, _ in provider.calls) == 2
+    assert sum("cited_passages" in context for _, context, _ in provider.calls) == (
+        0 if repeated_refusal or invalid_dose else 1
+    )
+    assert run.budget.retrievals == 2 and run.budget.calls <= 6
+    assert database_session.scalar(select(TrainingPlanVersion)) is None
+
+
 def test_duplicate_plan_query_uses_only_one_retrieval(database_session, rollout):
     client = owner(database_session)
     query = "training prescription"
@@ -204,6 +258,93 @@ def test_duplicate_plan_query_uses_only_one_retrieval(database_session, rollout)
     run.prepare({})
     assert rollout.queries == [query]
     assert run.budget.retrievals == 1
+
+
+def test_known_table_number_sequence_is_not_a_phone_number(database_session):
+    client = owner(database_session)
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=Agent())
+    run.references = [passage("See table 15.5, table 15.6 and table 15.9.")]
+    query = run._prepare_evidence_query(
+        "NSCA Tables 15.5 15.6 15.9 novice load repetition rest conditions"
+    )
+    assert query == "NSCA table 15.5 table 15.6 table 15.9 novice load repetition rest conditions"
+    for prohibited in (
+        "Tables 99.9 99.8 99.7 novice load",
+        "Tables 15.5 15.6 15.9 contact user@example.test",
+        "Tables 15.5 15.6 15.9 phone 5551234567",
+    ):
+        with pytest.raises(AssistantError, match="reference_query_invalid"):
+            run._prepare_evidence_query(prohibited)
+
+
+def test_plan_prompt_omits_duplicate_metadata_without_dropping_source_or_client_facts(
+    database_session, rollout
+):
+    client = owner(database_session)
+    rollout.passages = [passage("Squat: 3 sets of 8 repetitions, rest 90 seconds.")]
+    provider = Agent(route={"query": "squat sets repetitions rest"})
+    provider.citations = ["R1"]
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    run.prepare({})
+    duplicate = {"answer_data": {"field": "age", "value": 19}, "text": "Age 19"}
+    preference = {"text": "Prefers mornings"}
+    run.context["client_answers"] = {"age": {"value": 19, "reported_at": "2026-10-24"}}
+    run.context["client_memory"] = [duplicate, preference]
+    run.specialist()
+    sent = next(context for role, context, _ in provider.calls if role == "initial_plan")
+    assert sent["client_memory"] == [preference]
+    assert sent["client_answers"] == run.context["client_answers"]
+    assert sent["reference_passages"] == run.context["reference_passages"]
+    assert "question_catalog" not in sent
+    assert "duration_seconds" not in sent["source_prescription_parameters"][0]
+    assert run.context["client_memory"] == [duplicate, preference]
+
+
+def test_unresolved_programming_table_is_completed_before_drafting(database_session, rollout):
+    client = owner(database_session)
+    rollout.passages = [passage("Squat: based on table 2.1, choose an appropriate dose.")]
+
+    class CompleteTable(Agent):
+        def structured(self, context, instructions, schema, type_, *, role):
+            result = super().structured(context, instructions, schema, type_, role=role)
+            if role == "initial_plan" and context["reference_searches_remaining"] == 1:
+                assert schema["properties"]["result"] == {"type": "null"}
+                assert (
+                    schema["properties"]["clarification"]["properties"]["evidence_query"][
+                        "minLength"
+                    ]
+                    == 1
+                )
+                rollout.passages = [
+                    passage("TABLE 2.1\nSquat: 3 sets of 8 repetitions, rest 90 seconds.")
+                ]
+                return type_.model_validate(
+                    {
+                        "result": None,
+                        "grounding": "clarification",
+                        "citation_ids": [],
+                        "clarification": {
+                            "reason": "insufficient_evidence",
+                            "explanation": "Falta contexto.",
+                            "next_step": "Completar contexto.",
+                            "evidence_query": "squat dose technique",
+                        },
+                    }
+                )
+            return result
+
+    provider = CompleteTable(route={"query": "squat prescription"})
+    provider.citations = ["R1"]
+    run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
+    run.prepare({})
+    assert run.specialist().plan
+    assert run.budget.retrievals == 2
+    assert [role for role, _, _ in provider.calls] == [
+        "orchestrator",
+        "initial_plan",
+        "initial_plan",
+        "orchestrator",
+    ]
 
 
 def test_clarification_route_does_not_search_or_generate(database_session, rollout):
