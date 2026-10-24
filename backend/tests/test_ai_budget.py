@@ -372,3 +372,51 @@ def test_plan_calls_reuse_fixed_window_without_dropping_context(
         assert json.loads(body["messages"][1]["content"]) == context
     assert budget.input_tokens == 9300
     assert budget.output_tokens == 15
+
+
+@pytest.mark.parametrize(
+    "plan,role,context,effort",
+    [
+        (False, "orchestrator", {"allowed_specialist": "training_chat"}, "low"),
+        (True, "orchestrator", {"allowed_specialist": "initial_plan"}, "low"),
+        (False, "training_chat", {}, "low"),
+        (False, "orchestrator", {"cited_passages": []}, None),
+        (True, "initial_plan", {}, None),
+        (True, "orchestrator", {"cited_passages": []}, None),
+    ],
+)
+@pytest.mark.parametrize("hosted", [True, False])
+def test_optional_hosted_effort_distinguishes_routing_chat_and_plan_review(
+    monkeypatch, plan, role, context, effort, hosted
+):
+    monkeypatch.setenv("OPENAI_ROUTING_REASONING_EFFORT", "low")
+    monkeypatch.setenv("OPENAI_CHAT_REASONING_EFFORT", "low")
+    captured = []
+
+    def respond(request, timeout):
+        captured.append(json.loads(request.data))
+        return BytesIO(
+            json.dumps(
+                {
+                    "output": [{"content": [{"type": "output_text", "text": '{"answer":"ok"}'}]}],
+                    "usage": {"input_tokens": 100, "output_tokens": 5},
+                }
+                if hosted
+                else {
+                    "message": {"content": '{"answer":"ok"}'},
+                    "prompt_eval_count": 100,
+                    "eval_count": 5,
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(ai, "urlopen", respond)
+    with ExecutionBudget(plan=plan).scope():
+        provider = (
+            OpenAiResponsesOnboardingProvider(OpenAiConfig("test", "test", 10))
+            if hosted
+            else OllamaOnboardingProvider(OllamaConfig("http://local", "test", 10))
+        )
+        provider.structured(context, "Return JSON", {}, Result, role=role)
+    assert captured[0].get("reasoning", {}).get("effort") == (effort if hosted else None)
+    assert captured[0]["model"] == "test"

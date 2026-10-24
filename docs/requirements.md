@@ -2487,6 +2487,12 @@ The owner approved the following design decisions:
 - Initially use the existing configured chat model for all agents, with optional
   configuration overrides per role. Do not automatically switch to a more
   expensive model or another provider.
+- Hosted reasoning effort may be configured separately for routing/query repair
+  and ordinary training-chat generation. Empty settings preserve provider defaults;
+  local adapters remain unchanged. These settings must not lower reasoning for
+  plan generation, draft edits, or any independent grounding review. Model,
+  retrieval, token and deadline limits remain unchanged. Acceptance: per-stage
+  adapter tests and live positive/negative review checks precede deployment.
 - Full local operation without mandatory paid APIs or services is a project
   requirement, not merely a development/test alternative. The AI design must
   support local orchestration, all four specialists, embedding generation,

@@ -456,6 +456,18 @@ class _Provider:
                         "temperature": 0,
                     }
                 else:
+                    effort_setting = (
+                        "OPENAI_ROUTING_REASONING_EFFORT"
+                        if role == "orchestrator" and "cited_passages" not in context
+                        else "OPENAI_CHAT_REASONING_EFFORT"
+                        if not budget.plan and role == "training_chat"
+                        else None
+                    )
+                    effort = os.getenv(effort_setting, "").strip() if effort_setting else ""
+                    if effort:
+                        if effort not in {"none", "low", "medium", "high", "xhigh", "max"}:
+                            raise AiProviderError("configuration", retryable=False)
+                        body["reasoning"] = {"effort": effort}
                     body.update(max_output_tokens=reserved, truncation="disabled", store=False)
                 request.data = json.dumps(body).encode()
                 timeout = min(timeout, budget.remaining())
