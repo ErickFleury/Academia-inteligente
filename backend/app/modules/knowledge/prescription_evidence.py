@@ -94,6 +94,23 @@ def time_factor(unit):
     return 3600 if unit.startswith(("hour", "hora")) else 60 if unit.startswith("min") else 1
 
 
+WEEKLY_RATE = r"\b(?:por semana|per week|semanais|weekly)\b"
+
+
+def weekly_rate(after):
+    """Bind a duration to its own rate, not a later session frequency/total."""
+    clause = re.split(r"[.!?;]", after, maxsplit=1)[0][:120]
+    rate = re.search(WEEKLY_RATE, clause)
+    if rate is None:
+        return False
+    between = clause[: rate.start()]
+    return not re.search(
+        r"\b(?:(?:a|per|each|por|ao|cada)\s+(?:day|dia|session|sessao)|daily|diari\w*)\b"
+        r"|\d+\s*(?:days?|dias?)\b|" + NUMBER + rf"\s*(?:{TIME})\b",
+        between,
+    )
+
+
 def times(text):
     rest_rows, offset, in_rest_table = [], 0, False
     for line in text.splitlines(keepends=True):
@@ -122,7 +139,7 @@ def times(text):
             re.search(r"(?:rest|descanso)(?:\s+[a-z]+){0,4}\s*$", before)
             or re.match(r"\s*(?:de |of )?(?:rest|descanso|between sets|entre series)\b", after)
         )
-        weekly = bool(re.search(r"\b(?:por semana|per week|semanais|weekly)\b", after))
+        weekly = weekly_rate(after)
         yield bounds(match, time_factor(match["unit"])), rest, weekly
 
 
@@ -158,8 +175,12 @@ def weekly_prescriptions(content):
     for match in re.finditer(NUMBER + rf"\s*(?P<unit>{TIME})\b", text):
         before = re.split(r"[.!?;]|\b(?:ou|or)\b", text[: match.start()])[-1]
         after = re.split(r"[.!?;]|\b(?:ou|or)\b", text[match.end() :])[0]
-        if not re.search(r"\b(?:por semana|per week|semanais|weekly)\b", after[:120]):
+        if not weekly_rate(after):
             continue
+        # A preceding weekly total ends that dose's intensity clause. A comma
+        # after this total can introduce the next alternative, not its condition.
+        before = re.split(WEEKLY_RATE, before)[-1]
+        after = after.split(",", 1)[0]
         labels = intensities(before[-180:] + " " + after[:120])
         result.append(
             {
@@ -277,15 +298,20 @@ def prescription_gaps(items, citations, *, context, objective=""):
     # Weekly allocation needs explicit permission in the source, exact arithmetic
     # and a visible explanation. A range guessed by the model is not a derivation.
     allocation = False
+    allocated_items = {
+        index
+        for index, (item, duration) in enumerate(zip(items, durations), 1)
+        if duration and item["sets"] == 1 and item["rest_seconds"] == 0
+    }
+    allocated_durations = [durations[index - 1] for index in allocated_items]
     if (
         type(days) is int
         and 1 <= days <= 7
-        and all(durations)
-        and all(value[0] == value[1] for value in durations)
-        and all(item["sets"] == 1 and item["rest_seconds"] == 0 for item in items)
+        and allocated_durations
+        and all(value[0] == value[1] for value in allocated_durations)
         and re.search(r"dividir|distribu|spread|divide", text)
     ):
-        daily = sum(value[0] for value in durations)
+        daily = sum(value[0] for value in allocated_durations)
         total = daily * days
         explanation = numbers(objective)
         explanation_numbers = {float(value) for value in re.findall(r"\d+(?:\.\d+)?", explanation)}
@@ -303,13 +329,15 @@ def prescription_gaps(items, citations, *, context, objective=""):
         if not continuous and not contains((item["sets"], item["sets"]), set_ranges):
             fields.append("sets_supported")
         if duration:
-            supported = allocation or contains(duration, duration_ranges)
+            supported = (allocation and index in allocated_items) or contains(
+                duration, duration_ranges
+            )
         else:
             match = re.match(NUMBER, numbers(item["repetitions"]))
             supported = bool(match and contains(bounds(match), rep_ranges))
         if not supported:
             fields.append("repetitions_supported")
-        if allocation:
+        if allocation and index in allocated_items:
             matched = [
                 row
                 for row in ranges("weekly_prescriptions")

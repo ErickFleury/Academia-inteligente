@@ -113,6 +113,65 @@ def test_rest_durations_are_not_continuous_activity_doses():
     ]
 
 
+def test_mixed_plan_validates_weekly_cardio_without_waiving_resistance_checks():
+    source = refs(
+        "Squat: 2 sets of 8 repetitions; rest 90 seconds. "
+        "Caminhada: 150 minutos de atividade moderada por semana. Pode dividir a prática."
+    )
+    context = {"client_answers": {"weekly_availability": {"value": 3}}}
+    walking = item(
+        exercise_name="Caminhada",
+        sets=1,
+        repetitions="50 minutos",
+        rest_seconds=0,
+        load_guidance="Intensidade moderada.",
+    )
+    objective = "Musculação e caminhada: 150 minutos semanais em 3 dias de 50 minutos."
+    assert prescription_gaps([item(), walking], source, context=context, objective=objective) == []
+    for changed, field in (
+        ({"repetitions": "49 minutos"}, "repetitions_supported"),
+        ({"load_guidance": "Intensidade vigorosa."}, "load_supported"),
+        ({"sets": 2}, "repetitions_supported"),
+    ):
+        gaps = prescription_gaps(
+            [item(), {**walking, **changed}], source, context=context, objective=objective
+        )
+        assert any(gap["item_position"] == 2 and field in gap["fields"] for gap in gaps)
+    gaps = prescription_gaps(
+        [item(repetitions="999"), walking], source, context=context, objective=objective
+    )
+    assert gaps == [{"item_position": 1, "fields": ["repetitions_supported"]}]
+
+
+def test_daily_dose_with_weekly_frequency_is_not_a_weekly_total():
+    source = refs("The client runs 30 minutes a day, five days per week.")
+    row = source_parameters(source, 3)[0]
+    assert row["weekly_seconds"] == []
+    assert row["weekly_prescriptions"] == []
+    assert row["duration_seconds"] == [(1800, 1800)]
+
+
+def test_combined_daily_and_weekly_guidelines_keep_each_intensity():
+    source = refs(
+        "Moderate-intensity exercise for 30 minutes per day on five days of the week "
+        "for a total of 150 minutes per week, vigorous-intensity exercise for "
+        "20 minutes per day on three days of the week for 75 minutes per week. "
+        "You can walk and spread activity across the week."
+    )
+    row = source_parameters(source, 3)[0]
+    assert row["weekly_seconds"] == [(9000, 9000), (4500, 4500)]
+    assert row["duration_seconds"] == [(1800, 1800), (1200, 1200)]
+    assert [(dose["seconds"], dose["intensity"]) for dose in row["weekly_prescriptions"]] == [
+        ((9000, 9000), "moderada"),
+        ((4500, 4500), "vigorosa"),
+    ]
+    options = allocation_options(source, {"client_answers": {"weekly_availability": {"value": 3}}})
+    assert {(option["repetitions"], option["intensity"]) for option in options} == {
+        ("50 minutos", "moderada"),
+        ("25 minutos", "vigorosa"),
+    }
+
+
 def test_source_parameters_keep_provenance_and_units_for_generation():
     extracted = source_parameters(refs("Squat: 2 sets of 8 repetitions; rest 90 seconds."))
     assert extracted[0]["passage_id"] == "R1"

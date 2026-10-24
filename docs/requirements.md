@@ -2495,8 +2495,12 @@ The owner approved the following design decisions:
   whose rounded arithmetic fails the backend's own necessary checks before the
   option cap. An exactly selected backend-computed allocation retains its original
   derivation citations for validation and independent review; changed quantities
-  do not inherit that support. A repeated refusal ends the attempt, and any resulting candidate
-  still requires backend checks and independent review. Existing call, token,
+  do not inherit that support. Daily/session durations with a later weekly
+  frequency must not be mistaken for weekly totals; retain each total's own
+  intensity condition. Weekly allocation checks also apply to the continuous
+  component of a mixed resistance/cardio proposal, without waiving the separate
+  dose checks for resistance items. A repeated refusal ends the attempt, and any
+  resulting candidate still requires backend checks and independent review. Existing call, token,
   retrieval and time ceilings remain. Plan prompts omit duplicate normalized
   memory and empty metadata fields, retaining complete source text, current
   restrictions, validated answers and unique facts. Acceptance: no premature

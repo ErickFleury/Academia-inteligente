@@ -1295,3 +1295,20 @@ unnecessary exercise tutorials; a repeat found cardio dosage but still lacked
 activity selection. The focused suites passed 39 tests after this prompt change.
 These are successful clarification/continuation checks, not a claim that complete
 plan rebuilds now reliably succeed.
+
+Further live probes exposed two deterministic arithmetic defects: mixed plans
+disabled weekly allocation when resistance items were also present, and a daily
+duration followed by weekly frequency was misclassified as a weekly total.
+Three new tests reproduced the failures before correction. Continuous allocations
+are now checked independently of resistance doses, and each weekly total retains
+its own intensity clause. Incorrect durations/intensities and unsupported
+resistance doses remain rejected. The full suite passed 1,020 tests with the same
+two Alembic warnings.
+
+The follow-up query now asks for activity selection as well as dosage for a missing
+component. Actual two-search runs retained both cardio guidance and examples.
+An isolated three-search experiment did not resolve full generation, and one probe
+hit the existing provider timeout; no production limit was raised. The latest
+two-search candidate still failed because generation used unsupported exercise
+wording/duration representation and omitted the strength-dose citation. No live
+test in this investigation has yet saved a complete combined plan.
