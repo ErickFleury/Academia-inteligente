@@ -215,6 +215,21 @@ def source_parameters(references, days_per_week=None):
     return result
 
 
+def duration_block_items(items):
+    """Identify schema representation, never certify an activity or its dosage.
+
+    Semantic review must distinguish continuous activity from timed resistance
+    work. A duration and these sentinel values alone do not establish safety.
+    """
+    return [
+        index
+        for index, item in enumerate(items, 1)
+        if item.get("sets") == 1
+        and item.get("rest_seconds") == 0
+        and re.fullmatch(NUMBER + rf"\s*(?P<unit>{TIME})", numbers(item.get("repetitions", "")))
+    ]
+
+
 def prescription_gaps(items, citations, *, context, objective=""):
     text = normalized("\n".join(ref["content"] for ref in citations))
     extracted = [parameters(ref["content"]) for ref in citations]

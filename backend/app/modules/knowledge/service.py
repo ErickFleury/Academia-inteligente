@@ -9,7 +9,7 @@ from collections import Counter
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import Float, Text, case, delete, func, literal_column, select, text
+from sqlalchemy import Float, Text, case, delete, func, literal_column, or_, select, text
 from sqlalchemy.dialects.postgresql import TSQUERY
 from sqlalchemy.orm import Session
 
@@ -214,6 +214,21 @@ def section_match(content, query):
     return len(section_terms(heading) & section_terms(query))
 
 
+_TECHNIQUE_MARKERS = (
+    "starting position",
+    "backward movement",
+    "forward movement",
+    "upward movement",
+    "downward movement",
+    "pushing movement",
+    "pulling movement",
+    "posição inicial",
+    "fase concêntrica",
+    "fase excêntrica",
+    "execução do movimento",
+)
+
+
 def technique_passage(content):
     """Recognize explicit execution sections, not generic benefits or definitions.
 
@@ -223,22 +238,7 @@ def technique_passage(content):
     if not content.startswith("Seção: "):
         return False
     body = content.partition("\n")[2].casefold()
-    return any(
-        marker in body
-        for marker in (
-            "starting position",
-            "backward movement",
-            "forward movement",
-            "upward movement",
-            "downward movement",
-            "pushing movement",
-            "pulling movement",
-            "posição inicial",
-            "fase concêntrica",
-            "fase excêntrica",
-            "execução do movimento",
-        )
-    )
+    return any(marker in body for marker in _TECHNIQUE_MARKERS)
 
 
 def measurement_terms(query):
@@ -575,12 +575,19 @@ class KnowledgeService:
         if not query.strip() or len(query) > 500 or not 1 <= limit <= 10:
             raise KnowledgeError("reference_query_invalid")
         query = expand_search_terms(query)
+        technique_focus = prefer_technique and bool(
+            section_terms(query) & {"technique", "tecnica", "execucao", "execution", "movement"}
+        )
+        technique_filter = (
+            ReferencePassage.content.startswith("Seção: "),
+            or_(*(ReferencePassage.content.ilike(f"%{marker}%") for marker in _TECHNIQUE_MARKERS)),
+        )
         base = (
             select(ReferencePassage)
             .join(ReferenceVersion)
             .where(ReferenceVersion.active.is_(True), ReferenceVersion.status == "active")
         )
-        focused = []
+        focused, technique_lexical, technique_semantic = [], [], []
         if session.bind.dialect.name == "postgresql":
             document = func.to_tsvector(
                 text("'portuguese'::regconfig"), searchable_text(ReferencePassage.content)
@@ -601,6 +608,16 @@ class KnowledgeService:
                 )
                 .limit(20)
             ).all()
+            if technique_focus:
+                technique_lexical = session.scalars(
+                    base.where(document.op("@@")(terms), *technique_filter)
+                    .order_by(
+                        func.ts_rank_cd(document, terms).desc(),
+                        ReferenceVersion.source_id,
+                        ReferencePassage.position,
+                    )
+                    .limit(5)
+                ).all()
             if units := measurement_terms(query):
                 unit_query = func.plainto_tsquery(text("'portuguese'::regconfig"), units)
                 unit_terms = func.replace(unit_query.cast(Text), " & ", " | ").cast(TSQUERY)
@@ -617,10 +634,15 @@ class KnowledgeService:
             # SQLite is only the deterministic unit-test dialect; production uses PostgreSQL.
             terms = set(re.findall(r"\w+", query.casefold()))
             rows = session.scalars(base).all()
-            lexical = sorted(
+            lexical_candidates = sorted(
                 (r for r in rows if terms & set(re.findall(r"\w+", r.content.casefold()))),
                 key=lambda r: -len(terms & set(re.findall(r"\w+", r.content.casefold()))),
-            )[:20]
+            )
+            lexical = lexical_candidates[:20]
+            if technique_focus:
+                technique_lexical = [
+                    row for row in lexical_candidates if technique_passage(row.content)
+                ][:5]
         semantic = []
         try:
             query_vector = self.provider.embed([query], purpose="query", timeout=timeout)[0]
@@ -644,6 +666,15 @@ class KnowledgeService:
                     .order_by(distance, ReferenceVersion.source_id, ReferencePassage.position)
                     .limit(20)
                 ).all()
+                if technique_focus:
+                    # Reuse the same query vector and distance threshold. An
+                    # execution passage must survive candidate selection even
+                    # when twenty programming passages rank ahead of it.
+                    technique_semantic = session.scalars(
+                        compatible.where(distance <= 0.60, *technique_filter)
+                        .order_by(distance, ReferenceVersion.source_id, ReferencePassage.position)
+                        .limit(5)
+                    ).all()
             else:
 
                 def distance(row):
@@ -652,15 +683,26 @@ class KnowledgeService:
                         math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b))
                     )
 
-                semantic = sorted(
+                semantic_candidates = sorted(
                     (r for r in session.scalars(compatible) if distance(r) <= 0.60), key=distance
-                )[:20]
+                )
+                semantic = semantic_candidates[:20]
+                if technique_focus:
+                    technique_semantic = [
+                        row for row in semantic_candidates if technique_passage(row.content)
+                    ][:5]
         except AiProviderError:
             pass  # Explicit lexical-only degradation; never switch provider.
         scores, candidates = {}, {}
         # Cross-language evidence has less token overlap. Give the multilingual
         # semantic ranking enough weight to survive incidental Portuguese words.
-        for ranking, weight in ((lexical, 1), (semantic, 4), (focused, 2)):
+        for ranking, weight in (
+            (lexical, 1),
+            (semantic, 4),
+            (focused, 2),
+            (technique_lexical, 1),
+            (technique_semantic, 1),
+        ):
             for rank, passage in enumerate(ranking, 1):
                 candidates[passage.id] = passage
                 scores[passage.id] = scores.get(passage.id, 0) + weight / (60 + rank)

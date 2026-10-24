@@ -38,7 +38,11 @@ from app.modules.assistant.client_questions import (
 )
 from app.modules.assistant.presentation import client_message, exposes_retrieval
 from app.modules.clients.models import Client
-from app.modules.knowledge.prescription_evidence import allocation_options, source_parameters
+from app.modules.knowledge.prescription_evidence import (
+    allocation_options,
+    duration_block_items,
+    source_parameters,
+)
 from app.modules.knowledge.service import KnowledgeError, KnowledgeService
 from app.modules.memory.service import (
     MemoryChange,
@@ -230,6 +234,17 @@ pergunte especificamente sobre a diferença, sem reiniciar a mesma pergunta.
 Em cancel/chat, plan_action=none. A busca deve tratar do exercício e do pedido
 original, nunca usar a resposta pessoal como consulta técnica."""
 
+_DURATION_BLOCK_CONTRACT = """ Para atividade contínua, sets=1 representa um único
+bloco de duração em repetitions; rest_seconds=0 indica que não há intervalo ENTRE
+séries para representar. Esse zero não significa proibir pausas, exigir esforço
+ininterrupto ou dispensar repouso conforme necessidade. Esses dois valores de
+representação não exigem uma fonte prescrevendo 'uma série' ou 'zero segundos'.
+Confira se o item é realmente uma atividade contínua. Não aplique essa convenção
+a séries de musculação, circuitos ou intervalos só porque usam tempo. Duração,
+intensidade, atividade, condições, distribuição semanal e adequação ao cliente
+continuam exigindo apoio. Nunca trate duration_block_items como aprovação médica
+ou confirmação de que esses outros detalhes estão sustentados."""
+
 _PLAN_ROUTING = """Você é o orquestrador da Academia Inteligente. Escolha somente
 allowed_specialist ou clarify se precisar esclarecer algo em português brasileiro.
 Não execute ações, não aprove treinos. Retorne somente o JSON do esquema, com
@@ -264,7 +279,10 @@ Se o pedido inicial tem objetivo geral, como emagrecer ou condicionamento, e nã
 especifica musculação nem um exercício, query deve buscar atividade física para a
 população informada, com duração e intensidade; technique_query deve buscar opções
 de atividades (exemplos e modalidades), não apenas cuidados ou dor. Não escolha musculação por conta
-própria antes de ver as opções sustentadas pelas referências.
+própria antes de ver as opções sustentadas pelas referências. Para geração inicial
+ou reconstrução, o backend faz primeiro query e reserva a segunda busca para uma
+lacuna encontrada nos resultados. technique_query é apenas uma sugestão inicial;
+o especialista pode substituí-la por termos mais adequados após ler as fontes.
 Escreva termos separados por espaços, nunca nomes de campos ou snake_case.
 Exemplos de buscas conforme a necessidade: 'adultos atividade física duração
 intensidade frequência'; 'musculação iniciantes séries repetições descanso';
@@ -315,9 +333,7 @@ apareçam no mesmo trecho ou que o livro descreva este cliente individualmente.
 Você pode distribuir uma quantidade semanal documentada pelos dias disponíveis
 informados pelo cliente usando aritmética simples, se a fonte permitir essa
 distribuição. Explique a derivação no objetivo; não invente uma regra de progressão,
-carga ou aplicabilidade. Uma atividade contínua pode ser representada como um
-bloco (sets=1) com duração em repetitions e sem intervalo entre séries (rest_seconds=0).
-Isso não autoriza atribuir intervalos ou séries novos a exercícios resistidos.
+carga ou aplicabilidade.
 Decida primeiro grounding e clarification, antes de escrever result. Se faltar
 apoio técnico e reference_searches_remaining > 0, use evidence_query com uma busca
 complementar de até 12 palavras sobre a lacuna, sem informações pessoais.
@@ -437,6 +453,27 @@ _PRESCRIPTION_REVIEW += """ existing_draft é o rascunho salvo deste cliente.
 Valores exatamente inalterados podem se apoiar nesse registro; mudanças de
 exercício ou prescrição exigem fontes. Registros anteriores não comprovam
 adequação a novas queixas ou mudanças de saúde: verifique o contexto atual."""
+
+_PLAN_GROUNDING += _DURATION_BLOCK_CONTRACT
+_PRESCRIPTION_REVIEW += _DURATION_BLOCK_CONTRACT
+_PLAN_GROUNDING += """ Antes de redigir o plano, confira a cobertura do pedido nos
+trechos disponíveis. Para um plano completo, não ofereça somente um componente
+como se cobrisse todos os componentes necessários. Se as referências recomendam
+fortalecimento mas não trazem sua programação ou execução, e essa parte é relevante
+ao escopo solicitado, use a busca restante para esses detalhes antes de montar o
+plano. Não peça ao cliente séries, repetições, carga ou descanso. Não acrescente
+fortalecimento quando o pedido está explicitamente limitado a outra atividade.
+Se reference_searches_remaining > 0 e faltar apoio, retorne result=null,
+grounding=clarification e clarification.reason=insufficient_evidence, com
+clarification.evidence_query direcionada à lacuna. O backend executa essa busca
+internamente e continua o mesmo pedido sem pedir novo comando ao cliente.
+planned_complementary_query é uma sugestão anterior à leitura: substitua-a quando
+repetiria o assunto já coberto. Uma busca genérica de exemplos de atividade não
+resolve falta de dosagem e técnica de fortalecimento; busque programação e técnica
+para a população/experiência relevante, sem inventar um exercício antes das fontes.
+source_allocation_options são alternativas parciais, não comprovação de que um
+plano completo pode conter apenas uma delas. Se a evidência continuar insuficiente
+após a busca, explique o limite; não invente doses nem declare o plano completo."""
 
 _CLARIFICATION = """ Quando precisar esclarecer ou recusar uma proposta, preencha
 clarification; caso contrário, use null. Fale diretamente com a pessoa que está
@@ -1092,8 +1129,14 @@ class AssistantRun:
             if self.route.memory_changes:
                 raise AssistantError("memory_event_expired", 409)
         queries = [self.route.query]
-        if plan:
+        if plan and self.role != "initial_plan":
             queries.append(self.route.technique_query)
+        elif self.role == "initial_plan":
+            # Read the first results before spending the second retrieval. The
+            # specialist's existing evidence_query tool can target an observed
+            # gap instead of executing two speculative queries up front.
+            queries = [self.route.query or self.route.technique_query]
+            self.context["planned_complementary_query"] = self.route.technique_query
         if self.route.specialist == "clarify" or self.role == "onboarding":
             queries = []
         rankings = []
@@ -1446,6 +1489,7 @@ class AssistantRun:
                 query,
                 timeout=min(10, self.budget.remaining()),
                 include_activity_options=self.role == "initial_plan",
+                prefer_technique=self.role == "initial_plan",
             )
             self.budget.remaining()
         except (KnowledgeError, BudgetExceeded) as error:
@@ -1861,6 +1905,7 @@ class AssistantRun:
                         ),
                     },
                     "reference_searches_remaining": 2 - self.budget.retrievals,
+                    "duration_block_items": duration_block_items(plan_items or []),
                     "existing_draft": self.context.get("editable_training_draft"),
                     "reference_sources": self.model_sources(),
                     "cited_passages": self.model_references(self.citations),

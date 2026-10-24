@@ -64,6 +64,9 @@ def test_two_plan_queries_merge_unique_evidence_with_stable_bounded_labels(datab
         database_session, client.id, "initial_plan", provider=provider, knowledge=search
     )
     run.prepare({})
+    assert len(search.queries) == run.budget.retrievals == 1
+    assert run.context["planned_complementary_query"] == "squat technique precautions"
+    assert run._search_for_evidence(run.context["planned_complementary_query"])
     assert len(search.queries) == run.budget.retrievals == 2
     assert len(run.references) == 5
     assert len({r["passage_id"] for r in run.references}) == 5

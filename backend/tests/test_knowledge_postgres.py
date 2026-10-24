@@ -68,6 +68,15 @@ def test_complementary_technique_search_in_postgres(postgres_sessions):
     )
 
 
+def test_focused_technique_embedding_namespace_in_postgres(postgres_sessions):
+    from test_knowledge import test_focused_technique_candidates_cannot_mix_embedding_spaces
+
+    provider = FakeEmbedding()
+    test_focused_technique_candidates_cannot_mix_embedding_spaces(
+        (postgres_sessions, KnowledgeService(provider), provider)
+    )
+
+
 def test_portuguese_lexemes_are_not_stemmed_twice(postgres_sessions):
     provider = FakeEmbedding()
     service = KnowledgeService(provider)

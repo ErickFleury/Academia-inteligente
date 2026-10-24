@@ -2341,6 +2341,24 @@ The owner approved the following design decisions:
   Acceptance: complementary evidence survives bounded selection, inactive or
   unmatched sources are not injected, absent/unsupported doses remain blocked,
   concurrent traces remain separate and client responses expose no trace/citations.
+- Owner-approved plan-coverage follow-up (2026-10-23): initial generation and
+  full-draft rebuild reserve the second retrieval for a technical gap identified
+  after reading the first results. A router's complementary query is a hint,
+  not a mandatory second search before inspecting evidence. The specialist may
+  request the missing evidence internally and resume within the same budget,
+  without another client command or questions asking for technical prescriptions.
+  Explicit technique queries may admit up to five additional lexical and five
+  semantic execution candidates, retaining the existing relevance threshold,
+  active-version and embedding-namespace constraints. Reuse the query embedding;
+  the final context still contains at most five passages and two retrieval rounds.
+  Generation and review share the continuous-activity representation contract:
+  one duration block with no inter-set interval does not prescribe resistance
+  sets or prohibit pauses. This representation never waives evidence for the
+  activity, duration, intensity, conditions or applicability and does not apply
+  automatically to timed resistance work. Acceptance: observed evidence gaps
+  can be filled before referral, relevant technique survives programming-heavy
+  candidate pools, genuine gaps remain blocked, and continuous-activity review
+  receives explicit representation semantics without overriding failed checks.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

@@ -590,3 +590,60 @@ configuration deprecation warnings remain. Backend recreation completed and
 `/health` returned HTTP 200. Runtime inspection confirmed the new ranking/trace
 code, `gpt-6-luna`, the 25-second timeout and local Ollama embeddings. No dependency,
 schema migration, frontend change or secret configuration edit was needed.
+
+### Reserve retrieval for observed gaps and align duration-block review
+
+Owner-approved follow-up: RF-15/RF-18 new-plan and rebuild sourcing, with shared
+prescription review and existing RN-13/RN-15/RN-16/RN-23 constraints. Checkpoint:
+`eb1ffe7`. The new evidence trace located the next refusal in final review:
+all five passages came from the general activity guide; the reviewer accepted
+exercise, duration, load/intensity, equipment and applicability, but rejected
+sets/rest and flagged missing strengthening. Calls completed successfully. The
+generator/backend understood the one-block/no-inter-set-rest representation, but
+the reviewer did not receive that explicit contract. Both searches had already
+been consumed before the specialist could identify the missing component.
+
+Initial generation and full-draft rebuilding now perform one initial search and
+reserve the second for the specialist's existing bounded evidence-query tool.
+The router's complementary query is passed as a suggestion, not executed before
+the first results are inspected. The specialist must check requested coverage
+before drafting; where a relevant strengthening component lacks prescription or
+technique support, it requests those details internally and resumes without a
+new client command. A limited activity request does not automatically expand into
+a strength plan. Truly missing evidence still returns a controlled clarification.
+The full-draft workflow regression fills a gap and saves the same owned proposal
+within five model calls; the two-search/six-call/60-second limits are unchanged.
+
+The earlier technique reranking alone could not recover an execution passage
+absent from the initial top-20 candidate lists. A regression with 24 programming
+passages reproduced this. Explicit technique queries now also select at most five
+execution passages per lexical/semantic channel, under the original active-version,
+query-match/distance and embedding-namespace constraints. They reuse the same query
+embedding and do not add a model call or retrieval round. The final model context
+remains limited to five passages. A generic English local-only retrieval check
+that previously returned only the programming paper now also retrieves an NSCA
+technique section. This establishes coverage, not that its exercise is suitable
+for a particular client; semantic applicability review remains required.
+
+Generation and review now share one continuous-activity representation instruction.
+The review receives positions of items encoded as one duration block with no
+between-set interval. This is structural metadata, not an approval flag: zero
+inter-set rest does not prohibit pauses, and timed strength/interval work must not
+inherit the continuous-activity exemption. No negative model verdict is overwritten.
+Exercise, dose, intensity, conditions, arithmetic, equipment, applicability and
+conflict checks remain in place. Unsupported duration, extra sets or nonzero rest
+are rejected by the real source guard in regression tests; negative applicability
+and conflict reviews still block saving.
+
+Tests use synthetic agents and references, plus isolated PostgreSQL. They verify
+tool sequencing, source coverage, limits, representation delivery and persistence;
+they do not establish live Luna response quality. No paid generation call or
+private account replay was performed. The next normal user request remains the
+live verification step, with the existing evidence trace available for diagnosis.
+
+Validation: **911 backend tests passed**, including isolated PostgreSQL checks;
+Ruff lint/format and Git whitespace checks passed. The two existing Alembic
+configuration deprecation warnings remain. Backend recreation completed and
+`/health` returned HTTP 200. Runtime inspection confirmed the shared duration
+contract, `gpt-6-luna`, the 25-second provider timeout and local Ollama embeddings.
+No migration, dependency, frontend or secret-configuration change was required.

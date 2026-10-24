@@ -63,7 +63,7 @@ def test_complementary_search_preserves_technique_amid_programming_results(setup
     body = "\n".join(
         f"# Programação {index}\n"
         "Resistance training sets repetitions rest: 3 sets of 8 repetitions."
-        for index in range(8)
+        for index in range(24)
     )
     body += (
         "\n# Seated Row\nResistance training. Starting Position: sit upright. "
@@ -73,19 +73,23 @@ def test_complementary_search_preserves_technique_amid_programming_results(setup
     service.import_next(sessions)
     activate(sessions, service, version)
     with sessions() as session:
-        ordinary = service.search(session, "resistance training sets repetitions rest")
+        ordinary = service.search(session, "resistance training sets repetitions rest technique")
         assert all("Seated Row" not in row["content"] for row in ordinary)
+        embedding_calls = len(provider.calls)
         focused = service.search(
-            session, "resistance training sets repetitions rest", prefer_technique=True
+            session, "resistance training sets repetitions rest technique", prefer_technique=True
         )
         assert "Seated Row" in focused[0]["content"]
+        assert len(provider.calls) == embedding_calls + 1
         assert len(focused) == 5
         assert any("Programação" in row["content"] for row in focused)
         provider.fail = True
         assert (
             "Seated Row"
             in service.search(
-                session, "resistance training sets repetitions rest", prefer_technique=True
+                session,
+                "resistance training sets repetitions rest technique",
+                prefer_technique=True,
             )[0]["content"]
         )
 
@@ -104,10 +108,25 @@ def test_technique_preference_does_not_add_unmatched_or_withdrawn_sources(setup)
     active = activate(sessions, service, technique)
     provider.fail = True
     with sessions() as session:
-        hits = service.search(session, "caminhada adultos", prefer_technique=True)
+        hits = service.search(session, "caminhada adultos técnica", prefer_technique=True)
         assert len(hits) == 1 and hits[0]["version_id"] == str(general["id"])
         service.transition(session, active["id"], "withdraw", active["revision"])
         assert service.search(session, "seated row", prefer_technique=True) == []
+
+
+def test_focused_technique_candidates_cannot_mix_embedding_spaces(setup):
+    sessions, service, provider = setup
+    technique = upload(
+        sessions,
+        service,
+        body="# Seated Row\nStarting Position: sit upright. Backward Movement: pull handles.",
+    )
+    service.import_next(sessions)
+    activate(sessions, service, technique)
+    with sessions() as session:
+        assert service.search(session, "technique mechanics", prefer_technique=True)
+        provider.config = EmbeddingConfig(dimensions=2, revision="other-space")
+        assert service.search(session, "technique mechanics", prefer_technique=True) == []
 
 
 def test_import_requires_explicit_activation_and_preserves_citations(setup):
