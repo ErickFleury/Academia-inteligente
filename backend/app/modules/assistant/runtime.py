@@ -2095,9 +2095,12 @@ class AssistantRun:
                 and not self.context.get("plan_review_feedback")
                 and self.budget.calls <= 4
                 and self.budget.remaining() >= specialist_seconds + 10
-                and all(
-                    any(row[field] for row in self.context["source_prescription_parameters"])
-                    for field in ("sets", "repetitions", "rest_seconds", "named_activities")
+                and (
+                    self.context["source_allocation_options"]
+                    or all(
+                        any(row[field] for row in self.context["source_prescription_parameters"])
+                        for field in ("sets", "repetitions", "rest_seconds", "named_activities")
+                    )
                 )
             ):
                 # A refusal can also be wrong. Use the existing single correction
@@ -2105,7 +2108,10 @@ class AssistantRun:
                 self.context["plan_review_feedback"] = {
                     "refusal": detail.model_dump(mode="json"),
                     "instruction": "Reavalie a lacuna indicada nos trechos completos. "
-                    "Há nomes e quantidades reconhecidos, mas isso não prova aplicabilidade. "
+                    "Há nomes e quantidades reconhecidos ou alternativas de atividade contínua "
+                    "em source_allocation_options, mas isso não prova aplicabilidade. "
+                    "Confira o pedido atual: não exija musculação numa proposta de atividade "
+                    "física geral, nem substitua musculação explicitamente pedida por cardio. "
                     "Confira condições, fase inicial e diferenças entre exemplo e regra geral. "
                     "Se uma proposta inicial apoiada é possível, produza-a com as condições; "
                     "não exija otimização de força máxima nem doses em kg quando a fonte "

@@ -192,13 +192,15 @@ def test_null_plan_cannot_claim_to_be_grounded(database_session, rollout, ground
         run.specialist()
 
 
+@pytest.mark.parametrize("continuous", [False, True])
 @pytest.mark.parametrize(
     "repeated_refusal,review_supported,invalid_dose",
     [(False, True, False), (True, True, False), (False, False, False), (False, True, True)],
 )
 def test_evidence_refusal_gets_one_bounded_recheck_and_still_requires_review(
-    database_session, rollout, repeated_refusal, review_supported, invalid_dose
+    database_session, rollout, repeated_refusal, review_supported, invalid_dose, continuous
 ):
+    from app.modules.assistant.client_questions import render_questions
     from app.modules.knowledge.prescription_evidence import prescription_gaps
 
     client = owner(database_session)
@@ -206,6 +208,13 @@ def test_evidence_refusal_gets_one_bounded_recheck_and_still_requires_review(
     rollout.passages = [
         passage(f"Squat: {2 if invalid_dose else 3} sets of 8 repetitions, rest 90 seconds.")
     ]
+    if continuous:
+        rollout.passages = [
+            passage(
+                "Você pode caminhar. Faça 150 minutos de atividade física moderada por semana. "
+                "Pode dividir a prática em blocos de tempo."
+            )
+        ]
 
     class Reconsidering(Agent):
         def structured(self, context, instructions, schema, type_, *, role):
@@ -225,13 +234,48 @@ def test_evidence_refusal_gets_one_bounded_recheck_and_still_requires_review(
                         },
                     }
                 )
+            if role == "initial_plan" and continuous:
+                option = context["source_allocation_options"][0]
+                result.result.plan = {
+                    "name": "Proposta de atividade física",
+                    "objective": option["objective"],
+                    "items": [
+                        {
+                            key: option[key]
+                            for key in ("exercise_name", "sets", "repetitions", "rest_seconds")
+                        }
+                        | {
+                            "repetitions": "99 minutos" if invalid_dose else option["repetitions"],
+                            "load_guidance": "Intensidade moderada.",
+                            "equipment_requirement": None,
+                            "equipment_model_id": None,
+                        }
+                    ],
+                }
             return result
 
     provider = Reconsidering(route={"query": "squat sets repetitions rest"})
     provider.citations = ["R1"]
     provider.review_supported = review_supported
     run = AssistantRun(database_session, client.id, "initial_plan", provider=provider)
-    run.prepare({})
+    fields = ["weekly_availability", "session_duration"]
+    run.prepare(
+        {
+            "current_user_message": "3\n120 minutos",
+            "recent_messages": [
+                {
+                    "role": "assistant",
+                    "content": render_questions(fields),
+                    "clarification": {
+                        "reason": "missing_client_information",
+                        "missing_fields": fields,
+                    },
+                }
+            ],
+        }
+        if continuous
+        else {}
+    )
     run._search_for_evidence("squat technique")
     if repeated_refusal or not review_supported or invalid_dose:
         with pytest.raises(AssistantError, match="assistant_clarification_required"):
@@ -493,11 +537,15 @@ def test_review_feedback_repairs_a_supported_plan_within_the_same_budget(databas
     assert agent.reviews == 2 and run.budget.calls == 5
 
 
-def test_review_does_not_start_a_repair_without_time_for_validation(database_session, rollout):
+@pytest.mark.parametrize("deadline", [60, 90])
+def test_review_does_not_start_a_repair_without_time_for_validation(
+    database_session, rollout, monkeypatch, deadline
+):
     from time import monotonic
 
     from app.integrations.ai_budget import current_budget
 
+    monkeypatch.setenv("AI_PLAN_DEADLINE_SECONDS", str(deadline))
     client = owner(database_session)
     rollout.passages = [passage("Synthetic prescription")]
 
@@ -505,7 +553,7 @@ def test_review_does_not_start_a_repair_without_time_for_validation(database_ses
         def structured(self, context, *args, **kwargs):
             result = super().structured(context, *args, **kwargs)
             if "cited_passages" in context:
-                current_budget.get().started = monotonic() - 46
+                current_budget.get().started = monotonic() - (deadline - 14)
                 result.prescription_checks[0].rest_supported = False
             return result
 
