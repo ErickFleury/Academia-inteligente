@@ -1312,3 +1312,11 @@ hit the existing provider timeout; no production limit was raised. The latest
 two-search candidate still failed because generation used unsupported exercise
 wording/duration representation and omitted the strength-dose citation. No live
 test in this investigation has yet saved a complete combined plan.
+
+Deployment checkpoint: the backend was recreated at `dab61bb` after confirming
+zero active chat processing leases. Health returned HTTP 200; system-wide RAG,
+`gpt-6-luna` and the 90-second plan deadline remained configured. Technical replay
+and fictional conversation artifacts were retained on the host under
+`/tmp/plan-rebuild-evidence-20261024`. The real client's draft/history were not
+modified by these tests. This deploys the verified fixes above while leaving the
+documented live generation failures unresolved.
