@@ -183,7 +183,7 @@ def test_lowered_pilot_limits_reject_capacity_without_disabling_existing_source(
     with sessions() as session:
         assert {r["version_id"] for r in service.search(session, "força")} == {str(first["id"])}
     monkeypatch.setenv("AI_REFERENCE_MAX_CHARACTERS", "10")
-    with pytest.raises(DocumentError, match="document_extraction_failed"):
+    with pytest.raises(DocumentError, match="document_text_limit"):
         extract_document(b"This document is longer than the operator limit.", "text/plain")
 
 

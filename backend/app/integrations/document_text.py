@@ -16,7 +16,7 @@ def reference_limit(name: str, ceiling: int) -> int:
 
 
 MAX_UPLOAD_BYTES = reference_limit("AI_REFERENCE_MAX_UPLOAD_MIB", 150) * 1024 * 1024
-MAX_TEXT_CHARACTERS = reference_limit("AI_REFERENCE_MAX_CHARACTERS", 2_000_000)
+MAX_TEXT_CHARACTERS = reference_limit("AI_REFERENCE_MAX_CHARACTERS", 4_000_000)
 MAX_PAGES = reference_limit("AI_REFERENCE_MAX_PDF_PAGES", 1000)
 MEDIA_TYPES = {"application/pdf", "text/plain", "text/markdown"}
 
@@ -33,14 +33,16 @@ def extract_document(raw: bytes, media_type: str) -> list[dict[str, str]]:
             [sys.executable, "-m", "app.integrations.document_text", media_type],
             input=raw,
             capture_output=True,
-            timeout=300,
+            timeout=420,
             check=False,
         )
         if result.returncode == 2:
             raise DocumentError("document_page_limit")
+        if result.returncode == 3:
+            raise DocumentError("document_text_limit")
         if result.returncode == -signal.SIGXCPU:
             raise DocumentError("document_extraction_timeout")
-        if result.returncode or len(result.stdout) > 16_000_000:
+        if result.returncode or len(result.stdout) > 32_000_000:
             raise DocumentError("document_extraction_failed")
         pages = json.loads(result.stdout)
         if not pages or not any(p["text"].strip() for p in pages):
@@ -57,7 +59,7 @@ def _main():
     from io import BytesIO
 
     resource.setrlimit(resource.RLIMIT_AS, (768 * 1024 * 1024, 768 * 1024 * 1024))
-    resource.setrlimit(resource.RLIMIT_CPU, (240, 245))
+    resource.setrlimit(resource.RLIMIT_CPU, (360, 365))
     raw = sys.stdin.buffer.read(MAX_UPLOAD_BYTES + 1)
     if len(raw) > MAX_UPLOAD_BYTES:
         raise ValueError
@@ -76,11 +78,13 @@ def _main():
             text = page.extract_text() or ""
             total += len(text)
             if total > MAX_TEXT_CHARACTERS:
-                raise ValueError
+                sys.exit(3)
             pages.append({"location": f"page:{index + 1}", "text": text})
     else:
         text = raw.decode("utf-8-sig")
-        if len(text) > MAX_TEXT_CHARACTERS or "\x00" in text:
+        if len(text) > MAX_TEXT_CHARACTERS:
+            sys.exit(3)
+        if "\x00" in text:
             raise ValueError
         pages = [{"location": "text", "text": text}]
     sys.stdout.write(json.dumps(pages, ensure_ascii=True))

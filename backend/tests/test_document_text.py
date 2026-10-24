@@ -48,11 +48,31 @@ def test_page_limit_returns_specific_error(monkeypatch, limit, page_count):
         extract_document(text_pdf(page_count), "application/pdf")
 
 
+@pytest.mark.parametrize("media_type", ["application/pdf", "text/plain"])
+def test_text_limit_returns_specific_error(monkeypatch, media_type):
+    monkeypatch.setenv("AI_REFERENCE_MAX_CHARACTERS", "10")
+    raw = text_pdf(1) if media_type == "application/pdf" else b"Reference text."
+    with pytest.raises(DocumentError, match="^document_text_limit$"):
+        extract_document(raw, media_type)
+
+
+def test_accepts_four_million_extracted_characters(monkeypatch):
+    monkeypatch.delenv("AI_REFERENCE_MAX_CHARACTERS", raising=False)
+    raw = b"a" * 4_000_000
+    assert extract_document(raw, "text/plain") == [{"location": "text", "text": raw.decode()}]
+
+
+def test_rejects_one_character_above_ceiling(monkeypatch):
+    monkeypatch.delenv("AI_REFERENCE_MAX_CHARACTERS", raising=False)
+    with pytest.raises(DocumentError, match="^document_text_limit$"):
+        extract_document(b"a" * 4_000_001, "text/plain")
+
+
 @pytest.mark.parametrize("failure", ["wall_time", "cpu_time"])
 def test_extraction_timeout_is_actionable_without_exposing_contents(monkeypatch, failure):
     def run(*args, **kwargs):
         if failure == "wall_time":
-            raise subprocess.TimeoutExpired("extract", 300, output=b"private document")
+            raise subprocess.TimeoutExpired("extract", 420, output=b"private document")
         return subprocess.CompletedProcess([], -signal.SIGXCPU, b"", b"private document")
 
     monkeypatch.setattr(document_text.subprocess, "run", run)

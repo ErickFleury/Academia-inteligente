@@ -151,7 +151,7 @@ including while AI is unavailable. Existing transcript expiry still applies.
 
 The pilot ceilings can be lowered through `AI_REFERENCE_MAX_ACTIVE_DOCUMENTS`
 (100), `AI_REFERENCE_MAX_UPLOAD_MIB` (150), `AI_REFERENCE_MAX_PDF_PAGES` (1000), and
-`AI_REFERENCE_MAX_CHARACTERS` (2000000). Larger capacity needs separate validation.
+`AI_REFERENCE_MAX_CHARACTERS` (4000000). Larger capacity needs separate validation.
 
 Keep `AI_ORCHESTRATION_ENABLED=false` during deployment validation. After reviewing
 the [pilot evidence](docs/ai-rag-evaluation.md), enable it with an explicit

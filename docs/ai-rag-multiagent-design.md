@@ -231,7 +231,7 @@ operation, route, duration, usage, and controlled outcomes without raw prompts,
 responses, memory values, identifying health details, or credentials.
 
 Reference capacity: 100 active documents; uploads at most 150 MiB and 1,000 PDF
-pages; at most two million extracted characters per document. Processing must
+pages; at most four million extracted characters per document. Processing must
 also bound memory/CPU time; exact deployment settings need verification before
 support claims. Limits are configurable but changes must preserve acceptance.
 

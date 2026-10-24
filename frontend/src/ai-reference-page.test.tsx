@@ -12,6 +12,7 @@ function mount() { render(<MemoryRouter><AiReferencePage accessToken="test-token
 describe('referências do assistente', () => {
   it.each([
     ['document_page_limit', 'limite de páginas'],
+    ['document_text_limit', 'limite configurado de caracteres'],
     ['document_extraction_timeout', 'tempo permitido'],
   ])('explains %s and offers retry without activation', async (errorCode, message) => {
     vi.mocked(api.listReferences).mockResolvedValue([{ ...item, status: 'failed', error_code: errorCode }])

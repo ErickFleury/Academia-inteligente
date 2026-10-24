@@ -2412,7 +2412,7 @@ The owner approved the following design decisions:
   precise processor, and measured performance remain unverified; desktop results
   do not establish laptop performance.
 - Adopt configurable pilot limits of 100 active reference documents, 150 MiB per
-  upload, 1,000 pages per PDF, and two million extracted characters per document.
+  upload, 1,000 pages per PDF, and four million extracted characters per document.
   The owner raised the upload ceiling to 150 MiB on 2026-10-23 for larger
   OCR-processed references. Acceptance: files at the ceiling pass upload size
   validation; larger files are rejected, including requests without a declared
@@ -2422,10 +2422,14 @@ The owner approved the following design decisions:
   a text-based 1,000-page PDF passes page validation; 1,001 pages or a lower
   configured ceiling produces a specific page-limit error in the admin UI.
   Retrying a previously rejected import uses the new limit.
-  Background extraction for these larger documents is bounded to 300 seconds
-  of wall time and 240 seconds of CPU time (245-second hard stop), retaining
+  Background extraction for these larger documents is bounded to 420 seconds
+  of wall time and 360 seconds of CPU time (365-second hard stop), retaining
   the 768 MiB parser address-space cap. Timeout feedback must identify the
   processing limit and suggest splitting the document. Chat deadlines do not change.
+  Supporting the larger book also requires a four-million-character extraction
+  ceiling: its first 700 pages contain over 2.26 million characters. Text-limit
+  failures receive specific admin feedback; subprocess JSON output remains
+  bounded to 32 million bytes to accommodate escaped Unicode text.
   These are operating limits, not verified capacity claims.
 - Limit compact client memory to 50 current facts and 8,000 characters per client.
   Consolidate duplicates and superseded facts. At capacity, ask the client to
