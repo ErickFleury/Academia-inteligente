@@ -165,6 +165,8 @@ class GroundingReview(BaseModel):
 _ROUTING = """Você é o orquestrador da Academia Inteligente. Escolha somente o
 especialista autorizado em allowed_specialist, ou clarify quando for necessário
 pedir esclarecimento em português brasileiro. Não execute ações nem aprove treinos.
+known_training_profile contém objetivo e experiência já informados no cadastro;
+não pergunte novamente esses dados. client_answers traz correções mais recentes.
 Para orientação substantiva de treinamento que não esteja no plano salvo, marque
 needs_references e proponha palavras-chave do assunto/exercício (até 12 palavras),
 não uma pergunta completa. Preserve nomes de equipamentos, modelos e códigos de erro
@@ -798,6 +800,20 @@ def clean_reference_suffix(message, citation_ids, grounding):
     return prose if prose and ids == citation_ids else message
 
 
+def compact_answer_memory(facts, answers):
+    """Keep unique facts; normalized answers already carry their own provenance."""
+    return [
+        fact
+        for fact in facts
+        if not (
+            (data := fact.get("answer_data"))
+            and data.get("field") in answers
+            and data.get("value") == answers[data["field"]].get("value")
+            and data.get("unit") == answers[data["field"]].get("unit")
+        )
+    ]
+
+
 def strict_schema(schema):
     """Both adapters receive the same strict JSON contract, including nullable fields."""
     result = copy.deepcopy(schema)
@@ -1013,6 +1029,11 @@ class AssistantRun:
         }
         if self.role == "training_chat" and self.context.get("pending_draft_edit"):
             routing_context["pending_draft_edit"] = self.context["pending_draft_edit"]
+        if self.role == "training_chat" and onboarding and onboarding.status == "completed":
+            routing_context["known_training_profile"] = {
+                "training_goal": onboarding.training_goal,
+                "training_experience": onboarding.training_experience,
+            }
         if self.role == "training_chat" and self.context.get("editable_training_draft"):
             draft = self.context["editable_training_draft"]
             routing_context["editable_draft"] = {
@@ -1086,9 +1107,16 @@ class AssistantRun:
         if sources:
             routing_instructions += INTERPRET_ANSWERS
         routing_context["client_answers"] = self.context["client_answers"]
-        routing_context["question_catalog"] = self.context["question_catalog"]
         self._refresh_unanswered_fields()
         routing_context["unanswered_client_fields"] = self.unanswered_client_fields
+        routing_context["question_catalog"] = {
+            field: question
+            for field, question in self.context["question_catalog"].items()
+            if field in self.unanswered_client_fields
+        }
+        routing_context["client_memory"] = compact_answer_memory(
+            routing_context["client_memory"], self.context["client_answers"]
+        )
         # This same call may correct or withdraw an earlier answer. Constrain
         # the questions after interpreting those updates, not to stale gaps.
         route_schema = strict_schema(route_type.model_json_schema())
@@ -1976,16 +2004,9 @@ class AssistantRun:
                 key: value for key, value in self.context.items() if key != "question_catalog"
             }
             answers = self.context.get("client_answers", {})
-            model_context["client_memory"] = [
-                fact
-                for fact in self.context["client_memory"]
-                if not (
-                    (data := fact.get("answer_data"))
-                    and data.get("field") in answers
-                    and data.get("value") == answers[data["field"]].get("value")
-                    and data.get("unit") == answers[data["field"]].get("unit")
-                )
-            ]
+            model_context["client_memory"] = compact_answer_memory(
+                self.context["client_memory"], answers
+            )
             if "source_prescription_parameters" in self.context:
                 model_context["source_prescription_parameters"] = [
                     {key: value for key, value in row.items() if value}

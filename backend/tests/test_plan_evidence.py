@@ -768,3 +768,20 @@ def test_readonly_review_receives_saved_current_plan_for_factual_explanation(
     assert review["current_training_plan"] == saved
     assert review["authoritative_health_records"] == health
     assert review["answer"]["draft_update"] is None
+
+
+def test_chat_router_knows_completed_training_profile_without_exposing_measurements(
+    database_session,
+):
+    client = owner(database_session)
+    complete_onboarding(database_session, "owner")
+    onboarding = database_session.scalar(select(Onboarding))
+    provider = Agent()
+    run = AssistantRun(database_session, client.id, "training_chat", provider=provider)
+    run.prepare({"current_user_message": "Gere meu plano com as informações anteriores."})
+    context = provider.calls[0][1]
+    assert context["known_training_profile"] == {
+        "training_goal": onboarding.training_goal,
+        "training_experience": onboarding.training_experience,
+    }
+    assert "height_cm" not in context["known_training_profile"]
