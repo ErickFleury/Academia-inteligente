@@ -2387,6 +2387,23 @@ The owner approved the following design decisions:
   evidence and adjacent conditions within twelve passages; withdrawn/deleted
   versions cannot supply neighbors; no third search or ungrounded prescription
   is permitted when coverage remains insufficient.
+- Follow-up query recovery (2026-10-24): a rejected tool query is not evidence
+  that the references lack support. Validate the original query for prohibited
+  personal/contact data before grammatical compaction. An overlong query may
+  drop connectors while preserving substantive terms, population qualifiers and
+  negation; never truncate it to twelve words. If it remains overlong, allow one
+  bounded query-repair step within the existing generation/token/time budget and
+  validate its result before retrieval. An unrepaired or prohibited query returns
+  a controlled query-validation failure, not an insufficient-evidence referral.
+  The two-search and twelve-passage limits remain unchanged. For a technique gap,
+  use exercise names already present in applicable retrieved evidence; promotion
+  requires a matching specific subject heading, not merely generic technique or
+  parent-chapter terms. Initial strength requests prioritize resistance-programming
+  evidence even when the goal also includes general conditioning.
+  Acceptance: the observed thirteen-word follow-up resumes retrieval/generation;
+  privacy-invalid queries never reach embeddings; failed repairs cannot loop or
+  exceed budgets; generic technique queries do not force an unrelated exercise;
+  named technique searches still retrieve active, relevant execution passages.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

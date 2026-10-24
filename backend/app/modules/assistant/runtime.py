@@ -94,6 +94,11 @@ class Clarification(BaseModel):
         return " ".join(part for part in (self.explanation, self.next_step) if part)
 
 
+class EvidenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    query: str = Field(min_length=1, max_length=200)
+
+
 class Route(BaseModel):
     model_config = ConfigDict(extra="forbid")
     specialist: Role
@@ -275,8 +280,11 @@ técnicas de um pedido anterior que foi substituído. A mensagem atual pode ser 
 resposta a esclarecimento desse novo pedido. Não peça doses ou intensidade técnica
 ao cliente: obtenha-as nas referências. Retorne uma proposta ou perguntas pessoais
 essenciais agrupadas, sem exigir novo comando de criação após as respostas.
+Se força ou musculação faz parte do objetivo, priorize programação resistida para
+a experiência informada: seleção de exercícios, séries, repetições e descanso.
+Um objetivo combinado de força e condicionamento não é apenas atividade aeróbica.
 Se o pedido inicial tem objetivo geral, como emagrecer ou condicionamento, e não
-especifica musculação nem um exercício, query deve buscar atividade física para a
+especifica força, musculação nem um exercício, query deve buscar atividade física para a
 população informada, com duração e intensidade; technique_query deve buscar opções
 de atividades (exemplos e modalidades), não apenas cuidados ou dor. Não escolha musculação por conta
 própria antes de ver as opções sustentadas pelas referências. Para geração inicial
@@ -469,8 +477,14 @@ clarification.evidence_query direcionada à lacuna. O backend executa essa busca
 internamente e continua o mesmo pedido sem pedir novo comando ao cliente.
 planned_complementary_query é uma sugestão anterior à leitura: substitua-a quando
 repetiria o assunto já coberto. Uma busca genérica de exemplos de atividade não
-resolve falta de dosagem e técnica de fortalecimento; busque programação e técnica
-para a população/experiência relevante, sem inventar um exercício antes das fontes.
+resolve falta de dosagem e técnica de fortalecimento. Diferencie a lacuna: se falta
+programação, busque seleção de exercícios e dosagem para a experiência relevante.
+Se já há programação e faltam instruções de execução, escolha nomes de exercícios
+explicitamente presentes nos trechos adequados ao pedido e use esses nomes na busca
+com técnica, posição inicial ou execução. Preserve variantes e prefira o nome no
+idioma da fonte. Não repita apenas 'programação e técnica de força' nem invente
+um exercício antes de encontrá-lo nas fontes. Se há várias lacunas, direcione a
+consulta ao componente ausente, preservando o apoio já encontrado.
 source_allocation_options são alternativas parciais, não comprovação de que um
 plano completo pode conter apenas uma delas. Se a evidência continuar insuficiente
 após a busca, explique o limite; não invente doses nem declare o plano completo."""
@@ -612,20 +626,20 @@ def enabled(client_id):
     return str(client_id) in clients or "*" in clients
 
 
-def valid_reference_query(query):
+def valid_reference_query(query, *, max_words=12):
     return (
-        len(query.split()) <= 12
+        len(query.split()) <= max_words
         and "@" not in query
         and re.search(r"\d(?:[\s().+/-]?\d){6,}", query) is None
         and re.search(r"\b[0-9a-f]{8}-[0-9a-f-]{27,}\b", query, re.I) is None
     )
 
 
-def valid_plan_reference_query(query):
+def valid_plan_reference_query(query, *, max_words=12):
     # Personal measurements distracted retrieval from prescription evidence in
     # the reproduced failure. Do not send a rejected query to embeddings.
     return (
-        valid_reference_query(query)
+        valid_reference_query(query, max_words=max_words)
         and "?" not in query
         and not re.search(
             r"\b(?:altura|peso|height|weight)\s*[:=]?\s*\d|"
@@ -722,6 +736,7 @@ class AssistantRun:
         self.plan_brief = {}
         self.health_reply = None
         self.health_change = None
+        self.evidence_query_repair_used = False
 
     def reference_labels(self):
         return {ref["passage_id"]: f"R{i}" for i, ref in enumerate(self.references, 1)}
@@ -1479,9 +1494,56 @@ class AssistantRun:
             "assistant_clarification_required", 422, clarification=self.clarification
         )
 
+    def _prepare_evidence_query(self, query):
+        # Check the original before removing grammar: never sanitize private
+        # measurements or contact details into an apparently valid tool query.
+        if len(query) > 200 or not valid_plan_reference_query(query, max_words=200):
+            raise AssistantError("reference_query_invalid", 422)
+        if valid_plan_reference_query(query):
+            return query
+        connectors = {
+            "a",
+            "o",
+            "as",
+            "os",
+            "de",
+            "da",
+            "do",
+            "das",
+            "dos",
+            "e",
+            "para",
+            "the",
+            "an",
+            "of",
+            "and",
+            "for",
+        }
+        compact = " ".join(word for word in query.split() if word.casefold() not in connectors)
+        # Preserve every substantive term, number, qualifier and negation. Do
+        # not truncate the last words, which may identify the missing evidence.
+        if compact and valid_plan_reference_query(compact):
+            return compact
+        if self.evidence_query_repair_used:
+            raise AssistantError("reference_query_invalid", 422)
+        self.evidence_query_repair_used = True
+        repaired = self._call(
+            {"query_to_shorten": query},
+            "Reduza a consulta para até 12 palavras-chave. Preserve o assunto da lacuna, "
+            "nomes de exercícios, população, experiência e negações. Não acrescente fatos, "
+            "contatos nem medidas pessoais. Retorne somente query conforme o esquema.",
+            strict_schema(EvidenceQuery.model_json_schema()),
+            EvidenceQuery,
+            "orchestrator",
+        ).query
+        if not valid_plan_reference_query(repaired):
+            raise AssistantError("reference_query_invalid", 422)
+        return repaired
+
     def _search_for_evidence(self, query):
-        if not query or not valid_plan_reference_query(query) or self.budget.retrievals >= 2:
+        if not query or self.budget.retrievals >= 2:
             return False
+        query = self._prepare_evidence_query(query)
         try:
             self.budget.retrieval()
             additional = self.knowledge.search(

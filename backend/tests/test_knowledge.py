@@ -62,7 +62,7 @@ def test_complementary_search_preserves_technique_amid_programming_results(setup
     sessions, service, provider = setup
     body = "\n".join(
         f"# Programação {index}\n"
-        "Resistance training sets repetitions rest: 3 sets of 8 repetitions."
+        "Seated row resistance training sets repetitions rest: 3 sets of 8 repetitions."
         for index in range(24)
     )
     body += (
@@ -73,11 +73,15 @@ def test_complementary_search_preserves_technique_amid_programming_results(setup
     service.import_next(sessions)
     activate(sessions, service, version)
     with sessions() as session:
-        ordinary = service.search(session, "resistance training sets repetitions rest technique")
+        ordinary = service.search(
+            session, "seated row resistance training sets repetitions rest technique"
+        )
         assert all("Seated Row" not in row["content"] for row in ordinary)
         embedding_calls = len(provider.calls)
         focused = service.search(
-            session, "resistance training sets repetitions rest technique", prefer_technique=True
+            session,
+            "seated row resistance training sets repetitions rest technique",
+            prefer_technique=True,
         )
         assert "Seated Row" in focused[0]["content"]
         assert len(provider.calls) == embedding_calls + 1
@@ -88,7 +92,7 @@ def test_complementary_search_preserves_technique_amid_programming_results(setup
             "Seated Row"
             in service.search(
                 session,
-                "resistance training sets repetitions rest technique",
+                "seated row resistance training sets repetitions rest technique",
                 prefer_technique=True,
             )[0]["content"]
         )
@@ -583,3 +587,23 @@ def test_reference_deletion_requires_admin(setup, role, expected):
             == expected
         )
         assert bool(service.list(session)) == (role != "admin")
+
+
+@pytest.mark.parametrize(
+    "heading", ["# Hang Power Clean", "# Resistance training\n## Hang Power Clean"]
+)
+def test_generic_technique_query_does_not_promote_an_arbitrary_exercise(setup, heading):
+    sessions, service, _ = setup
+    body = "\n".join(
+        f"# Programming {i}\nResistance training sets repetitions rest: 3 sets of 8 repetitions."
+        for i in range(24)
+    )
+    body += f"\n{heading}\nResistance training. Starting Position: hold the bar."
+    version = upload(sessions, service, body=body)
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        hits = service.search(
+            session, "resistance training sets repetitions rest technique", prefer_technique=True
+        )
+        assert "Hang Power Clean" not in hits[0]["content"]

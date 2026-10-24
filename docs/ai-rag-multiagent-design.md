@@ -242,6 +242,10 @@ uses the same active versions and preserves page/condition provenance without an
 extra embedding call. Existing two-search, model-call, token and time budgets,
 evidence validation and instructor approval remain in force. Topic relevance and
 explicit audience suitability take precedence over numerical density.
+Overlong follow-up queries are compacted or repaired once within the same budget;
+invalid tool syntax is not reported as absent evidence. Technique promotion matches
+a specific subject heading, and gap queries use exercise names already found in
+the retrieved evidence instead of requesting generic strength technique.
 
 ## Verification and evaluation rubric
 

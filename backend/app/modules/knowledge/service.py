@@ -242,6 +242,17 @@ def technique_passage(content):
     return any(marker in body for marker in _TECHNIQUE_MARKERS)
 
 
+def technique_subject_match(content, query):
+    """A technique promotion must match a subject, not a generic chapter label."""
+    heading = content.split("\n", 1)[0][7:].rsplit(" / ", 1)[-1]
+    generic = section_terms(
+        "training resistance strength technique execution exercise movement programming "
+        "treinamento musculação força técnica execução exercício movimento programação "
+        "starting position posição inicial beginner novice adult iniciante adulto"
+    )
+    return len((section_terms(heading) - generic) & section_terms(query))
+
+
 def merge_plan_references(additional, previous, *, limit=5):
     """Preserve complementary evidence within the caller's bounded context.
 
@@ -924,14 +935,17 @@ class KnowledgeService:
             # programming abstracts. Promote a relevant execution passage from
             # the SAME bounded candidate pool; never fetch a random exercise or
             # impose a source quota. Preserve ordinary ranking for other slots.
-            candidate = next(
-                (
-                    key
-                    for key in ranked
-                    if technique_passage(candidates[key].content)
-                    and population_weight(candidates[key].content, query) == 1
-                ),
-                None,
+            matches = [
+                key
+                for key in ranked
+                if technique_passage(candidates[key].content)
+                and population_weight(candidates[key].content, query) == 1
+                and technique_subject_match(candidates[key].content, query) > 0
+            ]
+            candidate = max(
+                matches,
+                key=lambda key: technique_subject_match(candidates[key].content, query),
+                default=None,
             )
             if candidate is not None:
                 selected = [candidate, *(key for key in selected if key != candidate)][:limit]
