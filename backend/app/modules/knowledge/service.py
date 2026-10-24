@@ -552,34 +552,6 @@ class KnowledgeService:
                     if len(result) == limit:
                         return result
                     break
-            # A table's nearby introduction may qualify when its numbers apply.
-            # Reuse bounded lookup candidates; follow explicit mentions only
-            # within two positions of the actual table in the same version.
-            for seed, number, table in tables:
-                for row in linked:
-                    if (
-                        row.version_id != table.version_id
-                        or row.id in seen
-                        or not 0 < table.position - row.position <= 2
-                        or unusable_table(row.content)
-                        or not re.search(
-                            r"\b(?:table|tabela)\s+" + re.escape(number) + r"\b",
-                            row.content,
-                            re.I,
-                        )
-                    ):
-                        continue
-                    result.append(
-                        {
-                            **by_id[seed.id],
-                            "passage_id": str(row.id),
-                            "location": row.location,
-                            "content": row.content,
-                        }
-                    )
-                    seen.add(row.id)
-                    if len(result) == limit:
-                        return result
         nearby = session.scalars(
             select(ReferencePassage)
             .join(ReferenceVersion)
@@ -591,11 +563,46 @@ class KnowledgeService:
                         (ReferencePassage.version_id == seed.version_id)
                         & ReferencePassage.position.in_([seed.position - 1, seed.position + 1])
                         for seed in seeds
-                    ]
+                    ],
+                    *[
+                        (ReferencePassage.version_id == table.version_id)
+                        & ReferencePassage.position.in_([table.position - 2, table.position - 1])
+                        for _, _, table in tables
+                    ],
                 ),
             )
         ).all()
         neighbors = {(row.version_id, row.position): row for row in nearby}
+        # Keep the complete nearby introduction, including an intervening
+        # paragraph between its explicit table reference and the table itself.
+        # This reuses the adjacent-text query and the same two-position bound.
+        for seed, number, table in tables:
+            anchors = [
+                row.position
+                for row in linked
+                if row.version_id == table.version_id
+                and 0 < table.position - row.position <= 2
+                and re.search(
+                    r"\b(?:table|tabela)\s+" + re.escape(number) + r"\b", row.content, re.I
+                )
+            ]
+            if not anchors:
+                continue
+            for position in range(min(anchors), table.position):
+                row = neighbors.get((table.version_id, position))
+                if row is None or row.id in seen or unusable_table(row.content):
+                    continue
+                result.append(
+                    {
+                        **by_id[seed.id],
+                        "passage_id": str(row.id),
+                        "location": row.location,
+                        "content": row.content,
+                    }
+                )
+                seen.add(row.id)
+                if len(result) == limit:
+                    return result
 
         def continued(seed):
             return bool(re.search(r"\bcontinued\b|\bcontinua[çc][ãa]o\b", seed.content[:100], re.I))

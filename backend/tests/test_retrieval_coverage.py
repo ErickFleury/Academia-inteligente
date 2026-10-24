@@ -162,6 +162,7 @@ def test_linked_table_preserves_nearby_prose_that_conditions_its_application(set
             "# Other material\nUnrelated background.\n"
             "# More background\nA different subject.\n"
             "# Introduction\nBefore using table 3.1, novices must learn proper technique.\n"
+            "# Continuation\nModerate loads also build strength during this learning phase.\n"
             "# Table 3.1\nGoal-specific programming: two sets of ten repetitions.\n"
             "# Other text\nAn unrelated topic."
         ),
@@ -181,9 +182,10 @@ def test_linked_table_preserves_nearby_prose_that_conditions_its_application(set
                     if "Goal-specific programming" in r["content"]
                 )
             )
-        refs = service.expand_plan_context(session, seeds, limit=3)
+        refs = service.expand_plan_context(session, seeds, limit=4)
         assert any("Goal-specific programming" in r["content"] for r in refs)
         assert any("novices must learn" in r["content"] for r in refs)
+        assert any("Moderate loads also build strength" in r["content"] for r in refs)
 
 
 def test_continued_table_recovers_its_example_scope(setup):

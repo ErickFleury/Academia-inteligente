@@ -1682,7 +1682,7 @@ class AssistantRun:
                 for row in [*additional, *self.references]
             )
             self.references = merge_plan_references(
-                additional, self.references, limit=6 if table_context else 10
+                additional, self.references, limit=5 if table_context else 10
             )
             try:
                 self.references = self.knowledge.expand_plan_context(
