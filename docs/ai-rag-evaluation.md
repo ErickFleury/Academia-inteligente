@@ -1275,3 +1275,23 @@ generation; the distinction between a requested full gym routine and a limited
 aerobic proposal remains material. Model, source-grounding and instructor approval
 requirements remain unchanged. No higher model or additional production call
 allowance was enabled.
+
+The owner clarified that plan scope must follow the client's wishes, with relevant
+questions when necessary. Removed the routing instruction that treated an
+unspecified weight-loss goal as a general-activity request. A read-only replay now
+asks which type of training is wanted in 7.21 seconds, before retrieval. A fictional
+Luna conversation preserved age, availability and equipment answers, asked only
+the missing modality, and accepted free-form preferences and a subsequent
+correction after reload. Deterministic continuation tests cover both an explicit
+preference and delegated choice; the backend suite passed 1,017 tests (two existing
+Alembic deprecation warnings).
+
+Generation remains a separate unresolved check: the combined strength/cardio
+request exhausted retrieval without complete cardio selection evidence; a
+strength-only correction reached review but specified an unsupported flat-barbell
+variant of a generic bench-press entry. Neither changed the fictional draft. The
+evidence-completion prompt now prioritizes a missing requested component over
+unnecessary exercise tutorials; a repeat found cardio dosage but still lacked
+activity selection. The focused suites passed 39 tests after this prompt change.
+These are successful clarification/continuation checks, not a claim that complete
+plan rebuilds now reliably succeed.

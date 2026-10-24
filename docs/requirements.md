@@ -2451,6 +2451,20 @@ The owner approved the following design decisions:
   rest-table quantities are classified correctly without absorbing later activity
   durations; current scope corrections reach generation/review while stored
   onboarding and health records remain unchanged.
+- Owner-confirmed plan intent (2026-10-24): generate/rebuild the plan the client
+  wants, using current requests, prior answers and compact memory. A broad goal
+  such as weight loss does not establish a preference for walking, cardio or
+  resistance training; an old draft does not establish the requested new scope.
+  Ask grouped, relevant personal questions when materially different scopes
+  remain unresolved, before choosing technical retrieval. Interpret free-form
+  replies, corrections and an explicit delegation of activity choice. Resume
+  the authorized request automatically after sufficient answers; do not impose
+  a fixed questionnaire or ask again for known preferences. Technical selection,
+  doses and applicability still require sources and independent validation.
+  Acceptance: an ambiguous rebuild asks about the missing intent without changing
+  the draft; a saved preference reaches retrieval/generation/review after reload;
+  a free-form clarification resumes the same draft, and explicit scope or delegated
+  choice does not restart the interview. Approved plans remain unchanged.
 - Evidence applicability and draft scope (2026-10-24): reserve context space for
   linked tables and their introductory conditions, including explicit references
   within two preceding passage positions in the same active version. Continued

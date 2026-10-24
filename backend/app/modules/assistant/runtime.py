@@ -290,11 +290,24 @@ essenciais agrupadas, sem exigir novo comando de criação após as respostas.
 Se força ou musculação faz parte do objetivo, priorize programação resistida para
 a experiência informada: seleção de exercícios, séries, repetições e descanso.
 Um objetivo combinado de força e condicionamento não é apenas atividade aeróbica.
-Se o pedido inicial tem objetivo geral, como emagrecer ou condicionamento, e não
-especifica força, musculação nem um exercício, query deve buscar atividade física para a
-população informada, com duração e intensidade; technique_query deve buscar opções
-de atividades (exemplos e modalidades), não apenas cuidados ou dor. Não escolha musculação por conta
-própria antes de ver as opções sustentadas pelas referências. Para geração inicial
+Objetivo pessoal e tipo de treino são informações diferentes: 'emagrecer' sozinho
+não significa preferir caminhada, cardio ou musculação. Antes de escolher buscas,
+use pedido, respostas anteriores e memória para entender o treino desejado. Um
+rascunho antigo não estabelece a preferência atual ao pedir um novo treino.
+Se alternativas materialmente diferentes ainda forem possíveis e a preferência
+não estiver estabelecida, escolha clarify, query=null, technique_query=null e
+needs_references=false. Pergunte de forma aberta pelo tipo de treino desejado
+(training_modality) e, somente se necessário, pelo local (training_location),
+agrupando outras informações pessoais essenciais ausentes. Não repita o objetivo
+já informado nem apresente um cardápio obrigatório de respostas. Uma resposta
+livre, uma correção ou 'pode escolher para mim' é válida: esta última delega a
+escolha entre opções apoiadas para o objetivo, não é motivo para repetir a pergunta.
+Não peça preferências que já estejam claras nem invente novas etapas de entrevista.
+Com o escopo esclarecido, busque programação e seleção de atividades que o atendam.
+Para atividade física geral ou escolha delegada, query pode buscar duração e
+intensidade e technique_query opções de atividades aplicáveis. Não reduza um pedido
+de rotina de academia completa a caminhada por ser a primeira opção encontrada.
+Para geração inicial
 ou reconstrução, o backend faz primeiro query e reserva a segunda busca para uma
 lacuna encontrada nos resultados. technique_query é apenas uma sugestão inicial;
 o especialista pode substituí-la por termos mais adequados após ler as fontes.
@@ -2023,8 +2036,12 @@ class AssistantRun:
                     "para o detalhe complementar necessário. O backend também recuperará "
                     "as tabelas citadas e suas condições antes de pedir a proposta. "
                     "Não gaste a busca semântica procurando essas mesmas tabelas: essa parte "
-                    "é automática. Use a consulta para a lacuna complementar, por exemplo "
-                    "os nomes de exercícios já encontrados e suas técnicas/condições. "
+                    "é automática. Priorize o componente solicitado ainda sem programação: "
+                    "se já há seleção e doses de musculação, mas falta o cardio pedido, "
+                    "busque a programação aeróbica aplicável. Não dilua essa consulta com "
+                    "técnicas de vários exercícios que já aparecem no programa. Uma ficha "
+                    "concisa não exige um tutorial de execução; busque técnica somente "
+                    "quando seleção, variante ou condição necessária ainda carecer de apoio. "
                     "Isso é interno: não faça perguntas ao cliente nesta etapa."
                 )
         if self.references:

@@ -327,3 +327,91 @@ def test_rebuild_resumes_after_personal_answer_and_reload(database_session, roll
     assert plan_context["client_answers"]["weekly_availability"]["value"] == 3
     assert plan_context["draft_rebuild_request"]["request"] == "Gere meu plano de treino"
     assert draft.revision == 2
+
+
+@pytest.mark.parametrize(
+    "reply,preference",
+    [
+        ("Quero musculação e um pouco de cardio na academia.", "Musculação e cardio na academia"),
+        ("Pode escolher para mim conforme meu objetivo.", "Escolha delegada conforme objetivo"),
+    ],
+)
+def test_rebuild_scope_clarification_resumes_free_form_after_reload(
+    database_session, rollout, reply, preference
+):
+    """Exercise persistence/continuation; live replays verify model scope decisions."""
+    from app.modules.onboarding.models import Onboarding
+
+    class ScopeAgent(Agent):
+        def structured(self, context, instructions, schema, type_, *, role):
+            if role == "orchestrator" and "allowed_specialist" in context:
+                if context["allowed_specialist"] == "training_chat":
+                    self.route = {"plan_action": "rebuild_draft"}
+                    if context.get("pending_draft_edit"):
+                        self.route.update(
+                            draft_followup_action="resume",
+                            answer_updates=[
+                                {
+                                    "field": "training_modality",
+                                    "status": "answered",
+                                    "value": preference,
+                                    "source_index": context["answer_sources"][-1]["index"],
+                                    "quote": context["current_user_message"],
+                                }
+                            ],
+                        )
+                elif "training_modality" not in context["client_answers"]:
+                    self.route = {
+                        "specialist": "clarify",
+                        "clarification_detail": {
+                            "reason": "missing_client_information",
+                            "explanation": "",
+                            "next_step": "Responder",
+                            "questions": [
+                                {
+                                    "field": "training_modality",
+                                    "text": "Que tipo de treino você gostaria de fazer?",
+                                }
+                            ],
+                        },
+                    }
+                else:
+                    self.route = {
+                        "query": "programação exercícios iniciantes",
+                        "needs_references": True,
+                    }
+            return super().structured(context, instructions, schema, type_, role=role)
+
+    session = database_session
+    draft, _, _ = setup(session, rollout)
+    session.scalar(select(Onboarding)).training_goal = "Emagrecer"
+    session.commit()
+    agent = ScopeAgent()
+    agent.citations = ["R1"]
+    service = TrainingChatService(agent)
+    first = submit(service, session, "Me faça um novo treino")
+    clarification = first.messages[-1].clarification
+    assert clarification["reason"] == "missing_client_information"
+    assert clarification["pending_draft_edit"]["operation"] == "rebuild_draft"
+    assert first.messages[-1].content == "Que tipo de treino você gostaria de fazer?"
+    assert not rollout.queries
+    assert draft.revision == 1
+
+    session.expire_all()
+    result = submit(TrainingChatService(agent), session, reply)
+    assert "Refiz seu rascunho" in result.messages[-1].content
+    assert draft.revision == 2
+    assert session.scalars(select(TrainingPlanVersion)).all() == [draft]
+    for context in (
+        context
+        for role, context, _ in agent.calls
+        if role == "initial_plan" or "cited_passages" in context
+    ):
+        answers = context.get(
+            "client_answers", context.get("client_constraints", {}).get("client_answers")
+        )
+        assert answers["training_modality"]["value"] == preference
+    plan_context = next(context for role, context, _ in agent.calls if role == "initial_plan")
+    assert plan_context["current_plan_preferences"]["training_goal"] == "Emagrecer"
+    assert plan_context["draft_rebuild_request"]["request"] == "Me faça um novo treino"
+    assert "training_modality" not in plan_context["unanswered_client_fields"]
