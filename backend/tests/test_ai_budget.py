@@ -92,7 +92,7 @@ def test_adapter_caps_output_and_uses_explicit_role_model(monkeypatch, hosted):
     assert budget.output_tokens == 5
     assert (
         captured[0]["max_output_tokens"] if hosted else captured[0]["options"]["num_predict"]
-    ) == 1000
+    ) == (2000 if hosted else 1000)
     if hosted:
         assert captured[0]["store"] is False
         assert captured[0]["truncation"] == "disabled"

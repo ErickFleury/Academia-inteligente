@@ -54,6 +54,8 @@ _REASONS = {
     "provider_capacity",
     "provider_usage_invalid",
     "incomplete_response",
+    "incomplete_output_limit",
+    "incomplete_content_filter",
     "memory_evidence_invalid",
     "memory_evidence_uncertain",
     "memory_conflict",
@@ -63,6 +65,7 @@ _REASONS = {
 }
 _PATHS = {"none", "model", "direct", "confirmation", "cached"}
 _OPERATIONS = {"onboarding", "training_chat", "training_generation", "training_adaptation"}
+_ROLES = {"orchestrator", "onboarding", "training_chat", "initial_plan", "adaptation"}
 
 
 def _allowed(value, choices, default):
@@ -164,6 +167,8 @@ def observe_provider_call(function):
             "outcome": "success",
             "reason": "none",
         }
+        if "role" in kwargs:
+            metadata["role"] = _allowed(kwargs["role"], _ROLES, "unknown")
         try:
             return function(provider, context, instructions, schema, response_type, **kwargs)
         except Exception as error:

@@ -421,6 +421,11 @@ class _Provider:
                     + len(_json(schema).encode())
                 )
                 desired = 1000 if role == "orchestrator" else (7000 if budget.plan else 3000)
+                if role == "orchestrator" and "messages" not in body:
+                    # Hosted routing includes a large structured contract. Leave
+                    # room beyond the old 1k cap; reserve() still enforces the
+                    # shared turn ceiling and actual usage funds later stages.
+                    desired = 2000
                 result_schema = schema.get("properties", {}).get("result", {})
                 if role == "training_chat" and result_schema.get("properties", {}).get(
                     "draft_update"
@@ -480,8 +485,19 @@ class _Provider:
                 )
                 actual = usage.get("output_tokens", payload.get("eval_count"))
                 budget.reconcile_output(reserved, actual)
-                if payload.get("status") == "incomplete" or payload.get("done_reason") == "length":
-                    raise BudgetExceeded("incomplete_response")
+            if payload.get("status") == "incomplete":
+                details = payload.get("incomplete_details")
+                reason = details.get("reason") if isinstance(details, dict) else None
+                category = (
+                    "incomplete_output_limit"
+                    if reason == "max_output_tokens"
+                    else "incomplete_content_filter"
+                    if reason == "content_filter"
+                    else "incomplete_response"
+                )
+                raise BudgetExceeded(category)
+            if payload.get("done_reason") == "length":
+                raise BudgetExceeded("incomplete_response")
             return type_.model_validate_json(self._text(payload))
         except BudgetExceeded as error:
             raise AiProviderError(str(error), retryable=False) from None

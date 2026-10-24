@@ -448,3 +448,41 @@ set `AI_TIMEOUT_SECONDS=10` and recreate the backend; Git rollback alone cannot
 restore this deployment setting. The preceding code return point is `1dc0bea`.
 After backend recreation, runtime verification confirmed a 25-second provider
 timeout, a 30-second conversation budget and HTTP 200 from `/health`.
+
+### Incomplete hosted response handling
+
+Scope: shared provider adapter supporting RF-12, RF-16, RF-18/RF-19 and the
+bounded RAG orchestration amendment. Checkpoint: `1d1c782`.
+
+After the timeout increase, a provider call returned an incomplete response in
+about 9.7 seconds, producing controlled HTTP 503. This was below the active
+25-second timeout. The historical log omitted the provider's incomplete reason,
+so output-limit exhaustion remains a likely explanation, not a proven diagnosis
+of that exact request. The original response was not retrieved or replayed.
+
+A mocked regression reproduced the failure when routing required 1,500 output
+tokens under the old 1,000-token allowance. Hosted orchestrator calls now request
+up to 2,000 output tokens, capped by the remaining aggregate budget. Local Ollama
+routing remains at 1,000. Actual usage is reconciled before later stages; total
+chat/plan ceilings remain 4,000/12,000 output tokens, four/six calls and 30/60
+seconds. The active model remains Luna and the provider timeout remains 25 seconds.
+
+Incomplete responses now classify `max_output_tokens` and `content_filter`
+separately, with unknown or malformed details mapped to a generic category.
+Provider diagnostics include only an allowlisted role and category, never raw
+response content or arbitrary reason text. Partial responses remain unusable,
+including legacy calls outside orchestration. No automatic incomplete-response
+retry or additional paid evaluation was introduced. Classification follows
+[official OpenAI structured-output guidance](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+Regression coverage checks completion beyond the old routing limit, remaining
+budget for specialist/review calls, non-retryable partial-output rejection,
+safe handling of malformed details and diagnostic privacy. Actual live completion
+on the user's original request remains to be verified through normal user testing.
+
+Validation: **880 backend tests passed**, including isolated PostgreSQL workflows;
+Ruff lint/format and Git whitespace checks passed. Two existing Alembic deprecation
+warnings remain. No live provider evaluations or production account edits were
+performed. The secret-bearing `.env` is unchanged and remains excluded from Git.
+After backend recreation, `/health` returned HTTP 200; runtime checks confirmed
+`gpt-6-luna`, the 25-second provider timeout and 30/60-second total budgets.
