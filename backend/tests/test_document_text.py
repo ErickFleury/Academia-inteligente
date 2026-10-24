@@ -1,9 +1,12 @@
+import signal
+import subprocess
 from io import BytesIO
 
 import pytest
 from pypdf import PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
+from app.integrations import document_text
 from app.integrations.document_text import DocumentError, extract_document
 
 
@@ -43,3 +46,15 @@ def test_page_limit_returns_specific_error(monkeypatch, limit, page_count):
     monkeypatch.setenv("AI_REFERENCE_MAX_PDF_PAGES", str(limit))
     with pytest.raises(DocumentError, match="^document_page_limit$"):
         extract_document(text_pdf(page_count), "application/pdf")
+
+
+@pytest.mark.parametrize("failure", ["wall_time", "cpu_time"])
+def test_extraction_timeout_is_actionable_without_exposing_contents(monkeypatch, failure):
+    def run(*args, **kwargs):
+        if failure == "wall_time":
+            raise subprocess.TimeoutExpired("extract", 300, output=b"private document")
+        return subprocess.CompletedProcess([], -signal.SIGXCPU, b"", b"private document")
+
+    monkeypatch.setattr(document_text.subprocess, "run", run)
+    with pytest.raises(DocumentError, match="^document_extraction_timeout$"):
+        extract_document(b"document", "application/pdf")

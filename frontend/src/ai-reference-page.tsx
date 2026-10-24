@@ -6,6 +6,7 @@ import { deleteReference, listReferences, previewReference, referenceAction, upl
 
 const statuses: Record<string, string> = { pending: 'Na fila', processing: 'Processando', ready: 'Pronta para ativar', active: 'Ativa', withdrawn: 'Retirada', failed: 'Falha no processamento' }
 const extractionErrors: Record<string, string> = {
+  document_extraction_timeout: 'A leitura do documento excedeu o tempo permitido. Divida o PDF em arquivos menores e envie novamente.',
   document_page_limit: 'O PDF excede o limite de páginas configurado. Divida o documento em arquivos menores; o limite máximo é de 1.000 páginas por PDF.',
   document_no_text: 'Nenhum texto legível encontrado. Envie um PDF com texto selecionável ou um arquivo TXT/Markdown.',
   document_extraction_failed: 'Não foi possível ler este documento. Confira se não está protegido, digitalizado ou acima dos limites.',

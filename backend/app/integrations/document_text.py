@@ -2,6 +2,7 @@
 
 import json
 import os
+import signal
 import subprocess
 import sys
 
@@ -32,18 +33,22 @@ def extract_document(raw: bytes, media_type: str) -> list[dict[str, str]]:
             [sys.executable, "-m", "app.integrations.document_text", media_type],
             input=raw,
             capture_output=True,
-            timeout=25,
+            timeout=300,
             check=False,
         )
         if result.returncode == 2:
             raise DocumentError("document_page_limit")
+        if result.returncode == -signal.SIGXCPU:
+            raise DocumentError("document_extraction_timeout")
         if result.returncode or len(result.stdout) > 16_000_000:
             raise DocumentError("document_extraction_failed")
         pages = json.loads(result.stdout)
         if not pages or not any(p["text"].strip() for p in pages):
             raise DocumentError("document_no_text")
         return pages
-    except (subprocess.TimeoutExpired, OSError, ValueError):
+    except subprocess.TimeoutExpired:
+        raise DocumentError("document_extraction_timeout") from None
+    except (OSError, ValueError):
         raise DocumentError("document_extraction_failed") from None
 
 
@@ -52,7 +57,7 @@ def _main():
     from io import BytesIO
 
     resource.setrlimit(resource.RLIMIT_AS, (768 * 1024 * 1024, 768 * 1024 * 1024))
-    resource.setrlimit(resource.RLIMIT_CPU, (20, 20))
+    resource.setrlimit(resource.RLIMIT_CPU, (240, 245))
     raw = sys.stdin.buffer.read(MAX_UPLOAD_BYTES + 1)
     if len(raw) > MAX_UPLOAD_BYTES:
         raise ValueError

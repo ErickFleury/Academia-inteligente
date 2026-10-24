@@ -2422,6 +2422,10 @@ The owner approved the following design decisions:
   a text-based 1,000-page PDF passes page validation; 1,001 pages or a lower
   configured ceiling produces a specific page-limit error in the admin UI.
   Retrying a previously rejected import uses the new limit.
+  Background extraction for these larger documents is bounded to 300 seconds
+  of wall time and 240 seconds of CPU time (245-second hard stop), retaining
+  the 768 MiB parser address-space cap. Timeout feedback must identify the
+  processing limit and suggest splitting the document. Chat deadlines do not change.
   These are operating limits, not verified capacity claims.
 - Limit compact client memory to 50 current facts and 8,000 characters per client.
   Consolidate duplicates and superseded facts. At capacity, ask the client to

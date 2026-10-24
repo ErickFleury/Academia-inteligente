@@ -10,10 +10,13 @@ afterEach(() => { cleanup(); vi.resetAllMocks() })
 function mount() { render(<MemoryRouter><AiReferencePage accessToken="test-token" onSignOut={() => {}} /></MemoryRouter>) }
 
 describe('referências do assistente', () => {
-  it('explains page-limit failures and offers retry without activation', async () => {
-    vi.mocked(api.listReferences).mockResolvedValue([{ ...item, status: 'failed', error_code: 'document_page_limit' }])
+  it.each([
+    ['document_page_limit', 'limite de páginas'],
+    ['document_extraction_timeout', 'tempo permitido'],
+  ])('explains %s and offers retry without activation', async (errorCode, message) => {
+    vi.mocked(api.listReferences).mockResolvedValue([{ ...item, status: 'failed', error_code: errorCode }])
     mount()
-    expect(await screen.findByRole('alert')).toHaveTextContent('limite de páginas')
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
     expect(screen.getByText(/Até 150 MB e 1.000 páginas/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Tentar processamento novamente' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ativar esta versão' })).not.toBeInTheDocument()
