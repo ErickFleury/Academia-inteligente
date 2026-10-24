@@ -527,7 +527,6 @@ class KnowledgeService:
                 for row in linked:
                     if (
                         row.version_id != seed.version_id
-                        or row.id in seen
                         or unusable_table(row.content)
                         or not re.search(
                             r"(?im)^\s*(?:#{1,6}\s*)?(?:table|tabela)\s+"
@@ -538,6 +537,9 @@ class KnowledgeService:
                         )
                     ):
                         continue
+                    tables.append((seed, number, row))
+                    if row.id in seen:
+                        break
                     result.append(
                         {
                             **by_id[seed.id],
@@ -547,7 +549,6 @@ class KnowledgeService:
                         }
                     )
                     seen.add(row.id)
-                    tables.append((seed, number, row))
                     if len(result) == limit:
                         return result
                     break

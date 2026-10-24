@@ -151,7 +151,8 @@ def test_rest_interval_table_is_not_misread_as_exercise_duration():
     assert (600.0, 600.0) in fields["duration_seconds"]
 
 
-def test_linked_table_preserves_nearby_prose_that_conditions_its_application(setup):
+@pytest.mark.parametrize("preloaded", [False, True])
+def test_linked_table_preserves_nearby_prose_that_conditions_its_application(setup, preloaded):
     sessions, service, _ = setup
     version = upload(
         sessions,
@@ -171,7 +172,16 @@ def test_linked_table_preserves_nearby_prose_that_conditions_its_application(set
         seed = next(
             r for r in service.search(session, "sample plan") if "Based on table" in r["content"]
         )
-        refs = service.expand_plan_context(session, [seed], limit=3)
+        seeds = [seed]
+        if preloaded:
+            seeds.append(
+                next(
+                    r
+                    for r in service.search(session, "goal specific programming")
+                    if "Goal-specific programming" in r["content"]
+                )
+            )
+        refs = service.expand_plan_context(session, seeds, limit=3)
         assert any("Goal-specific programming" in r["content"] for r in refs)
         assert any("novices must learn" in r["content"] for r in refs)
 

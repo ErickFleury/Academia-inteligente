@@ -1895,6 +1895,9 @@ class AssistantRun:
                     "grounding=clarification e uma evidence_query de até 12 palavras "
                     "para o detalhe complementar necessário. O backend também recuperará "
                     "as tabelas citadas e suas condições antes de pedir a proposta. "
+                    "Não gaste a busca semântica procurando essas mesmas tabelas: essa parte "
+                    "é automática. Use a consulta para a lacuna complementar, por exemplo "
+                    "os nomes de exercícios já encontrados e suas técnicas/condições. "
                     "Isso é interno: não faça perguntas ao cliente nesta etapa."
                 )
         if self.references:
