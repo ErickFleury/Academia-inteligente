@@ -620,6 +620,15 @@ prescrições rejeitadas ou promessas de mudanças salvas."""
 )
 _GROUNDING += _CLARIFICATION
 _GROUNDING += ai._CONVERSATIONAL_STYLE
+_READ_ONLY_REVIEW = _REVIEW + """ Se houver uma lacuna, clarification identifica
+somente a falha concreta em uma frase curta em pt-BR, diretamente ao cliente.
+Use reason=unsupported_guidance para orientação sem apoio, conflicting_evidence
+para conflito relevante e insufficient_evidence para evidência insuficiente.
+Para lacunas técnicas, questions=[] e missing_fields=[]; nunca peça doses ao cliente.
+Se reference_searches_remaining > 0, evidence_query pode buscar a lacuna específica,
+com até 12 palavras e sem dados pessoais. Sem lacuna, clarification=null.
+Não imponha requisitos ausentes nas fontes e não transforme falta de evidência
+em contraindicação. Preserve toda condição realmente necessária ao procedimento."""
 _REVIEW += _CLARIFICATION
 
 _SPECIALISTS = {
@@ -692,6 +701,7 @@ _PLAN_ROUTING += _CLIENT_PRESENTATION
 _GROUNDING += _CLIENT_PRESENTATION
 _PLAN_OUTPUT_RULES += _CLIENT_PRESENTATION
 _REVIEW += _CLIENT_PRESENTATION
+_READ_ONLY_REVIEW += _CLIENT_PRESENTATION
 _READ_ONLY_CHAT += _CLIENT_PRESENTATION
 
 
@@ -2215,7 +2225,13 @@ class AssistantRun:
                         [p for p in self.references if p["passage_id"] not in canonical_ids]
                     ),
                 },
-                (_PLAN_REVIEW if self.role == "initial_plan" or editing else _REVIEW)
+                (
+                    _PLAN_REVIEW
+                    if self.role == "initial_plan" or editing
+                    else _READ_ONLY_REVIEW
+                    if not proposal
+                    else _REVIEW
+                )
                 + (
                     _PRESCRIPTION_REVIEW
                     if proposal
