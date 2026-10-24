@@ -238,7 +238,17 @@ class TrainingChatService:
                     # Retain retry input, release the client lock during inference.
                     session.commit()
                     run.prepare(context)
-                    if (
+                    if run.route.plan_action == "rebuild_draft":
+                        context["rules"]["may_update_ai_draft"] = True
+                        run.prepare_draft_rebuild()
+                        generated = run.specialist()
+                        response = AiTrainingChatResponse(
+                            assistant_message="Confira seu novo rascunho em Meu treino.",
+                            draft_update=generated.plan,
+                        )
+                        run.finalize()
+                        clarification = run.clarification
+                    elif (
                         run.route.plan_action == "generate_initial_plan"
                         and context["current_training_plan"] is None
                     ):
@@ -294,8 +304,12 @@ class TrainingChatService:
                     editable_draft.reference_citations = run.public_citations()
                 record_turn(outcome="draft_saved")
                 content = (
-                    "Atualizei o rascunho conforme solicitado. "
-                    "Confira as alterações em Meu treino; "
+                    (
+                        "Refiz seu rascunho conforme solicitado. "
+                        if run and run.context.get("draft_operation") == "rebuild_draft"
+                        else "Atualizei o rascunho conforme solicitado. "
+                    )
+                    + "Confira as alterações em Meu treino; "
                     "elas ainda dependem da aprovação do instrutor. "
                     "Seu plano atual não foi alterado."
                 )
@@ -334,10 +348,15 @@ class TrainingChatService:
             and context["rules"]["may_update_ai_draft"]
         ):
             pending = run.context.get("pending_draft_edit") if run else None
+            rebuild = run.context.get("draft_rebuild_request") if run else None
             clarification["pending_draft_edit"] = {
                 "draft_id": str(editable_draft.id),
                 "draft_revision": draft_revision,
-                "request_event_id": pending["request_event_id"] if pending else str(user.id),
+                "request_event_id": (rebuild or pending or {}).get(
+                    "request_event_id", str(user.id)
+                ),
+                "operation": (run.context.get("draft_operation") if run else None)
+                or (pending or {}).get("operation", "edit_draft"),
             }
         if run and run.health_change and not run.health_reply:
             content = "Atualizei seu cadastro de saúde conforme você confirmou. " + content
@@ -587,6 +606,12 @@ class TrainingChatService:
     def _initial_plan_reply(
         self, session: Session, subject: str, client_id: UUID, context: dict
     ) -> str | None:
+        if (
+            enabled(client_id)
+            and context.get("editable_training_draft")
+            and not context.get("model_requested_initial_plan")
+        ):
+            return None  # The router distinguishes viewing, editing and rebuilding.
         if context["current_training_plan"] is not None:
             return None  # Existing-plan changes keep the adaptation/review flow.
         resuming = context.get("resume_initial_plan", False)

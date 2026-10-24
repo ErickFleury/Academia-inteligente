@@ -551,6 +551,24 @@ concurrency protection. The AI never edits an approved, current, superseded,
 or historical version, and never approves or activates a plan; instructor
 review remains mandatory.
 
+**Full-draft rebuild (RF-15/RF-18, owner request 2026-10-23):** distinguish a
+request for a new/rebuilt plan from a small edit when a sole proposal exists.
+Interpret free-form intent through the orchestrator, then generate a complete
+replacement using the existing plan specialist and save it into that same owned
+draft only after validation. Do not create a second draft or change an approved
+plan. An explicitly replaced edit request and its exercise target are not
+requirements of the rebuild. Preserve validated personal answers, current health,
+relevant current-plan restrictions, preferences and onboarding; do not erase
+stored memory to reset the task. Ask only for genuinely missing personal facts,
+continue after answers, and obtain technical prescriptions from references.
+Pending rebuilds share edit-continuation ownership, revision, retention and
+forgetting checks. Completed onboarding, grounding, shared plan execution limits,
+atomic reply/draft persistence, idempotency and instructor approval remain required.
+Acceptance: rebuild the same proposal; retain personal facts without reviving a
+replaced edit; continue after reload and health confirmation; cancel or change
+topic without rebuilding; preserve drafts on failed evidence/provider checks;
+reject stale or other-client authority; never mutate current/approved plans.
+
 **Confirmation-loop correction (RF-15/RF-18):** when no current plan exists,
 an explicit initial-plan request or a short affirmative reply to the immediately
 preceding assistant's single initial-plan confirmation question invokes the

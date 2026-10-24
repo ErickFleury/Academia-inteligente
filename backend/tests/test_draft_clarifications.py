@@ -26,7 +26,11 @@ class ClarifyingEditor(Agent):
 
     def structured(self, context, instructions, schema, type_, *, role):
         if role == "orchestrator" and "allowed_specialist" in context:
-            assert schema["properties"]["plan_action"]["enum"] == ["none", "edit_draft"]
+            assert schema["properties"]["plan_action"]["enum"] == [
+                "none",
+                "edit_draft",
+                "rebuild_draft",
+            ]
             self.route = {
                 "plan_action": "edit_draft",
                 "query": "subir escadas",

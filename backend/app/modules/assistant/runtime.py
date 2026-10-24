@@ -48,6 +48,7 @@ from app.modules.memory.service import (
     utc,
 )
 from app.modules.onboarding import health_updates
+from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import Onboarding, OnboardingAiMessage
 from app.modules.training.models import TrainingAiMessage, TrainingPlan, TrainingPlanVersion
 
@@ -98,7 +99,7 @@ class Route(BaseModel):
     clarification: str | None = Field(default=None, max_length=400)
     clarification_detail: Clarification | None = None
     answer_updates: list[AnswerUpdate] = Field(default_factory=list, max_length=13)
-    plan_action: Literal["none", "generate_initial_plan", "edit_draft"] = "none"
+    plan_action: Literal["none", "generate_initial_plan", "edit_draft", "rebuild_draft"] = "none"
     draft_followup_action: Literal["resume", "replace", "cancel", "chat"] | None = None
     health_update: health_updates.HealthUpdate | None = None
 
@@ -199,6 +200,13 @@ portanto não consulta documentos nem fornece orientação de exercícios."""
 _ROUTING += """ Interprete a intenção livremente. Em training_chat, plan_action=
 generate_initial_plan quando a pessoa pede para montar seu treino, inclusive por
 paráfrase; edit_draft quando pede uma alteração concreta no rascunho existente;
+rebuild_draft quando já existe rascunho e pede um novo treino, refazer ou recomeçar
+o plano inteiro. 'Então me faça um novo treino' após uma edição sem sucesso é
+rebuild_draft, não a repetição daquela edição. Não exija que o cliente use essas
+palavras exatas. Uma pergunta hipotética ou dúvida sobre criar planos não autoriza
+refazer. Para rebuild_draft, escolha training_chat, query=null e needs_references=false:
+o especialista de geração buscará opções para o novo pedido e o backend atualizará
+o MESMO rascunho após validação, sem criar outro nem alterar planos aprovados;
 none para dúvidas, hipóteses, cancelamentos e conversa comum. Uma pergunta sobre
 como gerar um plano não é um pedido para gerá-lo. plan_state informa os limites
 reais. Não peça confirmação extra de um pedido claro. O backend valida os estados.
@@ -213,6 +221,9 @@ pergunta, inclusive negações como 'não tenho limitações'. Use draft_followu
 resume para respostas, correções ou dúvidas sobre esse pedido; replace para um
 novo pedido de edição que substitui o anterior; cancel para desistência; chat para
 mudança de assunto. Em resume, plan_action=edit_draft: não exija novo pedido de edição.
+Se pending_draft_edit.operation=rebuild_draft, resume retoma a reconstrução completa
+com plan_action=rebuild_draft, não uma edição pontual. Um novo pedido para refazer
+substitui a edição anterior: use replace e rebuild_draft.
 Preserve a dúvida se a resposta for incerta; não repita perguntas já respondidas.
 Relatos atuais não apagam queixas no onboarding. Se houver conflito relevante,
 pergunte especificamente sobre a diferença, sem reiniciar a mesma pergunta.
@@ -243,6 +254,12 @@ Restrições são relatos, nunca diagnósticos inferidos. Preserve nomes de exer
 solicitados em adaptações. Para planos, needs_references=true. Se faltar informação
 essencial, escolha clarify. Você escolhe buscas, não exercícios nem prescrições.
 Não limite toda busca a musculação: escolha modalidades pertinentes ao objetivo.
+Se houver draft_rebuild_request, ele é o pedido de refazer o plano inteiro.
+Use esse pedido e os dados pessoais atuais; não carregue exercícios nem limitações
+técnicas de um pedido anterior que foi substituído. A mensagem atual pode ser uma
+resposta a esclarecimento desse novo pedido. Não peça doses ou intensidade técnica
+ao cliente: obtenha-as nas referências. Retorne uma proposta ou perguntas pessoais
+essenciais agrupadas, sem exigir novo comando de criação após as respostas.
 Se o pedido inicial tem objetivo geral, como emagrecer ou condicionamento, e não
 especifica musculação nem um exercício, query deve buscar atividade física para a
 população informada, com duração e intensidade; technique_query deve buscar opções
@@ -741,6 +758,15 @@ class AssistantRun:
                 )
             }
             self.context["health_record_updated_at"] = utc(onboarding.updated_at).isoformat()
+            if self.health_change:
+                staged = health_updates.HealthUpdate.model_validate(self.health_change["proposal"])
+                changes = {
+                    staged.field: staged.present,
+                    health_updates.PAIRS[staged.field]: staged.details,
+                }
+                self.context["authoritative_health_records"].update(changes)
+                if "completed_onboarding" in self.context:
+                    self.context["completed_onboarding"].update(changes)
         if self.snapshot["event_after"]:
             # Only new source events may write memory. Historical summaries are
             # unnecessary once compact facts exist, and could restore corrections.
@@ -842,6 +868,23 @@ class AssistantRun:
         if health_allowed:
             routing_instructions += _HEALTH_ROUTING
         self.context["client_answers"] = client_answers(self.context)
+        if self.context.get("draft_rebuild_request"):
+            # These interpretations were already source-validated in this run's
+            # routing phase. Retain personal facts, not an old edit's exercise target.
+            self.context["client_answers"].update(context.get("client_answers", {}))
+            target = self.context["client_answers"].get("target_exercise", {})
+            if (
+                target.get("source_event_id")
+                != self.context["draft_rebuild_request"]["request_event_id"]
+            ):
+                self.context["client_answers"].pop("target_exercise", None)
+            self.context["client_memory"] = [
+                fact
+                for fact in self.context["client_memory"]
+                if (fact.get("answer_data") or {}).get("field") != "target_exercise"
+            ]
+            routing_context["client_memory"] = self.context["client_memory"]
+            routing_context["draft_rebuild_request"] = self.context["draft_rebuild_request"]
         self.context["question_catalog"] = question_catalog(self.context)
         # Carry one compact answer state, not a copy of it inside every past
         # clarification. The persisted messages retain their own expiring state.
@@ -870,7 +913,13 @@ class AssistantRun:
             route_schema["properties"].pop("health_update")
             route_schema["required"].remove("health_update")
         if self.role == "training_chat" and self.context.get("editable_training_draft"):
-            route_schema["properties"]["plan_action"]["enum"] = ["none", "edit_draft"]
+            route_schema["properties"]["plan_action"]["enum"] = [
+                "none",
+                "edit_draft",
+                "rebuild_draft",
+            ]
+        elif "plan_action" in route_schema["properties"]:
+            route_schema["properties"]["plan_action"]["enum"].remove("rebuild_draft")
         if not routing_context.get("pending_draft_edit"):
             route_schema["properties"].pop("draft_followup_action")
             route_schema["required"].remove("draft_followup_action")
@@ -979,6 +1028,10 @@ class AssistantRun:
             }
         if self.route.specialist not in {self.role, "clarify"}:
             raise AssistantError("delegation_not_allowed", 422)
+        if self.role == "training_chat":
+            self._resolve_draft_followup()
+        if self.role == "training_chat" and self.route.plan_action == "rebuild_draft":
+            self._authorize_draft_rebuild()
         if self.route.health_update:
             if not health_allowed:
                 raise AssistantError("health_update_not_allowed", 422)
@@ -993,19 +1046,6 @@ class AssistantRun:
                 self.route.plan_action = "none"
                 return
         if self.role == "training_chat":
-            if self.context.get("pending_draft_edit"):
-                action = self.route.draft_followup_action
-                if action == "resume":
-                    self.route.plan_action = "edit_draft"
-                elif action in {"replace", "cancel", "chat"}:
-                    self.context.pop("pending_draft_edit")
-                    if action == "replace":
-                        self.route.plan_action = "edit_draft"
-                    else:
-                        self.route.plan_action = "none"
-                        self.context["rules"]["may_update_ai_draft"] = False
-                else:
-                    raise AssistantError("malformed_structured_output", 422)
             if self.route.plan_action == "generate_initial_plan" and not self.context.get(
                 "current_training_plan"
             ):
@@ -1013,6 +1053,8 @@ class AssistantRun:
                 # caller still enforces onboarding, ownership and single draft.
                 self.budget.plan = True
                 return
+            if self.route.plan_action == "rebuild_draft":
+                return  # Dedicated generation owns retrieval for the replacement.
             if self.route.plan_action == "edit_draft" and self.context.get(
                 "editable_training_draft"
             ):
@@ -1073,6 +1115,79 @@ class AssistantRun:
         self.context["reference_sources"] = self.model_sources()
         self.context["reference_evidence_required"] = self.route.needs_references
         self.context["reference_searches_remaining"] = 2 - self.budget.retrievals
+
+    def _resolve_draft_followup(self):
+        pending = self.context.get("pending_draft_edit")
+        if not pending:
+            return
+        action = self.route.draft_followup_action
+        if action == "resume":
+            self.route.plan_action = (
+                "rebuild_draft" if pending.get("operation") == "rebuild_draft" else "edit_draft"
+            )
+        elif action in {"replace", "cancel", "chat"}:
+            self.context.pop("pending_draft_edit")
+            if action == "replace":
+                if self.route.plan_action != "rebuild_draft":
+                    self.route.plan_action = "edit_draft"
+            else:
+                self.route.plan_action = "none"
+                self.context["rules"]["may_update_ai_draft"] = False
+        else:
+            raise AssistantError("malformed_structured_output", 422)
+
+    def _authorize_draft_rebuild(self):
+        if not self.context.get("editable_training_draft"):
+            raise AssistantError("request_not_authorized", 422)
+        if not self.context.get("onboarding_completed"):
+            raise AssistantError("onboarding_incomplete", 409)
+        self.context["rules"]["may_update_ai_draft"] = True
+        self.context["draft_operation"] = "rebuild_draft"
+        self._promote_draft_budget()
+
+    def prepare_draft_rebuild(self):
+        """Generate replacement content under the same source, budget and revision.
+
+        The chat service owns persistence into the existing proposal. Old edit
+        commands and rejected prescriptions are not requirements of this request.
+        Verified personal answers and authoritative health remain available.
+        """
+        if (
+            self.role != "training_chat"
+            or self.route.plan_action != "rebuild_draft"
+            or self.source is None
+        ):
+            raise AssistantError("request_not_authorized", 422)
+        pending = self.context.get("pending_draft_edit") or {}
+        request = {
+            "request": pending.get("request", self.source.content),
+            "request_event_id": pending.get("request_event_id", str(self.source.id)),
+        }
+        onboarding = self.session.scalar(
+            select(Onboarding).where(Onboarding.client_id == self.client_id)
+        )
+        if not OnboardingDraftService().has_valid_completed_onboarding(
+            self.session, self.client_id
+        ):
+            raise AssistantError("onboarding_incomplete", 409)
+        context = {
+            "completed_onboarding": OnboardingDraftService.completion_data(onboarding).model_dump(),
+            "active_equipment_models": self.context.get("active_equipment_models", []),
+            "current_training_plan": self.context.get("current_training_plan"),
+            "client_answers": self.context["client_answers"],
+            "question_catalog": self.context["question_catalog"],
+            "draft_rebuild_request": request,
+            "draft_operation": "rebuild_draft",
+            "pending_draft_edit": pending or None,
+            "pending_health_update": self.context.get("pending_health_update"),
+            "proposal_rules": {
+                "status": "proposal",
+                "must_not_approve_or_activate": True,
+                "instructor_review_required": True,
+            },
+        }
+        self.role = "initial_plan"
+        self.prepare(context)
 
     def _refresh_unanswered_fields(self):
         if self.role in {"initial_plan", "adaptation"}:
@@ -1431,6 +1546,15 @@ class AssistantRun:
         if plan:
             instructions = instructions.replace("somente o onboarding", "o contexto")
             instructions += _PLAN_GROUNDING
+            if self.context.get("draft_rebuild_request"):
+                instructions += (
+                    " Refaça o plano inteiro conforme draft_rebuild_request.request. "
+                    "Use completed_onboarding, client_memory e client_answers; não reabra "
+                    "perguntas já respondidas. O pedido substitui a edição anterior, não "
+                    "exige seus exercícios. Preserve apenas requisitos explícitos desse "
+                    "novo pedido e restrições pessoais atuais. Se houver opções sustentadas "
+                    "que atendam ao objetivo, escolha-as sem pedir doses técnicas ao cliente."
+                )
             if self.context.get("plan_review_feedback"):
                 instructions += (
                     " A proposta anterior falhou na revisão. Use plan_review_feedback para "
@@ -1648,14 +1772,21 @@ class AssistantRun:
                                 "authoritative_health_records": self.context.get(
                                     "authoritative_health_records", {}
                                 ),
-                                "client_memory": self.snapshot["facts"],
+                                "client_memory": self.context["client_memory"],
                                 "client_answers": self.context["client_answers"],
+                                **(
+                                    {"current_training_plan": self.context["current_training_plan"]}
+                                    if self.context.get("draft_rebuild_request")
+                                    and self.context.get("current_training_plan")
+                                    else {}
+                                ),
                             }
                         }
                         if proposal
                         else {}
                     ),
-                    "question": self.context.get("current_user_message")
+                    "question": (self.context.get("draft_rebuild_request") or {}).get("request")
+                    or self.context.get("current_user_message")
                     or self.context.get("reason", "Gerar proposta confirmada"),
                     "unanswered_client_fields": self.unanswered_client_fields,
                     "answer": {

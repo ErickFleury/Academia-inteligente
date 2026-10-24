@@ -486,3 +486,56 @@ warnings remain. No live provider evaluations or production account edits were
 performed. The secret-bearing `.env` is unchanged and remains excluded from Git.
 After backend recreation, `/health` returned HTTP 200; runtime checks confirmed
 `gpt-6-luna`, the 25-second provider timeout and 30/60-second total budgets.
+
+### Rebuilding the sole draft through chat
+
+Owner-approved scope: RF-15/RF-18 full-draft rebuild, with RF-16 visibility and
+existing instructor approval/grounding requirements. Checkpoint: `939a298`.
+The reported request completed with HTTP 200 but returned an evidence
+clarification through the chat specialist. Inspection found no distinct full
+rebuild action, and the direct initial-generation shortcut merely announced that
+a draft already existed. Existing edit context could continue to frame the task
+as the previous exercise substitution. The exact live routing output was not
+retained, so the latter model interpretation is not asserted as proven.
+
+The router now distinguishes `rebuild_draft` from `edit_draft`, ordinary chat and
+initial creation. An explicit new-plan request with an existing proposal delegates
+replacement content to the existing initial-plan specialist, then persists into
+the same owned proposal/revision through the chat service's validated atomic edit.
+There is no second draft, implicit approval, activation or current-plan mutation.
+The generation phase retains the same request source, budget origin/counters,
+memory snapshot and domain revision, including the cost of its first router call.
+
+Rebuild context carries complete onboarding, current health (including an explicitly
+confirmed staged correction), equipment, applicable current-plan context, compact
+memory and source-validated personal answers. It omits prior edit commands,
+rejected prescriptions and the prior exercise target from the new generation and
+review context. Stored facts/history are not deleted. New explicit exercise or
+modality requirements remain in the original rebuild request. Technical quantities
+still require references and per-exercise checks; source gaps cannot be replaced
+with fabricated doses or requests for the client's technical prescription.
+
+Missing personal information or health confirmation preserves a backend-owned
+pending rebuild with the original event, draft identity and revision. Answers
+resume generation after refresh without another plan command. Cancellation, topic
+changes, replacement requests and existing retention/forgetting boundaries govern
+continuation. Failure preserves the previous draft, and retries remain idempotent.
+The generic initial-plan shortcut is retained for the legacy disabled-rollout path;
+enabled chat sends an existing draft's request through intent interpretation.
+
+Synthetic regressions cover rebuild/replay, continuation, health confirmation,
+personal memory, replacement of an old edit, cancellation/topic changes,
+completed-onboarding and ownership gates, concurrent revisions, provider/evidence
+failures and preservation of the approved current plan. No live account request
+was replayed or paid model evaluation performed; model interpretation and evidence
+adequacy on the original request still require normal user testing.
+
+Validation: **894 backend tests passed**, including isolated PostgreSQL workflow
+checks; Ruff lint/format and Git whitespace checks passed. The two existing
+Alembic configuration deprecation warnings remain. The full suite also verifies
+the compatibility fallback when a provider returns an initial-creation action
+despite an existing draft. Cancellation is resolved before rebuild authorization
+and budget promotion. No frontend/API migration or new dependency was required.
+Backend recreation completed; `/health` returned HTTP 200 and runtime inspection
+confirmed the new action, `gpt-6-luna` and the 25-second provider timeout. Deployment
+did not replay the account's request or rewrite its existing draft/history.
