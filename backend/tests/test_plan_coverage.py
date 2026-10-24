@@ -35,6 +35,48 @@ def test_reference_merge_preserves_ranked_anchors_full_conditions_and_stable_tie
     assert len({row["passage_id"] for row in selected}) == len(selected) == 5
 
 
+def test_full_plan_context_expands_only_after_an_evidence_gap(database_session):
+    client = owner(database_session)
+    first = [passage(f"Original evidence {i}.") for i in range(5)]
+    second = [passage(f"Follow-up evidence {i}.") for i in range(5)]
+    neighbors = [passage(f"Complete applicability condition {i}.") for i in range(2)]
+
+    class Search(ReferenceTool):
+        expansions = 0
+
+        def search(self, session, query, **kwargs):
+            self.queries.append(query)
+            return first if len(self.queries) == 1 else second
+
+        def expand_plan_context(self, session, references, *, limit=12):
+            self.expansions += 1
+            assert limit == 12 and len(references) == 10
+            return references + neighbors
+
+    search = Search()
+    run = AssistantRun(
+        database_session,
+        client.id,
+        "initial_plan",
+        provider=Agent(route={"query": "beginner program"}),
+        knowledge=search,
+    )
+    run.prepare({})
+    assert len(run.references) == 5 and search.expansions == 0
+    assert run._search_for_evidence("beginner exercise prescription")
+    assert len(run.references) == 12 and search.expansions == 1
+    assert {row["passage_id"] for row in run.references} == {
+        row["passage_id"] for row in first + second + neighbors
+    }
+    assert len(run.context["reference_passages"]) == 12
+    assert run.budget.retrievals == 2
+    assert not run._search_for_evidence("third search")
+    assert search.expansions == 1
+    run.provider.citations = [f"R{i}" for i in range(1, 13)]
+    assert run.specialist().plan["items"]
+    assert len(run.citations) == 12
+
+
 def test_rebuild_fills_evidence_gap_and_saves_only_the_owned_draft(database_session, monkeypatch):
     from uuid import uuid4
 
@@ -269,7 +311,7 @@ def test_gap_search_preserves_quantities_and_named_activities_in_generation_cont
                     technique["content"],
                     dose["content"],
                 } <= contents
-                assert len(contents) == 5
+                assert len(contents) == 10
                 assert context["source_allocation_options"]
                 assert any(
                     row["sets"] and row["repetitions"] and row["rest_seconds"]

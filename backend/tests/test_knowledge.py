@@ -262,6 +262,68 @@ def test_extraction_rejects_scans_invalid_pdf_and_non_utf8():
     )
 
 
+def test_plan_context_keeps_neighbors_in_active_version_and_preserves_conditions(setup):
+    sessions, service, _ = setup
+    version = upload(
+        sessions,
+        service,
+        body="\n".join(
+            f"# Section {i}\nCondition {i}: only for the population described in this section."
+            for i in range(16)
+        ),
+    )
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        rows = session.scalars(select(ReferencePassage).order_by(ReferencePassage.position)).all()
+        seed = {
+            "passage_id": str(rows[7].id),
+            "version_id": str(version["id"]),
+            "source_id": str(version["source_id"]),
+            "title": "Manual",
+            "version": 1,
+            "location": rows[7].location,
+            "content": rows[7].content,
+        }
+        expanded = service.expand_plan_context(session, [seed], limit=3)
+        assert expanded[0] == seed
+        assert {row["passage_id"] for row in expanded} == {
+            str(rows[6].id),
+            str(rows[7].id),
+            str(rows[8].id),
+        }
+        assert all(row["version_id"] == str(version["id"]) for row in expanded)
+        assert all("only for the population" in row["content"] for row in expanded)
+        many = [
+            {**seed, "passage_id": str(row.id), "location": row.location, "content": row.content}
+            for row in rows[2:12]
+        ]
+        assert len(service.expand_plan_context(session, many)) == 12
+        current = service.describe(session, session.get(ReferenceVersion, version["id"]))
+        service.transition(session, version["id"], "withdraw", current["revision"])
+        with pytest.raises(KnowledgeError, match="reference_conflict"):
+            service.expand_plan_context(session, [seed])
+
+
+def test_generic_prescription_query_does_not_force_an_execution_fragment(setup):
+    sessions, service, _ = setup
+    version = upload(
+        sessions,
+        service,
+        body=(
+            "# Adult resistance training\nPrescription: 2 sets of 8 repetitions; rest 90 seconds.\n"
+            "# Hang Power Clean\nStarting Position: hold the bar. Resistance training technique."
+        ),
+    )
+    service.import_next(sessions)
+    activate(sessions, service, version)
+    with sessions() as session:
+        query = "adult resistance training prescription sets repetitions rest"
+        ordinary = service.search(session, query)
+        assert "2 sets" in ordinary[0]["content"]
+        assert service.search(session, query, prefer_technique=True) == ordinary
+
+
 def test_chunking_preserves_all_text_and_bounds_embedding_bytes():
     original = "Não ignore restrições. " * 1000
     chunks = list(passages([{"location": "page:2", "text": original}]))

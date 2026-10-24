@@ -2364,6 +2364,29 @@ The owner approved the following design decisions:
   adding missing quantities, named activities, technique or distribution guidance
   over redundant background. Keep complete passage text, conditions and provenance;
   these selection hints do not establish applicability or waive grounding checks.
+- Owner-approved adaptive plan evidence (2026-10-24): this supersedes the fixed
+  five-passage cap above for an initial-plan/full-draft-rebuild evidence follow-up.
+  Start with at most five passages. When the specialist identifies a technical
+  gap, the second search may retain up to ten distinct ranked passages from both
+  rounds and add adjacent text from the same active versions, up to twelve total.
+  Neighbor expansion is part of that second retrieval operation, adds no embedding
+  call, and preserves complete text, page locations, conditions and provenance.
+  Ordinary chat keeps the five-passage cap. Existing token, time, model-call and
+  two-search limits remain mandatory, as do client isolation, current-version
+  validation, supported prescriptions and instructor approval.
+  Ranking must prioritize topic relevance and explicit population/training-status
+  suitability over numerical density. Scope hints work on plain extracted prose
+  as well as headings, remain soft ranking signals, and never establish clinical
+  applicability. Numeric/heading bonuses must not displace relevant programming
+  evidence merely because a different population has more quantities. Technique
+  promotion requires an explicit technique query; a generic dose query must not
+  promote an unrelated execution fragment.
+  Acceptance: relevant beginner programming survives numeric-heavy distractors;
+  matching special-population guidance remains retrievable; lexical-only fallback
+  and equal-relevance ordering remain usable; a plan follow-up retains complementary
+  evidence and adjacent conditions within twelve passages; withdrawn/deleted
+  versions cannot supply neighbors; no third search or ungrounded prescription
+  is permitted when coverage remains insufficient.
 - Commit a conversational reply and its validated memory/plan changes together
   only after required processing succeeds. Failure preserves previously saved
   state and retries cannot apply changes twice. Direct memory-screen edits

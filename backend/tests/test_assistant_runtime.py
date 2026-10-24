@@ -43,6 +43,9 @@ class ReferenceTool:
         self.queries.append(query)
         return self.passages
 
+    def expand_plan_context(self, session, references, *, limit=12):
+        return references
+
     def validate_citations(self, session, citations):
         if citations and self.withdrawn:
             from app.modules.knowledge.service import KnowledgeError

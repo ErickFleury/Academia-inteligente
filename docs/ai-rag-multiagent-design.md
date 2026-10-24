@@ -235,6 +235,14 @@ pages; at most four million extracted characters per document. Processing must
 also bound memory/CPU time; exact deployment settings need verification before
 support claims. Limits are configurable but changes must preserve acceptance.
 
+The 2026-10-24 owner amendment starts full-plan retrieval with five passages and
+allows an evidence-gap follow-up to retain up to ten ranked passages plus adjacent
+source context, capped at twelve in total. Ordinary chat retains five. Expansion
+uses the same active versions and preserves page/condition provenance without an
+extra embedding call. Existing two-search, model-call, token and time budgets,
+evidence validation and instructor approval remain in force. Topic relevance and
+explicit audience suitability take precedence over numerical density.
+
 ## Verification and evaluation rubric
 
 Freeze at least 40 primarily pt-BR questions against versioned test references,

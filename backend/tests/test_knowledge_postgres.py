@@ -371,3 +371,41 @@ def test_plan_search_keeps_an_activity_passage_alongside_dosage(postgres_session
         )
         assert any("caminhar" in hit["content"] for hit in hits[:3])
         assert any("150 minutos" in hit["content"] for hit in hits[:3])
+
+
+def test_beginner_programming_survives_numerically_dense_other_populations(postgres_sessions):
+    from app.integrations.embeddings import EmbeddingConfig
+
+    class RankedEmbedding:
+        config = EmbeddingConfig(dimensions=2)
+
+        def embed(self, texts, *, purpose, timeout=None):
+            return [
+                [1.0, 0.0] if purpose == "query" or "General novice" in value else [0.8, 0.6]
+                for value in texts
+            ]
+
+    service = KnowledgeService(RankedEmbedding())
+    for body in [
+        "General novice exercise selection for beginner resistance training program design: "
+        "choose exercises covering the main muscle groups according to the client's ability.",
+        "General novice programming for beginner resistance training: establish repetitions "
+        "and rest intervals before progressing the program.",
+        *[
+            f"For older adults, resistance training program design {i}: "
+            "exercise selection sets repetitions rest intervals. "
+            "3 sets, 8 repetitions, 90 seconds, 4 sets, 12 repetitions, 120 seconds."
+            for i in range(7)
+        ],
+    ]:
+        version = upload(postgres_sessions, service, body=body)
+        service.import_next(postgres_sessions)
+        activate(postgres_sessions, service, version)
+    with postgres_sessions() as session:
+        hits = service.search(
+            session,
+            "adult beginner resistance training program design exercise selection "
+            "sets repetitions rest intervals",
+        )
+        assert all("General novice" in hit["content"] for hit in hits[:2])
+        assert len(hits) == 5  # Downranking does not erase conditional evidence.

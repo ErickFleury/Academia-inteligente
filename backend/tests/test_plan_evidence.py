@@ -68,11 +68,11 @@ def test_two_plan_queries_merge_unique_evidence_with_stable_bounded_labels(datab
     assert run.context["planned_complementary_query"] == "squat technique precautions"
     assert run._search_for_evidence(run.context["planned_complementary_query"])
     assert len(search.queries) == run.budget.retrievals == 2
-    assert len(run.references) == 5
-    assert len({r["passage_id"] for r in run.references}) == 5
+    assert len(run.references) == 7
+    assert len({r["passage_id"] for r in run.references}) == 7
     assert second[1] in run.references and second[2] in run.references
     assert [r["passage_id"] for r in run.context["reference_passages"]] == [
-        f"R{i}" for i in range(1, 6)
+        f"R{i}" for i in range(1, 8)
     ]
 
 

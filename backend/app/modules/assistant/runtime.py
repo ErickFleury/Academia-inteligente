@@ -1501,7 +1501,18 @@ class AssistantRun:
             retrieval_round=self.budget.retrievals,
         )
         if self.role == "initial_plan":
-            self.references = merge_plan_references(additional, self.references)
+            previous_ids = {row["passage_id"] for row in self.references}
+            self.references = merge_plan_references(additional, self.references, limit=10)
+            try:
+                self.references = self.knowledge.expand_plan_context(
+                    self.session, self.references, limit=12
+                )
+                self.budget.remaining()
+            except (KnowledgeError, BudgetExceeded) as error:
+                raise AssistantError(getattr(error, "code", str(error))) from None
+            additional = additional or [
+                row for row in self.references if row["passage_id"] not in previous_ids
+            ]
         else:
             combined, seen = [], set()
             for group in zip_longest(additional, self.references):
@@ -1549,11 +1560,12 @@ class AssistantRun:
         editing = self.role == "training_chat" and bool(
             self.context.get("rules", {}).get("may_update_ai_draft")
         )
+        citation_limit = 12 if self.role == "initial_plan" else 10
         envelope = create_model(
             "SpecialistEnvelope",
             __config__=ConfigDict(extra="forbid"),
             result=(type_ | None if plan or editing else type_, ...),
-            citation_ids=(list[str], Field(max_length=10)),
+            citation_ids=(list[str], Field(max_length=citation_limit)),
             grounding=(Literal["record", "references", "clarification"], ...),
             clarification=(Clarification | None, None),
         )
@@ -1659,7 +1671,11 @@ class AssistantRun:
             "additionalProperties": False,
             "properties": {
                 "result": result_schema,
-                "citation_ids": {"type": "array", "maxItems": 10, "items": {"type": "string"}},
+                "citation_ids": {
+                    "type": "array",
+                    "maxItems": citation_limit,
+                    "items": {"type": "string"},
+                },
                 "grounding": {"type": "string", "enum": ["record", "references", "clarification"]},
                 "clarification": {
                     "anyOf": [

@@ -242,22 +242,24 @@ def technique_passage(content):
     return any(marker in body for marker in _TECHNIQUE_MARKERS)
 
 
-def merge_plan_references(additional, previous):
-    """Preserve complementary evidence when two ranked lists must fit five slots.
+def merge_plan_references(additional, previous, *, limit=5):
+    """Preserve complementary evidence within the caller's bounded context.
 
     Keep each search's leading result and use remaining slots for missing evidence
     types before redundant background. These are coverage hints, not assertions
     that quantities apply to an exercise/client. Preserve full text and rank order
     so conditions and provenance remain available to semantic review.
     """
+    if not 1 <= limit <= 12:
+        raise KnowledgeError("reference_query_invalid")
     ordered, seen = [], set()
     for pair in zip_longest(additional, previous):
         for reference in pair:
             if reference and reference["passage_id"] not in seen:
                 ordered.append(reference)
                 seen.add(reference["passage_id"])
-    if len(ordered) <= 5:
-        return ordered
+    if len(ordered) <= limit or limit == 1:
+        return ordered[:limit]
     facets = {}
     for reference, parameters in zip(ordered, source_parameters(ordered), strict=True):
         kinds = {
@@ -274,7 +276,7 @@ def merge_plan_references(additional, previous):
     selected = {ranking[0]["passage_id"] for ranking in (additional, previous) if ranking}
     covered = set().union(*(facets[key] for key in selected))
     remaining = [reference for reference in ordered if reference["passage_id"] not in selected]
-    while len(selected) < 5 and remaining:
+    while len(selected) < limit and remaining:
         # max preserves the existing rank order on equal coverage gains.
         best = max(remaining, key=lambda row: len(facets[row["passage_id"]] - covered))
         selected.add(best["passage_id"])
@@ -341,25 +343,62 @@ def prescription_weight(content, query):
         content,
         re.I,
     )
-    return 1 + 0.5 * min(3, len(measures))
+    return 1 + 0.05 * min(3, len(measures))
 
 
 def population_weight(content, query):
-    """Explicit section populations outrank dose density for a different group."""
-    if not content.startswith("Seção: "):
-        return 1.0
-    groups = (
-        {"adulto", "adult"},
-        {"idoso", "elderly", "older"},
-        {"crianca", "jovem", "adolescente", "child", "children", "adolescent"},
-        {"gestante", "pregnant", "pregnancy", "posparto"},
-        {"deficiencia", "disabilitie", "disability"},
-    )
-    wanted = {i for i, words in enumerate(groups) if words & section_terms(query)}
-    heading = {
-        i for i, words in enumerate(groups) if words & section_terms(content.split("\n", 1)[0])
+    """Downrank explicit mismatches, including unlabelled PDF prose.
+
+    This is a soft relevance hint, not a clinical applicability verdict. Mixed
+    populations and unknown scope remain available to the specialist/reviewer.
+    """
+    patterns = {
+        "older": (
+            r"\b(?:older|elderly)\s+(?:adults?|clients?|men|women|people|persons?)\b"
+            r"|\bidos[oa]s?\b"
+        ),
+        "youth": (
+            r"\b(?:children|child|youth|adolescents?|criancas?|adolescentes?)\b"
+            r"|\bjovens?\b(?!\s+adult)"
+        ),
+        "pregnancy": r"\b(?:pregnant|pregnancy|gestantes?|posparto)\b",
+        "disability": r"\b(?:disabilit\w*|deficiencia\w*)\b",
     }
-    return 0.25 if wanted and heading and not wanted & heading else 1.0
+
+    def scope(value):
+        value = "".join(
+            char
+            for char in unicodedata.normalize("NFKD", value.casefold())
+            if not unicodedata.combining(char)
+        )
+        tags = set()
+        for tag, pattern in patterns.items():
+            if re.search(pattern, value):
+                tags.add(tag)
+                value = re.sub(pattern, " ", value)
+        if re.search(r"\badult[oa]?s?\b", value):
+            tags.add("adult")
+        return tags
+
+    wanted, described = scope(query), scope(content)
+    # "Older adults" is a specific population, not a general-adult match.
+    if wanted and described and not wanted & described:
+        return 0.25
+    novice = {"beginner", "novice", "untrained", "iniciante", "destreinado"}
+    advanced = {
+        "advanced",
+        "experienced",
+        "avancado",
+        "experiente",
+        "elite",
+        "intermediate",
+        "intermediario",
+    }
+    query_terms, content_terms = section_terms(query), section_terms(content)
+    if query_terms & novice and not content_terms & novice:
+        if content_terms & (advanced | {"athlete", "atleta", "competition", "competicao"}):
+            return 0.25
+    return 1.0
 
 
 class KnowledgeService:
@@ -367,6 +406,73 @@ class KnowledgeService:
 
     def __init__(self, provider: EmbeddingProvider | None = None):
         self.provider = provider or HttpEmbeddingProvider()
+
+    def expand_plan_context(self, session, references, *, limit=12):
+        """Attach adjacent source text after an explicit plan-evidence gap.
+
+        This is bounded context around retrieved passages, not another semantic
+        search. Keep full provenance and applicability conditions for review.
+        """
+        if not 1 <= limit <= 12 or len(references) > limit:
+            raise KnowledgeError("reference_query_invalid")
+        if not references or len(references) == limit:
+            return references
+        by_id = {UUID(ref["passage_id"]): ref for ref in references}
+        seeds = session.scalars(
+            select(ReferencePassage)
+            .join(ReferenceVersion)
+            .where(
+                ReferencePassage.id.in_(by_id),
+                ReferenceVersion.active.is_(True),
+                ReferenceVersion.status == "active",
+            )
+        ).all()
+        if len(seeds) != len(by_id):
+            raise KnowledgeError("reference_conflict", 409)
+        nearby = session.scalars(
+            select(ReferencePassage)
+            .join(ReferenceVersion)
+            .where(
+                ReferenceVersion.active.is_(True),
+                ReferenceVersion.status == "active",
+                or_(
+                    *[
+                        (ReferencePassage.version_id == seed.version_id)
+                        & ReferencePassage.position.in_([seed.position - 1, seed.position + 1])
+                        for seed in seeds
+                    ]
+                ),
+            )
+        ).all()
+        neighbors = {(row.version_id, row.position): row for row in nearby}
+        order = {key: index for index, key in enumerate(by_id)}
+
+        def continued(seed):
+            return bool(re.search(r"\bcontinued\b|\bcontinua[çc][ãa]o\b", seed.content[:100], re.I))
+
+        seeds.sort(key=lambda seed: (not continued(seed), order[seed.id]))
+        result, seen = list(references), set(by_id)
+        for seed in seeds:
+            for delta in (-1, 1) if continued(seed) else (1, -1):
+                row = neighbors.get((seed.version_id, seed.position + delta))
+                if row is None or row.id in seen:
+                    continue
+                seed_page = re.match(r"page:(\d+)", seed.location)
+                row_page = re.match(r"page:(\d+)", row.location)
+                if seed_page and row_page and abs(int(seed_page[1]) - int(row_page[1])) > 1:
+                    continue
+                result.append(
+                    {
+                        **by_id[seed.id],
+                        "passage_id": str(row.id),
+                        "location": row.location,
+                        "content": row.content,
+                    }
+                )
+                seen.add(row.id)
+                if len(result) == limit:
+                    return result
+        return result
 
     def upload(self, session, *, title, media_type, raw, source_id=None):
         if not title.strip() or len(title) > 200 or media_type not in MEDIA_TYPES:
@@ -735,19 +841,35 @@ class KnowledgeService:
                     ][:5]
         except AiProviderError:
             pass  # Explicit lexical-only degradation; never switch provider.
+        semantic_ranks = {}
+        previous_distance, tied_rank = None, 1
+        for rank, passage in enumerate(semantic, 1):
+            vector = passage.embedding
+            value = 1 - sum(a * b for a, b in zip(vector, query_vector, strict=True)) / (
+                math.sqrt(sum(a * a for a in vector)) * math.sqrt(sum(b * b for b in query_vector))
+            )
+            if previous_distance is None or not math.isclose(
+                value, previous_distance, abs_tol=1e-7
+            ):
+                tied_rank = rank
+            semantic_ranks[passage.id] = tied_rank
+            previous_distance = value
         scores, candidates = {}, {}
-        # Cross-language evidence has less token overlap. Give the multilingual
-        # semantic ranking enough weight to survive incidental Portuguese words.
+        # Preserve meaningful semantic rank differences. Measurement candidates
+        # broaden recall, but their numerical density must not overwhelm topic
+        # relevance. Heading/dose bonuses below are deliberately small.
         for ranking, weight in (
             (lexical, 1),
             (semantic, 4),
-            (focused, 2),
+            (focused, 0.5 if semantic else 2),
             (technique_lexical, 1),
             (technique_semantic, 1),
         ):
             for rank, passage in enumerate(ranking, 1):
+                if ranking is semantic:
+                    rank = semantic_ranks[passage.id]
                 candidates[passage.id] = passage
-                scores[passage.id] = scores.get(passage.id, 0) + weight / (60 + rank)
+                scores[passage.id] = scores.get(passage.id, 0) + weight / (10 + rank)
         # Heading matches boost applicability without filtering out conflicting
         # evidence from other sources or relying on inferred personal attributes.
         ranked = sorted(
@@ -755,7 +877,7 @@ class KnowledgeService:
             key=lambda key: (
                 -(
                     scores[key]
-                    * (1 + 0.5 * min(3, section_match(candidates[key].content, query)))
+                    * (1 + 0.05 * min(3, section_match(candidates[key].content, query)))
                     * bibliography_weight(candidates[key].content)
                     * prescription_weight(candidates[key].content, query)
                     * population_weight(candidates[key].content, query)
@@ -797,7 +919,7 @@ class KnowledgeService:
                     selected = [key for key in selected if key != candidate]
                     selected.insert(min(2, len(selected)), candidate)
                     selected = selected[:limit]
-        if prefer_technique:
+        if technique_focus:
             # The complementary search must not return only another set of
             # programming abstracts. Promote a relevant execution passage from
             # the SAME bounded candidate pool; never fetch a random exercise or
