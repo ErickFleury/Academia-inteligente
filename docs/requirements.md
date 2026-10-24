@@ -1546,8 +1546,12 @@ following bounded conditions:
   seconds. Operations that depend on external services must show visible
   processing feedback within 200 milliseconds and must end with either a valid
   result or a controlled error under the timeout/retry policy approved for that
-  adapter. OpenAI retains its ten-second-per-attempt timeout and one retry;
-  Ollama retains its separately configurable local timeout.
+  adapter. OpenAI retains its configurable per-attempt timeout and one retry;
+  the owner approved a 25-second local deployment timeout after observing a
+  ten-second timeout failure. This overrides the original ten-second limit for
+  this deployment, while orchestration retains its 30-second conversation and
+  60-second plan deadlines, including retries. Ollama retains its separately
+  configurable local timeout.
 - **Responsive behavior:** verify the critical journey at 360×800 smartphone,
   768×1024 tablet, and 1366×768 computer viewports. Controls and content must
   remain usable, and the smartphone viewport must not require horizontal

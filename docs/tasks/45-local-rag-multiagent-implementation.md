@@ -431,3 +431,20 @@ configuration deprecation warnings remain. The backend was recreated and its
 health endpoint returned HTTP 200. Runtime remains OpenAI `gpt-6-luna` with local
 Ollama `embeddinggemma` and enabled orchestration. No production health records
 were edited, and no paid model evaluations were performed for this fix.
+
+### Owner-approved OpenAI timeout increase
+
+The latest observed request exceeded the ten-second provider wait and returned
+HTTP 503 with `deadline_exceeded`; the preceding two requests completed in about
+7.2 seconds. The owner approved increasing the local `.env` setting
+`AI_TIMEOUT_SECONDS` from 10 to 25 seconds. The existing adapter already reads
+this setting and caps each wait at the remaining orchestration budget; total
+conversation and plan limits remain 30 and 60 seconds respectively. Luna, local
+embeddings and retry behavior remain unchanged. No source-code change is needed.
+
+Validation: 45 mocked adapter and budget tests passed without paid API calls.
+The secret-bearing `.env` remains ignored and is not committed. To roll back,
+set `AI_TIMEOUT_SECONDS=10` and recreate the backend; Git rollback alone cannot
+restore this deployment setting. The preceding code return point is `1dc0bea`.
+After backend recreation, runtime verification confirmed a 25-second provider
+timeout, a 30-second conversation budget and HTTP 200 from `/health`.
