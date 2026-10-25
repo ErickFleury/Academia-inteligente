@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "captured_at": "2026-10-24T15:27:48.972666+00:00",
+  "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+  "frozen_plan_sha256": "a21502899cd9ee836b38aa55ec3857d7cb881eab36ac93b190e12248e53b301f",
+  "plan": {
+    "version": 2,
+    "scenario": "session",
+    "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+    "frozen_at": "2026-10-24T15:27:28.051270+00:00",
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "server_version": "0.34.1",
+    "maximum_writer_calls": 1,
+    "retries": 0,
+    "timeout_seconds": 360,
+    "expected_technical_outcome": "typed_candidate_passes_synthetic_fixture_core",
+    "input_sha256": "2376cec6982e21c140b6997f3e3d23e7daea52e3952f91ac985d13235e02cb75",
+    "writer_schema_sha256": "147d363535fe83d73b3056a629d1eda17cb3f094068593cfadca8b2e01f60230",
+    "writer_context_builder_sha256": "ccba8b3baa59b00aa4cdf9b6a30f638652f3163969334810e60c8017e618d977",
+    "negative_control": "Reject accepted output after sets exceed its synthetic rule bound",
+    "synthetic_fixture_sha256": "af31574aac8a0effc66a903b9b612341ce9b0a1f10dc6c0540f04ef4fae73fe2",
+    "synthetic_policy_fixture_sha256": "5011ab28bc736617736c6668010c1281a918d2a924861a6d7042bf7c2cb0eff1",
+    "adapter_sha256": "ebf7f57ccda3ae7a27ea28e00b158d6d2579a101937264f7383ca7d45c92ae26",
+    "uses_real_corpus_or_embedding_provider": false,
+    "database_configured": false,
+    "enabled_cohorts": []
+  },
+  "actual_writer_calls": 1,
+  "requests": [
+    {
+      "request_sha256": "25451abb12a87d43ea4648ea1bfb60fbe06bb3c735b815bfc3481a6e01f4a3f0",
+      "instructions_sha256": "4e30d53b76c69bd0bc8b94fd94f91680f534b56c37a04bff7f7d2676a859153e",
+      "options": {
+        "num_ctx": 16384
+      },
+      "think": false,
+      "stream": false,
+      "timeout_seconds": 360
+    }
+  ],
+  "elapsed_seconds": 20.897,
+  "outcome": {
+    "typed_candidate_sha256": "4982b3b0203e7db13b3dffab12eb2c2cd8b23a7279d778f29fedd78b75868f9b",
+    "status": "rejected_by_synthetic_core",
+    "category": "insufficient_support",
+    "reason": "unapproved_prescriptive_note"
+  },
+  "post_generation_mutation_control": {
+    "status": "not_executed",
+    "reason": "positive_candidate_not_accepted"
+  },
+  "saved_or_published_candidates": 0,
+  "scientific_approval": "pending",
+  "independent_evaluation": "not_executed",
+  "limitations": [
+    "Implementer-visible toy fixtures are not professional policies or held-out cases.",
+    "Retrieval, embeddings, automatic review and authenticated lifecycle were not exercised.",
+    "One writer/core call cannot establish supported-cohort acceptance or rejection rates.",
+    "No candidate prose, dose or trace is published; the application gate remains disabled."
+  ]
+}

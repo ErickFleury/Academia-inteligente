@@ -87,7 +87,7 @@ def test_initial_catalogue_contains_all_candidates_but_embeds_only_reviewed_allo
     data = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     provider = FakeEmbeddings()
     count = seed_catalog(session, provider, data)
-    assert len(session.scalars(select(KnowledgeSource)).all()) == 14
+    assert len(session.scalars(select(KnowledgeSource)).all()) == 24
     assert count == len(provider.calls) > 0
     rows = session.execute(select(KnowledgeChunk, KnowledgeSource).join(KnowledgeSource)).all()
     assert all(

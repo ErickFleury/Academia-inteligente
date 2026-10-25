@@ -1,0 +1,91 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T032830Z",
+  "results": [
+    {
+      "case_id": "initial-strength",
+      "status": "technical_failure",
+      "exception_type": "TrainingGenerationUnavailableError",
+      "elapsed_seconds": 99.37027046000003,
+      "stage_calls": {
+        "writer": 3,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 54.485078537003574,
+        "review": 33.645589921001374,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "category": "technical_unavailability",
+      "reason": "retrieval_unavailable",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.20523575900006108,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "stage": "writer",
+      "structured_answer": "{\"plan\": {\"name\": \"Treino para ganhar força\", \"objective\": \"Ganhar força\", \"items\": [{\"exercise_name\": \"Pressão de ombros com halteres (Dia A)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Pull-up com halteres (Dia A)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Quadricep extension com halteres (Dia A)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Pressão de ombros com halteres (Dia B)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Pull-up com halteres (Dia B)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Quadricep extension com halteres (Dia B)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Pressão de ombros com halteres (Dia C)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Pull-up com halteres (Dia C)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"Quadricep extension com halteres (Dia C)\", \"sets\": 3, \"repetitions\": \"]\", \"load_guidance\": \"Halteres, peso corporal\", \"rest_seconds\": 120, \"equipment_requirement\": null, \"equipment_model_id\": null}]}, \"citations\": [\"biga-anatomy-1\", \"nhs-strength-1\", \"biga-anatomy-2\", \"pavlova-tendinopathy-2023-1\", \"iversen-time-efficient-2021-06\", \"nhs-strength-2\"], \"knowledge_status\": \"supported\", \"knowledge_limitations\": \"\"}"
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": false,\n      \"issues\": [\n        \"ambiguous_exercise\",\n        \"missing_upper_push\",\n        \"missing_upper_pull\",\n        \"missing_lower_hip\",\n        \"missing_lower_knee\",\n        \"missing_trunk\"\n      ],\n      \"repetition_recommendation\": null\n    },\n    {\n      \"label\": \"B\",\n      \"complete\": false,\n      \"issues\": [\n        \"ambiguous_exercise\",\n        \"missing_upper_push\",\n        \"missing_upper_pull\",\n        \"missing_lower_hip\",\n        \"missing_lower_knee\",\n        \"missing_trunk\"\n      ],\n      \"repetition_recommendation\": null\n    },\n    {\n      \"label\": \"C\",\n      \"complete\": false,\n      \"issues\": [\n        \"ambiguous_exercise\",\n        \"missing_upper_push\",\n        \"missing_upper_pull\",\n        \"missing_lower_hip\",\n        \"missing_lower_knee\",\n        \"missing_trunk\"\n      ],\n      \"repetition_recommendation\": null\n    }\n  ]\n}"
+    }
+  ],
+  "retrieved": [
+    [
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-1"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-1"
+      },
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-2"
+      },
+      {
+        "source_id": "pavlova-tendinopathy-2023",
+        "chunk_id": "pavlova-tendinopathy-2023-1"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-06"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-2"
+      }
+    ]
+  ],
+  "implementation_unchanged": true,
+  "independent_evaluation": false,
+  "professional_review_performed": false
+}

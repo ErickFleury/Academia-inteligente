@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "identifier": "doi:10.1007/s40279-026-02432-5",
+  "source": {
+    "id": "lyristakis-strength-2026",
+    "title": "The Influence of Individual Resistance Training Variables on Muscle Strength: A Systematic Review and Meta-analysis",
+    "url": "https://link.springer.com/article/10.1007/s40279-026-02432-5",
+    "authors": [
+      "Philip Lyristakis",
+      "Daniel Wundersitz",
+      "Stephen Cousins",
+      "Minh Huynh",
+      "Emma Zadow",
+      "Brett A. Gordon"
+    ],
+    "language": "en",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "commercial_use_allowed": true,
+    "review_status": "approved",
+    "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+    "reviewed_at": "2026-10-23",
+    "review_due_at": "2027-10-23",
+    "attribution": "Lyristakis P, Wundersitz D, Cousins S, Huynh M, Zadow E, Gordon BA (2026). Sports Medicine 56:2001-2015. DOI 10.1007/s40279-026-02432-5. Copyright The Authors 2026. CC BY 4.0. Original English paragraphs selected and whitespace normalized; omissions identified by section. No third-party media, tables or supplements.",
+    "content_note": "Task 46 S4 article-text-only technical review. Full eligibility and limitations accompany selections. No professional prescription approval.",
+    "limitations": [
+      "Resultados agregados de força, principalmente em pessoas sem treinamento prévio; não estabelecem dose individual ótima.",
+      "As associações de dose não demonstram causalidade; comparações entre pessoas treinadas e não treinadas foram limitadas por dados insuficientes.",
+      "Revisão metodológica e aprovação profissional pendentes; não cobre todos os objetivos, níveis ou restrições."
+    ]
+  },
+  "selections": [
+    {
+      "id": "lyristakis-strength-2026-dosage",
+      "heading_ids": [
+        "Sec16",
+        "Sec5",
+        "Sec15"
+      ],
+      "locator": "HTML Sec16 / 6 Conclusions; Sec5 / 2.2 eligibility; Sec15 / 5 Limitations (complete paragraphs)",
+      "text_sha256": "a70e48b3b4b960c873303491abda2ea237c401e408f3dcc02aefa3b1bf5e5796"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ from app.modules.onboarding.draft_service import (
     OnboardingDraftService,
 )
 from app.modules.onboarding.models import Onboarding
+from app.modules.training import owner_rag
 from app.modules.training.completeness import (
     IncompleteTrainingPlanError,
     requested_training_schedule,
@@ -87,6 +88,7 @@ class InitialTrainingGenerationService:
             replace_existing=replace_existing,
         )
 
+    @owner_rag.authorized_attempt
     def generate_for_scope(
         self,
         session: Session,
@@ -104,38 +106,98 @@ class InitialTrainingGenerationService:
         ):
             raise CompletedOnboardingRequiredError
 
+        from app.modules.training.prescription_runtime import (
+            OperationalPrescriptionService,
+            enforcement_enabled,
+        )
+
+        if enforcement_enabled():
+            from app.modules.clients.models import Account
+
+            owner = session.get(Account, scope.account_id)
+            return OperationalPrescriptionService(
+                session=session,
+                client_id=scope.client_id,
+                subject=owner.keycloak_subject,
+                request=training_request,
+                knowledge_service=self._knowledge,
+            ).generate_version(self._provider, replace_existing=replace_existing, commit=commit)
+
         # Every client has at most one proposal, regardless of its creator.
         # Only valid content may be reused; legacy resource-only drafts must be regenerated.
         existing = self._lifecycle.find_proposal(session, client_id=scope.client_id)
         invalid_existing = existing is not None and self._lifecycle.has_invalid_exercises(
             session, existing
         )
-        if existing is not None and not replace_existing and not invalid_existing:
+        if (
+            owner_rag.enabled()
+            and existing is not None
+            and owner_rag.requires_regeneration(existing)
+        ):
+            invalid_existing = True
+        if (
+            owner_rag.enabled()
+            and existing is not None
+            and existing.origin == "ai"
+            and not any(c.get("owner_rag") for c in existing.citations)
+        ):
+            invalid_existing = True
+        if (
+            existing is not None
+            and not replace_existing
+            and not invalid_existing
+            and not (owner_rag.enabled() and training_request.strip())
+        ):
+            if owner_rag.enabled() and existing.origin == "ai":
+                owner_rag.validate_saved(
+                    session,
+                    existing,
+                    self._lifecycle.content(session, existing),
+                    onboarding=self._drafts.completion_data(onboarding).model_dump(),
+                )
             return existing
         expected_revision = existing.revision if existing else None
 
+        onboarding_data = self._drafts.completion_data(onboarding).model_dump()
+        effective_goal = (
+            owner_rag.requested_goal(training_request, onboarding_data["training_goal"])
+            if owner_rag.enabled()
+            else None
+        )
+        schedule = requested_training_schedule(training_request)
+        focus_options = {}
+        if owner_rag.enabled():
+            from app.modules.training.owner_rag_schema import dictionary
+
+            focus_options["allowed_muscle_groups"] = sorted(
+                {g for e in dictionary()["exercises"] for g in e["groups"]}
+            )
         try:
             focus = (
                 analyze_training_focus(
                     lambda focus_context: self._retry(
-                        lambda: self._provider.analyze_training_request(focus_context)
+                        lambda: self._provider.analyze_training_request(focus_context),
+                        stage="focus",
                     ),
                     training_request,
+                    **focus_options,
                 )
                 if training_request
                 else None
             )
         except InvalidTrainingFocusError:
             raise InvalidTrainingGenerationError from None
+        if focus is not None and effective_goal is not None:
+            focus["goal"] = effective_goal
 
         # `completion_data` is the shared form/conversation-independent source
         # of truth. The provider never receives another client's data or identity.
         context = {
             "training_request": training_request,
             "training_focus": focus,
-            "training_schedule": requested_training_schedule(training_request, focus),
+            "training_schedule": schedule,
             "active_equipment_models": EquipmentService().training_context(session),
-            "completed_onboarding": self._drafts.completion_data(onboarding).model_dump(),
+            "completed_onboarding": onboarding_data,
             "proposal_rules": {
                 "status": "proposal",
                 "must_not_approve_or_activate": True,
@@ -153,6 +215,7 @@ class InitialTrainingGenerationService:
             focus=focus,
         )
         context["knowledge"] = evidence.as_context()
+        context = owner_rag.prepare(context, evidence, onboarding_data, focus=focus)
         # Keep the actual requested scope beside the final writing instruction.
         context["training_focus"] = context.pop("training_focus")
         context["training_request"] = context.pop("training_request")
@@ -186,6 +249,17 @@ class InitialTrainingGenerationService:
                     else None
                 ),
             )
+            knowledge = owner_rag.bind(knowledge, context, proposal)
+            if owner_rag.enabled():
+                from types import SimpleNamespace
+
+                session.refresh(onboarding)
+                owner_rag.validate_saved(
+                    session,
+                    SimpleNamespace(citations=knowledge.citations),
+                    proposal,
+                    onboarding=self._drafts.completion_data(onboarding).model_dump(),
+                )
         except (
             ValidationError,
             KnowledgeCitationError,
@@ -242,6 +316,13 @@ class InitialTrainingGenerationService:
             if existing is not None and not self._lifecycle.has_invalid_exercises(
                 session, existing
             ):
+                if owner_rag.enabled() and existing.origin == "ai":
+                    owner_rag.validate_saved(
+                        session,
+                        existing,
+                        self._lifecycle.content(session, existing),
+                        onboarding=self._drafts.completion_data(onboarding).model_dump(),
+                    )
                 return existing
             raise InvalidTrainingGenerationError from None
         except InvalidTrainingContentError:
@@ -250,7 +331,7 @@ class InitialTrainingGenerationService:
 
     def _generate_complete_routine(self, context: dict, evidence: KnowledgeContext):
         labels = context["training_schedule"]["session_labels"]
-        if len(labels) < 2:
+        if len(labels) < 2 or (owner_rag.enabled() and len(labels) > 3):
             return self._generate_session(context)
         responses = []
         statuses = []
@@ -265,6 +346,19 @@ class InitialTrainingGenerationService:
                     for previous_label, previous in zip(labels, responses)
                 ],
             }
+            if owner_rag.enabled():
+                from app.modules.training.owner_rag_schema import exercise_for_name
+
+                session_context["previous_session_exercise_keys"] = {
+                    previous_label: [
+                        (exercise_for_name(item["exercise_name"], context) or {}).get("key")
+                        for item in previous.plan["items"]
+                    ]
+                    for previous_label, previous in zip(labels, responses)
+                }
+                # Keep shared source/onboarding prompt prefixes stable between days.
+                schedule = session_context.pop("training_schedule")
+                session_context["training_schedule"] = schedule
             response = self._generate_session(session_context)
             knowledge = evidence.resolve_citations(
                 response.citations,
@@ -280,7 +374,9 @@ class InitialTrainingGenerationService:
         priority = {"supported": 0, "insufficient_evidence": 1, "outdated": 2, "unavailable": 3}
         return AiTrainingGenerationResponse(
             plan={
-                "name": f"Corpo inteiro — {len(labels)} dias",
+                "name": f"Rotina de {len(labels)} fichas"
+                if owner_rag.enabled()
+                else f"Corpo inteiro — {len(labels)} dias",
                 "objective": responses[0].plan["objective"],
                 "items": [item for response in responses for item in response.plan["items"]],
             },
@@ -291,6 +387,12 @@ class InitialTrainingGenerationService:
     def _generate_session(self, context: dict):
         def write(selected_context):
             response = self._retry(lambda: self._provider.generate_training(selected_context))
+            if owner_rag.enabled():
+                from app.modules.training.owner_rag_schema import resolve_plan
+
+                response = response.model_copy(
+                    update={"plan": resolve_plan(response.plan, selected_context)}
+                )
             label = selected_context.get("training_session", {}).get("label")
             items = response.plan.get("items")
             if label and isinstance(items, list):
@@ -312,20 +414,39 @@ class InitialTrainingGenerationService:
             write,
             context,
             plan_field="plan",
+            repair_domain_errors=owner_rag.enabled(),
+            candidate_validator=owner_rag.validate_candidate if owner_rag.enabled() else None,
             assess=(
                 lambda review_context: self._retry(
-                    lambda: self._provider.assess_training(review_context)
+                    lambda: self._provider.assess_training(review_context), stage="review"
                 )
             ),
         )
 
     @staticmethod
-    def _retry(operation: Callable[[], object]):
+    def _retry(operation: Callable[[], object], stage="writer"):
         for attempt in range(2):
             try:
-                return operation()
+                from app.modules.training.prescription_budget import CURRENT_BUDGET
+
+                budget = CURRENT_BUDGET.get()
+                return budget.call(stage, operation) if budget is not None else operation()
             except AiProviderError as error:
                 record_retry(error.category, will_retry=not attempt and error.retryable)
                 if attempt or not error.retryable:
+                    if (
+                        owner_rag.enabled()
+                        and stage == "writer"
+                        and error.category == "malformed_structured_output"
+                    ):
+                        from app.modules.training.prescription_contract import PrescriptionRejection
+
+                        raise PrescriptionRejection(
+                            "insufficient_support",
+                            "invalid_typed_candidate",
+                            issues=[
+                                {"field": "candidate", "reason": "malformed_structured_output"}
+                            ],
+                        ) from None
                     raise TrainingGenerationUnavailableError from None
         raise TrainingGenerationUnavailableError

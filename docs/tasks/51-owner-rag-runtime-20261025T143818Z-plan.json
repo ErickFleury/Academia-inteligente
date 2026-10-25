@@ -1,0 +1,123 @@
+{
+  "name": "owner-rag-runtime-20261025T143818Z",
+  "frozen_at": "2026-10-25T14:38:18.043394+00:00",
+  "scope": "exposed_owner_authorized_technical_check",
+  "independent_evaluation": false,
+  "professional_review_performed": false,
+  "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-3",
+    "instruction_version": "owner-rag-4",
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "cases": [
+    {
+      "id": "initial-hypertrophy-repeat-1",
+      "onboarding": {
+        "training_goal": "Hipertrofia muscular",
+        "training_experience": "intermediate"
+      },
+      "repetitions": 5,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0,
+      "base_case_id": "initial-hypertrophy",
+      "repetition": 1
+    },
+    {
+      "id": "initial-hypertrophy-repeat-2",
+      "onboarding": {
+        "training_goal": "Hipertrofia muscular",
+        "training_experience": "intermediate"
+      },
+      "repetitions": 5,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0,
+      "base_case_id": "initial-hypertrophy",
+      "repetition": 2
+    },
+    {
+      "id": "initial-hypertrophy-repeat-3",
+      "onboarding": {
+        "training_goal": "Hipertrofia muscular",
+        "training_experience": "intermediate"
+      },
+      "repetitions": 5,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0,
+      "base_case_id": "initial-hypertrophy",
+      "repetition": 3
+    },
+    {
+      "id": "initial-hypertrophy-repeat-4",
+      "onboarding": {
+        "training_goal": "Hipertrofia muscular",
+        "training_experience": "intermediate"
+      },
+      "repetitions": 5,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0,
+      "base_case_id": "initial-hypertrophy",
+      "repetition": 4
+    },
+    {
+      "id": "initial-hypertrophy-repeat-5",
+      "onboarding": {
+        "training_goal": "Hipertrofia muscular",
+        "training_experience": "intermediate"
+      },
+      "repetitions": 5,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0,
+      "base_case_id": "initial-hypertrophy",
+      "repetition": 5
+    }
+  ],
+  "expected_accepted_proposals": 5,
+  "expected_load_mode": "qualitative_unmeasured",
+  "synthetic_onboarding_defaults": {
+    "training_goal": "Ganhar força",
+    "training_experience": "beginner",
+    "height_cm": 170,
+    "weight_kg": "70.50",
+    "has_limitations_or_complaints": false,
+    "limitations_or_complaints": null,
+    "has_health_conditions": false,
+    "health_conditions": null,
+    "uses_medications": false,
+    "medications": null
+  },
+  "timeout_seconds": 360,
+  "deadline_seconds_per_case": 3600,
+  "public_retrieval": "actual_PostgreSQL_BGE_M3_maximum_six_passages",
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "real_client_records_read": false,
+  "clinical_accuracy": "not_evaluated",
+  "implementation_sha256": {
+    "app/modules/training/owner_rag.py": "7010c2777019de529f42128765e6348340da175423989b9784d46a5c220df817",
+    "app/modules/training/owner_rag_schema.py": "48a64c7c11d5235969b54a681b0c0775b5d5928ce3f723d0a970aa0d7440ea19",
+    "app/modules/training/owner_rag_load.py": "82b9664dd573a8bd8fa9d9ef9bf5ccc4ddda1f3b63956ea9f27025d252008658",
+    "app/modules/training/owner-rag-exercises.json": "15736c0c9bf5b9cd32253ff01f60c437fa8d74581083bda62cec1f40bc6278c9",
+    "app/modules/training/generation_service.py": "2f2bbcfbe06de1efe9129296356855cc06d3dbb9187edd56857f893a5cb4a295",
+    "app/modules/training/chat_service.py": "7d2347346798e9051c6c90b59e6ee7f8946919d6c02eab8a685cfa7485a2b9c8",
+    "app/modules/training/adaptation_service.py": "a89f8f852544f6acc02ff3379813f9517ae430faf9660a60632c71a13a6b6753",
+    "app/modules/training/selection.py": "decde37e2a7f5f275a40f7b9dcb7b384ccccaef77d04fbd251571407d6790879",
+    "app/integrations/ai.py": "8d46cd8118d2595dd16e719688a9e09ee7bd68da598445b861c0445f918429c7"
+  }
+}

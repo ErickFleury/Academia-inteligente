@@ -1,0 +1,12 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T022221Z",
+  "status": "operator_stopped_for_excessive_runtime",
+  "reason": "The exposed diagnostic remained unfinished after more than fifteen minutes with structured reasoning enabled. Only its isolated one-off container was stopped. This run is not a passing result.",
+  "actual_model_http_calls": null,
+  "outputs": null,
+  "observation": "The process had not flushed its per-case result. Intermediate answers and exact counts are unavailable and are not represented as zero. The prior frozen plan is preserved.",
+  "real_client_records_read": false,
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "independent_evaluation": false,
+  "professional_review_performed": false
+}

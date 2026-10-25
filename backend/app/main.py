@@ -25,6 +25,9 @@ from app.modules.presence.router import router as presence_router
 from app.modules.progress.router import router as progress_router
 from app.modules.social.router import router as social_router
 from app.modules.training.collections_router import router as training_collections_router
+from app.modules.training.evidence_review_router import router as evidence_review_router
+from app.modules.training.prescription_contract import PrescriptionRejection
+from app.modules.training.prescription_router import router as prescription_router
 from app.modules.training.router import router as training_router
 
 
@@ -39,6 +42,24 @@ def create_app() -> FastAPI:
     @app.exception_handler(BiometricError)
     async def biometric_error(request, error):
         return JSONResponse(status_code=error.status, content={"detail": error.code})
+
+    @app.exception_handler(PrescriptionRejection)
+    async def prescription_error(request, error):
+        from app.modules.training.prescription_development import OUTCOME_COPY
+
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": {
+                    "status": "rejected",
+                    "category": error.category,
+                    "reason_codes": [error.reason],
+                    "message": OUTCOME_COPY[error.category],
+                    "next_action": error.action,
+                    "issues": error.issues,
+                }
+            },
+        )
 
     allowed_origins = [
         origin.strip()
@@ -76,6 +97,8 @@ def create_app() -> FastAPI:
     app.include_router(progress_router)
     app.include_router(social_router)
     app.include_router(training_router)
+    app.include_router(prescription_router)
+    app.include_router(evidence_review_router)
     app.include_router(training_collections_router)
     return app
 

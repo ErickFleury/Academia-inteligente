@@ -25,8 +25,31 @@ def training_knowledge_query(
         value = onboarding.get(field)
         if value:
             parts.append(str(value)[:400])
-    # General prescription evidence must be searched alongside any safety restrictions.
-    parts.append("Treinamento resistido, adaptações musculares, progressão de força e recuperação.")
+    from app.modules.training.request_intent import goal_families
+
+    families = goal_families(focus.get("goal") or request or onboarding.get("training_goal", ""))
+    if families == ["mobility_flexibility"]:
+        # Goal vocabulary comes before command boilerplate and old training
+        # experience, which otherwise dominates the bounded hybrid ranking.
+        return "\n".join(
+            filter(
+                None,
+                [
+                    " ".join(focus.get("muscle_groups", [])),
+                    "Flexibilidade",
+                    "Flexibility static stretching range of motion",
+                ],
+            )
+        )
+    elif families == ["cardiorespiratory_fitness"]:
+        parts.append("Treinamento aeróbico, condicionamento cardiorrespiratório, aerobic exercise.")
+    elif families == ["balance"]:
+        parts.append("Equilíbrio, controle postural, balance exercise.")
+    else:
+        # Preserve the established resistance query for its applicable goals.
+        parts.append(
+            "Treinamento resistido, adaptações musculares, progressão de força e recuperação."
+        )
     return "\n".join(filter(None, parts))
 
 

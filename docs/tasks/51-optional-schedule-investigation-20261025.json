@@ -1,0 +1,24 @@
+{
+  "scope": "redacted_optional_schedule_investigation",
+  "requested_account_inspection": {
+    "read_only": true,
+    "raw_records_exported": false,
+    "explicit_three_day_requests_had_single_A_proposal": true,
+    "requested_goal_and_stored_binding_disagreed": true,
+    "older_approved_history_had_ABC": true
+  },
+  "confirmed_technical_causes": [
+    "schedule_required_full_body_scope",
+    "explicit_goal_overridden_by_model_or_onboarding",
+    "whole_routine_review_positions_crossed_day_boundaries",
+    "contradictory_complete_and_item_failure_verdicts",
+    "full_body_coverage_missing_per_day_despite_positive_model_review",
+    "monolithic_multi_day_generation_copied_selections",
+    "duplicate_rows_lacked_item_specific_correction_feedback",
+    "obsolete_technical_binding_could_block_explicit_regeneration"
+  ],
+  "regression_scope": "synthetic_only",
+  "professional_review_performed": false,
+  "independent_evaluation": false,
+  "historical_raw_results_rewritten": false
+}

@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { createInitialTrainingProposal, submitTrainingDraft, type TrainingPlanDraft } from '../training-plan'
 import { StatusNotice } from './ui'
+import { ConnectedPrescriptionReview } from './connected-prescription-review'
 
 type Props = { accessToken: string; draft: TrainingPlanDraft; onSubmitted: (draft: TrainingPlanDraft) => void; disabled?: boolean }
 
@@ -17,6 +18,10 @@ export function TrainingDraftReviewActions({ accessToken, draft, onSubmitted, di
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Não foi possível enviar o treino para revisão.') }
     finally { setSubmitting(false) }
   }
+
+  if (draft.prescription_review_available && !draft.validation_error) return <ConnectedPrescriptionReview
+    key={`${draft.id}:${draft.revision}`} accessToken={accessToken} role="client"
+    versionId={draft.id} revision={draft.revision} disabled={disabled} onSubmitted={onSubmitted} />
 
   return <Stack spacing={1.5} aria-busy={submitting}>
     {draft.validation_error

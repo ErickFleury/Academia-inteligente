@@ -16,6 +16,7 @@ from app.modules.training.completeness import (
     validate_requested_sessions,
     validate_session_variation,
 )
+from app.modules.training.prescription_contract import PrescriptionRejection
 from app.modules.training.schema import TrainingPlanVersionInput
 
 Response = TypeVar("Response", bound=BaseModel)
@@ -24,15 +25,36 @@ Response = TypeVar("Response", bound=BaseModel)
 class RedundantTrainingExerciseError(ValueError):
     """The writer did not resolve competing prescriptions for the same exercise."""
 
+    def __init__(self, reason="redundant_exercise_prescription", *, issues=None):
+        super().__init__(reason)
+        self.issues = issues or []
+
 
 def validate_exercise_selection(plan: TrainingPlanVersionInput) -> None:
-    seen: dict[str, list[str]] = {}
-    for item in plan.items:
+    seen: dict[str, list[tuple[str, int, str | None]]] = {}
+    for position, item in enumerate(plan.items, 1):
         day, name = exercise_identity(item.exercise_name)
-        for previous_day in seen.get(name, []):
+        side = (
+            item.dose_details.dose["side"]
+            if item.dose_details is not None and item.dose_details.mode == "flexibility"
+            else None
+        )
+        for previous_day, previous_position, previous_side in seen.get(name, []):
             if not day or not previous_day or day == previous_day:
-                raise RedundantTrainingExerciseError("redundant_exercise_prescription")
-        seen.setdefault(name, []).append(day)
+                if {side, previous_side} == {"left", "right"}:
+                    continue
+                raise RedundantTrainingExerciseError(
+                    issues=[
+                        {
+                            "position": position,
+                            "duplicate_of": previous_position,
+                            "field": "exercise_name",
+                            "exercise_name": item.exercise_name,
+                            "reason": "duplicate_exercise_within_session",
+                        }
+                    ]
+                )
+        seen.setdefault(name, []).append((day, position, side))
 
 
 def request_selected_training(
@@ -42,6 +64,8 @@ def request_selected_training(
     assess: Callable,
     plan_field: str = "plan",
     plan_builder: Callable | None = None,
+    repair_domain_errors: bool = False,
+    candidate_validator: Callable | None = None,
 ) -> Response:
     """Require exercise review and one bounded correction before any AI plan is saved."""
 
@@ -56,18 +80,27 @@ def request_selected_training(
                 result = result.model_copy(update={plan_field: normalized.model_dump(mode="json")})
         return result
 
-    response = write(context)
+    selected_context = context
+    load_repair = None
     for attempt in range(2):
-        raw_plan = plan_builder(response) if plan_builder else getattr(response, plan_field)
-        if raw_plan is None:
-            if attempt:
-                raise RedundantTrainingExerciseError("missing_corrected_plan")
-            return response
-        plan = TrainingPlanVersionInput.model_validate(raw_plan)
+        plan = None
         try:
+            response = write(selected_context)
+            raw_plan = plan_builder(response) if plan_builder else getattr(response, plan_field)
+            if raw_plan is None:
+                if attempt:
+                    raise RedundantTrainingExerciseError("missing_corrected_plan")
+                return response
+            plan = TrainingPlanVersionInput.model_validate(raw_plan)
             validate_exercise_names(plan)
             validate_exercise_selection(plan)
             validate_requested_sessions(plan, context)
+            if load_repair is not None:
+                from app.modules.training.owner_rag_load import validate_load_correction
+
+                validate_load_correction(load_repair[0], plan, load_repair[1])
+            if candidate_validator is not None:
+                candidate_validator(plan, context)
             review_context = training_review_context(plan, context)
             assessment = assess(review_context)
             validate_session_variation(
@@ -78,22 +111,86 @@ def request_selected_training(
             )
             validate_assessment(assessment, review_context)
             return response
-        except (RedundantTrainingExerciseError, IncompleteTrainingPlanError) as error:
+        except (
+            RedundantTrainingExerciseError,
+            IncompleteTrainingPlanError,
+            PrescriptionRejection,
+        ) as error:
+            if isinstance(error, PrescriptionRejection) and (
+                not repair_domain_errors
+                or error.category != "insufficient_support"
+                or error.reason
+                not in {
+                    "invalid_typed_candidate",
+                    "unknown_exercise_or_variation",
+                    "exercise_outside_policy",
+                    "parameter_outside_policy",
+                    "calculated_quantity_mismatch",
+                    "unknown_load_calculation",
+                    "calculation_intent_required",
+                    "invalid_decision_rule",
+                    "mandatory_dimension_missing",
+                    "unknown_intensity_scale",
+                    "progression_outside_policy",
+                    "invalid_observation_reference",
+                    "modality_choice_outside_policy",
+                    "unmeasured_external_load_generated",
+                }
+            ):
+                raise
+            may_correct = not attempt
+            if may_correct and context.get("owner_rag_basis"):
+                from app.modules.training.prescription_budget import CURRENT_BUDGET
+
+                budget = CURRENT_BUDGET.get()
+                if budget is not None:
+                    may_correct = budget.consume_content_correction()
             record_retry(
                 "incomplete_training_plan"
                 if isinstance(error, IncompleteTrainingPlanError)
                 else "redundant_exercise_prescription",
-                will_retry=not attempt,
+                will_retry=may_correct,
             )
-            if attempt:
+            if not may_correct:
                 raise
-            issues = error.issues if isinstance(error, IncompleteTrainingPlanError) else []
-        response = write(
-            {
-                **context,
-                "selection_correction": exercise_selection_correction(plan, issues),
-            }
-        )
+            issues = (
+                error.issues
+                if isinstance(
+                    error,
+                    (
+                        IncompleteTrainingPlanError,
+                        PrescriptionRejection,
+                        RedundantTrainingExerciseError,
+                    ),
+                )
+                else []
+            )
+            if isinstance(error, PrescriptionRejection) and not issues:
+                issues = [{"field": "candidate", "reason": error.reason}]
+            if (
+                isinstance(error, PrescriptionRejection)
+                and error.reason == "unmeasured_external_load_generated"
+            ):
+                load_repair = (plan, [issue["position"] for issue in issues])
+        selected_context = {
+            **context,
+            "selection_correction": exercise_selection_correction(plan, issues)
+            if plan is not None
+            else {
+                "issues": issues,
+                "instruction": (
+                    "Corrija somente os campos indicados usando as opções permitidas; "
+                    "preserve fatos, objetivo e regras recebidos."
+                ),
+            },
+        }
+        if load_repair is not None:
+            selected_context["selection_correction"]["instruction"] = (
+                "Corrija somente load_guidance nas posições indicadas usando exatamente "
+                "as opções allowed. Preserve todos os demais campos, fatos, objetivo, "
+                "exercícios, séries, repetições e descanso. Não invente medições. "
+                "Retorne a ficha completa e suas citações."
+            )
     raise RedundantTrainingExerciseError("redundant_exercise_prescription")
 
 

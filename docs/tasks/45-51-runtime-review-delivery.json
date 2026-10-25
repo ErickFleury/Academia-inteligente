@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-10-24T18:05:33.454779+00:00",
+  "purpose": "local_runtime_public_corpus_and_migration_metadata_only",
+  "migration": "20261024_36",
+  "public_chunks": 66,
+  "vector_groups": [
+    {
+      "embedding_model": "bge-m3",
+      "dimensions": 1024,
+      "count": 66
+    }
+  ],
+  "catalog_sha256": "75d95cd342a4c99794e1cd712c3cb5f259530ed15263111399b29a6257c1297f",
+  "deployment_gate_enabled": "false",
+  "held_out_payloads_read": false,
+  "model_generation_calls": 0
+}

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "captured_at": "2026-10-24T15:28:08.049621+00:00",
+  "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+  "frozen_plan_sha256": "fd9570ff1231de804b9912841217bfc334e6581892e4f3dfb6be8be917835400",
+  "plan": {
+    "version": 2,
+    "scenario": "confirmed-week",
+    "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+    "frozen_at": "2026-10-24T15:27:50.657065+00:00",
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "server_version": "0.34.1",
+    "maximum_writer_calls": 1,
+    "retries": 0,
+    "timeout_seconds": 360,
+    "expected_technical_outcome": "typed_candidate_passes_synthetic_fixture_core",
+    "input_sha256": "b45fe2b256c2e38aa3408f20f4e4e678077d518131ee527d2e5f2d801acc6ea1",
+    "writer_schema_sha256": "955770fa464773f95a0e3cfd19efc590bbc4c42d1274f81f17e71d4c6ee984b5",
+    "writer_context_builder_sha256": "ccba8b3baa59b00aa4cdf9b6a30f638652f3163969334810e60c8017e618d977",
+    "negative_control": "Reject accepted output after sets exceed its synthetic rule bound",
+    "synthetic_fixture_sha256": "af31574aac8a0effc66a903b9b612341ce9b0a1f10dc6c0540f04ef4fae73fe2",
+    "synthetic_policy_fixture_sha256": "5011ab28bc736617736c6668010c1281a918d2a924861a6d7042bf7c2cb0eff1",
+    "adapter_sha256": "ebf7f57ccda3ae7a27ea28e00b158d6d2579a101937264f7383ca7d45c92ae26",
+    "uses_real_corpus_or_embedding_provider": false,
+    "database_configured": false,
+    "enabled_cohorts": []
+  },
+  "actual_writer_calls": 1,
+  "requests": [
+    {
+      "request_sha256": "c053d5abd2695b8c6b32b32b2f620ccbd5eaff5c30f55b75b83979919a54ca0e",
+      "instructions_sha256": "4e30d53b76c69bd0bc8b94fd94f91680f534b56c37a04bff7f7d2676a859153e",
+      "options": {
+        "num_ctx": 16384
+      },
+      "think": false,
+      "stream": false,
+      "timeout_seconds": 360
+    }
+  ],
+  "elapsed_seconds": 17.374,
+  "outcome": {
+    "status": "controlled_provider_failure",
+    "category": "malformed_structured_output",
+    "retryable": true
+  },
+  "post_generation_mutation_control": {
+    "status": "not_executed",
+    "reason": "positive_candidate_not_accepted"
+  },
+  "saved_or_published_candidates": 0,
+  "scientific_approval": "pending",
+  "independent_evaluation": "not_executed",
+  "limitations": [
+    "Implementer-visible toy fixtures are not professional policies or held-out cases.",
+    "Retrieval, embeddings, automatic review and authenticated lifecycle were not exercised.",
+    "One writer/core call cannot establish supported-cohort acceptance or rejection rates.",
+    "No candidate prose, dose or trace is published; the application gate remains disabled."
+  ]
+}

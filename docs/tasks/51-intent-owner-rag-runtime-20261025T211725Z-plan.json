@@ -1,0 +1,79 @@
+{
+  "name": "owner-rag-runtime-20261025T211725Z",
+  "frozen_at": "2026-10-25T21:17:26.008700+00:00",
+  "scope": "exposed_owner_authorized_technical_check",
+  "independent_evaluation": false,
+  "professional_review_performed": false,
+  "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-10",
+    "instruction_version": "owner-rag-11",
+    "sampling_temperature": 0,
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "cases": [
+    {
+      "id": "flexibility-plain",
+      "onboarding": {
+        "training_goal": "Força e hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "entry_point": "chat",
+      "request": "Gere uma ficha de treino de flexibilidade.",
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "mobility_flexibility"
+    }
+  ],
+  "expected_accepted_proposals": 1,
+  "expected_load_mode": "qualitative_unmeasured",
+  "synthetic_onboarding_defaults": {
+    "training_goal": "Ganhar força",
+    "training_experience": "beginner",
+    "height_cm": 170,
+    "weight_kg": "70.50",
+    "has_limitations_or_complaints": false,
+    "limitations_or_complaints": null,
+    "has_health_conditions": false,
+    "health_conditions": null,
+    "uses_medications": false,
+    "medications": null
+  },
+  "timeout_seconds": 360,
+  "deadline_seconds_per_case": 3600,
+  "public_retrieval": "actual_PostgreSQL_BGE_M3_maximum_six_passages",
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "real_client_records_read": false,
+  "clinical_accuracy": "not_evaluated",
+  "implementation_sha256": {
+    "app/modules/training/owner_rag.py": "8c2882c52a57b2a99491ce7e04d5024e8f86ee34538fbdcc4dd37754336e5209",
+    "app/modules/training/owner_rag_schema.py": "299a6835237809f4782b8acedf45bbd89dc7851c73dfe8fe0cc4bcd93790b690",
+    "app/modules/training/owner_rag_load.py": "4ada24bbdb8bccda09e8729bf1712e6843f11ca93ec13ad2ba8f4391f2ea9630",
+    "app/modules/training/owner_rag_flexibility.py": "a9e233c4923690327600471b0f5b25a2ea47903322bb40940d799d7eb1699798",
+    "app/modules/training/request_intent.py": "32e6d36591d0ee65ba8c78769b74f674b493e1937b009682f98eaf9491746c23",
+    "app/modules/training/knowledge_query.py": "77339ac3d472273399803d053d026549faa48dff16b417029c31c8eb7028cc74",
+    "app/modules/training/owner-rag-exercises.json": "bf54398a3c4258bca5ef852b3b28acc91c3c7a85e0170034db4f15752845886c",
+    "app/modules/training/generation_service.py": "40cf20b9dccfeabc64b649c31be59146294159a81f99e90c55dde9bf82e0ba34",
+    "app/modules/training/chat_service.py": "69df199dde70b8c1ec6554186b495ec885294f9de17e965fc6f1a1a8df2be63d",
+    "app/modules/training/adaptation_service.py": "a89f8f852544f6acc02ff3379813f9517ae430faf9660a60632c71a13a6b6753",
+    "app/modules/training/selection.py": "730690e3501276c053e9d41e27a9b15a1c36526a5cc3d31cdbf45e71d6185faa",
+    "app/modules/training/prescription_budget.py": "c9e16cc969908ae4e825e41ce6390e5ab05dbb49cd50bb11c49dc90c2d2abfd7",
+    "app/modules/training/completeness.py": "44e9d6c524fa56ec37431a0cbbbfc153298f7041351ee3ccdaf8f83f8a5c06ee",
+    "app/modules/training/focus.py": "41e7653306c5b6bd81108fae3366caab7eb1a547c81fa8b85846d1b45c47f8f5",
+    "app/integrations/ai.py": "c23ebf7af3d905296b702ee669917e2a425a2d4015ab90e1d05cf764d28e9dfe",
+    "app/integrations/ai_diagnostics.py": "7d9342b804292f188d7ef1b521ace1bc0436f403157ad6a74b81999c8936ebc9",
+    "scripts/probe_owner_rag_runtime.py": "55ceccc21654a3725e742983fba6ad61bf02b2cdf12c0dbb98c665d63446126c"
+  }
+}

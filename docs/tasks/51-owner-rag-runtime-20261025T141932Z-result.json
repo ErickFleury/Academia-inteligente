@@ -1,0 +1,110 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T141932Z",
+  "results": [
+    {
+      "case_id": "initial-hypertrophy",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "measured_baseline_required_for_external_load",
+      "issues": [
+        {
+          "position": 3,
+          "field": "load_guidance",
+          "reason": "measured_baseline_required_for_external_load"
+        }
+      ],
+      "proposal_count": 0,
+      "elapsed_seconds": 34.650674587999674,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 19.375682137000695,
+        "review": 13.408461103997979,
+        "focus": 0.0
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "case_id": "initial-hypertrophy",
+      "stage": "writer",
+      "context_characters": 33604,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Proposta de treino para hipertrofia muscular\",\n    \"objective\": \"Aumentar o diâmetro das fibras musculares através de treinamento resistido com foco em músculos específicos, conforme orientações de adaptação muscular.\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres (2 kg por braço)\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\", \"nhs-strength-1\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy",
+      "stage": "review",
+      "context_characters": 34483,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    }
+  ],
+  "retrieved": [
+    [
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-1"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-06"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-03"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-07"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-1"
+      },
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-2"
+      }
+    ]
+  ],
+  "implementation_unchanged": true,
+  "independent_evaluation": false,
+  "professional_review_performed": false
+}

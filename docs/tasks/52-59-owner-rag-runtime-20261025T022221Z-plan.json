@@ -1,0 +1,45 @@
+{
+  "name": "owner-rag-runtime-20261025T022221Z",
+  "frozen_at": "2026-10-25T02:22:21.978257+00:00",
+  "scope": "exposed_owner_authorized_technical_check",
+  "independent_evaluation": false,
+  "professional_review_performed": false,
+  "authorization_id": "owner-assisted-rag-operation-2026-10-24",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-1",
+    "instruction_version": "owner-rag-1"
+  },
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "cases": [
+    {
+      "id": "initial-strength",
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0
+    },
+    {
+      "id": "retrieval-outage",
+      "repetitions": 1,
+      "expected": "technical_unavailability_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    }
+  ],
+  "timeout_seconds": 360,
+  "deadline_seconds_per_case": 3600,
+  "public_retrieval": "actual_PostgreSQL_BGE_M3_maximum_six_passages",
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "real_client_records_read": false,
+  "clinical_accuracy": "not_evaluated",
+  "implementation_sha256": {
+    "app/modules/training/owner_rag.py": "3e98bcd6ce374a72ccf146cebb809a93d685a5397f702b753c7be2fe9439fce9",
+    "app/modules/training/generation_service.py": "0e2f254d59dca4aeab7828c63d297bd978bfc853d46ea0742f33be897dd5e763",
+    "app/integrations/ai.py": "6aa4961e838cba454d25624272ec296b988ee368261688fb01708e6a197eada1"
+  }
+}

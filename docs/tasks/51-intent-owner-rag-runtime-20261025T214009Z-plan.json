@@ -1,0 +1,208 @@
+{
+  "name": "owner-rag-runtime-20261025T214009Z",
+  "frozen_at": "2026-10-25T21:40:09.326460+00:00",
+  "scope": "exposed_owner_authorized_technical_check",
+  "independent_evaluation": false,
+  "professional_review_performed": false,
+  "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-12",
+    "instruction_version": "owner-rag-13",
+    "sampling_temperature": 0,
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "cases": [
+    {
+      "id": "flexibility-plain",
+      "onboarding": {
+        "training_goal": "Força e hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "entry_point": "chat",
+      "request": "Gere uma ficha de treino de flexibilidade.",
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "mobility_flexibility"
+    },
+    {
+      "id": "flexibility-copied-header",
+      "onboarding": {
+        "training_goal": "Força e hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "entry_point": "chat",
+      "request": "Você\nGere uma ficha de treino de flexibilidade.",
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "mobility_flexibility",
+      "history_request": "Gere uma ficha de força e hipertrofia"
+    },
+    {
+      "id": "flexibility-one-day",
+      "onboarding": {
+        "training_goal": "Força e hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "entry_point": "chat",
+      "request": "Gere uma ficha de treino de flexibilidade para um dia..",
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "mobility_flexibility"
+    },
+    {
+      "id": "flexibility-three-days",
+      "onboarding": {
+        "training_goal": "Força e hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "entry_point": "chat",
+      "request": "Gere uma ficha de flexibilidade em três dias, A/B/C.",
+      "expected_session_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected_goal_family": "mobility_flexibility"
+    },
+    {
+      "id": "flexibility-negated-goal",
+      "onboarding": {
+        "training_goal": "Força e hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "entry_point": "chat",
+      "request": "Gere uma ficha de flexibilidade, não quero hipertrofia.",
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "mobility_flexibility"
+    },
+    {
+      "id": "abc-strength",
+      "onboarding": {
+        "training_goal": "Hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "request": "Gere um treino de força em três dias, A/B/C.",
+      "expected_session_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected_goal_family": "strength"
+    },
+    {
+      "id": "initial-hypertrophy",
+      "onboarding": {
+        "training_goal": "Hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "hypertrophy"
+    },
+    {
+      "id": "ambiguous-goal",
+      "onboarding": {},
+      "entry_point": "chat",
+      "request": "Gere um treino de força e flexibilidade",
+      "repetitions": 1,
+      "expected": "clarification_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    },
+    {
+      "id": "conflicting-schedule",
+      "onboarding": {},
+      "entry_point": "chat",
+      "request": "Gere flexibilidade em dois dias, fichas A/B/C",
+      "repetitions": 1,
+      "expected": "clarification_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    },
+    {
+      "id": "retrieval-outage",
+      "onboarding": {},
+      "repetitions": 1,
+      "expected": "technical_unavailability_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    }
+  ],
+  "expected_accepted_proposals": 7,
+  "expected_load_mode": "qualitative_unmeasured",
+  "synthetic_onboarding_defaults": {
+    "training_goal": "Ganhar força",
+    "training_experience": "beginner",
+    "height_cm": 170,
+    "weight_kg": "70.50",
+    "has_limitations_or_complaints": false,
+    "limitations_or_complaints": null,
+    "has_health_conditions": false,
+    "health_conditions": null,
+    "uses_medications": false,
+    "medications": null
+  },
+  "timeout_seconds": 360,
+  "deadline_seconds_per_case": 3600,
+  "public_retrieval": "actual_PostgreSQL_BGE_M3_maximum_six_passages",
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "real_client_records_read": false,
+  "clinical_accuracy": "not_evaluated",
+  "implementation_sha256": {
+    "app/modules/training/owner_rag.py": "57c8bcbcfa7f585ae9cd60c907fa1ab5a5d487f6ad93146c618ed6d8f501a8c6",
+    "app/modules/training/owner_rag_schema.py": "3d441feea4ff7a8f818be4a90e375700380f30adf13d5efd11277cf84054ed99",
+    "app/modules/training/owner_rag_load.py": "4ada24bbdb8bccda09e8729bf1712e6843f11ca93ec13ad2ba8f4391f2ea9630",
+    "app/modules/training/owner_rag_flexibility.py": "a9e233c4923690327600471b0f5b25a2ea47903322bb40940d799d7eb1699798",
+    "app/modules/training/request_intent.py": "32e6d36591d0ee65ba8c78769b74f674b493e1937b009682f98eaf9491746c23",
+    "app/modules/training/knowledge_query.py": "746e2c6d1071aa9bef14e5ef093025f582e530344aa1c5fde51f693f7eec9870",
+    "app/modules/training/owner-rag-exercises.json": "bf54398a3c4258bca5ef852b3b28acc91c3c7a85e0170034db4f15752845886c",
+    "app/modules/training/generation_service.py": "40cf20b9dccfeabc64b649c31be59146294159a81f99e90c55dde9bf82e0ba34",
+    "app/modules/training/chat_service.py": "b2ee0856cf820c1614c575eef521d3641fb1264978821b8d00bc043248872dda",
+    "app/modules/training/adaptation_service.py": "a89f8f852544f6acc02ff3379813f9517ae430faf9660a60632c71a13a6b6753",
+    "app/modules/training/selection.py": "14b8582939d8903b9740486ffeff47972d7f3281eb54babbc52043a123e108e6",
+    "app/modules/training/prescription_budget.py": "c9e16cc969908ae4e825e41ce6390e5ab05dbb49cd50bb11c49dc90c2d2abfd7",
+    "app/modules/training/completeness.py": "d4bf300c2b7aba4df2001b9fcca7576c1d66f1342409cb9b1afce877565a73ac",
+    "app/modules/training/focus.py": "41e7653306c5b6bd81108fae3366caab7eb1a547c81fa8b85846d1b45c47f8f5",
+    "app/integrations/ai.py": "49ed78df4ca0a23916b47eaada8f9bf425bdd62be3007de0a82e1a8564abe87d",
+    "app/integrations/ai_diagnostics.py": "7d9342b804292f188d7ef1b521ace1bc0436f403157ad6a74b81999c8936ebc9",
+    "scripts/probe_owner_rag_runtime.py": "55ceccc21654a3725e742983fba6ad61bf02b2cdf12c0dbb98c665d63446126c"
+  }
+}

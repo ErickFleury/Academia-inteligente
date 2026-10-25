@@ -1,0 +1,227 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T143818Z",
+  "outputs": [
+    {
+      "case_id": "initial-hypertrophy-repeat-1",
+      "stage": "writer",
+      "context_characters": 34392,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-1",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para Hipertrofia Muscular (Intermediário)\",\n    \"objective\": \"Hipertrofia muscular\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-1",
+      "stage": "review",
+      "context_characters": 35168,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-1",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-2",
+      "stage": "writer",
+      "context_characters": 34392,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-2",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para Hipertrofia Muscular - 3 dias completos\",\n    \"objective\": \"Hipertrofia muscular\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_raise (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"goblet_squat (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"abdominal_curlup (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-2",
+      "stage": "review",
+      "context_characters": 35606,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-2",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-3",
+      "stage": "writer",
+      "context_characters": 34392,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-3",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para Hipertrofia muscular (Intermediário)\",\n    \"objective\": \"Aumentar o diâmetro das fibras musculares através de resistência controlada e sobrecarga progressiva, sem dor ou lesão.\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_raise (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_curl (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"10-15\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"12-15\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"goblet_squat (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"10-15\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"abdominal_curlup (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"12-15\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\", \"nhs-strength-1\", \"biga-anatomy-2\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-3",
+      "stage": "review",
+      "context_characters": 35946,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-3",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-4",
+      "stage": "writer",
+      "context_characters": 34392,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-4",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para hipertrofia muscular - intermediário\",\n    \"objective\": \"Hipertrofia muscular\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"abdominal_curlup (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"10-15\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\", \"nhs-strength-1\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-4",
+      "stage": "review",
+      "context_characters": 35362,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-4",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-5",
+      "stage": "writer",
+      "context_characters": 34392,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-5",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Proposta de treino para hipertrofia muscular\",\n    \"objective\": \"Aumentar o diâmetro das fibras musculares através de treinamento resistido com foco em músculos específicos e corpo inteiro, seguindo orientações de tempo eficiente para adultos com experiência intermediária.\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"abdominal_curlup (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"10-15\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\", \"nhs-strength-1\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-5",
+      "stage": "review",
+      "context_characters": 35546,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-5",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    }
+  ],
+  "captured_at": "2026-10-25T14:40:35.105622+00:00",
+  "independent_evaluation": false
+}

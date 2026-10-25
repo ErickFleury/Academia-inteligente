@@ -114,7 +114,7 @@ test('clears every applied filter and returns to the complete collection', async
 
 test.each([false, true])('collection mine=%s preserves sessions on reopening and shows historical prescriptions and attribution', async (mine) => {
   const current = { ...plan, items: sessionReviewItems }
-  const historicalItems = sessionReviewItems.map((item) => ({ ...item, exercise_name: `Histórico ${item.exercise_name}`, sets: item.sets + 10, load_guidance: `Histórico ${item.load_guidance}` }))
+  const historicalItems = sessionReviewItems.map((item) => ({ ...item, exercise_name: `Histórico ${item.exercise_name}`, sets: item.sets! + 10, load_guidance: `Histórico ${item.load_guidance}` }))
   const historical = { ...past, approved_at: '2026-08-20T12:00:00Z', items: historicalItems }
   const before = structuredClone({ current, historical })
   const fetchMock = mockFetch((url) => {

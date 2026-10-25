@@ -1,0 +1,85 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T144041Z",
+  "results": [
+    {
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "goal_priority_confirmation_required",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.4729406900005415,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "category": "technical_unavailability",
+      "reason": "retrieval_unavailable",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.021903297998505877,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    }
+  ],
+  "outputs": [],
+  "retrieved": [
+    [
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-1"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-1"
+      },
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-2"
+      },
+      {
+        "source_id": "pavlova-tendinopathy-2023",
+        "chunk_id": "pavlova-tendinopathy-2023-1"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-06"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-2"
+      }
+    ]
+  ],
+  "implementation_unchanged": true,
+  "independent_evaluation": false,
+  "professional_review_performed": false
+}

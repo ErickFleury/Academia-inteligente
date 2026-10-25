@@ -48,14 +48,14 @@ def test_actual_rag_migrations_support_catalogue_initialization_and_repeated_sta
     catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     provider = FakeEmbeddings()
     with knowledge_sessions() as session:
-        assert seed_catalog(session, provider, catalog) == 18
+        assert seed_catalog(session, provider, catalog) == 66
         session.commit()
     with knowledge_sessions() as session:
-        assert seed_catalog(session, provider, catalog) == 18
+        assert seed_catalog(session, provider, catalog) == 66
         session.commit()
-        assert len(provider.calls) == 18
-        assert session.scalar(select(func.count()).select_from(KnowledgeSource)) == 14
-        assert session.scalar(select(func.count()).select_from(KnowledgeChunk)) == 18
+        assert len(provider.calls) == 66
+        assert session.scalar(select(func.count()).select_from(KnowledgeSource)) == 24
+        assert session.scalar(select(func.count()).select_from(KnowledgeChunk)) == 66
         assert (
             session.scalar(
                 select(func.count())

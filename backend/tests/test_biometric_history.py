@@ -8,6 +8,7 @@ from test_biometric_access import known_client, recognize
 from test_biometrics_enrollment import service as service
 from test_clients import AsgiClient
 from test_clients import database_session as database_session
+from test_identity import FakeIdentityProvider
 
 from app.database import get_database_session
 from app.main import create_app
@@ -17,8 +18,9 @@ from app.modules.biometrics.history import event_history, provider_status
 from app.modules.biometrics.models import BiometricAudit
 from app.modules.biometrics.passages import PassageService
 from app.modules.biometrics.router import get_access_service
+from app.modules.identity import router as identity_router
 from app.modules.identity.router import get_authenticated_identity
-from app.modules.identity.service import AuthenticatedIdentity
+from app.modules.identity.service import AuthenticatedIdentity, InvalidSessionError
 
 
 def verify_pagination(session, service, access):
@@ -107,7 +109,10 @@ def test_provider_failure_returns_only_safe_status(database_session, access):
     }
 
 
-def test_history_api_limits_and_admin_only(database_session, access):
+def test_history_api_limits_and_admin_only(database_session, access, monkeypatch):
+    monkeypatch.setattr(
+        identity_router, "identity_provider", FakeIdentityProvider(InvalidSessionError())
+    )
     app = create_app()
     app.dependency_overrides[get_database_session] = lambda: database_session
     app.dependency_overrides[get_access_service] = lambda: access

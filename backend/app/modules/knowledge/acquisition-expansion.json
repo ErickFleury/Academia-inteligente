@@ -1,0 +1,1877 @@
+{
+  "version": 1,
+  "purpose": "Bounded expansion under existing license allowlist; scientific approval pending",
+  "entries": [
+    {
+      "pmc": "PMC11349676",
+      "doi": "10.3389/fspor.2024.1429789",
+      "article_version": "2024-08-14",
+      "source": {
+        "id": "singer-rest-2024",
+        "title": "Give it a rest: a systematic review with Bayesian meta-analysis on the effect of inter-set rest interval duration on muscle hypertrophy",
+        "url": "https://doi.org/10.3389/fspor.2024.1429789",
+        "authors": [
+          "Alec Singer",
+          "Milo Wolf",
+          "Leonardo Generoso",
+          "Elizabeth Arias",
+          "Kenneth Delcastillo",
+          "Edwin Echevarria",
+          "Amaris Martinez",
+          "Patroklos Androulakis Korakakis",
+          "Martin C Refalo",
+          "Paul A Swinton",
+          "Brad J Schoenfeld"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Alec Singer; Milo Wolf; Leonardo Generoso; Elizabeth Arias; Kenneth Delcastillo; Edwin Echevarria; Amaris Martinez; Patroklos Androulakis Korakakis; Martin C Refalo; Paul A Swinton; Brad J Schoenfeld (2024). Give it a rest: a systematic review with Bayesian meta-analysis on the effect of inter-set rest interval duration on muscle hypertrophy. DOI 10.3389/fspor.2024.1429789. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Hypertrophy inter-set rest; healthy adults, mainly short interventions. No clinical adjustment policy.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "singer-rest-2024-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s5",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s5",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2b"
+            },
+            {
+              "tag": "sec",
+              "id": "s4e"
+            }
+          ],
+          "locator": "PMC11349676 JATS s5 blocks 1; s5 blocks 2; s2b; s4e",
+          "text_sha256": "d8900c96ea176888bc1ba438a6029b218120a57a7034d756186ed9fdea9d0f49"
+        },
+        {
+          "id": "singer-rest-2024-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s4b",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s4b",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2b"
+            },
+            {
+              "tag": "sec",
+              "id": "s4e"
+            }
+          ],
+          "locator": "PMC11349676 JATS s4b blocks 1; s4b blocks 2; s2b; s4e",
+          "text_sha256": "0d7ca9d00caa00e16ea7c5d3033991f5ae14d53dfe960c73e44131d7fb1bbcc2"
+        },
+        {
+          "id": "singer-rest-2024-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s3c",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s3c",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2b"
+            },
+            {
+              "tag": "sec",
+              "id": "s4e"
+            }
+          ],
+          "locator": "PMC11349676 JATS s3c blocks 1; s3c blocks 2; s2b; s4e",
+          "text_sha256": "3e10a81ab3cf48073a92023f0f8d8f74d72a29c6e0030235b63b6a60cdc19508"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC8449772",
+      "doi": "10.1007/s40279-021-01490-1",
+      "article_version": "2021-06-14",
+      "source": {
+        "id": "iversen-time-efficient-2021",
+        "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+        "url": "https://doi.org/10.1007/s40279-021-01490-1",
+        "authors": [
+          "Vegard M Iversen",
+          "Martin Norum",
+          "Brad J Schoenfeld",
+          "Marius S Fimland"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "iversen-time-efficient-2021-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec2 blocks 1; Sec2 blocks 2; Sec2 blocks 3; Abstract; Sec23",
+          "text_sha256": "39b8811de1e07003dc4aafbbdfa4d8dd3d38353ac8c57b6cd2fe119d6774567c"
+        },
+        {
+          "id": "iversen-time-efficient-2021-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                4
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec2 blocks 4; Sec2 blocks 5; Abstract; Sec23",
+          "text_sha256": "d1dde3aafe10410688ca4a5e71db63246e78cba93109dfb59e344d3c00460bcd"
+        },
+        {
+          "id": "iversen-time-efficient-2021-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec3",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec3",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "text_sha256": "6d9ac7895bc62a48b625e363d6537f86bbcc116b8abd0d3fdea4799cbe1501e5"
+        },
+        {
+          "id": "iversen-time-efficient-2021-04",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec5",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec5",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec5 blocks 1; Sec5 blocks 2; Abstract; Sec23",
+          "text_sha256": "a9d644531f8d1e74da7381067cd0630528400166a41299c356523e06d7706450"
+        },
+        {
+          "id": "iversen-time-efficient-2021-05",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec6",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec6",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec6",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec6 blocks 1; Sec6 blocks 2; Sec6 blocks 3; Abstract; Sec23",
+          "text_sha256": "9f2e3a5d3f018df5f1496cbd41a0b8c61e323a2fca512d3f138a5882b09a7208"
+        },
+        {
+          "id": "iversen-time-efficient-2021-06",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec9",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec9",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "text_sha256": "2106a63442803133653b399795d335d826bc16b765c942e09f6b2dccaca0e196"
+        },
+        {
+          "id": "iversen-time-efficient-2021-07",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "text_sha256": "e8c48e05df053d44fc601655fdc9d1f3a7923c92673e0dda599652f517f7d264"
+        },
+        {
+          "id": "iversen-time-efficient-2021-08",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                4
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                5
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec22 blocks 1; Sec22 blocks 2; Sec22 blocks 3; Sec22 blocks 4; Sec22 blocks 5; Sec22 blocks 6; Abstract; Sec23",
+          "text_sha256": "995bca9417cb10173b92f5afac8d5ff461c6bf9336cdea7046f194bf861ad746"
+        },
+        {
+          "id": "iversen-time-efficient-2021-09",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                6
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                7
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec22",
+              "block_indices": [
+                8
+              ]
+            },
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec23"
+            }
+          ],
+          "locator": "PMC8449772 JATS Sec22 blocks 7; Sec22 blocks 8; Sec22 blocks 9; Abstract; Sec23",
+          "text_sha256": "08ddcb080e0bf4d1b414448d81973de20f62206b2d7a389dfa8da0196806d30c"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC8891239",
+      "doi": "10.1007/s40279-021-01587-7",
+      "article_version": "2021-11-10",
+      "source": {
+        "id": "schumann-concurrent-2022",
+        "title": "Compatibility of Concurrent Aerobic and Strength Training for Skeletal Muscle Size and Function: An Updated Systematic Review and Meta-Analysis",
+        "url": "https://doi.org/10.1007/s40279-021-01587-7",
+        "authors": [
+          "Moritz Schumann",
+          "Joshua F Feuerbacher",
+          "Marvin Sünkeler",
+          "Nils Freitag",
+          "Bent R Rønnestad",
+          "Kenji Doma",
+          "Tommy R Lundberg"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Moritz Schumann; Joshua F Feuerbacher; Marvin Sünkeler; Nils Freitag; Bent R Rønnestad; Kenji Doma; Tommy R Lundberg (2021). Compatibility of Concurrent Aerobic and Strength Training for Skeletal Muscle Size and Function: An Updated Systematic Review and Meta-Analysis. DOI 10.1007/s40279-021-01587-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Concurrent aerobic/resistance training and strength/power/hypertrophy; included-population and study-quality limits retained.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "schumann-concurrent-2022-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec14",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec4"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "paragraph_indices": [
+                6
+              ]
+            }
+          ],
+          "locator": "PMC8891239 JATS Sec14 blocks 1; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "a3d40a526af8c7cd59223a9f1c3a6c794a84b2953433887070217f1a423e676b"
+        },
+        {
+          "id": "schumann-concurrent-2022-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec11",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec11",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec4"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "paragraph_indices": [
+                6
+              ]
+            }
+          ],
+          "locator": "PMC8891239 JATS Sec11 blocks 1; Sec11 blocks 2; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "25abc355b174784062f70ba771fb24c98231aea1c679f2749ea20bb67c7010d7"
+        },
+        {
+          "id": "schumann-concurrent-2022-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec4"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "paragraph_indices": [
+                6
+              ]
+            }
+          ],
+          "locator": "PMC8891239 JATS Sec13 blocks 1; Sec13 blocks 2; Sec13 blocks 3; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "cc64cd560204f4c808e163b81fb9191f39396e60c912013eed0c1fa5b9a52007"
+        },
+        {
+          "id": "schumann-concurrent-2022-04",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec4"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13",
+              "paragraph_indices": [
+                6
+              ]
+            }
+          ],
+          "locator": "PMC8891239 JATS Sec13 blocks 4; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "c98bdc7088f8ad699258a20cb991c68433b02b64c7eeb96f288863465705f382"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC12152101",
+      "doi": "10.1007/s40279-025-02204-7",
+      "article_version": "2025-04-03; 2025-01-01",
+      "source": {
+        "id": "ingram-stretch-mechanisms-2025",
+        "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+        "url": "https://doi.org/10.1007/s40279-025-02204-7",
+        "authors": [
+          "Lewis A. Ingram",
+          "Grant R. Tomkinson",
+          "Noah M. A. d’Unienville",
+          "Bethany Gower",
+          "Sam Gleadhill",
+          "Terry Boyle",
+          "Hunter Bennett"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "ingram-stretch-mechanisms-2025-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec34",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec35",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec5"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec33"
+            }
+          ],
+          "locator": "PMC12152101 JATS Sec34 blocks 1; Sec35 blocks 1; Sec5; Sec33",
+          "text_sha256": "73aa84f39f2f8660bb26ae9e1692694c9def915760ac78dddd438739cf6513ee"
+        },
+        {
+          "id": "ingram-stretch-mechanisms-2025-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec23",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec78",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec5"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec33"
+            }
+          ],
+          "locator": "PMC12152101 JATS Sec23 blocks 1; Sec78 blocks 1; Sec5; Sec33",
+          "text_sha256": "db698b6d5251d034d36b732972bbc8028740397e3303159b2c149f26cfbc8313"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC10015931",
+      "doi": "10.1186/s40885-022-00232-3",
+      "article_version": "2023-03-15",
+      "source": {
+        "id": "smart-isometric-hypertension-2023",
+        "title": "An evidence-based guide to the efficacy and safety of isometric resistance training in hypertension and clinical implications",
+        "url": "https://doi.org/10.1186/s40885-022-00232-3",
+        "authors": [
+          "Biggie Baffour-Awuah",
+          "Melissa J Pearson",
+          "Gudrun Dieberg",
+          "Jonathan D Wiles",
+          "Neil A Smart"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Biggie Baffour-Awuah; Melissa J Pearson; Gudrun Dieberg; Jonathan D Wiles; Neil A Smart (2023). An evidence-based guide to the efficacy and safety of isometric resistance training in hypertension and clinical implications. DOI 10.1186/s40885-022-00232-3. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Isometric exercise for blood-pressure management; screening, measured MVC, table footnotes and suitability must travel with doses.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "smart-isometric-hypertension-2023-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec14",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec14",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec14",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec14",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "table-wrap",
+              "id": "Tab4"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec16"
+            }
+          ],
+          "locator": "PMC10015931 JATS Sec14 blocks 1; Sec14 blocks 2; Sec14 blocks 3; Sec14 blocks 4; Tab4; Sec13; Sec16",
+          "text_sha256": "3c33d852f6dd9d1b35e07b95ce3f6d4c8f0e092bd5a4322f2ae9717c24fb97e4"
+        },
+        {
+          "id": "smart-isometric-hypertension-2023-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec7",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec7",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec7",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec16"
+            }
+          ],
+          "locator": "PMC10015931 JATS Sec7 blocks 1; Sec7 blocks 2; Sec7 blocks 3; Sec13; Sec16",
+          "text_sha256": "54eda8f1a967654d199bd4b9ff5a631af540386ec68285fe17445e0f42b9314b"
+        },
+        {
+          "id": "smart-isometric-hypertension-2023-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec2",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec15",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "Sec13"
+            },
+            {
+              "tag": "sec",
+              "id": "Sec16"
+            }
+          ],
+          "locator": "PMC10015931 JATS Sec2 blocks 1; Sec2 blocks 2; Sec2 blocks 3; Sec2 blocks 4; Sec15 blocks 1; Sec13; Sec16",
+          "text_sha256": "62e17f7f4d295a4d4692eac29caf9072459fe59f0fbbb223769a3155274ec766"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC13539497",
+      "doi": "10.3389/fendo.2026.1887543",
+      "article_version": "2026-08-20",
+      "source": {
+        "id": "su-diabetes-exercise-2026",
+        "title": "Exercise and physical activity interventions in type 2 diabetes mellitus",
+        "url": "https://doi.org/10.3389/fendo.2026.1887543",
+        "authors": [
+          "Weilong Su",
+          "Xinyue Li",
+          "Haicheng Gou",
+          "Lingfeng Yuan",
+          "Lixin Lin",
+          "Xiuting Lin",
+          "Xiaodong Wang",
+          "Yingzhe Xiong",
+          "Yisheng Luan"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Weilong Su; Xinyue Li; Haicheng Gou; Lingfeng Yuan; Lixin Lin; Xiuting Lin; Xiaodong Wang; Yingzhe Xiong; Yisheng Luan (2026). Exercise and physical activity interventions in type 2 diabetes mellitus. DOI 10.3389/fendo.2026.1887543. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Narrative T2DM review including medication classes and complication-specific context; no autonomous drug/food adjustment authority.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "su-diabetes-exercise-2026-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s4_1_1",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s4_1_1",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s4_1_1 blocks 1; s4_1_1 blocks 2; s2; s10",
+          "text_sha256": "d5e102a2dd6d1cfaab1fa351d5692c04d9ab3dbe4a41bb29f62cd4ed103d9051"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s4_1_2",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s4_1_2",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s4_1_2 blocks 1; s4_1_2 blocks 2; s2; s10",
+          "text_sha256": "404e0405b91b59c759bf337bc5114a3d5f4aba7502b0195386e2fbd0708b2048"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s4_1_3",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s4_1_3",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s4_1_3 blocks 1; s4_1_3 blocks 2; s2; s10",
+          "text_sha256": "1ce12ae65da876ccdce5f7d3f65e225ee49b518b6162a91f91174c8060b59cdd"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-04",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s4_2",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s4_2 blocks 1; s2; s10",
+          "text_sha256": "5fcd3d7da35563baa21d4b7d3e8682b32913098b119c23b798990029283221c8"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-05",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s6",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s6",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s6",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s6 blocks 1; s6 blocks 2; s6 blocks 3; s2; s10",
+          "text_sha256": "c058b1e2253a852f60dac8a103f2beb3ca44711d697517415c237f5c3272aa5a"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-06",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s6",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s6",
+              "block_indices": [
+                4
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s6 blocks 4; s6 blocks 5; s2; s10",
+          "text_sha256": "fbfa235dd1d2cd41f9d04af8de62d2ae98d3929751131de0b9554b1ef61fb268"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-07",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s7_1",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_1",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_1",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s7_1 blocks 1; s7_1 blocks 2; s7_1 blocks 3; s2; s10",
+          "text_sha256": "ddfa8edda7bfe05a62938fa2d00059eda7f7a5d59d874496482e0ea8dd37cc73"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-08",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s7_1",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_1",
+              "block_indices": [
+                4
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s7_1 blocks 4; s7_1 blocks 5; s2; s10",
+          "text_sha256": "7b0b2358fca3e9a9198bf073752770df07948938e84148da3f108664df5bd5ab"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-09",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s7_2",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_2",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_2",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s7_2 blocks 1; s7_2 blocks 2; s7_2 blocks 3; s2; s10",
+          "text_sha256": "40de1a0cc29d1dc56ead0171baa52c1620f5c6726ebdf97b7c1ee442b44fcc1e"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-10",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s7_3",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_3",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_3",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s7_3 blocks 1; s7_3 blocks 2; s7_3 blocks 3; s2; s10",
+          "text_sha256": "a5d6eea838b857aa85b75d3fd82af154d453496f3a45d3adcd5a9929b184975b"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-11",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s7_4",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_4",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_4",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s7_4 blocks 1; s7_4 blocks 2; s7_4 blocks 3; s2; s10",
+          "text_sha256": "7bce7b3f226402f01aba7ee94786ec2b0e975b8a1cf6e664be517721583abd91"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-12",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s7_5",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_5",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s7_5",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s7_5 blocks 1; s7_5 blocks 2; s7_5 blocks 3; s2; s10",
+          "text_sha256": "1c717e91e87fbeaffe3d7bfcbe7e4b409c5a8ff60c2ac9242addc450e8aaf625"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-13",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s8_1",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s8_1",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s8_1",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s8_1 blocks 1; s8_1 blocks 2; s8_1 blocks 3; s2; s10",
+          "text_sha256": "c72d7514ed2c58c65e24c43c2dcce312bd150f978e5880cf6009b2f095a6add2"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-14",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s9",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s9",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s2"
+            },
+            {
+              "tag": "sec",
+              "id": "s10"
+            }
+          ],
+          "locator": "PMC13539497 JATS s9 blocks 1; s9 blocks 2; s2; s10",
+          "text_sha256": "cc37b3cfd7e8fad39fc9e7c19a79148abb10667487765c6b12c390da11e99b08"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC12107660",
+      "doi": "10.1080/15502783.2025.2507949",
+      "article_version": "2025-05-22",
+      "source": {
+        "id": "lafontant-body-fat-2025",
+        "title": "Comparison of concurrent, resistance, or aerobic training on body fat loss: a systematic review and meta-analysis",
+        "url": "https://doi.org/10.1080/15502783.2025.2507949",
+        "authors": [
+          "Kworweinski Lafontant",
+          "Alexa Rukstela",
+          "Ardis Hanson",
+          "Janet Chan",
+          "Yasamian Alsayed",
+          "Wayne A Ayers-Creech",
+          "Cassidy Bale",
+          "Yuto Ohigashi",
+          "John Solis",
+          "Gretchen Shelton",
+          "Indira Alur",
+          "Cassandra Resler",
+          "Andrew Heath",
+          "Savannah Ericksen",
+          "Scott C Forbes",
+          "Bill I Campbell"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Kworweinski Lafontant; Alexa Rukstela; Ardis Hanson; Janet Chan; Yasamian Alsayed; Wayne A Ayers-Creech; Cassidy Bale; Yuto Ohigashi; John Solis; Gretchen Shelton; Indira Alur; Cassandra Resler; Andrew Heath; Savannah Ericksen; Scott C Forbes; Bill I Campbell (2025). Comparison of concurrent, resistance, or aerobic training on body fat loss: a systematic review and meta-analysis. DOI 10.1080/15502783.2025.2507949. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Body-fat comparisons in metabolically healthy adults; clinical/metabolic disease exclusions retained.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "lafontant-body-fat-2025-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s0005",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0005",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0002-s2002"
+            },
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "paragraph_indices": [
+                7
+              ]
+            }
+          ],
+          "locator": "PMC12107660 JATS s0005 blocks 1; s0005 blocks 2; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "857898a759411fb68d255cf40e91dbe85568e90a3e260a32cfa3a8056bd4618f"
+        },
+        {
+          "id": "lafontant-body-fat-2025-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s0003-s2003",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0003-s2003",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0003-s2003",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0003-s2003",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0003-s2003",
+              "block_indices": [
+                4
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0002-s2002"
+            },
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "paragraph_indices": [
+                7
+              ]
+            }
+          ],
+          "locator": "PMC12107660 JATS s0003-s2003 blocks 1; s0003-s2003 blocks 2; s0003-s2003 blocks 3; s0003-s2003 blocks 4; s0003-s2003 blocks 5; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "23d1a8f5f2bc315b89dfcdae276f29dc604da2d0644e8a6710cca8f7e3f5f1e9"
+        },
+        {
+          "id": "lafontant-body-fat-2025-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0002-s2002"
+            },
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "paragraph_indices": [
+                7
+              ]
+            }
+          ],
+          "locator": "PMC12107660 JATS s0004 blocks 1; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "56831a99fcf151f03c8ebdd8d4010b006c1fc947428ac24664315a2992258fdb"
+        },
+        {
+          "id": "lafontant-body-fat-2025-04",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0002-s2002"
+            },
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "paragraph_indices": [
+                7
+              ]
+            }
+          ],
+          "locator": "PMC12107660 JATS s0004 blocks 2; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "f9a521ac32dae4a4d7455af3c06fe8e798d0d1b05ab5ebae4f40c964977d71ce"
+        },
+        {
+          "id": "lafontant-body-fat-2025-05",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "s0002-s2002"
+            },
+            {
+              "tag": "sec",
+              "id": "s0004",
+              "paragraph_indices": [
+                7
+              ]
+            }
+          ],
+          "locator": "PMC12107660 JATS s0004 blocks 3; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "c22ca84a341c248d2f8bcdee217c456c2797e3a5852fc8df51540e4ea693710d"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC13581003",
+      "doi": "10.1371/journal.pdig.0001728",
+      "article_version": "2026-09-16",
+      "source": {
+        "id": "bao-depp-2026",
+        "title": "DEPP: A diabetes exercise prescription protocol knowledge base",
+        "url": "https://doi.org/10.1371/journal.pdig.0001728",
+        "authors": [
+          "Ting Bao",
+          "Xingyun Liu",
+          "Shumin Ren",
+          "Ke Zhang",
+          "Jiale Du",
+          "Danting Li",
+          "Bingqing Liu",
+          "Jinhua Feng",
+          "Rongrong Wu",
+          "Erman Wu",
+          "Chaoying Zhan",
+          "Min Jiang",
+          "Li Shen",
+          "Cheng Bi",
+          "Yingbo Zhang",
+          "Sheyu Li",
+          "Juan M Ruso",
+          "Bairong Shen"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Ting Bao; Xingyun Liu; Shumin Ren; Ke Zhang; Jiale Du; Danting Li; Bingqing Liu; Jinhua Feng; Rongrong Wu; Erman Wu; Chaoying Zhan; Min Jiang; Li Shen; Cheng Bi; Yingbo Zhang; Sheyu Li; Juan M Ruso; Bairong Shen (2026). DEPP: A diabetes exercise prescription protocol knowledge base. DOI 10.1371/journal.pdig.0001728. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "Article methods, reporting gaps and limitations only; no DEPP database, participant records or 766 underlying protocols acquired.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "bao-depp-2026-01",
+          "selectors": [
+            {
+              "tag": "abstract"
+            },
+            {
+              "tag": "sec",
+              "id": "sec023",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "sec022"
+            }
+          ],
+          "locator": "PMC13581003 JATS Abstract; sec023 blocks 1; sec022",
+          "text_sha256": "5c6e8456f2bfc3e64274eb2158bdc0f39c7a5cf3396be880222f895fc0d68939"
+        }
+      ]
+    },
+    {
+      "pmc": "PMC12186601",
+      "doi": "10.1111/all.16573",
+      "article_version": "2025-05-06",
+      "source": {
+        "id": "price-asthma-2025",
+        "title": "Exercise Recommendations and Practical Considerations for Asthma Management—An EAACI Position Paper",
+        "url": "https://doi.org/10.1111/all.16573",
+        "authors": [
+          "Oliver J Price",
+          "Nikolaos G Papadopoulos",
+          "Darío Antolín Amérigo",
+          "Vibeke Backer",
+          "Valérie Bougault",
+          "Stefano Del Giacco",
+          "Radoslaw Gawlik",
+          "Ibon Eguiluz‐Gracia",
+          "Enrico Heffler",
+          "Christer Janson",
+          "Vanessa M McDonald",
+          "André Moreira",
+          "Andrew Simpson",
+          "Matteo Bonini"
+        ],
+        "language": "en",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercial_use_allowed": true,
+        "review_status": "approved",
+        "reviewed_by": "Codex technical license and extraction review; professional appraisal pending",
+        "reviewed_at": "2026-10-23",
+        "review_due_at": "2027-10-23",
+        "attribution": "Oliver J Price; Nikolaos G Papadopoulos; Darío Antolín Amérigo; Vibeke Backer; Valérie Bougault; Stefano Del Giacco; Radoslaw Gawlik; Ibon Eguiluz‐Gracia; Enrico Heffler; Christer Janson; Vanessa M McDonald; André Moreira; Andrew Simpson; Matteo Bonini (2025). Exercise Recommendations and Practical Considerations for Asthma Management—An EAACI Position Paper. DOI 10.1111/all.16573. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+        "content_note": "EAACI asthma exercise position paper; prose only. Adapted Table 3, other tables/figures and external clinical protocols are not imported.",
+        "limitations": [
+          "Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes.",
+          "Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos.",
+          "Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino."
+        ]
+      },
+      "scientific_approval": "pending",
+      "selections": [
+        {
+          "id": "price-asthma-2025-01",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0010",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0010",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0010",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0002"
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0019"
+            }
+          ],
+          "locator": "PMC12186601 JATS all16573-sec-0010 blocks 1; all16573-sec-0010 blocks 2; all16573-sec-0010 blocks 3; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "e662a80358483c761df2731f614931e9654e4224e881eb8bf4c158542f09266b"
+        },
+        {
+          "id": "price-asthma-2025-02",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0010",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0002"
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0019"
+            }
+          ],
+          "locator": "PMC12186601 JATS all16573-sec-0010 blocks 4; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "9afdcc87a5de5ce5d12088a3d642aa603809b95912c7d25d41b8ca77f7d64251"
+        },
+        {
+          "id": "price-asthma-2025-03",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0011",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0011",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0011",
+              "block_indices": [
+                2
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0011",
+              "block_indices": [
+                3
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0002"
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0019"
+            }
+          ],
+          "locator": "PMC12186601 JATS all16573-sec-0011 blocks 1; all16573-sec-0011 blocks 2; all16573-sec-0011 blocks 3; all16573-sec-0011 blocks 4; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "048b7fa05008369ae3b7162e00e5c841dac68f758b52a900313c31dcf58a5330"
+        },
+        {
+          "id": "price-asthma-2025-04",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0012",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0012",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0002"
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0019"
+            }
+          ],
+          "locator": "PMC12186601 JATS all16573-sec-0012 blocks 1; all16573-sec-0012 blocks 2; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "48d06aa95b2da9db5bc25b8d3d08619b757efaadc073ecbfd3f40f29fd8203c9"
+        },
+        {
+          "id": "price-asthma-2025-05",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0013",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0013",
+              "block_indices": [
+                1
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0002"
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0019"
+            }
+          ],
+          "locator": "PMC12186601 JATS all16573-sec-0013 blocks 1; all16573-sec-0013 blocks 2; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "c7974093117fe6ffba28447e79fc4a9861f5079a4a6a4a091b9b60d397ca1718"
+        },
+        {
+          "id": "price-asthma-2025-06",
+          "selectors": [
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0017",
+              "block_indices": [
+                0
+              ]
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0002"
+            },
+            {
+              "tag": "sec",
+              "id": "all16573-sec-0019"
+            }
+          ],
+          "locator": "PMC12186601 JATS all16573-sec-0017 blocks 1; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "e3a5f2dd064721f939769b0e7ff484342fd90498acde74f59bec5eedb9a2b33c"
+        }
+      ]
+    }
+  ],
+  "omitted_selections": [
+    {
+      "source_id": "ingram-stretch-mechanisms-2025",
+      "selection": "ingram-stretch-mechanisms-2025-02",
+      "reason": "Complete selection omitted: indivisible paragraph plus required context exceeds 7500 characters. No truncation."
+    }
+  ]
+}

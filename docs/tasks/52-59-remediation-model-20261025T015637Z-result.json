@@ -1,0 +1,140 @@
+{
+  "status": "accepted_software_fixture_only",
+  "projection": {
+    "name": "Proposta de treino",
+    "objective": "fixture",
+    "items": [
+      {
+        "exercise_name": "Caminhada (Dia C)",
+        "sets": null,
+        "repetitions": "10 min contínuos",
+        "load_guidance": "Moderada pelo teste da fala",
+        "rest_seconds": null,
+        "dose_details": {
+          "mode": "aerobic",
+          "dose": {
+            "kind": "aerobic",
+            "minutes": "10",
+            "intensity": "moderate",
+            "observation_fact": "reported_talk_test"
+          },
+          "rest": {
+            "kind": "not_applicable",
+            "seconds": null
+          },
+          "group": null
+        },
+        "equipment_requirement": null,
+        "equipment_model_id": null
+      }
+    ]
+  },
+  "activated": false,
+  "plan_name": "remediation-model-20261025T015637Z",
+  "elapsed_seconds": 112.08534165000128,
+  "stage_calls": {
+    "writer": 1,
+    "review": 1,
+    "focus": 0
+  },
+  "actual_model_http_calls": {
+    "writer": 1,
+    "review": 1,
+    "focus": 0
+  },
+  "stage_seconds": {
+    "writer": 13.462470794000183,
+    "review": 98.09142926500135,
+    "focus": 0.0
+  },
+  "outputs": [
+    {
+      "stage": "writer",
+      "structured_answer": "{\"schema_version\": 2, \"scope\": \"session_sheet\", \"input_snapshot_sha256\": \"dcabd408cc7189677c7234940599b9a98b85f27fb9b34e3a2889494c6ff7db14\", \"policy_version\": \"test-1\", \"dictionary_version\": \"test-1\", \"accounting_method_version\": \"test-1\", \"expected_revision\": null, \"sessions\": [{\"session_id\": \"1\", \"label\": \"C\", \"items\": [{\"item_id\": \"1\", \"exercise_key\": \"fixture\", \"variation_key\": \"fixture\", \"equipment_model_id\": null, \"sets\": null, \"dose\": {\"kind\": \"aerobic\", \"minutes\": 10, \"intensity\": \"moderate\", \"observation_fact\": \"reported_talk_test\"}, \"intensity\": null, \"rest_seconds\": null, \"rest\": {\"kind\": \"not_applicable\", \"seconds\": null}, \"group\": null, \"progression\": {\"instruction_key\": \"progress\", \"condition_fact\": \"progression_observed\", \"action_key\": \"add_duration\", \"amount\": 1, \"unit\": \"seconds\", \"stop_instruction_key\": \"stop\", \"regression_instruction_key\": \"regress\"}, \"decision_rules\": {\"selection\": \"synthetic-selection\", \"volume\": \"synthetic-volume\", \"intensity\": \"synthetic-intensity\", \"frequency\": \"synthetic-frequency\", \"progression\": \"synthetic-progression\", \"rest\": \"synthetic-rest\", \"restrictions\": \"synthetic-restrictions\"}, \"note_instruction_keys\": [\"support\", \"supervision\"], \"calculated_load\": null}]}], \"schedule\": null}"
+    },
+    {
+      "stage": "writer",
+      "result": {
+        "schema_version": 2,
+        "scope": "session_sheet",
+        "input_snapshot_sha256": "dcabd408cc7189677c7234940599b9a98b85f27fb9b34e3a2889494c6ff7db14",
+        "policy_version": "test-1",
+        "dictionary_version": "test-1",
+        "accounting_method_version": "test-1",
+        "expected_revision": null,
+        "sessions": [
+          {
+            "session_id": "1",
+            "label": "C",
+            "items": [
+              {
+                "item_id": "1",
+                "exercise_key": "fixture",
+                "variation_key": "fixture",
+                "equipment_model_id": null,
+                "sets": null,
+                "dose": {
+                  "kind": "aerobic",
+                  "minutes": "10",
+                  "intensity": "moderate",
+                  "observation_fact": "reported_talk_test"
+                },
+                "intensity": null,
+                "rest_seconds": null,
+                "rest": {
+                  "kind": "not_applicable",
+                  "seconds": null
+                },
+                "group": null,
+                "progression": {
+                  "instruction_key": "progress",
+                  "condition_fact": "progression_observed",
+                  "action_key": "add_duration",
+                  "amount": "1",
+                  "unit": "seconds",
+                  "stop_instruction_key": "stop",
+                  "regression_instruction_key": "regress"
+                },
+                "decision_rules": {
+                  "selection": "synthetic-selection",
+                  "volume": "synthetic-volume",
+                  "intensity": "synthetic-intensity",
+                  "frequency": "synthetic-frequency",
+                  "progression": "synthetic-progression",
+                  "rest": "synthetic-rest",
+                  "restrictions": "synthetic-restrictions"
+                },
+                "note_instruction_keys": [
+                  "support",
+                  "supervision"
+                ],
+                "calculated_load": null
+              }
+            ]
+          }
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\"sessions\": [{\"label\": \"C\", \"complete\": true, \"issues\": [], \"repetition_recommendation\": null}]}"
+    },
+    {
+      "stage": "review",
+      "result": {
+        "sessions": [
+          {
+            "label": "C",
+            "complete": true,
+            "issues": [],
+            "repetition_recommendation": null,
+            "item_issues": []
+          }
+        ]
+      }
+    }
+  ],
+  "independent_evaluation": false,
+  "real_policy_or_retrieval": false
+}

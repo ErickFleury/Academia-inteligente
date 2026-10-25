@@ -1,0 +1,75 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T211725Z",
+  "outputs": [
+    {
+      "case_id": "flexibility-plain",
+      "stage": "focus",
+      "context_characters": 153,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "context_characters": 32146,
+      "passage_count": 3,
+      "session_labels": [],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 3.0,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"iversen-time-efficient-2021-09\",\n    \"iversen-time-efficient-2021-08\",\n    \"iversen-time-efficient-2021-06\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "context_characters": 37203,
+      "passage_count": 3,
+      "session_labels": [],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [
+        {
+          "position": 2,
+          "duplicate_of": 1,
+          "field": "exercise_name",
+          "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+          "reason": "duplicate_exercise_within_session"
+        }
+      ],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"iversen-time-efficient-2021-09\",\n    \"iversen-time-efficient-2021-08\",\n    \"iversen-time-efficient-2021-06\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    }
+  ],
+  "captured_at": "2026-10-25T21:18:15.230883+00:00",
+  "independent_evaluation": false
+}

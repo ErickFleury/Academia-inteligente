@@ -1,0 +1,1629 @@
+{
+  "schema_version": 1,
+  "version": "2026-10-23-research-1",
+  "artifact_kind": "research_extraction_and_proposed_decisions",
+  "status": "awaiting_independent_methodological_and_professional_review",
+  "runtime_eligible": false,
+  "review_records": [],
+  "certainty": "not_assessed",
+  "sources": [
+    {
+      "id": "ACSM26",
+      "doi": "10.1249/MSS.0000000000003897",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41843416/",
+      "locator": "Abstract Results; Tables 4 and 6; Progression discussion",
+      "version": "2026-04, online 2026-03-05",
+      "access": "Official ACSM summary and indexed primary article passages; full methodological appraisal pending",
+      "rights": "Existing S2 metadata-only restriction remains; no runtime import"
+    },
+    {
+      "id": "ACSM09",
+      "doi": "10.1249/MSS.0b013e3181915670",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/",
+      "locator": "Public abstract: novice loading, advanced strength, progression, power, local muscular endurance",
+      "version": "2009-03;41(3):687-708",
+      "access": "PubMed XML fetched through NCBI E-utilities; publisher full text returned 402",
+      "rights": "Reference metadata and original bounded paraphrase only; no corpus import"
+    },
+    {
+      "id": "ACSM11",
+      "doi": "10.1249/MSS.0b013e318213fefb",
+      "url": "https://digitalcommons.uri.edu/kinesiology_facpubs/137/",
+      "locator": "Author institutional repository abstract, flexibility and individualization recommendations",
+      "version": "2011-07;43(7):1334-1359",
+      "access": "Public author-repository abstract; no inaccessible table reconstructed",
+      "rights": "Copyright reserved; metadata/reference only"
+    },
+    {
+      "id": "REST24",
+      "doi": "10.3389/fspor.2024.1429789",
+      "url": "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2024.1429789/full",
+      "locator": "Abstract; Methods; Discussion; Conclusion; Copyright",
+      "version": "2024-08-14;6:1429789",
+      "access": "Publisher full text consulted",
+      "rights": "Publisher links CC BY; precise artifact capture, version, allowlist and attribution validation still required before ingestion"
+    },
+    {
+      "id": "WHO20",
+      "url": "https://www.who.int/europe/news-room/fact-sheets/item/physical-activity",
+      "locator": "Physical activity recommendations: adults and older adults",
+      "version": "Fact sheet 2021-09-01, reflecting WHO 2020 guidelines",
+      "access": "Official fact sheet",
+      "rights": "Reference only; no artifact ingestion approval"
+    },
+    {
+      "id": "CDC_INTENSITY",
+      "url": "https://www.cdc.gov/physical-activity-basics/measuring/index.html",
+      "locator": "Relative intensity and talk test",
+      "version": "Web page consulted 2026-10-23",
+      "access": "Official public page",
+      "rights": "Reference only; no runtime source artifact"
+    },
+    {
+      "id": "FALLS22",
+      "doi": "10.1093/ageing/afac205",
+      "url": "https://academic.oup.com/ageing/article/51/9/afac205/6730755",
+      "locator": "Table 4 WG4; Component interventions / Exercise and physical activity interventions",
+      "version": "2022-09;51(9):afac205",
+      "access": "Publisher full text consulted",
+      "rights": "Open access does not itself establish allowlisted reuse; reference only pending rights check"
+    },
+    {
+      "id": "STRETCH25",
+      "doi": "10.1007/s40279-024-02143-9",
+      "url": "https://link.springer.com/article/10.1007/s40279-024-02143-9",
+      "locator": "Abstract Methods, Results and Conclusions",
+      "version": "Online 2024-11-30;2025;55:597-617",
+      "access": "Publisher abstract/subscription preview",
+      "rights": "No permitted full-text acquisition established; reference only"
+    },
+    {
+      "id": "SPORT25",
+      "doi": "10.1007/s40279-024-02149-3",
+      "url": "https://link.springer.com/article/10.1007/s40279-024-02149-3",
+      "locator": "Abstract Methods, Results and Conclusions",
+      "version": "2025-01-31;55:655-673",
+      "access": "Publisher abstract/subscription preview",
+      "rights": "Reference only"
+    },
+    {
+      "id": "NHS_STRENGTH",
+      "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+      "locator": "Introduction; Sit-to-stand; Mini-squats",
+      "version": "Web page consulted 2026-10-23",
+      "access": "Official public page",
+      "rights": "No text/media copied; artifact-level reuse not assessed"
+    },
+    {
+      "id": "NHS_BALANCE",
+      "url": "https://www.nhs.uk/live-well/exercise/balance-exercises/",
+      "locator": "Introduction; Sideways walking; Heel-to-toe walk; One-leg stand",
+      "version": "Web page consulted 2026-10-23",
+      "access": "Official public page",
+      "rights": "No text/media copied; artifact-level reuse not assessed"
+    },
+    {
+      "id": "ACE_SQUAT",
+      "url": "https://www.acefitness.org/resources/everyone/exercise-library/135/bodyweight-squat/",
+      "locator": "Exercise identity, equipment and difficulty",
+      "version": "Web page consulted 2026-10-23",
+      "access": "Official exercise identity page",
+      "rights": "All rights reserved; no copied instructions/media"
+    },
+    {
+      "id": "ACE_ROW",
+      "url": "https://www.acefitness.org/resources/everyone/exercise-library/168/seated-row/",
+      "locator": "Exercise identity, equipment and difficulty",
+      "version": "Web page consulted 2026-10-23",
+      "access": "Official exercise identity page",
+      "rights": "All rights reserved; no copied instructions/media"
+    },
+    {
+      "id": "WEIGHT24",
+      "doi": "10.1249/MSS.0000000000003520",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39277776/",
+      "locator": "Abstract",
+      "version": "2024-10;56(10):2076-2091",
+      "access": "Public abstract; earlier domain-spec extraction",
+      "rights": "Metadata/reference only"
+    },
+    {
+      "id": "BODY25",
+      "doi": "10.1136/bmjsem-2024-002363",
+      "url": "https://bmjopensem.bmj.com/content/11/3/e002363",
+      "locator": "Publisher-indexed findings and limitations",
+      "version": "2025;11:e002363",
+      "access": "Earlier indexed extraction; direct page returned 403",
+      "rights": "Metadata/reference only; full appraisal pending"
+    },
+    {
+      "id": "SETS26",
+      "doi": "10.1007/s40279-025-02344-w",
+      "url": "https://link.springer.com/article/10.1007/s40279-025-02344-w",
+      "locator": "Abstract Methods, Results and Conclusions",
+      "version": "Online 2025-12-04;2026;56:481-505",
+      "access": "Public publisher abstract; earlier domain-spec extraction",
+      "rights": "Metadata/reference only"
+    },
+    {
+      "id": "NSCA22",
+      "url": "https://www.nsca.com/education/articles/ptq/time-efficient-training/",
+      "locator": "Tables 4 (strength/hypertrophy), 5 (power), 6 (endurance)",
+      "version": "Bonder, Shim and Tangeman; Personal Training Quarterly November 2022;9(3)",
+      "access": "Official professional article and example tables consulted; examples are not independently validated universal protocols",
+      "rights": "Reference only; no copied instructions/media or runtime ingestion approval"
+    }
+  ],
+  "rules": [
+    {
+      "id": "RESISTANCE_EFFORT",
+      "kind": "direct_recommendation",
+      "sources": [
+        "ACSM26"
+      ],
+      "statement": "The discussion offers 2-3 repetitions in reserve as an example of sufficient resistance-training effort; failure is not required. RIR is an estimate requiring calibration, not a measured kg value or universal safety cutoff.",
+      "parameters": [
+        {
+          "name": "example_effort",
+          "unit": "rir",
+          "minimum": 2,
+          "maximum": 3
+        }
+      ],
+      "inputs": [
+        "calibrated_rir_estimate",
+        "observed_technique"
+      ],
+      "decision_needed": "Approve populations, calibration and implementation; do not combine an 8-12 RM test load with an incompatible required working repetition count plus RIR."
+    },
+    {
+      "id": "SOURCE_PAIRED_RESISTANCE",
+      "kind": "published_professional_example",
+      "sources": [
+        "NSCA22"
+      ],
+      "statement": "Table 4 example pairs: dumbbell shoulder press/lat pulldown, goblet squat/dumbbell Romanian deadlift, dumbbell bench press/seated cable row. Novice entries use three sets of 8-12 repetitions and 120 seconds after each pair, not after each individual exercise. This is one time-efficient example, not a universal optimal program.",
+      "parameters": [
+        {
+          "name": "working_sets",
+          "unit": "sets_per_exercise",
+          "minimum": 3,
+          "maximum": 3
+        },
+        {
+          "name": "repetitions",
+          "unit": "repetitions",
+          "minimum": 8,
+          "maximum": 12
+        },
+        {
+          "name": "after_pair_rest",
+          "unit": "seconds",
+          "minimum": 120,
+          "maximum": 120
+        }
+      ],
+      "inputs": [
+        "training_history",
+        "paired_structure",
+        "exercise_specific_capacity",
+        "equipment"
+      ],
+      "decision_needed": "Accept/adapt exact exercise pairs and effort; transfer to standalone sets requires a separate explicit rest decision."
+    },
+    {
+      "id": "SOURCE_MEDICINE_BALL_POWER",
+      "kind": "published_professional_example",
+      "sources": [
+        "NSCA22"
+      ],
+      "statement": "Table 5 overhead medicine-ball throw entry: three sets of 3-6 repetitions, light/moderate ball and 120 seconds between sets. An exercise entry is not the complete source program; do not apply barbell percent-1RM rules to a ball or prescribe throwing without a suitable area.",
+      "parameters": [
+        {
+          "name": "sets",
+          "unit": "sets_per_exercise",
+          "minimum": 3,
+          "maximum": 3
+        },
+        {
+          "name": "repetitions",
+          "unit": "repetitions",
+          "minimum": 3,
+          "maximum": 6
+        },
+        {
+          "name": "inter_set_rest",
+          "unit": "seconds",
+          "minimum": 120,
+          "maximum": 120
+        }
+      ],
+      "inputs": [
+        "throwing_competence",
+        "suitable_area",
+        "ball_selection"
+      ],
+      "decision_needed": "Approve ball mass from observed technique, stopping/progression criteria and applicability; no inferred kg."
+    },
+    {
+      "id": "SOURCE_ENDURANCE_CIRCUIT",
+      "kind": "published_professional_example",
+      "sources": [
+        "NSCA22"
+      ],
+      "statement": "Table 6 circuit example: three rounds, 15 repetitions for repetition-based exercises, below 60% 1RM and 30 seconds after each exercise; time/distance entries retain their own units. This is a different branch from the historical greater-than-15 repetition approach, not a reason to silently merge prescriptions.",
+      "parameters": [
+        {
+          "name": "rounds",
+          "unit": "rounds",
+          "minimum": 3,
+          "maximum": 3
+        },
+        {
+          "name": "repetition_based_item",
+          "unit": "repetitions",
+          "minimum": 15,
+          "maximum": 15
+        },
+        {
+          "name": "relative_load",
+          "unit": "percent_1rm",
+          "minimum": null,
+          "maximum": 60,
+          "maximum_exclusive": true
+        },
+        {
+          "name": "after_exercise_rest",
+          "unit": "seconds",
+          "minimum": 30,
+          "maximum": 30
+        }
+      ],
+      "inputs": [
+        "circuit_structure",
+        "exercise_specific_measured_1rm",
+        "observed_tolerance"
+      ],
+      "decision_needed": "Approve/adapt exact circuit, transitions, effort and recovery; the article example does not prove every injured/medicated case is suitable."
+    },
+    {
+      "id": "SELECT_RESISTANCE",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "ACSM26",
+        "ACSM09"
+      ],
+      "statement": "Select accessible movements for requested muscle groups and demonstrated technique; prioritize the requested strength skill early. Full-body requests cover major groups; targeted requests retain their requested scope. An exercise-identity page does not establish dosing or clinical suitability.",
+      "parameters": [],
+      "inputs": [
+        "confirmed_goal",
+        "request_scope",
+        "equipment",
+        "observed_technique"
+      ],
+      "decision_needed": "Approve exact gym variants, order, joint/muscle mappings and substitutions; do not treat bodyweight as a known percentage of 1RM."
+    },
+    {
+      "id": "STRENGTH_DOSE",
+      "kind": "direct_finding",
+      "sources": [
+        "ACSM26"
+      ],
+      "statement": "Healthy-adult strength enhancement: heavier relative loading, multiple sets, prioritized exercise, and repeated weekly sessions.",
+      "parameters": [
+        {
+          "name": "relative_load",
+          "unit": "percent_1rm",
+          "minimum": 80,
+          "maximum": null
+        },
+        {
+          "name": "working_sets",
+          "unit": "sets_per_exercise",
+          "minimum": 2,
+          "maximum": 3
+        },
+        {
+          "name": "frequency",
+          "unit": "sessions_per_week",
+          "minimum": 2,
+          "maximum": null
+        }
+      ],
+      "inputs": [
+        "adult_eligibility",
+        "exercise_specific_measured_1rm",
+        "schedule",
+        "training_history"
+      ],
+      "decision_needed": "Choose individual load and upper limit; this is an enhancement finding, not a mandatory novice starting dose."
+    },
+    {
+      "id": "NOVICE_LOADING",
+      "kind": "historical_direct_recommendation",
+      "sources": [
+        "ACSM09"
+      ],
+      "statement": "Novice reference uses an 8-12 RM load and 2-3 training days/week. RM is a measured repetition-maximum concept, not merely a repetition count or permission to force failure.",
+      "parameters": [
+        {
+          "name": "repetition_maximum",
+          "unit": "rm_repetitions",
+          "minimum": 8,
+          "maximum": 12
+        },
+        {
+          "name": "frequency",
+          "unit": "sessions_per_week",
+          "minimum": 2,
+          "maximum": 3
+        }
+      ],
+      "inputs": [
+        "training_history",
+        "observed_capacity",
+        "schedule"
+      ],
+      "decision_needed": "Reassess against ACSM26; define supervised calibration and actual working effort without inferred RM or compulsory failure."
+    },
+    {
+      "id": "HYPERTROPHY_VOLUME",
+      "kind": "direct_finding",
+      "sources": [
+        "ACSM26",
+        "SETS26"
+      ],
+      "statement": "Higher weekly muscle volume supports hypertrophy; the ACSM summary uses approximately 10 sets per muscle/week as a reference. Volume associations have diminishing returns, not a universal hard threshold.",
+      "parameters": [
+        {
+          "name": "reference_weekly_volume",
+          "unit": "working_sets_per_muscle_per_week",
+          "reference": 10
+        }
+      ],
+      "inputs": [
+        "schedule",
+        "muscle_classification",
+        "training_history",
+        "current_volume"
+      ],
+      "decision_needed": "Approve starting volume, tolerability and upper bound; resolve direct/indirect set definition before applying the reference."
+    },
+    {
+      "id": "HYPERTROPHY_LOADING",
+      "kind": "historical_direct_recommendation",
+      "sources": [
+        "ACSM09",
+        "ACSM26"
+      ],
+      "statement": "Historical hypertrophy emphasis is 6-12 RM within a wider loading approach. Contemporary evidence does not require one unique repetition zone or compulsory failure.",
+      "parameters": [
+        {
+          "name": "historical_emphasis",
+          "unit": "rm_repetitions",
+          "minimum": 6,
+          "maximum": 12
+        }
+      ],
+      "inputs": [
+        "observed_capacity",
+        "training_history"
+      ],
+      "decision_needed": "Select a working repetition/effort prescription; do not relabel RM as RIR or infer an exact RIR threshold."
+    },
+    {
+      "id": "STRENGTH_REST",
+      "kind": "historical_direct_recommendation",
+      "sources": [
+        "ACSM09"
+      ],
+      "statement": "Heavy intermediate/advanced strength sets use longer recovery.",
+      "parameters": [
+        {
+          "name": "inter_set_rest",
+          "unit": "seconds",
+          "minimum": 180,
+          "maximum": 300
+        }
+      ],
+      "inputs": [
+        "training_history",
+        "set_load",
+        "recovery_response"
+      ],
+      "decision_needed": "Approve applicability by loading/experience; do not apply automatically to a novice or a circuit."
+    },
+    {
+      "id": "HYPERTROPHY_REST",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "REST24",
+        "ACSM26"
+      ],
+      "statement": "REST24 suggests a small advantage above 60 seconds, with uncertain additional benefit above 90 seconds; ACSM26 reports insufficient hypertrophy evidence for a unique rest optimum. Proposed operational starting window: 120-180 seconds, adjusted to maintain technique/performance, not a proven optimum or absolute limit.",
+      "parameters": [
+        {
+          "name": "proposed_inter_set_rest",
+          "unit": "seconds",
+          "minimum": 120,
+          "maximum": 180
+        }
+      ],
+      "inputs": [
+        "set_performance",
+        "recovery_response",
+        "exercise_variant"
+      ],
+      "decision_needed": "Approve this proposed window, shorter/longer exceptions and conflict resolution; no short-rest mandate."
+    },
+    {
+      "id": "LOAD_PROGRESSION",
+      "kind": "historical_direct_recommendation",
+      "sources": [
+        "ACSM09"
+      ],
+      "statement": "For specific RM loading, consider a 2-10% load increase after demonstrating 1-2 repetitions beyond the desired number; not an automatic weekly increase.",
+      "parameters": [
+        {
+          "name": "load_increment",
+          "unit": "percent_current_load",
+          "minimum": 2,
+          "maximum": 10
+        },
+        {
+          "name": "excess_repetitions",
+          "unit": "repetitions",
+          "minimum": 1,
+          "maximum": 2
+        }
+      ],
+      "inputs": [
+        "same_exercise_observed_performance",
+        "current_load",
+        "desired_repetitions"
+      ],
+      "decision_needed": "Approve observation count, equipment increment/rounding, technique and recovery criteria; do not transfer this numeric rule to balance/aerobic/stretching."
+    },
+    {
+      "id": "ENDURANCE_DOSE",
+      "kind": "historical_direct_recommendation",
+      "sources": [
+        "ACSM09"
+      ],
+      "statement": "Local muscular endurance uses lighter relative loads, high repetitions and short rest.",
+      "parameters": [
+        {
+          "name": "relative_load",
+          "unit": "percent_1rm",
+          "minimum": 40,
+          "maximum": 60
+        },
+        {
+          "name": "repetitions",
+          "unit": "repetitions",
+          "minimum": 15,
+          "minimum_exclusive": true,
+          "maximum": null
+        },
+        {
+          "name": "inter_set_rest",
+          "unit": "seconds",
+          "minimum": null,
+          "maximum": 90,
+          "maximum_exclusive": true
+        }
+      ],
+      "inputs": [
+        "exercise_specific_measured_1rm",
+        "local_endurance_goal",
+        "observed_tolerance"
+      ],
+      "decision_needed": "Approve finite set/repetition limits and recovery exceptions; ACSM26 does not supply an optimal endurance-variable combination."
+    },
+    {
+      "id": "ENDURANCE_SETS",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "ACSM09"
+      ],
+      "statement": "Candidate starting block for local muscular endurance: two working sets of 16-20 repetitions where observed tolerance supports the historical endurance approach. These finite limits are a local proposal, not source-reported optimal values.",
+      "parameters": [
+        {
+          "name": "proposed_working_sets",
+          "unit": "sets_per_exercise",
+          "minimum": 2,
+          "maximum": 2
+        },
+        {
+          "name": "proposed_repetitions",
+          "unit": "repetitions",
+          "minimum": 16,
+          "maximum": 20
+        }
+      ],
+      "inputs": [
+        "observed_tolerance",
+        "exercise_identity"
+      ],
+      "decision_needed": "Accept, amend or reject starting dose and finite lower rest bound; not ready for automatic generation."
+    },
+    {
+      "id": "POWER_DOSE",
+      "kind": "direct_finding",
+      "sources": [
+        "ACSM26"
+      ],
+      "statement": "Power favors moderate relative loading and fast concentric intent.",
+      "parameters": [
+        {
+          "name": "relative_load",
+          "unit": "percent_1rm",
+          "minimum": 30,
+          "maximum": 70
+        }
+      ],
+      "inputs": [
+        "exercise_specific_measured_1rm",
+        "technical_competence",
+        "movement_speed_observation"
+      ],
+      "decision_needed": "Choose exercise and lower/upper-body applicability; velocity is not an assumed numerical speed."
+    },
+    {
+      "id": "POWER_STRUCTURE",
+      "kind": "historical_direct_recommendation",
+      "sources": [
+        "ACSM09"
+      ],
+      "statement": "Historical power structure uses multiple sets and long rest with multijoint emphasis; do not treat its older load ranges as identical to ACSM26.",
+      "parameters": [
+        {
+          "name": "working_sets",
+          "unit": "sets_per_exercise",
+          "minimum": 3,
+          "maximum": 5
+        },
+        {
+          "name": "inter_set_rest",
+          "unit": "seconds",
+          "minimum": 180,
+          "maximum": 300
+        }
+      ],
+      "inputs": [
+        "technical_competence",
+        "recovery_response"
+      ],
+      "decision_needed": "Approve finite repetitions and speed-loss stopping criterion from applicable evidence; ballistic/Olympic work requires appropriate supervision."
+    },
+    {
+      "id": "POWER_REPETITIONS",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "ACSM09",
+        "ACSM26"
+      ],
+      "statement": "Candidate quality-oriented block: three sets of three repetitions; cease the block if technical control or intended speed cannot be sustained. The repetition choice is a review proposal, not an extracted optimal power dose.",
+      "parameters": [
+        {
+          "name": "proposed_sets",
+          "unit": "sets_per_exercise",
+          "minimum": 3,
+          "maximum": 3
+        },
+        {
+          "name": "proposed_repetitions",
+          "unit": "repetitions",
+          "minimum": 3,
+          "maximum": 3
+        }
+      ],
+      "inputs": [
+        "technical_competence",
+        "movement_speed_observation"
+      ],
+      "decision_needed": "Approve dose, measurable stopping criterion and progression; never automatically prescribe explosive work from the goal label alone."
+    },
+    {
+      "id": "AEROBIC_DOSE",
+      "kind": "direct_recommendation",
+      "sources": [
+        "WHO20"
+      ],
+      "statement": "Adult health reference: 150-300 moderate or 75-150 vigorous aerobic minutes/week, or equivalent combination; strengthening at least two days/week. Older adults add multicomponent balance/strength work at least three days/week.",
+      "parameters": [
+        {
+          "name": "moderate_activity",
+          "unit": "minutes_per_week",
+          "minimum": 150,
+          "maximum": 300
+        },
+        {
+          "name": "vigorous_activity",
+          "unit": "minutes_per_week",
+          "minimum": 75,
+          "maximum": 150
+        },
+        {
+          "name": "strength_frequency",
+          "unit": "days_per_week",
+          "minimum": 2,
+          "maximum": null
+        },
+        {
+          "name": "older_adult_multicomponent_frequency",
+          "unit": "days_per_week",
+          "minimum": 3,
+          "maximum": null
+        }
+      ],
+      "inputs": [
+        "age_group",
+        "activity_baseline",
+        "schedule",
+        "intensity_classification"
+      ],
+      "decision_needed": "These are target reference bands, not initial workloads, ceilings or proof of sport-performance optimization; approve starting dose and progression."
+    },
+    {
+      "id": "AEROBIC_INTENSITY",
+      "kind": "direct_recommendation",
+      "sources": [
+        "CDC_INTENSITY"
+      ],
+      "statement": "Classify relative aerobic intensity using a documented method: moderate permits talking but not singing; vigorous permits only a few words before pausing for breath. The talk test does not establish medical clearance or a measured heart-rate zone.",
+      "parameters": [],
+      "inputs": [
+        "reported_talk_test",
+        "activity_context"
+      ],
+      "decision_needed": "Approve collection, interpretation and interaction handling; no age-predicted maximum heart rate or medication adjustment inferred."
+    },
+    {
+      "id": "AEROBIC_START_PROGRESS",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "ACSM11",
+        "WHO20"
+      ],
+      "statement": "Proposed initial moderate continuous block: 10 minutes on three scheduled days if demonstrated tolerated; use shorter blocks when individually reviewed. After completion with intended intensity and no unresolved symptoms, propose adding five minutes to one session, reassess before further changes. Increase duration before proposing higher intensity. Neither five minutes nor this schedule is a source-reported universal progression law.",
+      "parameters": [
+        {
+          "name": "proposed_initial_duration",
+          "unit": "minutes_per_session",
+          "minimum": 10,
+          "maximum": 10
+        },
+        {
+          "name": "proposed_initial_frequency",
+          "unit": "sessions_per_week",
+          "minimum": 3,
+          "maximum": 3
+        },
+        {
+          "name": "proposed_duration_step",
+          "unit": "minutes_per_selected_session",
+          "minimum": 5,
+          "maximum": 5
+        }
+      ],
+      "inputs": [
+        "observed_tolerance",
+        "recovery_response",
+        "schedule"
+      ],
+      "decision_needed": "Approve initial eligibility, reassessment timing, symptom handling and limits; no automatic plan edits or fixed 10%-per-week rule."
+    },
+    {
+      "id": "AEROBIC_RECOVERY",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "ACSM11"
+      ],
+      "statement": "Continuous activity has no inter-set rest parameter: encode not_applicable, not zero. Pauses/intervals and between-day recovery require their own explicit reviewed prescription. Do not generate an interval workout from a continuous-activity source.",
+      "parameters": [],
+      "inputs": [
+        "continuous_or_interval_mode",
+        "recovery_response"
+      ],
+      "decision_needed": "Approve workload distribution and tolerability criteria; vigorous/interval protocols need additional evidence."
+    },
+    {
+      "id": "FLEXIBILITY_DOSE",
+      "kind": "direct_recommendation",
+      "sources": [
+        "ACSM11"
+      ],
+      "statement": "Major muscle-tendon flexibility work: accumulate 60 seconds per exercise on at least two days/week.",
+      "parameters": [
+        {
+          "name": "accumulated_duration",
+          "unit": "seconds_per_exercise_per_session",
+          "minimum": 60,
+          "maximum": 60
+        },
+        {
+          "name": "frequency",
+          "unit": "days_per_week",
+          "minimum": 2,
+          "maximum": null
+        }
+      ],
+      "inputs": [
+        "target_joint_or_muscle",
+        "baseline_range_of_motion",
+        "tolerance"
+      ],
+      "decision_needed": "Approve exercise, range/intensity and whether this general reference matches the requested mobility outcome."
+    },
+    {
+      "id": "FLEXIBILITY_STRUCTURE",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "ACSM11",
+        "STRETCH25"
+      ],
+      "statement": "Candidate decomposition of the 60-second reference: two 30-second holds per selected side, 30 seconds of transition/recovery between holds; comfortable instructor-demonstrated range without forcing pain. Reassess control/range before increasing range; no obligatory weekly percentage increase. Hold split and recovery are proposed choices, not a published optimum.",
+      "parameters": [
+        {
+          "name": "proposed_holds",
+          "unit": "holds_per_side",
+          "minimum": 2,
+          "maximum": 2
+        },
+        {
+          "name": "proposed_hold_duration",
+          "unit": "seconds_per_hold",
+          "minimum": 30,
+          "maximum": 30
+        },
+        {
+          "name": "proposed_recovery",
+          "unit": "seconds",
+          "minimum": 30,
+          "maximum": 30
+        }
+      ],
+      "inputs": [
+        "tolerance",
+        "observed_range_and_control"
+      ],
+      "decision_needed": "Approve hold split, rest, discomfort interpretation, progression and strength/power-session placement; do not conflate passive flexibility with all active mobility."
+    },
+    {
+      "id": "FLEXIBILITY_NEWER_EVIDENCE",
+      "kind": "direct_finding",
+      "sources": [
+        "STRETCH25"
+      ],
+      "statement": "Adult static-stretching meta-regression reported response plateaus around four minutes/session acutely and ten minutes/week chronically. These are aggregate associations, not compulsory individual doses, exact ceilings or a substitute for an actual muscle/side protocol.",
+      "parameters": [
+        {
+          "name": "reported_acute_plateau",
+          "unit": "minutes_per_session",
+          "reference": 4
+        },
+        {
+          "name": "reported_chronic_plateau",
+          "unit": "minutes_per_week",
+          "reference": 10
+        }
+      ],
+      "inputs": [
+        "target_joint_or_muscle",
+        "baseline_range_of_motion"
+      ],
+      "decision_needed": "Full methods and per-muscle normalization require appraisal before comparison with ACSM11; do not sum whole-body stretching against a per-muscle target."
+    },
+    {
+      "id": "BALANCE_DOSE",
+      "kind": "direct_recommendation",
+      "sources": [
+        "NHS_BALANCE"
+      ],
+      "statement": "Supported single-leg stand: 5-10 seconds, three attempts each side; heel-to-toe walk: at least five steps. Use nearby stable support, build gradually, practice at least twice weekly.",
+      "parameters": [
+        {
+          "name": "single_leg_hold",
+          "unit": "seconds_per_attempt",
+          "minimum": 5,
+          "maximum": 10
+        },
+        {
+          "name": "single_leg_attempts",
+          "unit": "attempts_per_side",
+          "minimum": 3,
+          "maximum": 3
+        },
+        {
+          "name": "tandem_walk",
+          "unit": "steps",
+          "minimum": 5,
+          "maximum": null
+        },
+        {
+          "name": "frequency",
+          "unit": "days_per_week",
+          "minimum": 2,
+          "maximum": null
+        }
+      ],
+      "inputs": [
+        "balance_capacity",
+        "support_available",
+        "fall_history"
+      ],
+      "decision_needed": "Approve supervision and individual dose; support reduction is a professional decision, not automatic progression or a diagnostic test."
+    },
+    {
+      "id": "FALL_PREVENTION",
+      "kind": "direct_recommendation",
+      "sources": [
+        "FALLS22"
+      ],
+      "statement": "Community-dwelling older adults: individualized balance-challenging and functional exercise at least three times/week over at least twelve weeks, progressing intensity; include resistance/Tai Chi when feasible. This source reports GRADE 1A for its exercise recommendation; that rating is not a completed local appraisal.",
+      "parameters": [
+        {
+          "name": "frequency",
+          "unit": "sessions_per_week",
+          "minimum": 3,
+          "maximum": null
+        },
+        {
+          "name": "program_duration",
+          "unit": "weeks",
+          "minimum": 12,
+          "maximum": null
+        }
+      ],
+      "inputs": [
+        "age_group",
+        "living_context",
+        "fall_risk_assessment",
+        "supervision"
+      ],
+      "decision_needed": "Approve actual balance challenge, supervision, exercise dose, rest and progression; not a blanket protocol for all populations."
+    },
+    {
+      "id": "BALANCE_RECOVERY",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "NHS_BALANCE",
+        "FALLS22"
+      ],
+      "statement": "Candidate recovery is 30-60 seconds between balance attempts, with stable support restored before restarting; extend or stop if control is not recovered. Progress one challenge variable after observed success; reduce challenge/support demands if control is lost. The numeric rest window is a proposed professional choice.",
+      "parameters": [
+        {
+          "name": "proposed_between_attempt_rest",
+          "unit": "seconds",
+          "minimum": 30,
+          "maximum": 60
+        }
+      ],
+      "inputs": [
+        "observed_balance_control",
+        "recovery_response",
+        "supervision"
+      ],
+      "decision_needed": "Define success criterion and approved support/base-of-support progression; no eyes-closed or unstable-surface default."
+    },
+    {
+      "id": "FUNCTION_DOSE",
+      "kind": "direct_recommendation",
+      "sources": [
+        "NHS_STRENGTH"
+      ],
+      "statement": "Entry functional examples: sit-to-stand five repetitions and supported mini-squat five repetitions, with stable equipment; build repetitions gradually and practice at least twice weekly. No percentage-1RM dose is supplied by this source.",
+      "parameters": [
+        {
+          "name": "sit_to_stand",
+          "unit": "repetitions",
+          "minimum": 5,
+          "maximum": 5
+        },
+        {
+          "name": "supported_mini_squat",
+          "unit": "repetitions",
+          "minimum": 5,
+          "maximum": 5
+        },
+        {
+          "name": "frequency",
+          "unit": "days_per_week",
+          "minimum": 2,
+          "maximum": null
+        }
+      ],
+      "inputs": [
+        "functional_task_goal",
+        "demonstrated_capacity",
+        "stable_equipment"
+      ],
+      "decision_needed": "Approve starting number of rounds, recovery and task-specific progression; cannot substitute for post-injury rehabilitation guidance."
+    },
+    {
+      "id": "FUNCTION_STRUCTURE",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "NHS_STRENGTH",
+        "NHS_BALANCE"
+      ],
+      "statement": "Candidate entry structure: one round of the selected supported task with 60-120 seconds before another task. Add one repetition to the selected task after observed controlled completion and reassessment; reassess before adding load or removing support. These operational increments/rest are proposals, not source-reported thresholds.",
+      "parameters": [
+        {
+          "name": "proposed_rounds",
+          "unit": "rounds",
+          "minimum": 1,
+          "maximum": 1
+        },
+        {
+          "name": "proposed_between_task_rest",
+          "unit": "seconds",
+          "minimum": 60,
+          "maximum": 120
+        },
+        {
+          "name": "proposed_repetition_step",
+          "unit": "repetitions_per_selected_task",
+          "minimum": 1,
+          "maximum": 1
+        }
+      ],
+      "inputs": [
+        "observed_task_control",
+        "recovery_response"
+      ],
+      "decision_needed": "Approve criteria, finite cap and reassessment period; no unsupervised fall-risk escalation."
+    },
+    {
+      "id": "WEIGHT_DIRECTION",
+      "kind": "direct_finding",
+      "sources": [
+        "WEIGHT24",
+        "BODY25"
+      ],
+      "statement": "Use the weight-loss research and limitations in domain-spec section 5.1. Preserve weight, fat and fat-free-mass outcomes separately; retain resistance work when appropriate. No guaranteed kilograms, localized fat reduction or automatically superior HIIT protocol.",
+      "parameters": [],
+      "inputs": [
+        "confirmed_goal",
+        "activity_baseline",
+        "schedule",
+        "relevant_health_context"
+      ],
+      "decision_needed": "Approve combined aerobic/resistance policy, recovery and applicability; no diet or drug prescribing scope."
+    },
+    {
+      "id": "SPORT_SPECIFICITY",
+      "kind": "proposed_professional_translation",
+      "sources": [
+        "SPORT25",
+        "ACSM26"
+      ],
+      "statement": "Require named sport/event, performance outcome, training history, current training/competition load and tested relevant capacity before selecting a protocol. The endurance-trained review does not establish one universally superior intensity distribution; no 80/20, mileage, interval or taper default is justified for an unspecified sport.",
+      "parameters": [],
+      "inputs": [
+        "sport_and_event",
+        "performance_outcome",
+        "current_sport_schedule",
+        "measured_relevant_capacity"
+      ],
+      "decision_needed": "Acquire/appraise an event-specific protocol for all dose/recovery/progression decisions; generic sport performance remains partial."
+    },
+    {
+      "id": "RESTRICTIONS",
+      "kind": "project_requirement",
+      "sources": [],
+      "statement": "Consume authorized own-client onboarding and confirmed request-specific facts. A disclosure alone never excludes access; unresolved relevant interactions, population eligibility or necessary inputs block the dependent proposal. Do not infer diagnoses, clearance, measured 1RM, medication effects or finite symptom thresholds. Existing approved manual path remains available.",
+      "parameters": [],
+      "inputs": [
+        "authorized_onboarding",
+        "confirmed_population",
+        "relevant_health_context"
+      ],
+      "decision_needed": "Named professional approves each restriction combination, required input authority, observation validity, symptom/regression actions and referral criteria."
+    },
+    {
+      "id": "RESISTANCE_ACCOUNTING",
+      "kind": "proposed_accounting_definition",
+      "sources": [
+        "SETS26"
+      ],
+      "statement": "Keep working/warm-up sets separate; sum actual scheduled occurrences per seven-day window. Retain direct/indirect muscle counts separately; no automatic 0.5 weighting. Sum repetitions and external-load volume only with explicit per-side/load conventions; unknown is not zero.",
+      "parameters": [],
+      "inputs": [
+        "schedule",
+        "reviewed_exercise_mapping",
+        "set_classification",
+        "load_convention"
+      ],
+      "decision_needed": "Approve exercise/muscle mapping and any weights; per-exercise kg-repetitions is not an interchangeable physiological dose across equipment."
+    },
+    {
+      "id": "AEROBIC_ACCOUNTING",
+      "kind": "proposed_accounting_definition",
+      "sources": [
+        "WHO20",
+        "CDC_INTENSITY"
+      ],
+      "statement": "Sum actual minutes by reviewed intensity category per seven-day window. Candidate moderate-equivalent accounting: moderate_minutes + 2 * vigorous_minutes, without counting concurrent minutes twice. Keep interval work/recovery, warm-up/cool-down and total duration distinct; unclassified time does not qualify. No conversion from resistance rest/time to aerobic minutes or from minutes to kilograms lost.",
+      "parameters": [
+        {
+          "name": "proposed_vigorous_equivalence",
+          "unit": "moderate_minutes_per_vigorous_minute",
+          "reference": 2
+        }
+      ],
+      "inputs": [
+        "schedule",
+        "segment_duration",
+        "intensity_classification"
+      ],
+      "decision_needed": "Approve equivalence and intensity-observation method; do not treat the public-health equation as equivalent sport-training stimulus."
+    },
+    {
+      "id": "FLEXIBILITY_ACCOUNTING",
+      "kind": "proposed_accounting_definition",
+      "sources": [
+        "ACSM11"
+      ],
+      "statement": "Sum hold_count * hold_seconds by exercise, side, target and actual weekly occurrence. Two 30-second holds on each side mean 60 seconds per side, not 120 seconds per side. Rest is separate; range-of-motion measurements need joint/method/unit provenance and are not kilograms or muscle sets.",
+      "parameters": [],
+      "inputs": [
+        "target_and_side",
+        "hold_duration",
+        "schedule"
+      ],
+      "decision_needed": "Approve bilateral conventions and distinction between static holds and active-mobility repetitions."
+    },
+    {
+      "id": "BALANCE_FUNCTION_ACCOUNTING",
+      "kind": "proposed_accounting_definition",
+      "sources": [],
+      "statement": "Track task attempts, successful controlled repetitions/steps, hold duration per side, support level, supervision and actual sessions separately. A balance attempt is not a hypertrophy working set; failed attempts are not completed dose. Program weeks are not multiplied into a fictitious weekly frequency.",
+      "parameters": [],
+      "inputs": [
+        "task_identity",
+        "side",
+        "support_and_supervision",
+        "observed_completion",
+        "schedule"
+      ],
+      "decision_needed": "Approve completion definitions, task measures and permissible data collection."
+    },
+    {
+      "id": "COMBINED_GOALS",
+      "kind": "project_requirement",
+      "sources": [],
+      "statement": "Preserve free-text goals and confirm priorities. Combine complete applicable component policies without summing incompatible dose units or ignoring shared recovery/time. Distinguish health target, adaptation objective and measured outcome. No automatic sport-to-general-health or rehabilitation relabeling.",
+      "parameters": [],
+      "inputs": [
+        "goal_priorities",
+        "schedule",
+        "current_combined_load"
+      ],
+      "decision_needed": "Approve combined applicability, resource/recovery conflicts and measurable outcomes before release."
+    }
+  ],
+  "profiles": [
+    {
+      "goal_family": "strength",
+      "population": "Adults; beginner and experienced branches require separate confirmation",
+      "dimensions": {
+        "selection": [
+          "SELECT_RESISTANCE"
+        ],
+        "volume": [
+          "STRENGTH_DOSE"
+        ],
+        "intensity": [
+          "STRENGTH_DOSE",
+          "NOVICE_LOADING",
+          "RESISTANCE_EFFORT"
+        ],
+        "frequency": [
+          "STRENGTH_DOSE",
+          "NOVICE_LOADING"
+        ],
+        "rest": [
+          "STRENGTH_REST"
+        ],
+        "progression": [
+          "LOAD_PROGRESSION"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Novice rest and working-effort calibration",
+        "Individual load ceiling and goal/experience mapping",
+        "Reviewed exercise identities and all restriction combinations"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [
+        "SOURCE_PAIRED_RESISTANCE"
+      ],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "hypertrophy",
+      "population": "Adults; healthy-adult evidence cannot clear clinical combinations",
+      "dimensions": {
+        "selection": [
+          "SELECT_RESISTANCE"
+        ],
+        "volume": [
+          "HYPERTROPHY_VOLUME"
+        ],
+        "intensity": [
+          "HYPERTROPHY_LOADING",
+          "RESISTANCE_EFFORT"
+        ],
+        "frequency": [
+          "STRENGTH_DOSE"
+        ],
+        "rest": [
+          "HYPERTROPHY_REST"
+        ],
+        "progression": [
+          "LOAD_PROGRESSION"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Frequency is a proposed schedule translation, not proof of an independent hypertrophy optimum",
+        "Finite initial/session volume, effort, upper bound and rest decision",
+        "Direct/indirect counting compatibility"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [
+        "SOURCE_PAIRED_RESISTANCE"
+      ],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "weight_loss",
+      "population": "Adults seeking weight/fat reduction; do not infer obesity",
+      "dimensions": {
+        "selection": [
+          "WEIGHT_DIRECTION",
+          "SELECT_RESISTANCE"
+        ],
+        "volume": [
+          "AEROBIC_DOSE",
+          "AEROBIC_START_PROGRESS"
+        ],
+        "intensity": [
+          "AEROBIC_INTENSITY",
+          "NOVICE_LOADING"
+        ],
+        "frequency": [
+          "AEROBIC_DOSE"
+        ],
+        "rest": [
+          "AEROBIC_RECOVERY",
+          "HYPERTROPHY_REST"
+        ],
+        "progression": [
+          "AEROBIC_START_PROGRESS",
+          "LOAD_PROGRESSION"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "AEROBIC_ACCOUNTING",
+        "RESISTANCE_ACCOUNTING",
+        "COMBINED_GOALS"
+      ],
+      "unresolved": [
+        "Complete individualized resistance component",
+        "Combined-goal and concurrent recovery policy",
+        "Initial aerobic translation approval; no promised body-weight change"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "cardiorespiratory_fitness",
+      "population": "Adults; fitness improvement target differs from sport optimization",
+      "dimensions": {
+        "selection": [
+          "AEROBIC_START_PROGRESS"
+        ],
+        "volume": [
+          "AEROBIC_DOSE",
+          "AEROBIC_START_PROGRESS"
+        ],
+        "intensity": [
+          "AEROBIC_INTENSITY"
+        ],
+        "frequency": [
+          "AEROBIC_DOSE",
+          "AEROBIC_START_PROGRESS"
+        ],
+        "rest": [
+          "AEROBIC_RECOVERY"
+        ],
+        "progression": [
+          "AEROBIC_START_PROGRESS"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "AEROBIC_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Choose walking/cycling/other permitted mode and baseline tolerance",
+        "Approve starting dose, response measure and progress criteria",
+        "No interval protocol or measured HR zone supplied"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "muscular_endurance",
+      "population": "Adults; local muscular endurance rather than cardiorespiratory fitness",
+      "dimensions": {
+        "selection": [
+          "SELECT_RESISTANCE"
+        ],
+        "volume": [
+          "ENDURANCE_DOSE",
+          "ENDURANCE_SETS"
+        ],
+        "intensity": [
+          "ENDURANCE_DOSE"
+        ],
+        "frequency": [
+          "NOVICE_LOADING"
+        ],
+        "rest": [
+          "ENDURANCE_DOSE"
+        ],
+        "progression": [
+          "LOAD_PROGRESSION",
+          "ENDURANCE_SETS"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Historical recommendations require current appraisal",
+        "Approve finite rest/effort, set limits, frequency and endurance-specific progression",
+        "No universal current optimum established"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [
+        "SOURCE_ENDURANCE_CIRCUIT"
+      ],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "power",
+      "population": "Adults with demonstrated technique; supervision must match exercise",
+      "dimensions": {
+        "selection": [
+          "SELECT_RESISTANCE",
+          "POWER_STRUCTURE"
+        ],
+        "volume": [
+          "POWER_STRUCTURE",
+          "POWER_REPETITIONS"
+        ],
+        "intensity": [
+          "POWER_DOSE"
+        ],
+        "frequency": [
+          "STRENGTH_DOSE"
+        ],
+        "rest": [
+          "POWER_STRUCTURE"
+        ],
+        "progression": [
+          "POWER_REPETITIONS"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Approve exercise-specific fast movement, speed stopping rule and progression",
+        "Frequency translation needs approval",
+        "Do not interchange historical and contemporary load ranges"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [
+        "SOURCE_MEDICINE_BALL_POWER"
+      ],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "mobility_flexibility",
+      "population": "Adults; static flexibility is only one component of mobility",
+      "dimensions": {
+        "selection": [
+          "FLEXIBILITY_DOSE"
+        ],
+        "volume": [
+          "FLEXIBILITY_DOSE",
+          "FLEXIBILITY_STRUCTURE",
+          "FLEXIBILITY_NEWER_EVIDENCE"
+        ],
+        "intensity": [
+          "FLEXIBILITY_STRUCTURE"
+        ],
+        "frequency": [
+          "FLEXIBILITY_DOSE"
+        ],
+        "rest": [
+          "FLEXIBILITY_STRUCTURE"
+        ],
+        "progression": [
+          "FLEXIBILITY_STRUCTURE"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "FLEXIBILITY_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Named joint/muscle and static versus active-mobility goal",
+        "Approve actual stretch identities, range, hold/rest and session placement",
+        "Appraise newer findings before selecting a weekly optimization target"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "balance",
+      "population": "General balance and older-adult fall-prevention branches are distinct",
+      "dimensions": {
+        "selection": [
+          "BALANCE_DOSE",
+          "FALL_PREVENTION"
+        ],
+        "volume": [
+          "BALANCE_DOSE"
+        ],
+        "intensity": [
+          "BALANCE_RECOVERY"
+        ],
+        "frequency": [
+          "BALANCE_DOSE",
+          "FALL_PREVENTION"
+        ],
+        "rest": [
+          "BALANCE_RECOVERY"
+        ],
+        "progression": [
+          "BALANCE_RECOVERY",
+          "FALL_PREVENTION"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "BALANCE_FUNCTION_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Confirm population branch, fall risk, environment and supervision",
+        "Approve success/recovery and support progression",
+        "General twice-weekly practice does not replace the older-adult fall-prevention program"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "functional_autonomy",
+      "population": "Adults with a confirmed daily-task goal; no rehabilitation diagnosis inferred",
+      "dimensions": {
+        "selection": [
+          "FUNCTION_DOSE"
+        ],
+        "volume": [
+          "FUNCTION_DOSE",
+          "FUNCTION_STRUCTURE"
+        ],
+        "intensity": [
+          "FUNCTION_STRUCTURE"
+        ],
+        "frequency": [
+          "FUNCTION_DOSE",
+          "FALL_PREVENTION"
+        ],
+        "rest": [
+          "FUNCTION_STRUCTURE"
+        ],
+        "progression": [
+          "FUNCTION_STRUCTURE"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "BALANCE_FUNCTION_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Define task-specific outcome and baseline, support and safety",
+        "Approve dose/recovery/progression; falls recommendation only when its population applies",
+        "Rehabilitation requires condition-specific protocols"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "general_health",
+      "population": "Adults with confirmed age/life-stage and relevant context",
+      "dimensions": {
+        "selection": [
+          "SELECT_RESISTANCE",
+          "COMBINED_GOALS"
+        ],
+        "volume": [
+          "AEROBIC_DOSE",
+          "FUNCTION_DOSE"
+        ],
+        "intensity": [
+          "AEROBIC_INTENSITY",
+          "NOVICE_LOADING"
+        ],
+        "frequency": [
+          "AEROBIC_DOSE"
+        ],
+        "rest": [
+          "AEROBIC_RECOVERY",
+          "FUNCTION_STRUCTURE"
+        ],
+        "progression": [
+          "AEROBIC_START_PROGRESS",
+          "FUNCTION_STRUCTURE"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "AEROBIC_ACCOUNTING",
+        "RESISTANCE_ACCOUNTING",
+        "BALANCE_FUNCTION_ACCOUNTING"
+      ],
+      "unresolved": [
+        "Select a coherent reviewed program rather than taking every component dose",
+        "Minimum supported activity may benefit health; no mandatory perfect-plan barrier",
+        "Named life-stage/condition policies and shared recovery"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    },
+    {
+      "goal_family": "sport_performance",
+      "population": "Named sport/event and performance level required",
+      "dimensions": {
+        "selection": [
+          "SPORT_SPECIFICITY"
+        ],
+        "volume": [
+          "SPORT_SPECIFICITY"
+        ],
+        "intensity": [
+          "SPORT_SPECIFICITY"
+        ],
+        "frequency": [
+          "SPORT_SPECIFICITY"
+        ],
+        "rest": [
+          "SPORT_SPECIFICITY"
+        ],
+        "progression": [
+          "SPORT_SPECIFICITY"
+        ],
+        "restrictions": [
+          "RESTRICTIONS"
+        ]
+      },
+      "accounting": [
+        "COMBINED_GOALS",
+        "AEROBIC_ACCOUNTING",
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "unresolved": [
+        "No universal sport-specific numeric program supported",
+        "Acquire a complete protocol for the actual event and performance outcome",
+        "Do not turn an endurance-athlete finding into a sprint, team-sport or novice prescription"
+      ],
+      "coverage_status": "partial_awaiting_review",
+      "runtime_eligible": false,
+      "protocol_alternatives": [],
+      "branch_resolution": "Linked rules are alternatives or components requiring an explicit coherent applicability decision; never blindly combine all bounds."
+    }
+  ],
+  "exercise_identity_candidates": [
+    {
+      "key": "bodyweight-squat",
+      "label_pt_br": "Agachamento com peso corporal",
+      "source": "ACE_SQUAT",
+      "equipment": "No external load",
+      "status": "identity_reference_only",
+      "review_needed": "Variation, technique, target muscles and clinical applicability; not interchangeable with a measured loaded squat"
+    },
+    {
+      "key": "selectorized-seated-row",
+      "label_pt_br": "Remada sentada na máquina",
+      "source": "ACE_ROW",
+      "equipment": "Compatible selectorized row machine",
+      "status": "identity_reference_only",
+      "review_needed": "Exact equipment variant, kg convention, muscles and clinical applicability"
+    },
+    {
+      "key": "chair-sit-to-stand",
+      "label_pt_br": "Sentar e levantar da cadeira",
+      "source": "NHS_STRENGTH",
+      "equipment": "Stable suitable chair",
+      "status": "identity_reference_only",
+      "review_needed": "Chair height, support and task competence; not a loaded-squat alias"
+    },
+    {
+      "key": "supported-mini-squat",
+      "label_pt_br": "Miniagachamento com apoio",
+      "source": "NHS_STRENGTH",
+      "equipment": "Stable support",
+      "status": "identity_reference_only",
+      "review_needed": "Range, support and control"
+    },
+    {
+      "key": "supported-single-leg-stand",
+      "label_pt_br": "Equilíbrio em uma perna com apoio próximo",
+      "source": "NHS_BALANCE",
+      "equipment": "Stable support and appropriate supervision",
+      "status": "identity_reference_only",
+      "review_needed": "Fall risk, support and success criterion"
+    },
+    {
+      "key": "heel-to-toe-walk",
+      "label_pt_br": "Caminhada com um pé à frente do outro",
+      "source": "NHS_BALANCE",
+      "equipment": "Safe surface and stable support",
+      "status": "identity_reference_only",
+      "review_needed": "Assistance, step definition and environment"
+    }
+  ]
+}

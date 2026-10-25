@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
 
 import type { CurrentTrainingItem } from '../training-plan'
+import { trainingCount, trainingRest } from '../training-dose'
 
 export const trainingColumns = ['Ordem', 'Exercício', 'Séries', 'Repetições ou duração', 'Carga', 'Descanso']
 
@@ -15,8 +16,8 @@ export function TrainingExerciseTable({ rows }: { rows: string[][] }) {
 
 export function trainingRows(items: CurrentTrainingItem[]) {
   return [...items].sort((first, second) => first.position - second.position).map((item) => [
-    String(item.position), item.exercise_name, String(item.sets), item.repetitions,
-    item.load_guidance, `${item.rest_seconds} s`,
+    String(item.position), item.exercise_name, trainingCount(item.sets), item.repetitions,
+    item.load_guidance, trainingRest(item.rest_seconds, item.dose_details),
   ])
 }
 

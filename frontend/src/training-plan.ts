@@ -1,13 +1,16 @@
 import type { TrainingKnowledge } from './training-knowledge'
+import { prescriptionRejectionMessage, PrescriptionInputRequiredError } from './training-prescription'
+import type { DoseDetails } from './training-dose'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
 export type CurrentTrainingItem = {
   exercise_name: string
-  sets: number
+  sets: number | null
   repetitions: string
   load_guidance: string
-  rest_seconds: number
+  rest_seconds: number | null
+  dose_details?: DoseDetails | null
   position: number
   equipment_requirement?: string | null
   equipment_model_id?: string | null
@@ -30,6 +33,7 @@ export type TrainingPlanDraft = Omit<CurrentTrainingPlan, 'status'> & {
   submitted_for_review_at: string | null
   preview?: string | null
   validation_error?: string | null
+  prescription_review_available?: boolean
   status: 'proposal'
   origin: 'ai' | 'instructor'
 }
@@ -43,7 +47,11 @@ export async function submitTrainingDraft(accessToken: string, id: string, revis
   if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
   if (response.status === 403 || response.status === 404) throw new Error('Você não tem permissão para enviar este rascunho.')
   if (response.status === 409) throw new Error('O rascunho mudou. Recarregue a página e confira a versão atual antes de enviar.')
-  if (response.status === 422) throw new Error('Este rascunho contém exercícios inválidos. Gere uma nova ficha antes de enviar para revisão.')
+  if (response.status === 422) {
+    let detail: unknown
+    try { detail = (await response.json() as { detail?: unknown }).detail } catch { /* Controlled fallback. */ }
+    throw new Error(prescriptionRejectionMessage(detail) ?? 'Este rascunho contém exercícios inválidos. Gere uma nova ficha antes de enviar para revisão.')
+  }
   if (!response.ok) throw new Error('Não foi possível enviar o treino para revisão. Tente novamente.')
   return response.json() as Promise<TrainingPlanDraft>
 }
@@ -60,6 +68,11 @@ export async function createInitialTrainingProposal(accessToken: string): Promis
     let detail: unknown
     try { detail = (await response.json() as { detail?: unknown }).detail } catch { /* Use the validation message when no structured detail is available. */ }
     if (detail === 'Completed onboarding is required before generating a training proposal') throw new Error('Conclua seu onboarding antes de gerar seu rascunho de treino.')
+    const rejection = prescriptionRejectionMessage(detail)
+    if (rejection) {
+      if (detail && typeof detail === 'object' && 'category' in detail && detail.category === 'missing_input') throw new PrescriptionInputRequiredError(rejection)
+      throw new Error(rejection)
+    }
     throw new Error('A ficha gerada não passou pela validação automática. Tente gerar novamente; seu treino atual não foi alterado.')
   }
   if (response.status === 503) throw new Error('A geração por IA está indisponível no momento. Tente novamente.')

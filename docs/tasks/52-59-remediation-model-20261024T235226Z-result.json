@@ -1,0 +1,49 @@
+{
+  "status": "rejected",
+  "category": "insufficient_support",
+  "reason": "invalid_typed_candidate",
+  "issues": [
+    {
+      "field": "candidate",
+      "reason": "malformed_structured_output"
+    }
+  ],
+  "next_action": "abstain",
+  "plan_name": "remediation-model-20261024T235226Z",
+  "elapsed_seconds": 61.20718722199854,
+  "stage_calls": {
+    "writer": 4,
+    "review": 0,
+    "focus": 0
+  },
+  "actual_model_http_calls": {
+    "writer": 4,
+    "review": 0,
+    "focus": 0
+  },
+  "stage_seconds": {
+    "writer": 61.09670565899978,
+    "review": 0.0,
+    "focus": 0.0
+  },
+  "outputs": [
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"schema_version\": 2,\n  \"scope\": \"session_sheet\",\n  \"input_snapshot_sha256\": \"225042e01e631db4d2cb7756371d5b5d897e9b40bc58ac381460a00640133875\",\n  \"policy_version\": \"test-1\",\n  \"dictionary_version\": \"test-1\",\n  \"accounting_method_version\": \"test-1\",\n  \"expected_revision\": null,\n  \"sessions\": [\n    {\n      \"session_id\": \"fixture:1\",\n      \"label\": \"C\",\n      \"items\": [\n        {\n          \"item_id\": \"fixture\",\n          \"exercise_key\": \"fixture\",\n          \"variation_key\": \"fixture\",\n          \"equipment_model_id\": \"a2c7d942-4c3c-4d3b-9f8e-5d3a0b1e5d2c\",\n          \"sets\": null,\n          \"dose\": {\n            \"kind\": \"aerobic\",\n            \"minutes\": 10,\n            \"intensity\": \"moderate\",\n            \"observation_fact\": \"progression_observed\"\n          },\n          \"intensity\": null,\n          \"rest_seconds\": null,\n          \"rest\": {\n            \"kind\": \"after_exercise\",\n            \"seconds\": 30\n          },\n          \"group\": null,\n          \"progression\": {\n            \"instruction_key\": \"progress\",\n            \"condition_fact\": \"progression_observed\",\n            \"action_key\": \"add_duration\",\n            \"amount\": 1,\n            \"unit\": \"seconds\",\n            \"stop_instruction_key\": \"stop\",\n            \"regression_instruction_key\": \"regress\"\n          },\n          \"decision_rules\": {\n            \"selection\": \"synthetic-selection\",\n            \"volume\": \"synthetic-volume\",\n            \"intensity\": \"synthetic-intensity\",\n            \"frequency\": \"synthetic-frequency\",\n            \"progression\": \"synthetic-progression\",\n            \"rest\": \"synthetic-rest\",\n            \"restrictions\": \"synthetic-restrictions\"\n          },\n          \"note_instruction_keys\": [\"support\", \"supervision\"],\n          \"calculated_load\": null\n        }\n      ]\n    }\n  ],\n  \"schedule\": null\n}"
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"schema_version\": 2,\n  \"scope\": \"session_sheet\",\n  \"input_snapshot_sha256\": \"225042e01e631db4d2cb7756371d5b5d897e9b40bc58ac381460a00640133875\",\n  \"policy_version\": \"test-1\",\n  \"dictionary_version\": \"test-1\",\n  \"accounting_method_version\": \"test-1\",\n  \"expected_revision\": null,\n  \"sessions\": [\n    {\n      \"session_id\": \"session-1\",\n      \"label\": \"C\", \"items\": [\n        {\n          \"item_id\": \"item-1\",\n          \"exercise_key\": \"fixture\",\n          \"variation_key\": \"fixture\",\n          \"equipment_model_id\": null,\n          \"sets\": null,\n          \"dose\": {\n            \"kind\": \"aerobic\",\n            \"minutes\": 5,\n            \"intensity\": \"moderate\",\n            \"observation_fact\": \"progression_observed\"\n          },\n          \"intensity\": null,\n          \"rest_seconds\": null,\n          \"rest\": null,\n          \"group\": null,\n          \"progression\": {\n            \"instruction_key\": \"progress\",\n            \"condition_fact\": \"progression_observed\",\n            \"action_key\": \"add_duration\",\n            \"amount\": 1,\n            \"unit\": \"seconds\",\n            \"stop_instruction_key\": \"stop\",\n            \"regression_instruction_key\": \"regress\"\n          },\n          \"decision_rules\": {\n            \"selection\": \"synthetic-selection\",\n            \"volume\": \"synthetic-volume\",\n            \"intensity\": \"synthetic-intensity\",\n            \"frequency\": \"synthetic-frequency\",\n            \"progression\": \"synthetic-progression\",\n            \"rest\": \"synthetic-rest\",\n            \"restrictions\": \"synthetic-restrictions\"\n          },\n          \"note_instruction_keys\": [\"support\", \"supervision\"],\n          \"calculated_load\": null\n        }\n      ]\n    }\n  ],\n  \"schedule\": null\n}"
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"schema_version\": 2,\n  \"scope\": \"session_sheet\",\n  \"input_snapshot_sha256\": \"225042e01e631db4d2cb7756371d5b5d897e9b40bc58ac381460a00640133875\",\n  \"policy_version\": \"test-1\",\n  \"dictionary_version\": \"test-1\",\n  \"accounting_method_version\": \"test-1\",\n  \"expected_revision\": null,\n  \"sessions\": [\n    {\n      \"session_id\": \"session-1\",\n      \"label\": \"C\",\n      \"items\": [\n        {\n          \"item_id\": \"item-1\",\n          \"exercise_key\": \"fixture\",\n          \"variation_key\": \"fixture\",\n          \"equipment_model_id\": null,\n          \"sets\": null,\n          \"dose\": {\n            \"kind\": \"aerobic\",\n            \"minutes\": 5,\n            \"intensity\": \"moderate\",\n            \"observation_fact\": \"progression_observed\"\n          },\n          \"intensity\": null,\n          \"rest_seconds\": null,\n          \"rest\": {\n            \"kind\": \"after_exercise\",\n            \"seconds\": 10\n          },\n          \"group\": null,\n          \"progression\": {\n            \"instruction_key\": \"progress\",\n            \"condition_fact\": \"progression_observed\",\n            \"action_key\": \"add_duration\",\n            \"amount\": 1,\n            \"unit\": \"seconds\",\n            \"stop_instruction_key\": \"stop\",\n            \"regression_instruction_key\": \"regress\"\n          },\n          \"decision_rules\": {\n            \"selection\": \"synthetic-selection\",\n            \"volume\": \"synthetic-volume\",\n            \"intensity\": \"synthetic-intensity\",\n            \"frequency\": \"synthetic-frequency\",\n            \"progression\": \"synthetic-progression\",\n            \"rest\": \"synthetic-rest\",\n            \"restrictions\": \"synthetic-restrictions\"\n          },\n          \"note_instruction_keys\": [\n            \"support\",\n            \"supervision\"\n          ],\n          \"calculated_load\": null\n        }\n      ]\n    }\n  ],\n  \"schedule\": null\n}"
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"schema_version\": 2,\n  \"scope\": \"session_sheet\",\n  \"input_snapshot_sha256\": \"225042e01e631db4d2cb7756371d5b5d897e9b40bc58ac381460a00640133875\",\n  \"policy_version\": \"test-1\",\n  \"dictionary_version\": \"test-1\",\n  \"accounting_method_version\": \"test-1\",\n  \"expected_revision\": null,\n  \"sessions\": [\n    {\n      \"session_id\": \"session-1\",\n      \"label\": \"C\", \"items\": [\n        {\n          \"item_id\": \"item-1\",\n          \"exercise_key\": \"fixture\",\n          \"variation_key\": \"fixture\",\n          \"equipment_model_id\": \"a2b3c4d5-e6f7-8901-2345-6789abcdef01\",\n          \"sets\": null,\n          \"dose\": {\n            \"kind\": \"aerobic\",\n            \"minutes\": 5,\n            \"intensity\": \"moderate\",\n            \"observation_fact\": \"progression_observed\"\n          },\n          \"intensity\": null,\n          \"rest_seconds\": null,\n          \"rest\": null,\n          \"group\": null,\n          \"progression\": {\n            \"instruction_key\": \"progress\",\n            \"condition_fact\": \"progression_observed\",\n            \"action_key\": \"add_duration\",\n            \"amount\": 1,\n            \"unit\": \"seconds\",\n            \"stop_instruction_key\": \"stop\",\n            \"regression_instruction_key\": \"regress\"\n          },\n          \"decision_rules\": {\n            \"selection\": \"synthetic-selection\",\n            \"volume\": \"synthetic-volume\",\n            \"intensity\": \"synthetic-intensity\",\n            \"frequency\": \"synthetic-frequency\",\n            \"progression\": \"synthetic-progression\",\n            \"rest\": \"synthetic-rest\",\n            \"restrictions\": \"synthetic-restrictions\"\n          },\n          \"note_instruction_keys\": [\"support\", \"supervision\"],\n          \"calculated_load\": null\n        }\n      ]\n    }\n  ],\n  \"schedule\": null\n  }"
+    }
+  ],
+  "independent_evaluation": false,
+  "real_policy_or_retrieval": false
+}

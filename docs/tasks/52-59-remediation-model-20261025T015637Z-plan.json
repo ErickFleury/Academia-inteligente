@@ -1,0 +1,40 @@
+{
+  "name": "remediation-model-20261025T015637Z",
+  "frozen_at": "2026-10-25T01:56:37.870766+00:00",
+  "scope": "exposed_software_diagnostic_synthetic_contract_and_evidence",
+  "real_policy_or_retrieval": false,
+  "independent_evaluation": false,
+  "case": "aerobic_continuous_no_resistance_fields",
+  "repetitions": 1,
+  "expected": "Reviewable synthetic proposal if the actual model follows the supplied envelope; all failures retained",
+  "clinical_accuracy": "not_evaluated",
+  "explanation": "not_graded_no_free_prose",
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "writer_configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "typed-prescription-1",
+    "instruction_version": "operational-prescription-2"
+  },
+  "timeout_seconds": 360,
+  "deadline_seconds": 3600,
+  "max_http_calls": {
+    "writer": 4,
+    "review": 4,
+    "focus": 0,
+    "total": 8
+  },
+  "contract_sha256": "bdd85bb0202bdfc1b546a909b84b5ebd8fc810e2c822c8d244a62fc05deb722e",
+  "dictionary_sha256": "6de7a63b932a87f82dbab4f0924b457763031a1bd7107343a488dd4b5b2eae91",
+  "source_support": "Synthetic fixture; no scientific support claim",
+  "implementation_sha256": {
+    "app/modules/training/prescription_writer_schema.py": "8ea13d6f29e4289e42786e6f703723f5f50e630e2a66f07818a4d855ef523065",
+    "app/modules/training/prescription_contract.py": "d525555b558a8564a2646b5cca51c649c5fed2d34f345e8d8a020dd730733236",
+    "app/modules/training/prescription_validation.py": "bba3029f09a372d7f139e3254ddf96dd5a8b464f8556f14511063d7da9325b06",
+    "app/integrations/ai.py": "533a8429f25aa2e3254438bba7643e601c4a63a911695838cfb98e984af19eb7"
+  },
+  "persistence": "in_memory_sqlite_only_no_real_clients_or_release"
+}

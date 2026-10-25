@@ -559,6 +559,45 @@ Generate initial guidance/a training plan using the information provided during 
   coverage and client restrictions without claims of clinical superiority.
   Instructor approval remains necessary.
 
+**Owner optional-schedule clarification — 2026-10-25 (CA-15.11–13):**
+Explicit session count/labels (including three days or A/B/C) are independent of
+muscle focus. A request need not say full-body to receive the requested sheets;
+targeted sheets remain targeted. No explicit schedule keeps the existing
+unscheduled behavior. Preserve requested labels, requested goal, per-sheet review,
+distinct-selection checks and the existing grounded repetition exception. Do not
+infer a weekly calendar from labels or silently replace the requested goal with
+onboarding/model output. Mixed goals without a clear primary goal require
+clarification. Owner RAG retains one complete-routine candidate plus at most one
+content correction, shared call/deadline limits and atomic persistence.
+For two or three requested sheets, the routine may be assembled from individually
+generated/reviewed session fragments. They share one logical attempt and one total
+content correction; the allowance must never reset for each day. The same maximum
+four writer/four review/two focus HTTP calls and ten total includes all fragments,
+transport retries and correction. No fragment is persisted separately; final
+validation and saving apply atomically to the complete routine.
+See the [investigation and execution plan](training-optional-three-day-work-plan.md).
+Implementation evidence, generated routines and verification limits are recorded
+in the [optional-schedule delivery](tasks/51-optional-three-day-delivery-20261025.md).
+
+**Intent and flexibility implementation clarification — 2026-10-25:**
+RF-15/RF-18 interpret the current explicit client instruction independently of
+old conversation objectives. A copied standalone client-role header does not
+turn an otherwise explicit request into generic chat; preserve the original
+stored message and its request-UUID replay. Token boundaries, negated objectives
+and an explicit primary goal distinguish actual competing goals from incidental
+words. Ask for a primary goal only when needed; session count remains optional.
+As required by EXT-CA-AI-02.27, flexibility uses typed hold duration and side,
+not resistance repetitions or invented measured range. Left/right holds are
+separate anatomical targets, not competing prescriptions; overlapping doses for
+the same movement/day/side still require correction under CA-15.12. Splitting
+side rows never makes a copied exercise selection distinct under CA-15.13.
+Full-body flexibility checks upper/lower/trunk flexibility coverage, while
+resistance retains its existing five movement patterns. These are technical
+representation/coverage checks, not a universal exercise count or clinical dose.
+See the [incident work plan](training-intent-flexibility-work-plan.md).
+Completed implementation, actual generated sheets and verification limits are in
+the [intent/flexibility delivery](tasks/51-intent-flexibility-delivery-20261025.md).
+
 **Consolidation note:** Apply RN-12 through RN-19 and RN-29 through RN-31. DEC-07 resolves the current proposal/review flow: AI may create only a structured proposal, and an instructor must review it before approval or activation.
 
 ### RF-16 View current training plan
@@ -1600,6 +1639,487 @@ Acceptance: `EXT-CA-INST-05.1` separate persisted operational state;
 `EXT-CA-INST-05.5` retained plans/history are unchanged;
 `EXT-CA-INST-05.6` no live-availability meaning or unauthorized mutation.
 
+#### EXT-RF-AI-02 — Evidence-qualified training prescription and mandatory abstention
+
+**Scope:** owner-requested follow-up specification, 2026-10-22; implementation
+planned in Tasks 45–51. **Related:** RF-15, RF-18, RF-19; RF-16/RF-17 and
+EXT-RF-INST-02/03 only for presentation, review, and lifecycle integration.
+
+Search for reusable evidence, download and embed eligible material through the
+existing knowledge module, and qualify AI prescriptions against explicit,
+professionally reviewed applicability and prescription policies. Bibliographic
+relevance, citation validity, model confidence, and a second AI review do not
+establish adequate prescription or reliable personalization for every client.
+
+For new AI-generated prescriptions and AI changes to prescriptions, this policy
+tightens the RF-15/RF-18/RF-19 RAG contract: insufficient, expired, unavailable,
+conflicting, or inapplicable support must prevent a usable training proposal.
+An explanatory limitation alone is no longer sufficient for such writes.
+Non-prescriptive chat may still return a qualified explanation without generating
+a plan. Health disclosures alone do not automatically prohibit generation under
+CA-15.4/RN-13/DEC-07; failure to establish applicable support does. Instructor
+review and manual authoring remain available, with no automatic approval.
+
+Acceptance criteria:
+
+- [ ] **EXT-CA-AI-02.1:** reproducible searches and source screening produce a
+  versioned coverage matrix of supported goal families, all existing experience
+  levels (`none`, `beginner`, `intermediate`, `advanced`), relevant populations,
+  and restrictions. Free-text goals are preserved; unknown or ambiguous goals
+  cannot silently map to a supported family. Every cell is supported, partial,
+  unsupported, or awaiting review, with reasons and source locators. Combinations
+  of restrictions require explicit applicability; isolated coverage is insufficient.
+  Searches and appraisal follow the prespecified methodological protocol in
+  EXT-CA-AI-02.14; scientific relevance and permission to ingest are separate.
+- [ ] **EXT-CA-AI-02.2:** each ingested artifact has verified reuse permission
+  under the existing OGL-3.0/CC-BY-4.0/CC-BY-SA-4.0 allowlist, provenance,
+  capture/version/hash, attribution, review deadline, and extraction quality
+  checks. Discovery indexes and free-to-read content are not automatic permission
+  to download, redistribute, adapt, or embed full text. Ineligible candidates
+  remain metadata-only.
+- [ ] **EXT-CA-AI-02.3:** eligible downloads and passage extraction are
+  reproducible; idempotent ingestion uses the existing PostgreSQL/pgvector,
+  Ollama BGE-M3 `vector(1024)`, and startup bootstrap. Changed passages are
+  re-embedded; removed, revoked, or expired material cannot support new output.
+  Operational acquisition/indexing evidence is distinct from automated tests.
+- [ ] **EXT-CA-AI-02.4:** versioned prescription policies have an identified
+  qualified professional reviewer, review date/deadline, population and goal
+  applicability, exclusions, evidence certainty/limitations, and exact passage
+  locators. Technical/license review is separate from professional approval.
+  Policies specify supported bounds and decision rules for exercise selection,
+  volume, intensity, frequency, progression, restriction adjustments, and rest.
+  Missing or conflicting rules leave the affected profile unsupported; neither
+  developers nor AI may invent clinical thresholds or mark their own extraction
+  as professional approval.
+  Each rule includes an evidence-to-decision record, outcome-specific certainty,
+  benefit/harm considerations, applicability judgments, and any conditional use.
+  Lower certainty does not automatically mean prohibition; enabling conditional
+  use requires an explicit professionally approved policy with stated limits.
+- [ ] **EXT-CA-AI-02.5:** retrieval applies scope, permission, freshness, and
+  policy applicability before selection. The final zero-to-six-passage context
+  must collectively support all mandatory prescription dimensions for the actual
+  request/profile. Similarity and citation count cannot establish coverage.
+  If six passages cannot support the request, generation abstains; the bound
+  and existing writing/embedding providers are not silently changed.
+- [ ] **EXT-CA-AI-02.6:** backend-owned validation checks structured parameters
+  and cross-item/session/week totals against applicable policy rules. Each
+  material prescription decision links to a reviewed rule and retrieved source
+  locator. A professionally approved conservative choice within a supported
+  range is distinguishable from a source's directly reported finding. Unsupported
+  exact loads, inferred one-repetition maximums, diagnoses, and invented progression
+  are rejected. Missing required input leads to clarification or abstention.
+- [ ] **EXT-CA-AI-02.7:** evidence status and prescription eligibility are
+  separate backend decisions. `knowledge_status=supported`, valid citations,
+  writer self-assessment, or automatic AI review cannot authorize generation
+  without a complete applicable validation result. Conflicting guidance requires
+  a recorded professionally approved resolution; uncertainty cannot be hidden
+  by selecting a convenient citation.
+- [ ] **EXT-CA-AI-02.8:** failing any mandatory check discards the generated
+  candidate: no plan, partial sheet, adaptation operations, actionable workout
+  in chat, preview, submission, or approval is published from that attempt.
+  Return a stable machine-readable reason and a clear pt-BR explanation with
+  an authorized manual-review path. No generic workout or warning-only fallback
+  is allowed. External failures are bounded and controlled under RNF01/05/06.
+  Distinguish a documented restriction conflict, missing required input,
+  insufficient applicable support, and technical unavailability. Only the first
+  may describe an identified prescription conflict; the other outcomes do not
+  establish that a workout is harmful or that the client cannot exercise.
+- [ ] **EXT-CA-AI-02.9:** the same gate covers initial generation, targeted
+  sheets, full rebuilds, chat draft edits, and adaptation, including retries,
+  cached drafts, and idempotent replays. A correction may repair representation
+  within the existing bounded retry policy; it cannot manufacture evidence or
+  relax eligibility. Unsupported AI-generated exercise prescriptions in chat
+  are subject to the same abstention rule.
+- [ ] **EXT-CA-AI-02.10:** rejection preserves the sole saved draft, its revision,
+  submission state, approved/current plan, adaptation history, and instructor
+  attribution. Successful persistence remains atomic and concurrency-checked.
+  No raw discarded workout or sensitive prompt is retained in ordinary logs;
+  minimal reason/version diagnostics follow existing privacy/retention rules.
+- [ ] **EXT-CA-AI-02.11:** client and instructor views distinguish qualified
+  proposals, evidence limitations, and abstention. Instructors can inspect the
+  decision-to-rule/source trace without raw private chat. No UI claims clinical
+  validation, universal coverage, or individual effectiveness from passing gates.
+  Manual instructor edits invalidate affected AI validation/grounding; they remain
+  explicitly human-authored and cannot inherit an AI eligibility badge.
+- [ ] **EXT-CA-AI-02.12:** a versioned, professionally reviewed evaluation suite
+  independent of writer/automatic-review judgments reports per-profile coverage,
+  support correctness, unsafe/unsupported acceptance, justified rejection, and
+  false rejection. All critical negative cases must reject; supported cases
+  must also pass to prevent an always-abstain implementation. Unmeasured profiles
+  remain unsupported. Passing fixtures is not proof of clinical effectiveness.
+  Freeze outcome definitions, error costs, cohort denominators, sampling rationale
+  and release thresholds before evaluation; report false acceptance/rejection
+  and uncertainty on held-out cases. Zero observed critical test failures is a
+  software release condition, not an estimate of zero real-world risk.
+- [ ] **EXT-CA-AI-02.13:** accepted drafts retain immutable evidence/policy/
+  validator versions and a decision trace bound to their exact content revision.
+  Before resubmission, AI reuse, or approval of an AI-qualified draft, stale or
+  changed support is revalidated; failure prevents automated reuse/approval as
+  qualified content. An instructor may explicitly author/edit a manual draft
+  through the existing workflow, clearing AI qualification. Historical approved
+  plans are preserved and never silently recertified or rewritten.
+- [ ] **EXT-CA-AI-02.14:** before substantive source selection, Task 45 versions
+  a protocol with PICO questions, search/screening rules, design-appropriate
+  appraisal (AGREE II for guidelines, AMSTAR 2 for eligible systematic reviews,
+  RoB 2 for randomized-trial results), outcome-specific GRADE certainty and a
+  structured evidence-to-decision process. Instrument versions, justified
+  adaptations, reviewers, disagreements, inaccessible evidence, overlapping
+  studies and amendments are recorded. PRISMA supports reporting, not a quality
+  pass. Instrument ratings, licenses, retrieval similarity and product safety
+  decisions cannot be collapsed into an invented universal score. Every material
+  criterion records its methodological/source basis or is explicitly classified
+  as a technical constraint or product policy with an evaluation plan. Required
+  professional/methodological reviews remain pending until actually performed;
+  methods references are not automatically licensed corpus content.
+- [ ] **EXT-CA-AI-02.15:** release requires a separate operational evaluation
+  using the actual deployment writer, embedding model, retrieval and validator
+  configuration with synthetic clients and the sealed evaluation set. Run counts,
+  budgets and thresholds are fixed before execution; record repeated-run results,
+  versions and failures. Fake-provider CI remains mandatory but cannot substitute
+  for this run. An unavailable or unevaluated deployment configuration remains
+  disabled; no real-client plan is submitted or activated by evaluation.
+- [ ] **EXT-CA-AI-02.16:** AI prescriptions use a versioned typed contract with
+  explicit scope, session/schedule identities, recognized versioned exercise keys,
+  sets, repetitions or duration, discriminated intensity/load units, rest,
+  progression conditions/actions/limits, restriction-rule links and policy-defined
+  muscle-volume accounting. Displayed prescription values derive from that
+  contract; contradictory free-text dosing cannot bypass validation. The bounded
+  exercise dictionary is a validation dependency, not exercise-management CRUD.
+- [ ] **EXT-CA-AI-02.17:** Task 47 produces an input-readiness matrix and the
+  generation flow binds each attempt to a minimized, confirmed, versioned input
+  snapshot with provenance, authority, observation/confirmation times and policy-
+  defined validity. Existing onboarding/person data is consumed only through
+  authorized services. Necessary request-specific facts may be collected through
+  the existing authenticated clarification flow without rewriting onboarding.
+  Missing/stale/conflicting facts prevent affected qualification. New unsupported
+  medical fields or retention policies require their existing decision gates.
+- [ ] **EXT-CA-AI-02.18:** before operational gate enablement, Task 47 runs
+  a retrieval-feasibility experiment over the Task 46 corpus using reviewed
+  development cases and reference supporting passages. Measure passage-budget,
+  applicability and dimension coverage, distinguish missing literature/indexing
+  from ranking/budget failure, and record end-to-end resource limits. The six-
+  passage bound remains unchanged; cohorts that cannot meet it stay disabled
+  pending a documented architectural decision, not an invented evidence pass.
+  The owner-approved 2026-10-23 development exception permits isolated Tasks
+  48–50 implementation/tests with synthetic policies before this experiment;
+  it cannot enable the new feature for real students.
+- [ ] **EXT-CA-AI-02.19:** evaluation design starts in Task 45 and reference
+  judgments, case partitions, thresholds, repeated-run plan and release scope
+  are sealed by Task 47 before independent evaluation and operational enablement.
+  The owner-approved 2026-10-23 exception permits isolated development before
+  sealing, while preserving the prespecified design and untouched independent
+  held-out cases/answers. Task 51 executes this
+  protocol. Developers receive development cases, not held-out cases/answers;
+  contaminated or subsequently tuned held-out cases require a new independent
+  set and recorded amendment before a new release claim.
+- [ ] **EXT-CA-AI-02.20:** an explicit transition matrix governs qualified,
+  unvalidated, edited, expired and manually assumed drafts without adding plan
+  lifecycle states or erasing AI lineage. Only an instructor may explicitly
+  assume responsibility for an existing saved draft through an audited manual
+  action, clearing AI qualification; changing an origin flag is insufficient.
+  AI adaptations validate the complete resulting plan and aggregate effects;
+  a legacy base that cannot be normalized/qualified requires manual review.
+  Qualification of a new revision never rewrites prior historical versions.
+- [ ] **EXT-CA-AI-02.21:** manual authoring remains independent of AI/knowledge
+  outages after successful backend initialization. Existing fail-closed schema/
+  knowledge bootstrap is preserved: startup failure means the backend and its
+  manual API are unavailable, not degraded readiness. Task 46 supplies recovery
+  and last-known-valid-catalog procedures that preserve data and never reinstate
+  expired/revoked evidence; Task 51 verifies runtime outage and startup recovery
+  separately. No new degraded startup mode is implicitly authorized.
+- [ ] **EXT-CA-AI-02.22:** Task 45 establishes named accountable owners, reviewer
+  qualifications/independence, adjudication, resource availability and approval
+  records. Task 47 records adopt/adapt/reassess decisions for reusable existing
+  appraisals and owns policy approval; technical maintainers own artifact integrity
+  and execution, not clinical approval. Source/policy/model/input-contract changes
+  trigger impact assessment, affected-cohort suspension and scoped reevaluation;
+  prior approved plans remain unchanged. Task 51 records explicit release sign-off.
+
+**Owner governance clarification — 2026-10-24 (EXT-CA-AI-02.22):**
+Every active Instructor profile is functionally authorized to perform the
+methodological and professional review functions and to serve as custodian of
+the sealed evaluation. No separate application role is required. Each completed
+review/custody action must still identify the actual responsible instructor and
+its scope, dates and artifact references. Independent assessments require distinct
+human reviewers; implementer-exposed development material cannot become an
+independent held-out set through a role assignment. This authorization does not
+record an appraisal, policy approval, evaluation seal or release decision as
+already performed.
+
+**Owner workflow extension — 2026-10-24 (Tasks 45–51):**
+Provide an instructor workspace for reviewing the current source and prescription
+artifacts and registering custody of synthetic sealed evaluation material.
+This explicitly extends Task 47/50's earlier file-only review boundary; it does
+not authorize a general corpus uploader, automatic professional approval or
+automatic real-student enablement.
+
+**Owner approval amendment — 2026-10-24 (EXT-RF-AI-02):**
+The owner explicitly reports that no professional reviewer is available and
+authorizes all current consultation sources and proposed rules by project-owner
+decision, including operational use once technical prerequisites are complete.
+For source/rule governance, this is an alternative to the independent professional
+approval required by .4/.14/.22/.23 above; it is not a completed scientific
+appraisal. Preserve `professional_review_performed=false`, unassessed certainty,
+and the original research findings, proposed translations and open applicability
+decisions. Never create human-review signatures or impersonate an instructor.
+Record the actual owner instruction and exact artifact hashes in a versioned
+owner approval registry. Changed/revoked/unlisted artifacts lose this approval.
+The instructor evidence workspace must display this approval separately from
+optional professional judgments and independent-review completion.
+
+Owner approval does not change copyright/reuse permission, review freshness,
+source exclusions, confirmed-input requirements, unresolved prescription branches,
+or missing executable policies/dictionary/accounting/contracts. It permits testing
+with the approved research rules and eligible retrieved passages; such generated
+development outputs must identify their owner basis and lack of professional
+validation. Complete typed validation and separately budgeted operational evaluation
+remain prerequisites to qualified operational rollout. No automatic activation or
+silent modification of existing student plans is authorized.
+
+**Owner operational RAG amendment — 2026-10-24 (Tasks 46–51 and remediation):**
+The owner explicitly states: “Não há nem haverá avaliador ou casos independentes.
+Implemente o que for necessário para que funcione o RAG.” This supersedes the
+independent-review, held-out-case, sealing and independent-release prerequisites
+for the `owner_rag` assisted-drafting mode. Independent evaluation and professional
+appraisal are optional enhancements in this mode, never fabricated completed work.
+Record the actual owner instruction, accepted source/rule registry hash and actual
+writer configuration in a versioned operational authorization. Technical regression,
+actual local RAG/provider checks and ordinary instructor plan approval remain.
+
+This mode uses the existing proposal, chat, adaptation and manual-review workflows
+with eligible retrieved consultation passages and applicable owner-accepted research
+rules. It can create reviewable drafts without a completed seven-dimension compiled
+prescription policy. A consultation-backed draft must identify its owner basis,
+absence of professional/independent evaluation and lack of compiled prescription
+qualification. Do not display a qualified-prescription badge or clinical certainty
+on that basis. Exact compiled-bundle authorization and full typed-policy checks
+remain required when claiming compiled prescription qualification; that optional
+scope cannot be claimed from assisted RAG drafting.
+
+Keep the six-passage bound, permissions/licenses, technical review freshness,
+client isolation, no invented citations, actual exercise checks, mandatory automatic
+exercise review, one content correction, shared call/deadline budgets and atomic
+draft persistence. Bind consultation proposals to exact content, onboarding and
+source/rule versions; changed/revoked dependencies prevent reuse/submission/approval
+until regeneration or explicit instructor manual authoring. Preserve approved
+history. Runtime AI/embedding failure retains controlled failure and manual authoring.
+No clinical threshold, missing observation, independent signature or automatic
+activation is authorized by this amendment. Optional review/custody tools remain.
+
+For this expressly authorized mode, .4/.7/.8/.12/.14–19/.22/.26/.33 and Tasks
+47/48/51 are interpreted with the above operational distinction: evidence filters,
+source transparency and technical checks are mandatory; independent appraisal/seals
+and complete compiled clinical policies are not prerequisites to assisted drafting.
+The other stated safety, identity, lifecycle and source-rights requirements persist.
+
+- [ ] **EXT-CA-AI-02.23:** every active local instructor can inspect the current
+  review artifacts and submit an immutable methodological/professional judgment
+  with rationale, scope, method/version, outcome certainty, source locators,
+  competence/conflict declarations and intentional attestation. The backend binds
+  identity/time to the authenticated local instructor and judgment to the exact
+  artifact hash. Stale hashes reject; clients, inactive instructors and admin-only
+  identities cannot perform these actions. One person cannot supply the two
+  independent assessments of the same artifact version. Incomplete executable
+  bundles may receive change requests, but cannot receive a completed approval.
+  An approval requires explicit independence and a future review deadline.
+  An instructor can explicitly supersede their own judgment in the same function;
+  preserve the original assessment and allow only one current successor under
+  concurrency. Expired approvals cannot satisfy current independent review.
+  Bundle hashes bind substantive policies, execution and accounting content,
+  excluding approval status, review records and deadlines to avoid circular
+  signatures. Runtime approval references must resolve to the current app records
+  for that substantive hash and cannot extend their human-declared deadlines.
+- [ ] **EXT-CA-AI-02.24:** an instructor may register a synthetic evaluation seal
+  with a frozen protocol, referenced artifact hashes, prespecified repetition/
+  resource/threshold metadata and a private case/reference payload. Record the
+  responsible custodian and payload hash before evaluation. Other instructors
+  may inspect protocol/hash metadata but cannot retrieve the sealed cases or
+  answers. Store private material in the existing protected database, outside
+  repository fixtures and ordinary logs; the implementer must not read real
+  held-out payloads. Changes require a new seal, never silent replacement.
+  The public frozen protocol is itself reviewable by other instructors using the
+  same judgment workflow, without loading its private cases or references.
+- [ ] **EXT-CA-AI-02.25:** review and custody UI uses the existing instructor shell,
+  shared components and pt-BR feedback, exposes incomplete/awaiting-review status
+  honestly and never renders another custodian's cases. Creating records is
+  explicit and concurrency/idempotency protected. Review/custody registration
+  alone cannot publish a runtime policy, execute an unbudgeted model run, enable
+  a cohort or satisfy the separate release sign-offs and independent evaluation.
+
+**Owner-requested prescription remediation specification — 2026-10-24:**
+The owner requested a specific implementation specification after the local
+generation/rule experiments. The criteria below refine RF-15/RF-18/RF-19 and
+EXT-RF-AI-02; they do not record implementation, new clinical choices or release.
+The source/rule owner-approval amendment remains in force. Approval of a research
+rule is distinct from completing its executable applicability and decision branches.
+
+- [ ] **EXT-CA-AI-02.26 — Executable policy and approval basis:** inventory all
+  37 accepted rules and eleven goal families, linking exact source/rule versions
+  to selected coherent branches, explicit missing decisions and executable status.
+  Policy, dictionary, accounting and runtime validation must consume a truthful
+  `owner_decision` or `independent_review` approval basis consistently. Owner basis
+  retains absent professional appraisal and may retain `not_assessed` certainty;
+  it cannot fabricate HumanReview records. The current source/rule registry alone
+  cannot authorize a new compiled bundle: bind the completed bundle and its
+  component/input versions to an explicit authorization record. Missing dose,
+  authority, applicability, restriction-interaction or branch decisions remain
+  controlled gaps. Changed/revoked dependencies invalidate affected authorization.
+  A status-only promotion, silently combined alternatives or invented bounds fails.
+- [ ] **EXT-CA-AI-02.27 — Exercise and modality representation:** writers choose
+  stable versioned exercise/variation identifiers from the applicable dictionary;
+  names and aliases are rendered in pt-BR. Backend checks movement identity,
+  requested focus, actual equipment eligibility and variation compatibility.
+  Resource-only or ambiguous names produce item-specific feedback. Contracts and
+  projections preserve resistance, continuous aerobic, side-specific holds,
+  balance/function, pair and circuit quantities when those modes are supported.
+  Inapplicable rest is explicitly tagged, never encoded as zero. Missing mode
+  support yields a controlled reason, not conversion to a resistance exercise.
+  Existing historical plans retain their original names and references.
+- [ ] **EXT-CA-AI-02.28 — Backend calculations:** authoritative progression,
+  percent-based load, session/seven-day totals, side-specific duration and approved
+  aerobic equivalence are computed in domain services using exact decimal/integer
+  operations and explicit units, occurrences and provenance. Reuse the existing
+  accounting core where applicable. The writer selects permitted intent; backend
+  calculations supply derived values and rendered totals. A conflicting supplied
+  value is rejected for correction, not silently accepted. Missing measurement,
+  schedule, classification, increment/rounding policy or side convention remains
+  unknown and cannot become zero or a guessed dose. The five documented wrong
+  quantities must have exact regression oracles, including 50 kg + 2% = 51 kg.
+- [ ] **EXT-CA-AI-02.29 — Transport and domain schema:** narrow writer choices
+  using the current envelope's identifiers, units, instructions and decision-rule
+  links. Require actual JSON null where applicable, closed enums/objects, correct
+  scalar types and complete response cardinality. API unit keys stay in English;
+  presentation stays pt-BR. Backend domain validation remains authoritative when
+  a provider ignores schema constraints. A versioned, deterministic adapter may
+  map an explicitly enumerated unambiguous representation alias; it cannot guess
+  missing values, change dose or default a decision to acceptance. Duplicate,
+  missing or invented IDs and unrecognized aliases reject with precise feedback.
+- [ ] **EXT-CA-AI-02.30 — Limits, restrictions and actions:** executable bounds
+  represent inclusive/exclusive and open/reference-only limits explicitly. Reference
+  associations are not silently converted to personal minimums or ceilings.
+  Backend evaluation owns the next action: documented restriction conflict,
+  required-input clarification, unsupported applicability and technical failure
+  retain their existing distinct categories. Loss of control activates the
+  applicable interruption/regression condition; it cannot authorize increased
+  challenge through model prose. Separate the validity of an explanatory fragment
+  from the operational action so that `accept` of a description cannot substitute
+  for `clarify` of missing information. Disclosures alone never prohibit access.
+- [ ] **EXT-CA-AI-02.31 — Scoped generation context:** resolve actual goal,
+  experience, focus, confirmed inputs and a coherent applicable branch before
+  building the writer envelope. Send only relevant authorized rules, dictionary
+  choices and the existing maximum of six eligible retrieved passages. Missing
+  goals, mixed priorities, sport/event facts or restriction applicability use the
+  existing clarification/manual path without relabeling the goal. Record exact
+  rule-to-passage coverage and missing dimensions; insufficient support cannot
+  be repaired by adding unrelated rules, changing licenses or enlarging context.
+- [ ] **EXT-CA-AI-02.32 — Bounded correction and atomic persistence:** reuse the
+  existing single content-correction mechanism with item/field-specific backend
+  reasons and allowed choices. At most two content candidates are written per
+  logical attempt. Preserve the adapter's maximum one transient transport retry
+  per stage, with shared per-attempt accounting that nesting/replay cannot reset:
+  at most four writer HTTP calls, four automatic-review HTTP calls and two focus
+  HTTP calls, and no more than ten total. Unused stages do not create extra calls.
+  Every call uses the configured adapter timeout and remaining operation deadline.
+  Revalidate support, scope, content and revision after correction and immediately
+  before atomic save. Missing facts, revoked support, unresolved policy, a
+  documented conflict or an outage cannot be repaired by model invention. Failure
+  preserves the existing draft, approved plan, lineage and submission state.
+- [ ] **EXT-CA-AI-02.33 — Verification and release evidence:** preserve the
+  original two full-sheet attempts, 74-case/37-rule experiment and isolated
+  diagnostics as historical evidence. Convert their specific failures into offline
+  domain/adapter/integration regressions; keep format, numeric, action, explanation
+  and source-support results separate. Replace the ambiguous fragment-accept versus
+  required-action rubric in a newly versioned suite, without rewriting the old
+  scores. Exercise actual initial/targeted/rebuild/chat/adaptation/replay/review
+  paths, positive qualification, expected rejection, clarification, exhaustion,
+  stale support, isolation and rollback. An always-reject implementation fails.
+  Run separately frozen actual-deployment synthetic experiments with predeclared
+  cases, repetitions, call/time budgets and outcomes. Fresh independent evaluation
+  and scoped release remain separate gates; exposed regression cases cannot become
+  held-out evidence. Required critical negative cases must reject. The frontend
+  uses the established MUI system, accessible pt-BR feedback and DEC-16 viewports/
+  processing/timeout checks for affected journeys. No automatic cohort enablement
+  or clinical reliability claim follows from software-test success.
+
+Implementation map, incident-to-test matrix, data contracts and execution order:
+[`docs/training-prescription-remediation-spec.md`](training-prescription-remediation-spec.md).
+The owner-requested [hypertrophy unmeasured-load remediation map](training-hypertrophy-load-remediation-spec.md)
+details the existing owner-RAG, scoped-contract and single-correction requirements
+for repeated invented-load failures; it introduces no new clinical prescription rule.
+These refinements require no new major technology, provider, paid service or
+dependency. Any unresolved substantive prescription choice is recorded explicitly
+before the affected policy is enabled; preparing this specification supplies no
+such clinical choice or approval.
+
+Detailed task decomposition and implementation reading map:
+[`docs/evidence-qualified-training-specification.md`](evidence-qualified-training-specification.md).
+The [domain contracts](training-prescription-domain-spec.md) consolidate the
+owner's input, exercise-reference, prescription, evaluation, audience and
+accounting decisions dated 2026-10-23. They detail the following clarification
+without replacing the approval, reuse, evaluation or implementation gates above.
+
+**Owner contract clarification — 2026-10-23 (EXT-RF-AI-02):**
+
+- Completed, valid own-student onboarding is authoritative for existing student
+  facts. Missing inputs cannot be guessed or silently added to onboarding;
+  existing request clarification, equipment and revision services retain their
+  separate approved responsibilities under EXT-CA-AI-02.17.
+- The audience includes students with and without medication use, injuries,
+  complaints or reported conditions, across all four existing experience levels.
+  No blanket exclusion from system access or automatic prescription rejection
+  may depend solely on those disclosures. The earlier adult-strength initial
+  slice is a feasibility proposal, not the complete product audience.
+- AI must seek an adapted proposal for the actual goal and reported context;
+  hypertrophy remains hypertrophy rather than silently becoming rehabilitation.
+  Every mandatory decision still needs applicable support, confirmed required
+  inputs and validation. If those cannot be established, reject/clarify the
+  attempt and retain access to the existing instructor/manual path. Inclusive
+  access does not promise successful AI generation for every combination.
+- Weight loss/fat loss is also an explicitly requested goal family. Preserve the
+  actual free-text goal and clarify priorities for mixed goals such as fat loss
+  with muscle preservation or hypertrophy; do not infer obesity from the request.
+  Research guidance and accounting for aerobic duration/intensity are detailed
+  in domain-contract section 5.1. These are review candidates, not enabled dose
+  defaults or promises of kilograms lost. Nutrition/drug prescriptions and new
+  outcome-tracking features are outside this clarification. Existing applicable
+  evidence, professional approval and independent release gates still apply.
+- The owner also requests research and concrete review candidates for the other
+  discussed goal families: strength, hypertrophy, cardiorespiratory fitness,
+  local muscular endurance, power, mobility/flexibility, balance, functional
+  autonomy, general health and sport performance. The
+  [rule review package](training-prescription-rule-review.md) records numerical
+  findings separately from proposed professional translations, all mandatory
+  dimensions, accounting, source locators, inputs and unresolved decisions.
+  Research families do not replace stored free-text goals or enable a profile.
+  Sport performance requires the actual event/modalities and matching evidence;
+  clinical combinations and active mobility cannot inherit unrelated support.
+  Synthetic validator tests do not establish scientific correctness; real-policy
+  tests and independent evaluation require actual approved rule records.
+- The owner delegates research of professional exercise, prescription and
+  accounting references. Selected references guide review; no source title,
+  professional reputation or instructor approval grants missing reuse rights,
+  methodological approval, policy applicability or universal coverage.
+- A prescription with material gaps or no valid source references must reject.
+  A nonempty bibliography is insufficient: all material decisions must link to
+  current applicable policy rules and actually retrieved allowed passages under
+  EXT-CA-AI-02.5–10. Instructor approval remains mandatory and cannot override a
+  failed AI candidate; the separate manual workflow remains available.
+- Accounting must preserve actual exercise/session/seven-day quantities,
+  explicit units/schedule and reviewed direct/indirect muscle classification.
+  Any fractional weighting requires an applicable reviewed policy; missing
+  classification or schedule is unknown, not zero or an assumed weekly total.
+  Reference selection and proposed bookkeeping do not approve numeric dosing.
+
+The supporting [methodological protocol](training-evidence-methodology.md)
+defines Task 45's prespecification and the Task 47/51 handoffs.
+The [execution contracts](training-prescription-execution-contracts.md) detail
+EXT-CA-AI-02.15–22. Both documents support, and do not replace, this requirement.
+Task 45 research and Task 46 eligible acquisition may proceed. The 2026-10-24
+owner approval amendment supplies source/rule governance without a professional
+opinion; enabling a qualified prescription profile still requires complete
+executable policies and the operational evaluation in **EXT-DEC-AI-02**.
+Existing catalog technical review is not prescription qualification.
+
 #### EXT-RF-LANG-01 — Portuguese user-facing application
 
 **Scope:** approved cross-cutting extension for existing, MVP, and post-MVP UI.
@@ -2144,6 +2664,7 @@ EXT-RF-LANG-01 was approved separately as a cross-cutting language rule.
 | EXT-DEC-EQP-01 | **Resolved for Task 21** | UUID-identified `EquipmentModel` canonical grouping; each physical `EquipmentUnit` belongs to one model; active quantity is derived from active units, not a mutable aggregate; no live availability semantics. | Equipment catalog and quantities may proceed. |
 | EXT-DEC-PRES-01 | **Resolved for Task 23** | Default-off client-owned profile tag only; derived from fresh confirmed passages with a 12-hour limit; immediate opt-out; no directory, staff override, or occupancy impact. | Opt-in profile presence may proceed. |
 | EXT-DEC-INST-01 | **Resolved for Tasks 28–37** | Shared person identity and RF-07/RF-08 instructor provisioning; dedicated instructor area; public-profile-only read-only feed; one cross-source plan draft; plan responsibility/history/search/onboarding workflows; separate equipment operational state; ViaCEP-assisted but always editable Brazilian addresses. | Instructor professional-area tasks may proceed in dependency order. |
+| EXT-DEC-AI-02 | **Owner source/rule governance approved; executable contracts and evaluation pending** | The explicit 2026-10-24 owner decision accepts exact current source/proposed-rule versions without a professional opinion as an alternative source/rule approval basis. Preserve absent appraisal/certainty, reuse permissions, scope and unresolved branches. Complete executable policy/input/dictionary/accounting contracts and separately budgeted operational evaluation remain required before qualified rollout. No fabricated human signatures, new clinical ranges, universal coverage, new license types, paid services or architecture changes are implicitly approved. | Approved research may be tested with eligible retrieval; technically incomplete or unevaluated profiles remain unqualified. |
 
 ### 9.2 Privacy and sensitive-data rules
 

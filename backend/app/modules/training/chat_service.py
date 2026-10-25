@@ -6,7 +6,7 @@ import json
 import os
 import re
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -26,6 +26,7 @@ from app.modules.equipment.service import EquipmentService
 from app.modules.knowledge.service import KnowledgeCitationError, KnowledgeResult, KnowledgeService
 from app.modules.onboarding.draft_service import OnboardingDraftService
 from app.modules.onboarding.models import Onboarding
+from app.modules.training import owner_rag
 from app.modules.training.completeness import IncompleteTrainingPlanError
 from app.modules.training.generation_service import (
     CompletedOnboardingRequiredError,
@@ -40,6 +41,8 @@ from app.modules.training.models import (
     TrainingPlanItem,
     TrainingPlanVersion,
 )
+from app.modules.training.prescription_contract import PrescriptionRejection
+from app.modules.training.prescription_runtime import enforcement_enabled
 from app.modules.training.presentation import proposal_preview
 from app.modules.training.schema import TrainingPlanVersionInput
 from app.modules.training.selection import (
@@ -109,6 +112,7 @@ class TrainingChatService:
         return TrainingChatState(self._messages(session, conversation.id))
 
     @observe_turn("training_chat")
+    @owner_rag.authorized_attempt
     def submit_for_subject(
         self, session: Session, subject: str, *, message: str, client_request_id: UUID
     ) -> TrainingChatState:
@@ -123,6 +127,28 @@ class TrainingChatService:
             )
         )
         if reply is not None:
+            if owner_rag.enabled():
+                proposal = self._lifecycle.find_proposal(session, client_id=client_id)
+                if proposal is not None and any(c.get("owner_rag") for c in proposal.citations):
+                    owner_rag.validate_saved(
+                        session,
+                        proposal,
+                        self._lifecycle.content(session, proposal),
+                        onboarding=owner_rag.current_onboarding(session, client_id),
+                    )
+            if enforcement_enabled():
+                from app.modules.training.prescription_chat import replay_reply
+
+                content = replay_reply(self, session, subject, client_id, client_request_id)
+                messages = self._messages(session, conversation.id)
+                return TrainingChatState(
+                    [
+                        replace(item, content=content)
+                        if item.reply_to_client_request_id == client_request_id
+                        else item
+                        for item in messages
+                    ]
+                )
             record_turn(outcome="cached", path="cached")
             return TrainingChatState(self._messages(session, conversation.id))
 
@@ -155,12 +181,21 @@ class TrainingChatService:
         )
         if newer:
             raise ConcurrentTrainingUpdateError
-        message = user.content
+        from app.modules.training.request_intent import request_text
+
+        message = request_text(user.content)
         context = self._context(session, client_id, conversation, message, user.id)
         editable_draft = self._editable_ai_draft(session, client_id)
         draft_revision = editable_draft.revision if editable_draft else None
         try:
-            initial_reply = self._initial_plan_reply(session, subject, client_id, context)
+            if enforcement_enabled():
+                from app.modules.training.prescription_chat import operational_reply
+
+                initial_reply = operational_reply(
+                    self, session, subject, client_id, context, client_request_id
+                )
+            else:
+                initial_reply = self._initial_plan_reply(session, subject, client_id, context)
             if initial_reply is not None:
                 # This preview comes from validated domain content, not provider
                 # prose; it is not subject to the writing adapter's text limit.
@@ -179,17 +214,41 @@ class TrainingChatService:
                 # Retrieval uses only this client's message and scoped plan context.
                 evidence = self._knowledge.retrieve(session, client_id, message)
                 context["knowledge"] = evidence.as_context()
+                if owner_rag.enabled() and context["rules"]["may_update_ai_draft"]:
+                    context = owner_rag.prepare(
+                        context, evidence, owner_rag.current_onboarding(session, client_id)
+                    )
                 record_turn(path="model")
                 try:
                     if context["rules"]["may_update_ai_draft"]:
-                        response = request_selected_training(
-                            lambda selected_context: self._retry(
+
+                        def write_chat(selected_context):
+                            result = self._retry(
                                 lambda: self._provider.training_chat(selected_context)
-                            ),
+                            )
+                            if owner_rag.enabled() and result.draft_update is not None:
+                                from app.modules.training.owner_rag_schema import resolve_plan
+
+                                result = result.model_copy(
+                                    update={
+                                        "draft_update": resolve_plan(
+                                            result.draft_update, selected_context
+                                        )
+                                    }
+                                )
+                            return result
+
+                        response = request_selected_training(
+                            write_chat,
                             context,
                             plan_field="draft_update",
+                            repair_domain_errors=owner_rag.enabled(),
+                            candidate_validator=owner_rag.validate_candidate
+                            if owner_rag.enabled()
+                            else None,
                             assess=lambda review_context: self._retry(
-                                lambda: self._provider.assess_training(review_context)
+                                lambda: self._provider.assess_training(review_context),
+                                stage="review",
                             ),
                         )
                     else:
@@ -200,6 +259,17 @@ class TrainingChatService:
                         if "knowledge_status" in response.model_fields_set
                         else None,
                     )
+                    if response.draft_update is not None and owner_rag.enabled():
+                        from types import SimpleNamespace
+
+                        plan = TrainingPlanVersionInput.model_validate(response.draft_update)
+                        knowledge = owner_rag.bind(knowledge, context, plan)
+                        owner_rag.validate_saved(
+                            session,
+                            SimpleNamespace(citations=knowledge.citations),
+                            plan,
+                            onboarding=owner_rag.current_onboarding(session, client_id),
+                        )
                 except (
                     KnowledgeCitationError,
                     ValidationError,
@@ -218,7 +288,7 @@ class TrainingChatService:
                         )
                     )
                     raise TrainingChatDraftUpdateError from None
-        except (TrainingChatUnavailableError, TrainingChatDraftUpdateError):
+        except (TrainingChatUnavailableError, TrainingChatDraftUpdateError, PrescriptionRejection):
             session.commit()  # Preserve only the original client message for retry.
             raise
         content = response.assistant_message
@@ -390,6 +460,16 @@ class TrainingChatService:
                 )
             )
         )
+        if owner_rag.enabled():
+            from app.modules.training.completeness import requested_training_schedule
+
+            try:
+                requested_days = bool(requested_training_schedule(message)["session_labels"])
+            except PrescriptionRejection:
+                # The generation path returns the ordinary clarification instead
+                # of allowing a conflicting request to reuse an unrelated draft.
+                requested_days = True
+            detailed = detailed or requested_days or bool(owner_rag.goal_families(message))
         # Request UUIDs handle transport retries in submit_for_subject. Repeated
         # text can be a fresh instruction or follow a failed generation, so it
         # cannot establish that the saved draft fulfills the current request.
@@ -397,7 +477,16 @@ class TrainingChatService:
             existing is not None
             and not detailed
             and not self._lifecycle.has_invalid_exercises(session, existing)
+            and (not owner_rag.enabled() or not owner_rag.requires_regeneration(existing))
+            and (not owner_rag.enabled() or any(c.get("owner_rag") for c in existing.citations))
         ):
+            if owner_rag.enabled():
+                owner_rag.validate_saved(
+                    session,
+                    existing,
+                    self._lifecycle.content(session, existing),
+                    onboarding=owner_rag.current_onboarding(session, client_id),
+                )
             return (
                 "Seu rascunho já está disponível em Meu treino. "
                 "Você pode pedir uma alteração nesse rascunho. Quando estiver satisfeito, "
@@ -423,6 +512,25 @@ class TrainingChatService:
             raise TrainingChatUnavailableError from None
         except InvalidTrainingGenerationError:
             raise TrainingChatDraftUpdateError from None
+        except PrescriptionRejection as error:
+            if error.reason == "goal_priority_confirmation_required":
+                record_turn(outcome="clarification", reason="none")
+                return (
+                    "Você pediu mais de um objetivo. Qual deve ser o principal? "
+                    "Envie o pedido novamente com essa prioridade. A quantidade de dias é opcional."
+                )
+            if error.reason == "training_goal_confirmation_required":
+                record_turn(outcome="clarification", reason="none")
+                return (
+                    "Qual é o objetivo desejado para esta ficha? A quantidade de dias é opcional."
+                )
+            if error.reason == "training_schedule_confirmation_required":
+                record_turn(outcome="clarification", reason="none")
+                return (
+                    "Confirme quantas fichas deseja e quais letras devo usar. "
+                    "Por exemplo: três fichas, A, B e C."
+                )
+            raise
         record_turn(outcome="draft_saved")
         return (
             "Criei seu rascunho de treino com base no onboarding concluído. "
@@ -507,6 +615,9 @@ class TrainingChatService:
 
     @classmethod
     def _requests_initial_plan(cls, message: str, history: list[dict]) -> bool:
+        from app.modules.training.request_intent import request_text
+
+        message = request_text(message)
         text = cls._normalized(message).strip()
         # Full matches intentionally exclude conditions, negation, health
         # corrections and ambiguous compound answers from consent.
@@ -528,23 +639,35 @@ class TrainingChatService:
         # still explicit generation requests, not generic chat about an old exercise.
         if re.search(
             r"\b(?:se|caso|desde que|antes|depois|quando)\b|"
-            r"\bnao (?:quero|gere|crie|monte|prepare|refaca|refazer|remonte|"
-            r"remontar|recrie|recriar|reformule|reformular|agora)\b",
+            r"^nao (?:quero|preciso|gostaria)\b|"
+            r"\bnao (?:quero|preciso|gostaria)(?: de)? (?:que|um treino|uma ficha)\b|"
+            r"\bnao(?: (?:quero|preciso|gostaria)(?: de)?)? "
+            r"(?:gere|gerar|crie|criar|monte|montar|prepare|preparar|refaca|refazer|"
+            r"remonte|remontar|recrie|recriar|reformule|reformular|agora)\b",
             text,
         ):
             return False
-        return bool(
-            re.match(
-                r"(?:por favor[, ]+)?(?:(?:quero|preciso|gostaria) que (?:voce )?|"
-                r"(?:voce )?(?:pode|poderia|quero|gostaria de) )?"
-                r"(?:prepare|preparar|gere|gerar|monte|montar|crie|criar|elabore|elaborar|"
-                r"refaca|refazer|remonte|remontar|recrie|recriar|reformule|reformular) "
-                r"(?:(?:um|uma|o|a|meu|minha|novo|nova|primeiro|primeira|seu|sua|todo|toda) )*"
-                r"(?:sugestao de treino|plano(?: de treino)?|treino|"
-                r"rascunho(?: de treino)?|ficha)\b",
-                text,
-            )
+        command = re.match(
+            r"(?:por favor[, ]+)?(?:(?:quero|preciso|gostaria) que (?:voce )?|"
+            r"(?:voce )?(?:pode|poderia|quero|gostaria de) )?"
+            r"(?:prepare|preparar|gere|gerar|monte|montar|crie|criar|elabore|elaborar|"
+            r"refaca|refazer|remonte|remontar|recrie|recriar|reformule|reformular) ",
+            text,
         )
+        if command is None:
+            return False
+        target = text[command.end() :]
+        if re.match(
+            r"(?:(?:um|uma|o|a|meu|minha|novo|nova|primeiro|primeira|seu|sua|todo|toda|"
+            r"[1-7]|dois|duas|tres|quatro|cinco|seis|sete) )*"
+            r"(?:sugestao de treino|planos?(?: de treino)?|treinos?|"
+            r"rascunhos?(?: de treino)?|fichas?)\b",
+            target,
+        ):
+            return True
+        from app.modules.training.request_intent import GOAL_TERMS
+
+        return any(re.match(r"(?:" + terms + r")(?!\w)", target) for terms in GOAL_TERMS.values())
 
     @staticmethod
     def _editable_ai_draft(session: Session, client_id: UUID) -> TrainingPlanVersion | None:
@@ -694,10 +817,12 @@ class TrainingChatService:
 
     @staticmethod
     def _normalized(text: str) -> str:
-        return "".join(
-            char
-            for char in unicodedata.normalize("NFKD", text.lower())
-            if not unicodedata.combining(char)
+        return " ".join(
+            "".join(
+                char
+                for char in unicodedata.normalize("NFKD", text.lower())
+                if not unicodedata.combining(char)
+            ).split()
         )
 
     @classmethod
@@ -789,13 +914,24 @@ class TrainingChatService:
         return conversation
 
     @staticmethod
-    def _retry(operation):
+    def _retry(operation, stage="writer"):
         for attempt in range(2):
             try:
-                return operation()
+                from app.modules.training.prescription_budget import CURRENT_BUDGET
+
+                budget = CURRENT_BUDGET.get()
+                return budget.call(stage, operation) if budget is not None else operation()
             except AiProviderError as error:
                 record_retry(error.category, not attempt and error.retryable)
                 if attempt or not error.retryable:
+                    if (
+                        owner_rag.enabled()
+                        and stage == "writer"
+                        and error.category == "malformed_structured_output"
+                    ):
+                        raise PrescriptionRejection(
+                            "insufficient_support", "invalid_typed_candidate"
+                        ) from None
                     raise TrainingChatUnavailableError from None
         raise TrainingChatUnavailableError
 

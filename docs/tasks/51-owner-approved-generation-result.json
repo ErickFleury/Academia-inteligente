@@ -1,0 +1,291 @@
+{
+  "plan": {
+    "purpose": "owner_approved_research_development_not_independent_evaluation",
+    "frozen_at": "2026-10-24T20:44:51.245690+00:00",
+    "owner_decision_id": "owner-source-rule-acceptance-2026-10-24",
+    "registry_sha256": "1320b0f43e38f926afe8456ede97b31c981b6e7871059069531b1faa0f752b07",
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "maximum_model_calls": 4,
+    "maximum_generation_calls_per_case": 1,
+    "maximum_assessment_calls_per_case": 1,
+    "timeout_seconds_per_call": 360,
+    "retries": 0,
+    "cases": [
+      {
+        "goal_family": "hypertrophy",
+        "context_sha256": "463b13aa6f92602dfcbdb359b6a3f913c138f4aa2305b8558312c376f168484c"
+      },
+      {
+        "goal_family": "strength",
+        "context_sha256": "73d374f4d6c2b50fba7c97eae38c39c8b3863f2b6e5106a4f258b0745c6fb510"
+      }
+    ],
+    "checks": [
+      "schema",
+      "exercise_names",
+      "duplicates",
+      "citations",
+      "automatic_review"
+    ],
+    "dose_policy_validation": "not_available_incomplete_executable_contracts",
+    "no_student_lifecycle_writes": true,
+    "release_authorized_by_probe": false
+  },
+  "results": [
+    {
+      "goal_family": "hypertrophy",
+      "retrieved_passages": [
+        {
+          "source_id": "nhs-strength",
+          "chunk_id": "nhs-strength-1"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-09"
+        },
+        {
+          "source_id": "biga-anatomy",
+          "chunk_id": "biga-anatomy-1"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-08"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-04"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        }
+      ],
+      "owner_approved_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SOURCE_PAIRED_RESISTANCE",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "professional_review_performed": false,
+      "qualified_prescription": false,
+      "automatic_assessment": {
+        "sessions": [
+          {
+            "label": "A",
+            "complete": true,
+            "issues": [],
+            "repetition_recommendation": null
+          }
+        ]
+      },
+      "status": "generation_and_automatic_checks_passed",
+      "development_plan": {
+        "name": "Ficha de corpo inteiro para hipertrofia",
+        "objective": "hipertrofia",
+        "items": [
+          {
+            "exercise_name": "flexão de braços (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "remada curvada (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "halteres",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "agachamento (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "ponte de quadril (Dia A)",
+            "sets": 3,
+            "repetitions": "10-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "prancha (Dia A)",
+            "sets": 3,
+            "repetitions": "20-30 segundos",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "iversen-time-efficient-2021-09",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec22 blocks 7; Sec22 blocks 8; Sec22 blocks 9; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23"
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-04",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec5 blocks 1; Sec5 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23"
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23"
+        }
+      ],
+      "knowledge_limitations": "Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "elapsed_seconds": 361.169
+    },
+    {
+      "goal_family": "strength",
+      "retrieved_passages": [
+        {
+          "source_id": "nhs-strength",
+          "chunk_id": "nhs-strength-1"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-09"
+        },
+        {
+          "source_id": "biga-anatomy",
+          "chunk_id": "biga-anatomy-1"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-08"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-04"
+        },
+        {
+          "source_id": "biga-anatomy",
+          "chunk_id": "biga-anatomy-2"
+        }
+      ],
+      "owner_approved_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SOURCE_PAIRED_RESISTANCE",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ],
+      "professional_review_performed": false,
+      "qualified_prescription": false,
+      "automatic_assessment": {
+        "sessions": [
+          {
+            "label": "A",
+            "complete": false,
+            "issues": [
+              "ambiguous_exercise"
+            ],
+            "repetition_recommendation": null
+          }
+        ]
+      },
+      "status": "rejected_by_automatic_checks",
+      "issues": [
+        {
+          "label": "A",
+          "complete": false,
+          "issues": [
+            "ambiguous_exercise"
+          ],
+          "repetition_recommendation": null
+        }
+      ],
+      "elapsed_seconds": 280.76
+    }
+  ],
+  "actual_model_calls": 4,
+  "requests": [
+    {
+      "request_sha256": "e02771e9fc764ed59d5b2923cd749f44fbbef1ebb7cf2026dc7dcea13dfa2d33"
+    },
+    {
+      "request_sha256": "b90c7d4e3adb9225d7806d8e7adc2b28baf664a0a99f9840c8f1a59eb911c0d8"
+    },
+    {
+      "request_sha256": "551527bb973c0222582d9e4dc53048ec8ed3905372577f9542094db51ba1abe4"
+    },
+    {
+      "request_sha256": "73a656c63b06b3416297e277903ebff99996c0ee79d6f706eb293907021d5d4b"
+    }
+  ],
+  "saved_student_plans": 0,
+  "activated_student_plans": 0,
+  "independent_evaluation_performed": false,
+  "limitations": [
+    "Only two implementer-exposed synthetic development cases, one run each.",
+    "Research rules are owner approved, without professional or methodological appraisal.",
+    "Schema/citation/automatic review checks do not validate numeric research-rule compliance.",
+    "Incomplete executable policies, dictionary and accounting still block typed qualification."
+  ]
+}

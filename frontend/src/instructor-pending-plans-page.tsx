@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom'
 import { ApiRequestError } from './clients'
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { TrainingPlanContent } from './components/training-plan-content'
+import { ConnectedPrescriptionReview } from './components/connected-prescription-review'
 import { TrainingKnowledgeSources } from './components/training-knowledge-sources'
 import { TrainingDraftFields } from './training-draft-fields'
 import { InstructorShell } from './instructor-shell'
@@ -12,7 +13,7 @@ import { appendPendingToCurrent, approvePendingPlan, getPendingPlan, getPendingP
 
 const sources = { ai: 'IA', instructor: 'Instrutor', adaptation: 'Adaptação aceita pelo cliente' }
 const date = (value: string) => new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'medium', timeStyle: 'short' })
-const content = (plan: PendingPlan): ReviewContent => ({ name: plan.name, objective: plan.objective, items: plan.items.map((item) => ({ exercise_name: item.exercise_name, sets: item.sets, repetitions: item.repetitions, load_guidance: item.load_guidance, rest_seconds: item.rest_seconds, equipment_requirement: item.equipment_requirement ?? null, equipment_model_id: item.equipment_model_id ?? null })) })
+const content = (plan: PendingPlan): ReviewContent => ({ name: plan.name, objective: plan.objective, items: plan.items.map((item) => ({ exercise_name: item.exercise_name, sets: item.sets, repetitions: item.repetitions, load_guidance: item.load_guidance, rest_seconds: item.rest_seconds, ...(item.dose_details ? { dose_details: item.dose_details } : {}), equipment_requirement: item.equipment_requirement ?? null, equipment_model_id: item.equipment_model_id ?? null })) })
 
 export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessToken: string; onSignOut: () => void }) {
   const [searchParams] = useSearchParams()
@@ -185,7 +186,15 @@ export function InstructorPendingPlansPage({ accessToken, onSignOut }: { accessT
             <Tab id="aba-visualizar" aria-controls="painel-visualizar" value="preview" label="Visualizar treino" />
             <Tab id="aba-editar" aria-controls="painel-editar" value="edit" label="Editar rascunho" />
           </Tabs>
-          <Box role="tabpanel" id="painel-visualizar" aria-labelledby="aba-visualizar" hidden={editing}>{!editing && <TrainingPlanContent plan={draft} />}</Box>
+          <Box role="tabpanel" id="painel-visualizar" aria-labelledby="aba-visualizar" hidden={editing}>{!editing && (selected.prescription_review_available
+            ? <ConnectedPrescriptionReview key={`${selected.id}:${selected.revision}`} accessToken={accessToken} role="instructor"
+                versionId={selected.id} revision={selected.revision} disabled={busy || stale || dirty}
+                onChanged={async () => {
+                  const latest = await getPendingPlan(accessToken, selected.id)
+                  setSelected(latest); setDraft(content(latest))
+                  setPlans((items) => items.map((item) => item.id === latest.id ? latest : item))
+                }} />
+            : <TrainingPlanContent plan={draft} />)}</Box>
           <Box role="tabpanel" id="painel-editar" aria-labelledby="aba-editar" hidden={!editing}>
             {editing && <Box component="fieldset" disabled={busy || stale} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
               <TrainingDraftFields accessToken={accessToken} draft={draft} onChange={(value) => { setDraft(value); setSelectedPositions([]) }} />

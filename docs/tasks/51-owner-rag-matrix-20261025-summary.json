@@ -1,0 +1,487 @@
+{
+  "scope": "exposed_synthetic_owner_rag_matrix",
+  "professional_review_performed": false,
+  "independent_evaluation": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "case_id": "initial-strength",
+      "status": "proposal",
+      "activated": false,
+      "elapsed_seconds": 59.85115245400084,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 47.197533086000476,
+        "review": 6.420949166000355,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 1,
+      "case_id": "initial-hypertrophy",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "measured_baseline_required_for_external_load",
+      "issues": [
+        {
+          "position": 3,
+          "field": "load_guidance",
+          "reason": "measured_baseline_required_for_external_load"
+        }
+      ],
+      "proposal_count": 0,
+      "elapsed_seconds": 22.892094623999583,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 15.177900611997757,
+        "review": 6.446974729999056,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 1,
+      "case_id": "initial-muscular-endurance",
+      "status": "technical_failure",
+      "exception_type": "InvalidTrainingGenerationError",
+      "elapsed_seconds": 47.18633077599952,
+      "stage_calls": {
+        "writer": 2,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 2,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 46.8696929300022,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 1,
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "goal_priority_confirmation_required",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.3065968540031463,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 1,
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "category": "technical_unavailability",
+      "reason": "retrieval_unavailable",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.02951044300061767,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-strength",
+      "status": "proposal",
+      "activated": false,
+      "elapsed_seconds": 52.209034761999646,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 34.711204241000814,
+        "review": 15.44039038000119,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-hypertrophy",
+      "status": "proposal",
+      "activated": false,
+      "elapsed_seconds": 43.02765687200008,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 32.455184235997876,
+        "review": 8.94072449899977,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-muscular-endurance",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "measured_baseline_required_for_external_load",
+      "issues": [
+        {
+          "position": 3,
+          "field": "load_guidance",
+          "reason": "measured_baseline_required_for_external_load"
+        }
+      ],
+      "proposal_count": 0,
+      "elapsed_seconds": 23.56478132399934,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 16.715597296999476,
+        "review": 6.218228570000065,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 2,
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "goal_priority_confirmation_required",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.25885375999860116,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "attempt": 2,
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "category": "technical_unavailability",
+      "reason": "retrieval_unavailable",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.018119497002771823,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    }
+  ],
+  "accepted_proposals": [
+    {
+      "attempt": 1,
+      "case_id": "initial-strength",
+      "elapsed_seconds": 59.85115245400084,
+      "projection": {
+        "name": "Treino de força para iniciante",
+        "objective": "Aumentar a força muscular para iniciantes",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "10-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "cited_passages": [
+        "biga-anatomy-1",
+        "nhs-strength-1",
+        "biga-anatomy-2",
+        "pavlova-tendinopathy-2023-1",
+        "iversen-time-efficient-2021-06",
+        "nhs-strength-2"
+      ]
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-strength",
+      "elapsed_seconds": 52.209034761999646,
+      "projection": {
+        "name": "Treino de Força para Iniciantes",
+        "objective": "Ganhar força",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Elevação de panturrilhas em pé (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 180,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "cited_passages": [
+        "biga-anatomy-1",
+        "nhs-strength-1",
+        "biga-anatomy-2",
+        "pavlova-tendinopathy-2023-1",
+        "iversen-time-efficient-2021-06",
+        "nhs-strength-2"
+      ]
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-hypertrophy",
+      "elapsed_seconds": 43.02765687200008,
+      "projection": {
+        "name": "Treino para hipertrofia muscular",
+        "objective": "Aumentar o diâmetro das fibras musculares através do treinamento resistido, com foco na incorporação de proteínas estruturais e miofibrilas.",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "cited_passages": [
+        "biga-anatomy-1",
+        "iversen-time-efficient-2021-06",
+        "iversen-time-efficient-2021-03"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "attempt": 1,
+      "case_id": "initial-strength",
+      "not_activated": true,
+      "citations_in_provided_passages": true,
+      "current_source_hashes": true,
+      "current_rule_hashes": true,
+      "no_professional_claim": true,
+      "no_independent_claim": true,
+      "no_compiled_qualification_claim": true
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-strength",
+      "not_activated": true,
+      "citations_in_provided_passages": true,
+      "current_source_hashes": true,
+      "current_rule_hashes": true,
+      "no_professional_claim": true,
+      "no_independent_claim": true,
+      "no_compiled_qualification_claim": true
+    },
+    {
+      "attempt": 2,
+      "case_id": "initial-hypertrophy",
+      "not_activated": true,
+      "citations_in_provided_passages": true,
+      "current_source_hashes": true,
+      "current_rule_hashes": true,
+      "no_professional_claim": true,
+      "no_independent_claim": true,
+      "no_compiled_qualification_claim": true
+    },
+    {
+      "attempt": 1,
+      "case_id": "ambiguous-goal",
+      "zero_model_calls_and_no_save": true
+    },
+    {
+      "attempt": 1,
+      "case_id": "retrieval-outage",
+      "zero_model_calls_and_no_save": true
+    },
+    {
+      "attempt": 2,
+      "case_id": "ambiguous-goal",
+      "zero_model_calls_and_no_save": true
+    },
+    {
+      "attempt": 2,
+      "case_id": "retrieval-outage",
+      "zero_model_calls_and_no_save": true
+    }
+  ],
+  "actual_model_http_calls": {
+    "writer": 7,
+    "review": 5,
+    "focus": 0
+  },
+  "generation_attempts": 6,
+  "accepted_proposal_count": 3,
+  "negative_control_count": 4,
+  "implementation_unchanged": true,
+  "same_implementation_across_attempts": true,
+  "same_configuration": true
+}

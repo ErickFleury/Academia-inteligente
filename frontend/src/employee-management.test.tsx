@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { EmployeeManagement } from './employee-management'
@@ -61,7 +61,8 @@ test('registers an instructor with complete personal data', async () => {
   render(<EmployeeManagement accessToken="admin-token" onUnauthenticated={vi.fn()} />)
   await screen.findByText('Nenhum instrutor encontrado.')
   fireEvent.click(screen.getByRole('button', { name: 'Novo instrutor' }))
-  for (const [label, value] of [['Nome', 'Maria'], ['Sobrenome', 'Silva'], ['E-mail', 'maria@example.test'], ['CPF', '529.982.247-25'], ['Telefone', '(11) 99876-5432'], ['CEP', '01001-000'], ['Logradouro', 'Praça da Sé'], ['Número', '1'], ['Bairro', 'Sé'], ['Cidade', 'São Paulo'], ['UF', 'SP']] as const) fireEvent.change(screen.getByRole('textbox', { name: label }), { target: { value } })
+  const form = within(screen.getByRole('dialog', { name: /Cadastrar instrutor/ }))
+  for (const [label, value] of [['Nome', 'Maria'], ['Sobrenome', 'Silva'], ['E-mail', 'maria@example.test'], ['CPF', '529.982.247-25'], ['Telefone', '(11) 99876-5432'], ['CEP', '01001-000'], ['Logradouro', 'Praça da Sé'], ['Número', '1'], ['Bairro', 'Sé'], ['Cidade', 'São Paulo'], ['UF', 'SP']] as const) fireEvent.change(form.getByLabelText(new RegExp('^' + label + '[\\s*]*$')), { target: { value } })
   fireEvent.click(screen.getByRole('button', { name: 'Verificar cadastro facial' }))
   await screen.findByText(/será reutilizado/)
   fireEvent.click(screen.getByRole('button', { name: 'Cadastrar instrutor' }))

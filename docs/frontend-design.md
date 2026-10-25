@@ -112,7 +112,7 @@ palette, or page composition.
 - **InstructorShell:** Reuse the ClientShell responsive navigation mechanics and
   the denser operational clarity of AdminShell without combining their
   permissions. Its ordered destinations are Feed, Planos pendentes, Meus
-  planos, Todos os planos, Clientes, Equipamentos, and Perfil; Feed is the
+  planos, Todos os planos, Clientes, Equipamentos, Revisão de evidências, and Perfil; Feed is the
   default and there is no home/dashboard item. On larger screens use the shared
   persistent sidebar pattern; on phone use the same keyboard-accessible compact
   header/panel behavior. Plan review, client workspace, sensitive onboarding,
@@ -120,6 +120,23 @@ palette, or page composition.
   imagery. The read-only feed reuses social cards but omits every interaction
   composer/control. Perfil is a deliberate pt-BR future-feature state until an
   instructor social profile is separately specified.
+- **Evidence review (owner extension, 2026-10-24):** use the instructor shell for
+  artifact/version inspection, intentional attributable human judgments and
+  synthetic evaluation custody. Reuse shared cards, forms, tabs and feedback.
+  Separate public protocol/hash metadata from custodian-only case/reference
+  content, reset private state on session changes, and never imply release or
+  scientific approval merely from registration. Professional reviewers may
+  explicitly inspect the complete computable contract in a technical disclosure;
+  ordinary navigation, labels and feedback remain pt-BR.
+  Present separate material types (sources, proposed rules, prescription policies
+  and evaluation protocols), with readable content and review guidance before
+  the judgment form. Source reading offers a direct original-document link and
+  exact selected passages with citation locators; research in its original
+  language is identified explicitly. Proposed rules expose parameters,
+  applicability, open decisions and source links. Public protocols expose methods,
+  thresholds and budgets without sealed cases. JSON and hashes belong in an
+  optional technical disclosure; do not require instructors to interpret JSON.
+  Select controls must render pt-BR labels rather than API enum values.
 - **Dual-role area switch:** when the backend-verified session has both active
   client and instructor roles, both sidebars show a compact current-area panel
   above the account/sign-out controls, separate from the ordered menu. Reuse

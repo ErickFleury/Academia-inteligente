@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-24T03:36:53.776600+00:00",
+  "purpose": "development_only_public_corpus_technical_probes",
+  "catalog_sha256": "75d95cd342a4c99794e1cd712c3cb5f259530ed15263111399b29a6257c1297f",
+  "embedding_model": "bge-m3",
+  "model_digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+  "final_passage_limit": 6,
+  "queries": [
+    {
+      "query": "Inter-set rest interval duration muscle hypertrophy",
+      "target_source_id": "singer-rest-2024",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "singer-rest-2024",
+          "chunk_id": "singer-rest-2024-01"
+        },
+        {
+          "source_id": "singer-rest-2024",
+          "chunk_id": "singer-rest-2024-02"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-07"
+        },
+        {
+          "source_id": "singer-rest-2024",
+          "chunk_id": "singer-rest-2024-03"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-02"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-01"
+        }
+      ],
+      "context_characters": 32667,
+      "elapsed_seconds": 0.179
+    },
+    {
+      "query": "Time-efficient resistance training minimum dose supersets",
+      "target_source_id": "iversen-time-efficient-2021",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-08"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-07"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-02"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-01"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-06"
+        }
+      ],
+      "context_characters": 37860,
+      "elapsed_seconds": 0.121
+    },
+    {
+      "query": "Concurrent aerobic resistance training compatibility interference",
+      "target_source_id": "schumann-concurrent-2022",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "schumann-concurrent-2022",
+          "chunk_id": "schumann-concurrent-2022-03"
+        },
+        {
+          "source_id": "schumann-concurrent-2022",
+          "chunk_id": "schumann-concurrent-2022-02"
+        },
+        {
+          "source_id": "schumann-concurrent-2022",
+          "chunk_id": "schumann-concurrent-2022-01"
+        },
+        {
+          "source_id": "schumann-concurrent-2022",
+          "chunk_id": "schumann-concurrent-2022-04"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-03"
+        }
+      ],
+      "context_characters": 34095,
+      "elapsed_seconds": 0.123
+    },
+    {
+      "query": "Stretching mechanisms flexibility range of motion",
+      "target_source_id": "ingram-stretch-mechanisms-2025",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "chunk_id": "ingram-stretch-mechanisms-2025-01"
+        },
+        {
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "chunk_id": "ingram-stretch-mechanisms-2025-02"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-09"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-05"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-02"
+        }
+      ],
+      "context_characters": 38144,
+      "elapsed_seconds": 0.105
+    },
+    {
+      "query": "Isometric exercise training hypertension blood pressure",
+      "target_source_id": "smart-isometric-hypertension-2023",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "smart-isometric-hypertension-2023",
+          "chunk_id": "smart-isometric-hypertension-2023-03"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-06"
+        },
+        {
+          "source_id": "schumann-concurrent-2022",
+          "chunk_id": "schumann-concurrent-2022-03"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-01"
+        },
+        {
+          "source_id": "smart-isometric-hypertension-2023",
+          "chunk_id": "smart-isometric-hypertension-2023-01"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        }
+      ],
+      "context_characters": 38366,
+      "elapsed_seconds": 0.136
+    },
+    {
+      "query": "Diabetes exercise medication hypoglycemia precautions",
+      "target_source_id": "su-diabetes-exercise-2026",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-05"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-06"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-14"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-08"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-01"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-10"
+        }
+      ],
+      "context_characters": 38770,
+      "elapsed_seconds": 0.122
+    },
+    {
+      "query": "Exercise body fat percentage aerobic resistance training",
+      "target_source_id": "lafontant-body-fat-2025",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-06"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-02"
+        },
+        {
+          "source_id": "lafontant-body-fat-2025",
+          "chunk_id": "lafontant-body-fat-2025-03"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        },
+        {
+          "source_id": "schumann-concurrent-2022",
+          "chunk_id": "schumann-concurrent-2022-03"
+        },
+        {
+          "source_id": "lafontant-body-fat-2025",
+          "chunk_id": "lafontant-body-fat-2025-01"
+        }
+      ],
+      "context_characters": 39422,
+      "elapsed_seconds": 0.139
+    },
+    {
+      "query": "DEPP exercise prescription protocol database methods limitations",
+      "target_source_id": "bao-depp-2026",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "bao-depp-2026",
+          "chunk_id": "bao-depp-2026-01"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-08"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-01"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-14"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-10"
+        },
+        {
+          "source_id": "su-diabetes-exercise-2026",
+          "chunk_id": "su-diabetes-exercise-2026-03"
+        }
+      ],
+      "context_characters": 37196,
+      "elapsed_seconds": 0.115
+    },
+    {
+      "query": "Asthma exercise training bronchoconstriction precautions",
+      "target_source_id": "price-asthma-2025",
+      "target_retrieved": true,
+      "status": "supported",
+      "selected_passages": [
+        {
+          "source_id": "price-asthma-2025",
+          "chunk_id": "price-asthma-2025-04"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-01"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-04"
+        },
+        {
+          "source_id": "iversen-time-efficient-2021",
+          "chunk_id": "iversen-time-efficient-2021-03"
+        },
+        {
+          "source_id": "price-asthma-2025",
+          "chunk_id": "price-asthma-2025-06"
+        },
+        {
+          "source_id": "price-asthma-2025",
+          "chunk_id": "price-asthma-2025-01"
+        }
+      ],
+      "context_characters": 35676,
+      "elapsed_seconds": 0.127
+    }
+  ],
+  "target_hits": 9,
+  "reviewed_development_cases": 0,
+  "dimension_coverage": "not_assessed",
+  "scientific_approval": "pending",
+  "enabled_cohorts": [],
+  "limitations": [
+    "Queries were authored and observed by the implementer, with known source topics.",
+    "Target retrieval is a technical smoke check, not independent relevance judgment.",
+    "No prescription, clinical applicability or six-passage dimension coverage was evaluated.",
+    "No writing model was invoked and no client plan was created or activated."
+  ]
+}

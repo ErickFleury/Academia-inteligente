@@ -1,0 +1,343 @@
+{
+  "scope": "Frontend broad-run file cache; individual failures were not captured in this snapshot",
+  "vitest_version": "4.1.11",
+  "file_count": 47,
+  "passing_file_count": 44,
+  "failed_files": [
+    ":src/app.test.tsx",
+    ":src/client-management.test.tsx",
+    ":src/approved-training-session.test.tsx"
+  ],
+  "results": [
+    [
+      ":src/instructor-pending-plans-page.test.tsx",
+      {
+        "duration": 28599.449900000003,
+        "failed": false
+      }
+    ],
+    [
+      ":src/training-chat-page.test.tsx",
+      {
+        "duration": 9662.9499,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/training-knowledge-sources.test.tsx",
+      {
+        "duration": 329.77679999999987,
+        "failed": false
+      }
+    ],
+    [
+      ":src/current-training-page.test.tsx",
+      {
+        "duration": 6660.663199999999,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/training-chat-content.test.tsx",
+      {
+        "duration": 298.09429999999975,
+        "failed": false
+      }
+    ],
+    [
+      ":src/app-session.test.tsx",
+      {
+        "duration": 6148.0597,
+        "failed": false
+      }
+    ],
+    [
+      ":src/app.test.tsx",
+      {
+        "duration": 12844.2189,
+        "failed": true
+      }
+    ],
+    [
+      ":src/auth.test.ts",
+      {
+        "duration": 18.77570000000003,
+        "failed": false
+      }
+    ],
+    [
+      ":src/auth-redirects.test.ts",
+      {
+        "duration": 33.6712,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/training-prescription-review.test.tsx",
+      {
+        "duration": 767.7175000000002,
+        "failed": false
+      }
+    ],
+    [
+      ":src/facial-access-page.test.tsx",
+      {
+        "duration": 17559.346299999997,
+        "failed": false
+      }
+    ],
+    [
+      ":src/client-management.test.tsx",
+      {
+        "duration": 18624.028000000002,
+        "failed": true
+      }
+    ],
+    [
+      ":src/instructor-plan-collections-page.test.tsx",
+      {
+        "duration": 15965.2662,
+        "failed": false
+      }
+    ],
+    [
+      ":src/employee-management.test.tsx",
+      {
+        "duration": 12271.1361,
+        "failed": false
+      }
+    ],
+    [
+      ":src/progress-moderation-page.test.tsx",
+      {
+        "duration": 2229.5256,
+        "failed": false
+      }
+    ],
+    [
+      ":src/equipment-management-page.test.tsx",
+      {
+        "duration": 12125.9436,
+        "failed": false
+      }
+    ],
+    [
+      ":src/onboarding-conversation-page.test.tsx",
+      {
+        "duration": 2721.0774,
+        "failed": false
+      }
+    ],
+    [
+      ":src/approved-training-session.test.tsx",
+      {
+        "duration": 5233.6973,
+        "failed": true
+      }
+    ],
+    [
+      ":src/onboarding-form.test.tsx",
+      {
+        "duration": 5597.0817,
+        "failed": false
+      }
+    ],
+    [
+      ":src/social-profile-page.test.tsx",
+      {
+        "duration": 5118.9105,
+        "failed": false
+      }
+    ],
+    [
+      ":src/instructor-equipment-page.test.tsx",
+      {
+        "duration": 6302.8889,
+        "failed": false
+      }
+    ],
+    [
+      ":src/instructor-shell.test.tsx",
+      {
+        "duration": 2095.1205,
+        "failed": false
+      }
+    ],
+    [
+      ":src/instructor-clients-page.test.tsx",
+      {
+        "duration": 6932.763900000001,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/facial-enrollment.test.tsx",
+      {
+        "duration": 374.68269999999984,
+        "failed": false
+      }
+    ],
+    [
+      ":src/training-sessions.test.ts",
+      {
+        "duration": 15.02170000000001,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/webcam-capture.test.tsx",
+      {
+        "duration": 460.6343999999999,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/profile-connections-dialog.test.tsx",
+      {
+        "duration": 1116.6378,
+        "failed": false
+      }
+    ],
+    [
+      ":src/instructor-onboarding.test.tsx",
+      {
+        "duration": 3975.7415,
+        "failed": false
+      }
+    ],
+    [
+      ":src/training-draft-fields.test.tsx",
+      {
+        "duration": 1057.6828000000003,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/application-shell.test.tsx",
+      {
+        "duration": 992.9590999999998,
+        "failed": false
+      }
+    ],
+    [
+      ":src/instructor-feed-page.test.tsx",
+      {
+        "duration": 723.4535000000001,
+        "failed": false
+      }
+    ],
+    [
+      ":src/admin-dashboard-page.test.tsx",
+      {
+        "duration": 313.52589999999987,
+        "failed": false
+      }
+    ],
+    [
+      ":src/equipment-catalog-page.test.tsx",
+      {
+        "duration": 708.0571999999997,
+        "failed": false
+      }
+    ],
+    [
+      ":src/equipment-editor.test.tsx",
+      {
+        "duration": 1174.6742,
+        "failed": false
+      }
+    ],
+    [
+      ":src/progress-page.test.tsx",
+      {
+        "duration": 1018.4142999999999,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/area-switch.test.tsx",
+      {
+        "duration": 227.14300000000003,
+        "failed": false
+      }
+    ],
+    [
+      ":src/onboarding-access-page.test.tsx",
+      {
+        "duration": 399.2543999999998,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/password-recovery-action.test.tsx",
+      {
+        "duration": 442.7588999999998,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/training-plan-content.test.tsx",
+      {
+        "duration": 541.2431000000001,
+        "failed": false
+      }
+    ],
+    [
+      ":src/profile-presence-page.test.tsx",
+      {
+        "duration": 560.1554000000001,
+        "failed": false
+      }
+    ],
+    [
+      ":src/admin-workspace.test.tsx",
+      {
+        "duration": 720.5110000000002,
+        "failed": false
+      }
+    ],
+    [
+      ":src/occupancy-page.test.tsx",
+      {
+        "duration": 512.8101999999999,
+        "failed": false
+      }
+    ],
+    [
+      ":src/use-chat-auto-scroll.test.tsx",
+      {
+        "duration": 15.042400000000043,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/connected-prescription-review.test.tsx",
+      {
+        "duration": 767.5278000000003,
+        "failed": false
+      }
+    ],
+    [
+      ":src/instructor-evidence-review-page.test.tsx",
+      {
+        "duration": 11475.2984,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/evidence-review-material.test.tsx",
+      {
+        "duration": 244.55849999999987,
+        "failed": false
+      }
+    ],
+    [
+      ":src/components/prescription-remediation.test.tsx",
+      {
+        "duration": 610.5747999999999,
+        "failed": false
+      }
+    ]
+  ],
+  "all_green": false
+}

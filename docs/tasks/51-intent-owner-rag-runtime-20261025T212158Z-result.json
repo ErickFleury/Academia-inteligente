@@ -1,0 +1,1812 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T212158Z",
+  "results": [
+    {
+      "case_id": "flexibility-plain",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "FLEXIBILITY_PROPOSAL",
+        "objective": "Flexibilidade",
+        "items": [
+          {
+            "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "panturrilhas",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "panturrilhas",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de quadríceps em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "quadríceps",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de quadríceps em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 3,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "quadríceps",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 3
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de posterior de coxa sentado (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "posterior de coxa",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de posterior de coxa sentado (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "posterior de coxa",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "ingram-stretch-mechanisms-2025-02",
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "section": "PMC12152101 JATS Sec23 blocks 1; Sec78 blocks 1; Sec5; Sec33",
+          "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+          "url": "https://doi.org/10.1007/s40279-025-02204-7",
+          "authors": [
+            "Lewis A. Ingram",
+            "Grant R. Tomkinson",
+            "Noah M. A. d’Unienville",
+            "Bethany Gower",
+            "Sam Gleadhill",
+            "Terry Boyle",
+            "Hunter Bennett"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [],
+            "focus_scope": "unspecified"
+          }
+        },
+        {
+          "chunk_id": "ingram-stretch-mechanisms-2025-01",
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "section": "PMC12152101 JATS Sec34 blocks 1; Sec35 blocks 1; Sec5; Sec33",
+          "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+          "url": "https://doi.org/10.1007/s40279-025-02204-7",
+          "authors": [
+            "Lewis A. Ingram",
+            "Grant R. Tomkinson",
+            "Noah M. A. d’Unienville",
+            "Bethany Gower",
+            "Sam Gleadhill",
+            "Terry Boyle",
+            "Hunter Bennett"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [],
+            "focus_scope": "unspecified"
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-09",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec22 blocks 7; Sec22 blocks 8; Sec22 blocks 9; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [],
+            "focus_scope": "unspecified"
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Movimentos leves e gerais de mobilidade; respeitar restrições relatadas e revisão do instrutor. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "session_labels": [
+        "A"
+      ],
+      "goal_family": "mobility_flexibility",
+      "proposal_count": 1,
+      "elapsed_seconds": 28.831030893001298,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "stage_seconds": {
+        "writer": 19.12931245800428,
+        "review": 7.28594102000352,
+        "focus": 1.8385114640041138
+      }
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "FLEXIBILITY_PROPOSAL",
+        "objective": "Flexibilidade",
+        "items": [
+          {
+            "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "panturrilhas",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "panturrilhas",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de quadríceps em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "quadríceps",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de quadríceps em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 3,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "quadríceps",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 3
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de posterior de coxa sentado (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "posterior de coxa",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de posterior de coxa sentado (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "posterior de coxa",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "ingram-stretch-mechanisms-2025-02",
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "section": "PMC12152101 JATS Sec23 blocks 1; Sec78 blocks 1; Sec5; Sec33",
+          "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+          "url": "https://doi.org/10.1007/s40279-025-02204-7",
+          "authors": [
+            "Lewis A. Ingram",
+            "Grant R. Tomkinson",
+            "Noah M. A. d’Unienville",
+            "Bethany Gower",
+            "Sam Gleadhill",
+            "Terry Boyle",
+            "Hunter Bennett"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [],
+            "focus_scope": "unspecified"
+          }
+        },
+        {
+          "chunk_id": "ingram-stretch-mechanisms-2025-01",
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "section": "PMC12152101 JATS Sec34 blocks 1; Sec35 blocks 1; Sec5; Sec33",
+          "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+          "url": "https://doi.org/10.1007/s40279-025-02204-7",
+          "authors": [
+            "Lewis A. Ingram",
+            "Grant R. Tomkinson",
+            "Noah M. A. d’Unienville",
+            "Bethany Gower",
+            "Sam Gleadhill",
+            "Terry Boyle",
+            "Hunter Bennett"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [],
+            "focus_scope": "unspecified"
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-09",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec22 blocks 7; Sec22 blocks 8; Sec22 blocks 9; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [],
+            "focus_scope": "unspecified"
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Movimentos leves e gerais de mobilidade; respeitar restrições relatadas e revisão do instrutor. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "session_labels": [
+        "A"
+      ],
+      "goal_family": "mobility_flexibility",
+      "proposal_count": 1,
+      "elapsed_seconds": 20.90875034200144,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "stage_seconds": {
+        "writer": 15.927049352001632,
+        "review": 2.987098943005549,
+        "focus": 1.4678855210004258
+      }
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "FLEXIBILITY_PROPOSAL",
+        "objective": "Flexibilidade",
+        "items": [
+          {
+            "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "panturrilhas",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de panturrilha em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "panturrilhas",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de quadríceps em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "quadríceps",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de quadríceps em pé (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 3,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "quadríceps",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 3
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de posterior de coxa sentado (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado esquerdo",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "left",
+                "target": "posterior de coxa",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Alongamento de posterior de coxa sentado (Dia A)",
+            "sets": null,
+            "repetitions": "2 × 30 s; lado direito",
+            "load_guidance": "Sem carga externa; amplitude confortável, sem forçar dor.",
+            "rest_seconds": 30,
+            "dose_details": {
+              "mode": "flexibility",
+              "dose": {
+                "kind": "flexibility",
+                "holds": 2,
+                "hold_seconds": "30",
+                "side": "right",
+                "target": "posterior de coxa",
+                "intensity_instruction_key": "comfortable_range_without_pain"
+              },
+              "rest": {
+                "kind": "between_holds",
+                "seconds": 30
+              },
+              "group": null
+            },
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "ingram-stretch-mechanisms-2025-02",
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "section": "PMC12152101 JATS Sec23 blocks 1; Sec78 blocks 1; Sec5; Sec33",
+          "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+          "url": "https://doi.org/10.1007/s40279-025-02204-7",
+          "authors": [
+            "Lewis A. Ingram",
+            "Grant R. Tomkinson",
+            "Noah M. A. d’Unienville",
+            "Bethany Gower",
+            "Sam Gleadhill",
+            "Terry Boyle",
+            "Hunter Bennett"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [
+              "A"
+            ],
+            "focus_scope": "unspecified"
+          }
+        },
+        {
+          "chunk_id": "ingram-stretch-mechanisms-2025-01",
+          "source_id": "ingram-stretch-mechanisms-2025",
+          "section": "PMC12152101 JATS Sec34 blocks 1; Sec35 blocks 1; Sec5; Sec33",
+          "title": "Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression",
+          "url": "https://doi.org/10.1007/s40279-025-02204-7",
+          "authors": [
+            "Lewis A. Ingram",
+            "Grant R. Tomkinson",
+            "Noah M. A. d’Unienville",
+            "Bethany Gower",
+            "Sam Gleadhill",
+            "Terry Boyle",
+            "Hunter Bennett"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Lewis A. Ingram; Grant R. Tomkinson; Noah M. A. d’Unienville; Bethany Gower; Sam Gleadhill; Terry Boyle; Hunter Bennett (2025). Mechanisms Underlying Range of Motion Improvements Following Acute and Chronic Static Stretching: A Systematic Review, Meta-analysis and Multivariate Meta-regression. DOI 10.1007/s40279-025-02204-7. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Adult static-stretching mechanisms and ROM; not a complete active-mobility or rehabilitation protocol.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [
+              "A"
+            ],
+            "focus_scope": "unspecified"
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-09",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec22 blocks 7; Sec22 blocks 8; Sec22 blocks 9; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-intent-flexibility-2026-10-25",
+            "goal_family": "mobility_flexibility",
+            "onboarding_sha256": "de12da2fd925616925d7b42f753cecf1c3eac31adfe697b3c4ebe2ded11759b5",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "ingram-stretch-mechanisms-2025": "8b5df43f3e6d3535a167022327e932926d2fb5498113ea565f7527cd10a32865",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4"
+            },
+            "rule_hashes": {
+              "FLEXIBILITY_DOSE": "0e012e83c0333046ecb549e349ea88eda9a85b3541b8396c633acf029d8ce69c",
+              "FLEXIBILITY_STRUCTURE": "58aae120651e0f52dc50360682115b7c7fd537bc477186c394ee31abff1786b4",
+              "FLEXIBILITY_NEWER_EVIDENCE": "ecf25747bc0f1b7044808b6e214e6bbb37fdea96495b4cf62c403198ed840288",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "FLEXIBILITY_ACCOUNTING": "8bbaefc30a3a61c9e035a7cbd2418221eaf9f4a5a9b55fe4c2867ecc9ba8f21c"
+            },
+            "provided_passage_ids": [
+              "ingram-stretch-mechanisms-2025-02",
+              "ingram-stretch-mechanisms-2025-01",
+              "iversen-time-efficient-2021-09"
+            ],
+            "exercise_dictionary_sha256": "ed5d36bbb3411df710062208066d2b7295985b9813a05b6a0d27f576c4de5bf8",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-4",
+            "writer_configuration_sha256": "0f176a6e4447b87c507f9fee55a3d14edc7e647cf40115bd6adb8c77ce7b79d5",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "47f34c2edb8e5e76f7ca6669abdef9884a738f320526c143e0ac2098b9a30169",
+            "preserved_item_hashes": [],
+            "session_labels": [
+              "A"
+            ],
+            "focus_scope": "unspecified"
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Movimentos leves e gerais de mobilidade; respeitar restrições relatadas e revisão do instrutor. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "session_labels": [
+        "A"
+      ],
+      "goal_family": "mobility_flexibility",
+      "proposal_count": 1,
+      "elapsed_seconds": 25.854595142001926,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "stage_seconds": {
+        "writer": 19.44864447699365,
+        "review": 4.338813157999539,
+        "focus": 1.5449873370016576
+      }
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "status": "technical_failure",
+      "exception_type": "TrainingChatUnavailableError",
+      "proposal_count": 0,
+      "elapsed_seconds": 337.13539699199464,
+      "content_corrections": 1,
+      "stage_calls": {
+        "writer": 4,
+        "review": 1,
+        "focus": 1
+      },
+      "actual_model_http_calls": {
+        "writer": 4,
+        "review": 1,
+        "focus": 1
+      },
+      "stage_seconds": {
+        "writer": 49.25867401400319,
+        "review": 285.6545857710007,
+        "focus": 1.686658600003284
+      }
+    },
+    {
+      "case_id": "flexibility-negated-goal",
+      "status": "technical_failure",
+      "exception_type": "TrainingChatUnavailableError",
+      "proposal_count": 0,
+      "elapsed_seconds": 0.1315968970011454,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 2
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 2
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.03987022199726198
+      }
+    },
+    {
+      "case_id": "abc-strength",
+      "status": "technical_failure",
+      "exception_type": "TrainingGenerationUnavailableError",
+      "proposal_count": 0,
+      "elapsed_seconds": 0.057779483002377674,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 2
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 2
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.03109668400429655
+      }
+    },
+    {
+      "case_id": "initial-hypertrophy",
+      "status": "technical_failure",
+      "exception_type": "OperationalError",
+      "proposal_count": 0,
+      "elapsed_seconds": 0.03592076000495581,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "goal_priority_confirmation_required",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.04988133499864489,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "conflicting-schedule",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "training_schedule_confirmation_required",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.05655630800174549,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "category": "technical_unavailability",
+      "reason": "retrieval_unavailable",
+      "issues": [],
+      "proposal_count": 0,
+      "elapsed_seconds": 0.04552765800326597,
+      "content_corrections": 0,
+      "stage_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 0.0,
+        "review": 0.0,
+        "focus": 0.0
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "case_id": "flexibility-plain",
+      "stage": "focus",
+      "context_characters": 153,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "context_characters": 32978,
+      "passage_count": 3,
+      "session_labels": [],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "review",
+      "context_characters": 37263,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "focus",
+      "context_characters": 153,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "writer",
+      "context_characters": 32978,
+      "passage_count": 3,
+      "session_labels": [],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "review",
+      "context_characters": 37263,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "focus",
+      "context_characters": 166,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "writer",
+      "context_characters": 32997,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "review",
+      "context_characters": 37279,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "focus",
+      "context_characters": 163,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 33142,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "review",
+      "context_characters": 37424,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 36754,
+      "passage_count": 3,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"ingram-stretch-mechanisms-2025-01\", \"ingram-stretch-mechanisms-2025-02\", \"iversen-time-efficient-2021-09\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 41824,
+      "passage_count": 3,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [
+        {
+          "position": 5,
+          "duplicate_of": 3,
+          "field": "exercise_name",
+          "exercise_name": "Alongamento de panturrilha em pé (Dia B)",
+          "reason": "duplicate_exercise_within_session"
+        }
+      ],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 41824,
+      "passage_count": 3,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [
+        {
+          "position": 5,
+          "duplicate_of": 3,
+          "field": "exercise_name",
+          "exercise_name": "Alongamento de panturrilha em pé (Dia B)",
+          "reason": "duplicate_exercise_within_session"
+        }
+      ],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "flexibility-negated-goal",
+      "stage": "focus",
+      "context_characters": 166,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "flexibility-negated-goal",
+      "stage": "focus",
+      "context_characters": 166,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "focus",
+      "context_characters": 155,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "focus",
+      "context_characters": 155,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    }
+  ],
+  "retrieved": [
+    [
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-02"
+      },
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-01"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-09"
+      },
+      {
+        "source_id": "su-diabetes-exercise-2026",
+        "chunk_id": "su-diabetes-exercise-2026-13"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-07"
+      },
+      {
+        "source_id": "nhs-flexibility",
+        "chunk_id": "nhs-flexibility-2"
+      }
+    ],
+    [
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-02"
+      },
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-01"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-09"
+      },
+      {
+        "source_id": "su-diabetes-exercise-2026",
+        "chunk_id": "su-diabetes-exercise-2026-13"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-07"
+      },
+      {
+        "source_id": "nhs-flexibility",
+        "chunk_id": "nhs-flexibility-2"
+      }
+    ],
+    [
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-02"
+      },
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-01"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-09"
+      },
+      {
+        "source_id": "su-diabetes-exercise-2026",
+        "chunk_id": "su-diabetes-exercise-2026-13"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-07"
+      },
+      {
+        "source_id": "nhs-flexibility",
+        "chunk_id": "nhs-flexibility-2"
+      }
+    ],
+    [
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-02"
+      },
+      {
+        "source_id": "ingram-stretch-mechanisms-2025",
+        "chunk_id": "ingram-stretch-mechanisms-2025-01"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-09"
+      },
+      {
+        "source_id": "su-diabetes-exercise-2026",
+        "chunk_id": "su-diabetes-exercise-2026-13"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-07"
+      },
+      {
+        "source_id": "nhs-flexibility",
+        "chunk_id": "nhs-flexibility-2"
+      }
+    ]
+  ],
+  "implementation_unchanged": true,
+  "independent_evaluation": false,
+  "professional_review_performed": false
+}

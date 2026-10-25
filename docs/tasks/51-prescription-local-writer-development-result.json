@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-24T14:55:53.412092+00:00",
+  "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+  "frozen_plan_sha256": "d8f7a9c9bea4a7ce0f8fe40f0c8633a22ff1e4f204de08d24184be03dbaf1e30",
+  "plan": {
+    "version": 1,
+    "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+    "frozen_at": "2026-10-24T14:55:09.152498+00:00",
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "server_version": "0.34.1",
+    "maximum_writer_calls": 1,
+    "retries": 0,
+    "timeout_seconds": 360,
+    "expected_technical_outcome": "typed_candidate_passes_synthetic_fixture_core",
+    "input_sha256": "b1789ab984d2d7b0c8f48ec3afe65a6a7a1066b9bcc3e1f5a5deb3ae9fd728dd",
+    "writer_schema_sha256": "2ae50b6423e372fad66e068e75f3198e9b59ca4e21c2881fb022bb9bbc62437b",
+    "synthetic_fixture_sha256": "af31574aac8a0effc66a903b9b612341ce9b0a1f10dc6c0540f04ef4fae73fe2",
+    "synthetic_policy_fixture_sha256": "5011ab28bc736617736c6668010c1281a918d2a924861a6d7042bf7c2cb0eff1",
+    "adapter_sha256": "5ad863af91cbecbaafd9211fe49add77efe3ccf2bde3c1164928fe69bee88c4a",
+    "uses_real_corpus_or_embedding_provider": false,
+    "database_configured": false,
+    "enabled_cohorts": []
+  },
+  "actual_writer_calls": 1,
+  "requests": [
+    {
+      "request_sha256": "a785c45dc53161124574b24caccdf558af5553e3918fa4008cd7bcd7f0f2486c",
+      "instructions_sha256": "e3bf3a6a90a6687b19a13a743d08478044041ee0e1994c6590fc72e2e9296fe6",
+      "options": {
+        "num_ctx": 16384
+      },
+      "think": false,
+      "stream": false,
+      "timeout_seconds": 360
+    }
+  ],
+  "elapsed_seconds": 44.243,
+  "outcome": {
+    "typed_candidate_sha256": "f3ecb8e3320553cf3588e3ccd8e7799b195bea9d01c0d0fb91c76e2fb5ce965f",
+    "status": "rejected_by_synthetic_core",
+    "category": "missing_input",
+    "reason": "schedule_not_confirmed"
+  },
+  "saved_or_published_candidates": 0,
+  "scientific_approval": "pending",
+  "independent_evaluation": "not_executed",
+  "limitations": [
+    "Implementer-visible toy fixtures are not professional policies or held-out cases.",
+    "Retrieval, embeddings, automatic review and authenticated lifecycle were not exercised.",
+    "One writer/core call cannot establish supported-cohort acceptance or rejection rates.",
+    "No candidate prose, dose or trace is published; the application gate remains disabled."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "purpose": "owner_approved_research_development_not_independent_evaluation",
+  "frozen_at": "2026-10-24T20:44:51.245690+00:00",
+  "owner_decision_id": "owner-source-rule-acceptance-2026-10-24",
+  "registry_sha256": "1320b0f43e38f926afe8456ede97b31c981b6e7871059069531b1faa0f752b07",
+  "provider": "ollama",
+  "model": "qwen3:4b",
+  "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "maximum_model_calls": 4,
+  "maximum_generation_calls_per_case": 1,
+  "maximum_assessment_calls_per_case": 1,
+  "timeout_seconds_per_call": 360,
+  "retries": 0,
+  "cases": [
+    {
+      "goal_family": "hypertrophy",
+      "context_sha256": "463b13aa6f92602dfcbdb359b6a3f913c138f4aa2305b8558312c376f168484c"
+    },
+    {
+      "goal_family": "strength",
+      "context_sha256": "73d374f4d6c2b50fba7c97eae38c39c8b3863f2b6e5106a4f258b0745c6fb510"
+    }
+  ],
+  "checks": [
+    "schema",
+    "exercise_names",
+    "duplicates",
+    "citations",
+    "automatic_review"
+  ],
+  "dose_policy_validation": "not_available_incomplete_executable_contracts",
+  "no_student_lifecycle_writes": true,
+  "release_authorized_by_probe": false
+}

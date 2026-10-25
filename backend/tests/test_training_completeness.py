@@ -95,12 +95,11 @@ def test_full_body_schedule_preserves_three_complete_sheets(frequency):
     )
 
 
-def test_targeted_requests_and_set_counts_do_not_invent_three_full_body_sheets():
+def test_targeted_day_requests_retain_sessions_without_inventing_full_body_scope():
     targeted = FOCUS.model_copy(update={"scope": "targeted", "muscle_groups": ["bíceps"]})
-    assert (
-        requested_training_schedule("Bíceps em três dias", targeted.model_dump())["session_labels"]
-        == []
-    )
+    assert requested_training_schedule("Bíceps em três dias", targeted.model_dump())[
+        "session_labels"
+    ] == ["A", "B", "C"]
     assert (
         requested_training_schedule("Corpo inteiro, três séries", FOCUS.model_dump())[
             "session_labels"

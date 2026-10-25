@@ -45,6 +45,11 @@ _REASONS = {
     "invalid_training_citations",
     "invalid_training_equipment",
     "incomplete_training_plan",
+    "goal_priority_confirmation_required",
+    "training_schedule_confirmation_required",
+    "current_owner_rag_authorization_required",
+    "unmeasured_external_load_generated",
+    "invalid_typed_candidate",
 }
 _PATHS = {"none", "model", "direct", "confirmation", "cached"}
 _OPERATIONS = {"onboarding", "training_chat", "training_generation", "training_adaptation"}
@@ -103,6 +108,15 @@ def observe_turn(operation: str):
                     "TrainingChatDraftUpdateError": "draft_blocked",
                     "TrainingChatNotFoundError": "unavailable",
                 }.get(type(error).__name__, "unexpected_error")
+                if type(error).__name__ == "PrescriptionRejection":
+                    metadata["outcome"] = {
+                        "missing_input": "clarification",
+                        "insufficient_support": "draft_blocked",
+                        "technical_unavailability": "provider_failure",
+                    }.get(getattr(error, "category", None), "draft_blocked")
+                    metadata["reason"] = _allowed(
+                        getattr(error, "reason", None), _REASONS, "unclassified"
+                    )
                 raise
             finally:
                 metadata["duration_ms"] = round((perf_counter() - started) * 1000, 2)

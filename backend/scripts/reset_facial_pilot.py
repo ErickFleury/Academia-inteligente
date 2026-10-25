@@ -17,6 +17,7 @@ from app.modules.biometrics.config import BiometricConfig
 from app.modules.biometrics.provider import CompreFaceProvider
 from app.modules.clients.models import Account
 from app.modules.identity.keycloak_admin import KeycloakAdminClient, KeycloakAdminConfig
+from app.modules.knowledge.models import KnowledgeChunk, KnowledgeSource
 
 PRESERVED_TABLES = {
     "account",
@@ -24,7 +25,10 @@ PRESERVED_TABLES = {
     "equipment_model",
     "equipment_unit",
     "equipment_image",
+    "training_evidence_judgment",
+    "training_evidence_seal",
 }
+SCOPED_TABLES = {"knowledge_source", "knowledge_chunk"}
 RESET_TABLES = {
     "person_profile",
     "client",
@@ -43,6 +47,9 @@ RESET_TABLES = {
     "training_ai_message",
     "training_adaptation_proposal",
     "training_adaptation_operation",
+    "training_prescription_adaptation_validation",
+    "training_prescription_development_validation",
+    "training_prescription_development_confirmation",
     "progress_update",
     "social_profile",
     "profile_image",
@@ -126,17 +133,28 @@ def table_counts(session):
 
 
 def validate_schema(session):
-    expected = RESET_TABLES | PRESERVED_TABLES
+    expected = RESET_TABLES | PRESERVED_TABLES | SCOPED_TABLES
     actual = set(inspect(session.connection()).get_table_names()) - {"alembic_version"}
     if set(Base.metadata.tables) != expected or actual != expected:
         raise RuntimeError("Schema changed; review the reset table allowlist before proceeding")
 
 
 def clear_database(session, protected):
-    """Atomic, explicit table allowlist; no CASCADE and no equipment/configuration writes."""
+    """Atomic allowlist deletion preserving public evidence and gym configuration."""
     validate_schema(session)
-    names = ", ".join('"' + name + '"' for name in sorted(RESET_TABLES))
-    session.execute(text("TRUNCATE TABLE " + names))
+    for name in ("training_evidence_judgment", "training_evidence_seal"):
+        if session.scalar(select(func.count()).select_from(Base.metadata.tables[name])):
+            raise RuntimeError(
+                "Review/custody records exist; pilot reset requires a human decision"
+            )
+    # Public evidence shares tables with client-owned material. TRUNCATE would
+    # require truncating the referencing knowledge tables, erasing the corpus.
+    private_sources = select(KnowledgeSource.id).where(KnowledgeSource.client_id.is_not(None))
+    session.execute(delete(KnowledgeChunk).where(KnowledgeChunk.source_id.in_(private_sources)))
+    session.execute(delete(KnowledgeSource).where(KnowledgeSource.client_id.is_not(None)))
+    for table in reversed(Base.metadata.sorted_tables):
+        if table.name in RESET_TABLES:
+            session.execute(delete(table))
     session.execute(
         delete(Account).where(
             or_(Account.keycloak_subject.is_(None), Account.keycloak_subject.not_in(protected))

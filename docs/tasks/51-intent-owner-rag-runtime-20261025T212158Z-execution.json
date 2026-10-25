@@ -1,0 +1,31 @@
+{
+  "status": "infrastructure_interrupted",
+  "observed_at": "2026-10-25T21:28:45.761035+00:00",
+  "reason": "Docker engine API returned HTTP 500 and backend health was unavailable under host memory pressure. Desktop restart required.",
+  "host_free_memory_mb_observed": 458,
+  "completed_cases": [
+    {
+      "id": "flexibility-plain",
+      "status": "proposal"
+    },
+    {
+      "id": "flexibility-copied-header",
+      "status": "proposal"
+    },
+    {
+      "id": "flexibility-one-day",
+      "status": "proposal"
+    }
+  ],
+  "unfinished_cases": [
+    "flexibility-three-days",
+    "flexibility-negated-goal",
+    "abc-strength",
+    "initial-hypertrophy",
+    "ambiguous-goal",
+    "conflicting-schedule",
+    "retrieval-outage"
+  ],
+  "implementation_unchanged_at_interruption": true,
+  "held_out_evaluation": false
+}

@@ -1,0 +1,166 @@
+{
+  "captured_at": "2026-10-25T13:27:47.787997+00:00",
+  "scope": "tasks_46_51_read_only_readiness",
+  "catalog_sha256": "75d95cd342a4c99794e1cd712c3cb5f259530ed15263111399b29a6257c1297f",
+  "embedding_model": "bge-m3",
+  "embedding_dimensions_expected": 1024,
+  "public_vectors": 66,
+  "dimensions_min": 1024,
+  "dimensions_max": 1024,
+  "public_sources": [
+    {
+      "id": "bao-depp-2026",
+      "review_status": "approved",
+      "indexed_passages": 1
+    },
+    {
+      "id": "biga-anatomy",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "bmj-knee-modalities-2025",
+      "review_status": "excluded",
+      "indexed_passages": 0
+    },
+    {
+      "id": "br-physical-activity-2021",
+      "review_status": "excluded",
+      "indexed_passages": 0
+    },
+    {
+      "id": "ingram-stretch-mechanisms-2025",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "iversen-time-efficient-2021",
+      "review_status": "approved",
+      "indexed_passages": 9
+    },
+    {
+      "id": "jospt-rotator-cuff-2025",
+      "review_status": "pending",
+      "indexed_passages": 0
+    },
+    {
+      "id": "lafontant-body-fat-2025",
+      "review_status": "approved",
+      "indexed_passages": 5
+    },
+    {
+      "id": "lin-knee-proprioception-2025",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "lyristakis-strength-2026",
+      "review_status": "approved",
+      "indexed_passages": 1
+    },
+    {
+      "id": "nhs-balance",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "nhs-flexibility",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "nhs-strength",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "open-exercise-physiology",
+      "review_status": "excluded",
+      "indexed_passages": 0
+    },
+    {
+      "id": "pavlova-tendinopathy-2023",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "price-asthma-2025",
+      "review_status": "approved",
+      "indexed_passages": 6
+    },
+    {
+      "id": "rojas-deep-squat-2024",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "schumann-concurrent-2022",
+      "review_status": "approved",
+      "indexed_passages": 4
+    },
+    {
+      "id": "singer-rest-2024",
+      "review_status": "approved",
+      "indexed_passages": 3
+    },
+    {
+      "id": "smart-isometric-hypertension-2023",
+      "review_status": "approved",
+      "indexed_passages": 3
+    },
+    {
+      "id": "su-diabetes-exercise-2026",
+      "review_status": "approved",
+      "indexed_passages": 14
+    },
+    {
+      "id": "verville-low-back-2023",
+      "review_status": "approved",
+      "indexed_passages": 2
+    },
+    {
+      "id": "who-low-back-guideline-2023",
+      "review_status": "pending",
+      "indexed_passages": 0
+    },
+    {
+      "id": "wu-rotator-cuff-2025",
+      "review_status": "approved",
+      "indexed_passages": 2
+    }
+  ],
+  "writer_configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "typed-prescription-1",
+    "instruction_version": "operational-prescription-2"
+  },
+  "bundle_sha256": "b2e97166a3776b14ee7768b029b53b7991798f34f2e2e584b0055fa26a2ab66c",
+  "accepted_research_rules": 37,
+  "compiled_approved_policy_count": 0,
+  "seal_metadata": [],
+  "private_cases_read": false,
+  "client_records_read": false,
+  "independent_evaluation": "optional_not_performed",
+  "owner_rag": {
+    "enabled": true,
+    "authorized": true,
+    "decision_id": "owner-assisted-rag-operation-2026-10-24",
+    "independent_evaluation_required": false,
+    "professional_review_performed": false,
+    "compiled_prescription_qualification": false
+  },
+  "release_authorized": true,
+  "release_scope": "owner_assisted_rag_only",
+  "compiled_prescription_release_authorized": false,
+  "compiled_policy_open_items": [
+    "Objetivos, aplicabilidade e decisÃµes pendentes precisam ser resolvidos.",
+    "As sete dimensÃµes de prescriÃ§Ã£o precisam de decisÃµes documentadas.",
+    "O dicionÃ¡rio de exercÃ­cios precisa ser preenchido para revisÃ£o.",
+    "Os contratos de execuÃ§Ã£o e de autoridade das informaÃ§Ãµes estÃ£o incompletos.",
+    "O mÃ©todo de contabilizaÃ§Ã£o de volume estÃ¡ incompleto.",
+    "As versÃµes e os vÃ­nculos entre os contratos precisam ser corrigidos."
+  ],
+  "enabled_cohorts": [],
+  "blockers": []
+}

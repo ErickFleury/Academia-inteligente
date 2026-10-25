@@ -23,7 +23,7 @@ test('places the exact instructor navigation in the shared sidebar without clien
   const sidebar = screen.getByRole('complementary')
   const navigation = within(sidebar).getByRole('navigation', { name: 'Navegação da área do instrutor' })
   expect(within(navigation).getAllByRole('link').map((link) => link.textContent)).toEqual([
-    'Feed', 'Planos pendentes', 'Meus planos', 'Todos os planos', 'Clientes', 'Equipamentos', 'Perfil',
+    'Feed', 'Planos pendentes', 'Meus planos', 'Todos os planos', 'Clientes', 'Equipamentos', 'Revisão de evidências', 'Perfil',
   ])
   expect(within(navigation).getByRole('link', { name: 'Feed' })).toHaveAttribute('aria-current', 'page')
   expect(within(sidebar).getByRole('button', { name: 'Sair' })).toBeInTheDocument()
@@ -74,7 +74,7 @@ test('instructor sidebar signs out only once', () => {
 test('dual-role mobile switch stays outside the menu and closes the drawer', async () => {
   render(<SessionContext.Provider value={{ accessToken: 'same-token', refreshToken: 'refresh', expiresAt: Date.now() + 300_000, lastActivityAt: Date.now(), roles: ['client', 'instructor'] }}><MemoryRouter initialEntries={['/instrutor/feed']}><InstructorShell onSignOut={vi.fn()}>Conteúdo</InstructorShell></MemoryRouter></SessionContext.Provider>)
   const navigation = screen.getByRole('navigation', { name: 'Navegação da área do instrutor' })
-  expect(within(navigation).getAllByRole('link')).toHaveLength(7)
+  expect(within(navigation).getAllByRole('link')).toHaveLength(8)
   expect(navigation).not.toContainElement(screen.getByRole('link', { name: 'Mudar para a área do cliente' }))
   const trigger = screen.getByRole('button', { name: 'Abrir navegação' })
   fireEvent.click(trigger)

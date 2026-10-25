@@ -11,7 +11,9 @@ from app.modules.biometrics import models as biometric_models  # noqa: F401 - re
 from app.modules.clients import models  # noqa: F401 - registers metadata
 from app.modules.knowledge import models as knowledge_models  # noqa: F401 - registers metadata
 from app.modules.onboarding import models as onboarding_models  # noqa: F401 - registers metadata
+from app.modules.training import evidence_review_models as evidence_review_models  # noqa: F401
 from app.modules.training import models as training_models  # noqa: F401 - registers metadata
+from app.modules.training import prescription_development as prescription_models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

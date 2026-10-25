@@ -1,0 +1,49 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T141932Z",
+  "outputs": [
+    {
+      "case_id": "initial-hypertrophy",
+      "stage": "writer",
+      "context_characters": 33604,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Proposta de treino para hipertrofia muscular\",\n    \"objective\": \"Aumentar o diâmetro das fibras musculares através de treinamento resistido com foco em músculos específicos, conforme orientações de adaptação muscular.\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres (2 kg por braço)\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\", \"nhs-strength-1\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy",
+      "stage": "review",
+      "context_characters": 34483,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    }
+  ],
+  "captured_at": "2026-10-25T14:20:06.821019+00:00",
+  "independent_evaluation": false
+}

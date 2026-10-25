@@ -1,0 +1,193 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T200123Z",
+  "outputs": [
+    {
+      "case_id": "abc-strength",
+      "stage": "focus",
+      "context_characters": 187,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": null}"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "writer",
+      "context_characters": 30650,
+      "passage_count": 6,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "strength",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino de força para iniciante\",\n    \"objective\": \"Força\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"nhs-strength-1\", \"biga-anatomy-1\", \"pavlova-tendinopathy-2023-1\", \"biga-anatomy-2\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-01\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "review",
+      "context_characters": 31755,
+      "passage_count": 6,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "strength",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "writer",
+      "context_characters": 31447,
+      "passage_count": 6,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "strength",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino de força para iniciante\",\n    \"objective\": \"Força\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia B)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia B)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia B)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"pavlova-tendinopathy-2023-1\", \"iversen-time-efficient-2021-01\", \"iversen-time-efficient-2021-06\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "review",
+      "context_characters": 32552,
+      "passage_count": 6,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "strength",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"B\": {\n      \"label\": \"B\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "writer",
+      "context_characters": 33715,
+      "passage_count": 6,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "strength",
+      "correction_issues": [
+        {
+          "label": "B",
+          "issues": [
+            "repeated_session"
+          ],
+          "matches_label": "A"
+        }
+      ],
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino de força para iniciante\",\n    \"objective\": \"Força\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia B)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia B)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia B)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres; carga a definir na revisão do instrutor.\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"biga-anatomy-1\",\n    \"biga-anatomy-2\",\n    \"pavlova-tendinopathy-2023-1\",\n    \"iversen-time-efficient-2021-01\",\n    \"iversen-time-efficient-2021-06\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "review",
+      "context_characters": 32552,
+      "passage_count": 6,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "strength",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "NOVICE_LOADING",
+        "STRENGTH_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"B\": {\n      \"label\": \"B\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    }
+  ],
+  "captured_at": "2026-10-25T20:04:24.824729+00:00",
+  "independent_evaluation": false
+}

@@ -164,6 +164,10 @@ class TrainingLifecycleService:
                 )
             version.revision += 1
             version.updated_at = datetime.now(UTC)
+            if actor != "ai":
+                from app.modules.training.prescription_runtime import record_manual_edit
+
+                record_manual_edit(session, version, actor=actor)
             if commit:
                 session.commit()
             else:
@@ -223,6 +227,7 @@ class TrainingLifecycleService:
         current_version_id: UUID,
         expected_current_revision: int,
         selected_positions: list[int],
+        actor: str | None = None,
     ) -> TrainingPlanVersion:
         draft = session.get(TrainingPlanVersion, version_id)
         if draft is None:
@@ -240,6 +245,16 @@ class TrainingLifecycleService:
             raise InvalidTrainingTransitionError
         if draft.revision != expected_revision:
             raise ConcurrentTrainingUpdateError
+        from app.modules.training.prescription_runtime import (
+            _existing_record,
+            enforcement_enabled,
+            record_manual_edit,
+        )
+
+        if actor is None and (
+            enforcement_enabled() or _existing_record(session, draft) is not None
+        ):
+            raise InvalidTrainingTransitionError
         current = session.scalar(
             select(TrainingPlanVersion)
             .join(TrainingPlan)
@@ -307,6 +322,8 @@ class TrainingLifecycleService:
             )
             draft.revision += 1
             draft.updated_at = datetime.now(UTC)
+            if actor is not None:
+                record_manual_edit(session, draft, actor=actor)
             session.commit()
         except Exception:
             session.rollback()
@@ -379,6 +396,9 @@ class TrainingLifecycleService:
             )
             .with_for_update()
         ).all()
+        from app.modules.training.prescription_runtime import validate_lifecycle_transition
+
+        validate_lifecycle_transition(session, version, actor=actor, phase="approval")
         try:
             for current in current_versions:
                 current.status = "superseded"
@@ -470,6 +490,9 @@ class TrainingLifecycleService:
         if version.revision != expected_revision:
             raise ConcurrentTrainingUpdateError
         self.validate_exercises(self.content(session, version))
+        from app.modules.training.prescription_runtime import validate_lifecycle_transition
+
+        validate_lifecycle_transition(session, version, actor=subject, phase="submission")
         if version.submitted_for_review_at is None:
             version.submitted_for_review_at = datetime.now(UTC)
             version.updated_at = version.submitted_for_review_at

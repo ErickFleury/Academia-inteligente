@@ -24,6 +24,13 @@ _NUMBERS = {
     "seis": 6,
     "sete": 7,
 }
+FULL_BODY_PATTERNS = ("upper_push", "upper_pull", "lower_knee", "lower_hip", "trunk")
+
+
+def full_body_patterns(context):
+    if context.get("owner_rag_basis", {}).get("goal_family") == "mobility_flexibility":
+        return ("flexibility_upper", "flexibility_lower", "flexibility_trunk")
+    return FULL_BODY_PATTERNS
 
 
 class IncompleteTrainingPlanError(ValueError):
@@ -59,11 +66,24 @@ def training_review_context(plan: TrainingPlanVersionInput, context: dict) -> di
         labels = list(
             dict.fromkeys(split_training_day(item.exercise_name)[0] for item in plan.items)
         )
-    return {
+    result = {
         **context,
         "training_schedule": {"session_labels": labels},
         "proposed_plan": plan.model_dump(mode="json"),
     }
+    if context.get("owner_exercise_dictionary"):
+        from app.modules.training.owner_rag_schema import exercise_for_name
+
+        result["review_index"] = [
+            {
+                "position": position,
+                "label": split_training_day(item.exercise_name)[0],
+                "exercise_key": (exercise_for_name(item.exercise_name, context) or {}).get("key"),
+                "exercise_name": item.exercise_name,
+            }
+            for position, item in enumerate(plan.items, 1)
+        ]
+    return result
 
 
 def normalize_exercise_resource(item: TrainingPlanItemInput) -> TrainingPlanItemInput:
@@ -132,6 +152,41 @@ def validate_exercise_names(plan: TrainingPlanVersionInput) -> None:
         raise IncompleteTrainingPlanError(issues)
 
 
+def validate_full_body_coverage(plan, context):
+    if (
+        not context.get("owner_rag_basis")
+        or (context.get("training_focus") or {}).get("scope") != "full_body"
+    ):
+        return
+    from app.modules.training.owner_rag_schema import exercise_for_name
+
+    found = {}
+    for item in plan.items:
+        label = split_training_day(item.exercise_name)[0]
+        exercise = exercise_for_name(item.exercise_name, context)
+        found.setdefault(label, set()).update((exercise or {}).get("movement_patterns", []))
+    issues = []
+    for label, patterns in found.items():
+        missing = [pattern for pattern in full_body_patterns(context) if pattern not in patterns]
+        if missing:
+            issues.append(
+                {
+                    "label": label,
+                    "issues": ["missing_" + pattern for pattern in missing],
+                    "allowed_exercises": {
+                        pattern: [
+                            e["key"]
+                            for e in context["owner_exercise_dictionary"]["exercises"]
+                            if pattern in e["movement_patterns"]
+                        ]
+                        for pattern in missing
+                    },
+                }
+            )
+    if issues:
+        raise IncompleteTrainingPlanError(issues)
+
+
 def validate_session_variation(
     plan: TrainingPlanVersionInput,
     context: dict,
@@ -140,10 +195,38 @@ def validate_session_variation(
     citations: list[str] | None = None,
 ) -> None:
     """Allow a copied sheet only with an assessed, cited recommendation to repeat it."""
-    current = sorted(exercise_identity(item.exercise_name)[1] for item in plan.items)
+    if not context.get("training_session"):
+        days = list(dict.fromkeys(split_training_day(item.exercise_name)[0] for item in plan.items))
+        if len(days) > 1:
+            previous = []
+            for label in days:
+                day = plan.model_copy(
+                    update={
+                        "items": [
+                            item
+                            for item in plan.items
+                            if split_training_day(item.exercise_name)[0] == label
+                        ]
+                    }
+                )
+                validate_session_variation(
+                    day,
+                    {
+                        **context,
+                        "training_session": {"label": label},
+                        "previous_sessions": previous,
+                    },
+                    assessment=assessment,
+                    citations=citations,
+                )
+                previous.append({"label": label, "plan": day.model_dump(mode="json")})
+        return
+    current = sorted({exercise_identity(item.exercise_name)[1] for item in plan.items})
     for previous in context.get("previous_sessions", []):
         previous_plan = TrainingPlanVersionInput.model_validate(previous["plan"])
-        selection = sorted(exercise_identity(item.exercise_name)[1] for item in previous_plan.items)
+        selection = sorted(
+            {exercise_identity(item.exercise_name)[1] for item in previous_plan.items}
+        )
         if current == selection:
             if _has_repetition_recommendation(context, assessment, citations):
                 continue
@@ -188,19 +271,47 @@ def _has_repetition_recommendation(
     )
 
 
-def requested_training_schedule(request: str, focus: dict | None) -> dict:
-    if not focus or focus["scope"] != "full_body":
-        return {"session_labels": []}
-    match = re.search(
-        r"\b([1-7]|um|uma|dois|duas|três|tres|quatro|cinco|seis|sete)\s+(?:dias?|vezes)\b",
-        request.casefold(),
+def requested_training_schedule(request: str, focus: dict | None = None) -> dict:
+    """Requested sessions are independent of anatomical focus and model guesses."""
+    from app.modules.training.prescription_contract import PrescriptionRejection
+
+    value = "".join(
+        c for c in unicodedata.normalize("NFKD", request.casefold()) if not unicodedata.combining(c)
     )
-    count = (
-        (int(match.group(1)) if match.group(1).isdigit() else _NUMBERS[match.group(1)])
-        if match
-        else 0
-    )
-    return {"session_labels": list("ABCDEFG"[:count])}
+    labels = []
+    for match in re.finditer(
+        r"\b(?:treinos?|fichas?|dias?)\s*[(:]?\s*([a-g](?:\s*(?:[,/;+&-]|\be\b)\s*[a-g]){1,6})\b",
+        value,
+    ):
+        selected = re.split(r"\s*[,/;+&-]\s*", re.sub(r"\s+e\s+", ",", match.group(1)))
+        if labels and labels != [item.upper() for item in selected]:
+            raise PrescriptionRejection("missing_input", "training_schedule_confirmation_required")
+        labels = [item.upper() for item in selected]
+    if not labels and re.search(r"\babc\b|\ba\s*/\s*b\s*/\s*c\b", value):
+        labels = list("ABC")
+    if not labels:
+        single = re.search(r"\b(?:treino|ficha)\s+([A-G])(?=\s*(?:[).,!;:]|$))", request)
+        if single:
+            labels = [single.group(1)]
+    counts = set()
+    for match in re.finditer(
+        r"\b(\d+|um|uma|dois|duas|tres|quatro|cinco|seis|sete)\s+(dias?|vezes|fichas|treinos)\b",
+        value,
+    ):
+        number, unit = match.groups()
+        if number in {"um", "uma"} and unit in {"fichas", "treinos"}:
+            continue
+        if re.match(r"\s+(?:de descanso|sem treinar)\b", value[match.end() :]):
+            continue
+        counts.add(int(number) if number.isdigit() else _NUMBERS[number])
+    if (
+        len(counts) > 1
+        or any(n < 1 or n > 7 for n in counts)
+        or len(labels) != len(set(labels))
+        or (labels and counts and len(labels) not in counts)
+    ):
+        raise PrescriptionRejection("missing_input", "training_schedule_confirmation_required")
+    return {"session_labels": labels or list("ABCDEFG"[: next(iter(counts), 0)])}
 
 
 def validate_requested_sessions(plan: TrainingPlanVersionInput, context: dict) -> None:
@@ -226,6 +337,35 @@ def validate_assessment(assessment: AiTrainingPlanAssessment, context: dict) -> 
         raise IncompleteTrainingPlanError(
             [{"label": label, "issues": ["missing_session"]} for label in expected]
         )
-    issues = [item.model_dump() for item in assessment.sessions if not item.complete or item.issues]
+    issues = []
+    proposed = context.get("proposed_plan", {}).get("items", [])
+    for item in assessment.sessions:
+        if not item.complete or item.issues or item.item_issues:
+            if not item.item_issues:
+                issues.append(item.model_dump())
+            for detail in item.item_issues:
+                if (
+                    detail.position > len(proposed)
+                    or split_training_day(proposed[detail.position - 1]["exercise_name"])[0]
+                    != item.label
+                ):
+                    raise IncompleteTrainingPlanError(
+                        [
+                            {
+                                "label": item.label,
+                                "issues": ["ambiguous_exercise"],
+                                "reason": "invalid_review_item_position",
+                            }
+                        ]
+                    )
+                issues.append(
+                    {
+                        "label": item.label,
+                        "issues": [detail.reason],
+                        "position": detail.position,
+                        "exercise_name": proposed[detail.position - 1]["exercise_name"],
+                        "reason": detail.reason,
+                    }
+                )
     if issues:
         raise IncompleteTrainingPlanError(issues)

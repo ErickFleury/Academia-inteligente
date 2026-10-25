@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
 from app.integrations.ai import (
@@ -18,6 +18,7 @@ from app.modules.clients.models import Account, Client
 from app.modules.equipment.service import EquipmentService
 from app.modules.knowledge.service import KnowledgeCitationError, KnowledgeService
 from app.modules.onboarding.models import Onboarding
+from app.modules.training import owner_rag
 from app.modules.training.completeness import (
     IncompleteTrainingPlanError,
     normalize_exercise_resource,
@@ -82,6 +83,7 @@ class TrainingAdaptationService:
         self._equipment = EquipmentService()
         self._knowledge = knowledge_service or KnowledgeService()
 
+    @owner_rag.authorized_attempt
     def generate(
         self,
         session: Session,
@@ -91,6 +93,23 @@ class TrainingAdaptationService:
         client_request_id: UUID,
         reason: str,
     ) -> TrainingAdaptationProposal:
+        from app.modules.training.prescription_runtime import enforcement_enabled
+
+        if enforcement_enabled():
+            from app.modules.training.prescription_adaptation import generate_adaptation
+
+            try:
+                return generate_adaptation(
+                    session,
+                    self,
+                    subject,
+                    source_client_request_id=source_client_request_id,
+                    client_request_id=client_request_id,
+                    reason=reason,
+                )
+            except Exception:
+                session.rollback()
+                raise
         client_id = self._client_id(session, subject)
         base = self._current(session, client_id)
         existing = session.scalar(
@@ -101,6 +120,13 @@ class TrainingAdaptationService:
             )
         )
         if existing is not None:
+            if owner_rag.enabled() and any(c.get("owner_rag") for c in existing.citations):
+                owner_rag.validate_saved(
+                    session,
+                    existing,
+                    self._apply(session, base, existing),
+                    onboarding=owner_rag.current_onboarding(session, client_id),
+                )
             return existing
 
         if TrainingLifecycleService().find_proposal(session, client_id=client_id):
@@ -116,6 +142,10 @@ class TrainingAdaptationService:
             context["relevant_onboarding"],
         )
         context["knowledge"] = evidence.as_context()
+        if owner_rag.enabled():
+            context = owner_rag.prepare(
+                context, evidence, owner_rag.current_onboarding(session, client_id)
+            )
 
         def write_adaptation(selected_context):
             response = self._retry(lambda: self._provider.generate_adaptation(selected_context))
@@ -125,6 +155,13 @@ class TrainingAdaptationService:
             for operation in operations:
                 if operation.item is not None:
                     operation.item = normalize_exercise_resource(operation.item)
+                    if owner_rag.enabled():
+                        from app.modules.training.owner_rag_schema import resolve_plan
+
+                        item = resolve_plan(
+                            {"items": [operation.item.model_dump(mode="json")]}, selected_context
+                        )["items"][0]
+                        operation.item = type(operation.item).model_validate(item)
             return response.model_copy(
                 update={
                     "operations": [operation.model_dump(mode="json") for operation in operations]
@@ -135,8 +172,10 @@ class TrainingAdaptationService:
             response = request_selected_training(
                 write_adaptation,
                 context,
+                repair_domain_errors=owner_rag.enabled(),
+                candidate_validator=owner_rag.validate_candidate if owner_rag.enabled() else None,
                 assess=lambda review_context: self._retry(
-                    lambda: self._provider.assess_training(review_context)
+                    lambda: self._provider.assess_training(review_context), stage="review"
                 ),
                 plan_builder=lambda response: self._apply_operations(
                     session,
@@ -158,6 +197,17 @@ class TrainingAdaptationService:
                     else None
                 ),
             )
+            if owner_rag.enabled():
+                from types import SimpleNamespace
+
+                full_plan = self._apply_operations(session, base, operations)
+                knowledge = owner_rag.bind(knowledge, context, full_plan)
+                owner_rag.validate_saved(
+                    session,
+                    SimpleNamespace(citations=knowledge.citations),
+                    full_plan,
+                    onboarding=owner_rag.current_onboarding(session, client_id),
+                )
         except (
             ValidationError,
             KnowledgeCitationError,
@@ -217,6 +267,31 @@ class TrainingAdaptationService:
         )
         if proposal is None:
             raise AdaptationNotFoundError
+        from app.modules.training.prescription_adaptation import validate_adaptation
+        from app.modules.training.prescription_development import PrescriptionAdaptationValidation
+        from app.modules.training.prescription_runtime import enforcement_enabled
+
+        validation = None
+        gated = enforcement_enabled() or (
+            inspect(session.connection()).has_table(PrescriptionAdaptationValidation.__tablename__)
+            and session.get(PrescriptionAdaptationValidation, proposal.id) is not None
+        )
+        if accept and gated:
+            try:
+                validation = validate_adaptation(session, self, proposal, subject)
+            except Exception:
+                session.rollback()
+                raise
+        if accept and any(c.get("owner_rag") for c in proposal.citations):
+            base = session.get(TrainingPlanVersion, proposal.base_version_id)
+            if base is None:
+                raise AdaptationStateError
+            owner_rag.validate_saved(
+                session,
+                proposal,
+                self._apply(session, base, proposal),
+                onboarding=owner_rag.current_onboarding(session, client_id),
+            )
         if (
             accept
             and proposal.status == "pending_instructor_review"
@@ -249,6 +324,16 @@ class TrainingAdaptationService:
                 draft.citations = list(proposal.citations)
                 draft.knowledge_status = proposal.knowledge_status
                 draft.knowledge_limitations = proposal.knowledge_limitations
+                if validation is not None:
+                    runtime, result = validation
+                    runtime._save_record(
+                        session,
+                        draft,
+                        result,
+                        "client",
+                        "adaptation_acceptance",
+                        request_id=proposal.client_request_id,
+                    )
             except (ValidationError, InvalidTrainingContentError):
                 session.rollback()
                 raise AdaptationStateError from None
@@ -398,6 +483,7 @@ class TrainingAdaptationService:
                         "repetitions": item.repetitions,
                         "load_guidance": item.load_guidance,
                         "rest_seconds": item.rest_seconds,
+                        **({"dose_details": item.dose_details} if item.dose_details else {}),
                         "equipment_requirement": item.equipment_requirement,
                         "equipment_model_id": str(item.equipment_model_id)
                         if item.equipment_model_id
@@ -482,6 +568,9 @@ class TrainingAdaptationService:
                     repetitions=item.repetitions if item else None,
                     load_guidance=item.load_guidance if item else None,
                     rest_seconds=item.rest_seconds if item else None,
+                    dose_details=item.dose_details.model_dump(mode="json")
+                    if item and item.dose_details
+                    else None,
                     equipment_requirement=item.equipment_requirement if item else None,
                     equipment_model_id=item.equipment_model_id if item else None,
                     is_existing_exercise=item.is_existing_exercise if item else None,
@@ -507,12 +596,17 @@ class TrainingAdaptationService:
                     item=(
                         {
                             "exercise_name": operation.exercise_name or "",
-                            "sets": operation.sets or 0,
+                            "sets": operation.sets
+                            if operation.dose_details
+                            else operation.sets or 0,
                             "repetitions": operation.repetitions or "",
                             "load_guidance": operation.load_guidance or "",
                             "rest_seconds": operation.rest_seconds
                             if operation.rest_seconds is not None
+                            else None
+                            if operation.dose_details
                             else -1,
+                            "dose_details": operation.dose_details,
                             "equipment_requirement": operation.equipment_requirement,
                             "equipment_model_id": operation.equipment_model_id,
                             "is_existing_exercise": bool(operation.is_existing_exercise),
@@ -537,6 +631,7 @@ class TrainingAdaptationService:
                 repetitions=item.repetitions,
                 load_guidance=item.load_guidance,
                 rest_seconds=item.rest_seconds,
+                dose_details=item.dose_details,
                 equipment_requirement=item.equipment_requirement,
                 equipment_model_id=item.equipment_model_id,
             )
@@ -564,11 +659,24 @@ class TrainingAdaptationService:
         )
 
     @staticmethod
-    def _retry(operation):
+    def _retry(operation, stage="writer"):
         for attempt in range(2):
             try:
-                return operation()
+                from app.modules.training.prescription_budget import CURRENT_BUDGET
+
+                budget = CURRENT_BUDGET.get()
+                return budget.call(stage, operation) if budget is not None else operation()
             except AiProviderError as error:
                 if attempt or not error.retryable:
+                    if (
+                        owner_rag.enabled()
+                        and stage == "writer"
+                        and error.category == "malformed_structured_output"
+                    ):
+                        from app.modules.training.prescription_contract import PrescriptionRejection
+
+                        raise PrescriptionRejection(
+                            "insufficient_support", "invalid_typed_candidate"
+                        ) from None
                     raise AdaptationUnavailableError from None
         raise AdaptationUnavailableError

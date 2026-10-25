@@ -1,4 +1,5 @@
 import type { TrainingKnowledge } from './training-knowledge'
+import { prescriptionRejectionMessage } from './training-prescription'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
@@ -29,7 +30,11 @@ async function adaptationError(response: Response): Promise<never> {
   if (response.status === 401) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
   if (response.status === 403) throw new Error('Você não tem permissão para esta alteração.')
   if (response.status === 409) throw new Error('Já existe um rascunho ou o treino mudou. Recarregue e revise antes de continuar.')
-  if (response.status === 422) throw new Error('Você precisa ter um treino atual antes de solicitar uma alteração.')
+  if (response.status === 422) {
+    let detail: unknown
+    try { detail = (await response.json() as { detail?: unknown }).detail } catch { /* Controlled fallback. */ }
+    throw new Error(prescriptionRejectionMessage(detail) ?? 'Você precisa ter um treino atual antes de solicitar uma alteração.')
+  }
   if (response.status === 503) throw new Error('A proposta de alteração está indisponível no momento. Tente novamente.')
   throw new Error('Não foi possível processar a proposta de alteração. Tente novamente.')
 }

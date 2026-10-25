@@ -1,0 +1,239 @@
+{
+  "frozen_run": "owner-rag-runtime-20261025T201258Z",
+  "generation_passed": 7,
+  "generation_total": 7,
+  "expected_refusals_passed": 3,
+  "expected_refusals_total": 3,
+  "implementation_unchanged_during_run": true,
+  "all_saved_bindings_revalidated_read_only": true,
+  "all_requested_goals_and_labels_preserved": true,
+  "all_selections_distinct": true,
+  "automatic_activation": false,
+  "professional_review_performed": false,
+  "independent_evaluation_performed": false,
+  "cases": [
+    {
+      "case_id": "abc-strength",
+      "status": "proposal",
+      "elapsed_seconds": 45.828716071999224,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 3,
+        "focus": 1
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "strength",
+      "focus_scope": "unspecified",
+      "session_item_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 3
+      }
+    },
+    {
+      "case_id": "abc-hypertrophy",
+      "status": "proposal",
+      "elapsed_seconds": 66.82254336899496,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 3,
+        "focus": 1
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "hypertrophy",
+      "focus_scope": "unspecified",
+      "session_item_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 3
+      }
+    },
+    {
+      "case_id": "abc-muscular-endurance",
+      "status": "proposal",
+      "elapsed_seconds": 172.95919590700214,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 4,
+        "review": 3,
+        "focus": 1
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "muscular_endurance",
+      "focus_scope": "unspecified",
+      "session_item_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 1
+      }
+    },
+    {
+      "case_id": "abc-full-body",
+      "status": "proposal",
+      "elapsed_seconds": 287.7300442150008,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 3,
+        "focus": 1
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "strength",
+      "focus_scope": "full_body",
+      "session_item_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      }
+    },
+    {
+      "case_id": "two-day-hypertrophy",
+      "status": "proposal",
+      "elapsed_seconds": 193.94480341699818,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 2,
+        "focus": 1
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "hypertrophy",
+      "focus_scope": "unspecified",
+      "session_item_counts": {
+        "A": 3,
+        "B": 3
+      }
+    },
+    {
+      "case_id": "initial-hypertrophy",
+      "status": "proposal",
+      "elapsed_seconds": 36.21685782599525,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "hypertrophy",
+      "focus_scope": "unspecified",
+      "session_item_counts": {
+        "A": 5
+      }
+    },
+    {
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "elapsed_seconds": 0.2705716409982415,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "reason": "goal_priority_confirmation_required",
+      "expected_control_passed": true
+    },
+    {
+      "case_id": "priority-goal",
+      "status": "proposal",
+      "elapsed_seconds": 67.79794124800537,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 3,
+        "focus": 1
+      },
+      "saved_binding_revalidated": true,
+      "distinct_selections": true,
+      "goal_family": "hypertrophy",
+      "focus_scope": "unspecified",
+      "session_item_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 3
+      }
+    },
+    {
+      "case_id": "conflicting-schedule",
+      "status": "rejected",
+      "elapsed_seconds": 0.020431380995432846,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "reason": "training_schedule_confirmation_required",
+      "expected_control_passed": true
+    },
+    {
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "elapsed_seconds": 0.048627604002831504,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "reason": "retrieval_unavailable",
+      "expected_control_passed": true
+    }
+  ],
+  "provider_failures": {
+    "provider_server": 2
+  },
+  "passage_counts": [
+    5,
+    6
+  ],
+  "final_backend_tests": {
+    "passed": 1260,
+    "seconds": 218.98,
+    "isolated_postgresql_enabled": true
+  },
+  "final_focused_chat_tests": {
+    "passed": 97,
+    "seconds": 25.43
+  },
+  "frontend_contract_tests_passed": 7,
+  "final_implementation_sha256": {
+    "app/modules/training/owner_rag.py": "7dea352f9de29169f4219b3bb942a92692f81f8f8a29d07b93c6de7f9eab97b5",
+    "app/modules/training/owner_rag_schema.py": "23122794c6f7a316acd250cea532eba98459e0329a5c6df0c473ff4e66d800be",
+    "app/modules/training/owner_rag_load.py": "82b9664dd573a8bd8fa9d9ef9bf5ccc4ddda1f3b63956ea9f27025d252008658",
+    "app/modules/training/owner-rag-exercises.json": "8365178dbb2e6dac830f93d3b09844b6e33f240f7118a23becce53bb6a83e2a7",
+    "app/modules/training/generation_service.py": "40cf20b9dccfeabc64b649c31be59146294159a81f99e90c55dde9bf82e0ba34",
+    "app/modules/training/chat_service.py": "28ed68be2ceccb20d0a9ae6bdc17c75359d2036856a21dd106d2bca6440bb6bb",
+    "app/modules/training/adaptation_service.py": "a89f8f852544f6acc02ff3379813f9517ae430faf9660a60632c71a13a6b6753",
+    "app/modules/training/selection.py": "730690e3501276c053e9d41e27a9b15a1c36526a5cc3d31cdbf45e71d6185faa",
+    "app/modules/training/prescription_budget.py": "c9e16cc969908ae4e825e41ce6390e5ab05dbb49cd50bb11c49dc90c2d2abfd7",
+    "app/modules/training/completeness.py": "46a5bb3aae05dc01bb23a5318a0d50d4d3bfe99479513fda3f85aeeb259cf424",
+    "app/modules/training/focus.py": "41e7653306c5b6bd81108fae3366caab7eb1a547c81fa8b85846d1b45c47f8f5",
+    "app/integrations/ai.py": "737a2fa80ab5dd1f55b0a193bf645455b6fac365a2813770f96d5beed96c5e48",
+    "app/integrations/ai_diagnostics.py": "7d9342b804292f188d7ef1b521ace1bc0436f403157ad6a74b81999c8936ebc9"
+  },
+  "post_matrix_changes": [
+    "app/modules/training/chat_service.py"
+  ],
+  "post_matrix_validation": "Six explicit chat refresh and UUID replay regressions plus final full backend suite; direct writer/review/generation code unchanged.",
+  "deployment": {
+    "backend_recreated": true,
+    "health_status": "ok",
+    "rag_release_authorized": true,
+    "public_vectors": 66,
+    "accepted_rules": 37,
+    "rag_release_blockers": [],
+    "readiness_artifact": "51-optional-three-day-readiness-20261025T203427Z.json",
+    "designated_account_preserved_after_restart": true,
+    "container_health": "healthy"
+  }
+}

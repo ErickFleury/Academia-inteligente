@@ -1,0 +1,448 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "version": 1,
+      "source_id": "singer-rest-2024",
+      "identifier": "doi:10.3389/fspor.2024.1429789",
+      "repository_identifier": "PMC11349676",
+      "article_version": "2024-08-14",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11349676/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11349676/fullTextXML",
+      "captured_at": "2026-10-23T23:21:20.306179+00:00",
+      "artifact_file": "325ac35e8ce4cef9fb4cd5fd482817cc40210ac6283ede809d07975207f2f5c6.xml",
+      "artifact_sha256": "325ac35e8ce4cef9fb4cd5fd482817cc40210ac6283ede809d07975207f2f5c6",
+      "artifact_bytes": 117390,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© 2024 Singer, Wolf, Generoso, Arias, Delcastillo, Echevarria, Martinez, Androulakis Korakakis, Refalo, Swinton and Schoenfeld.</copyright-statement><license><license-p>This is an open-access article distributed under the terms of the <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">Creative Commons Attribution License (CC BY)</ext-link>. The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.</license-p></license></permissions>",
+      "license_evidence_sha256": "ed983f3f60289be02c24043bfd38eccdaebe8581da76275bf6c01c495f8f5af1",
+      "recipe_sha256": "5bd264bbdbed79779724f1e1649e7aac60c0964d9b33d7c9c2507ab17629a11b",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "singer-rest-2024-01",
+          "locator": "PMC11349676 JATS s5 blocks 1; s5 blocks 2; s2b; s4e",
+          "text_sha256": "d8900c96ea176888bc1ba438a6029b218120a57a7034d756186ed9fdea9d0f49"
+        },
+        {
+          "id": "singer-rest-2024-02",
+          "locator": "PMC11349676 JATS s4b blocks 1; s4b blocks 2; s2b; s4e",
+          "text_sha256": "0d7ca9d00caa00e16ea7c5d3033991f5ae14d53dfe960c73e44131d7fb1bbcc2"
+        },
+        {
+          "id": "singer-rest-2024-03",
+          "locator": "PMC11349676 JATS s3c blocks 1; s3c blocks 2; s2b; s4e",
+          "text_sha256": "3e10a81ab3cf48073a92023f0f8d8f74d72a29c6e0030235b63b6a60cdc19508"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "iversen-time-efficient-2021",
+      "identifier": "doi:10.1007/s40279-021-01490-1",
+      "repository_identifier": "PMC8449772",
+      "article_version": "2021-06-14",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8449772/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8449772/fullTextXML",
+      "captured_at": "2026-10-23T23:21:29.828358+00:00",
+      "artifact_file": "e7337fb0b5405affec762a4cca37734a9b0120ee95c929b0292568a79db9a37c.xml",
+      "artifact_sha256": "e7337fb0b5405affec762a4cca37734a9b0120ee95c929b0292568a79db9a37c",
+      "artifact_bytes": 191844,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© The Author(s) 2021</copyright-statement><license><license-p><bold>Open Access</bold>This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">http://creativecommons.org/licenses/by/4.0/</ext-link>.</license-p></license></permissions>",
+      "license_evidence_sha256": "a59dfde68a3a7cbfb811cc145ca5fa4b34be0fe21d7781173e8dae83dd11918f",
+      "recipe_sha256": "e9849250d70b7387aa844c1e83037aa016f741cc6d7c3af9b2e8ef2b8d9b8899",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "iversen-time-efficient-2021-01",
+          "locator": "PMC8449772 JATS Sec2 blocks 1; Sec2 blocks 2; Sec2 blocks 3; Abstract; Sec23",
+          "text_sha256": "39b8811de1e07003dc4aafbbdfa4d8dd3d38353ac8c57b6cd2fe119d6774567c"
+        },
+        {
+          "id": "iversen-time-efficient-2021-02",
+          "locator": "PMC8449772 JATS Sec2 blocks 4; Sec2 blocks 5; Abstract; Sec23",
+          "text_sha256": "d1dde3aafe10410688ca4a5e71db63246e78cba93109dfb59e344d3c00460bcd"
+        },
+        {
+          "id": "iversen-time-efficient-2021-03",
+          "locator": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "text_sha256": "6d9ac7895bc62a48b625e363d6537f86bbcc116b8abd0d3fdea4799cbe1501e5"
+        },
+        {
+          "id": "iversen-time-efficient-2021-04",
+          "locator": "PMC8449772 JATS Sec5 blocks 1; Sec5 blocks 2; Abstract; Sec23",
+          "text_sha256": "a9d644531f8d1e74da7381067cd0630528400166a41299c356523e06d7706450"
+        },
+        {
+          "id": "iversen-time-efficient-2021-05",
+          "locator": "PMC8449772 JATS Sec6 blocks 1; Sec6 blocks 2; Sec6 blocks 3; Abstract; Sec23",
+          "text_sha256": "9f2e3a5d3f018df5f1496cbd41a0b8c61e323a2fca512d3f138a5882b09a7208"
+        },
+        {
+          "id": "iversen-time-efficient-2021-06",
+          "locator": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "text_sha256": "2106a63442803133653b399795d335d826bc16b765c942e09f6b2dccaca0e196"
+        },
+        {
+          "id": "iversen-time-efficient-2021-07",
+          "locator": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "text_sha256": "e8c48e05df053d44fc601655fdc9d1f3a7923c92673e0dda599652f517f7d264"
+        },
+        {
+          "id": "iversen-time-efficient-2021-08",
+          "locator": "PMC8449772 JATS Sec22 blocks 1; Sec22 blocks 2; Sec22 blocks 3; Sec22 blocks 4; Sec22 blocks 5; Sec22 blocks 6; Abstract; Sec23",
+          "text_sha256": "995bca9417cb10173b92f5afac8d5ff461c6bf9336cdea7046f194bf861ad746"
+        },
+        {
+          "id": "iversen-time-efficient-2021-09",
+          "locator": "PMC8449772 JATS Sec22 blocks 7; Sec22 blocks 8; Sec22 blocks 9; Abstract; Sec23",
+          "text_sha256": "08ddcb080e0bf4d1b414448d81973de20f62206b2d7a389dfa8da0196806d30c"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "schumann-concurrent-2022",
+      "identifier": "doi:10.1007/s40279-021-01587-7",
+      "repository_identifier": "PMC8891239",
+      "article_version": "2021-11-10",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8891239/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8891239/fullTextXML",
+      "captured_at": "2026-10-23T23:21:31.825727+00:00",
+      "artifact_file": "8452a5f92f0f244559e93116ef0524c74ba8a2842b179d37401b489fbac543b1.xml",
+      "artifact_sha256": "8452a5f92f0f244559e93116ef0524c74ba8a2842b179d37401b489fbac543b1",
+      "artifact_bytes": 130772,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© The Author(s) 2021</copyright-statement><license><license-p><bold>Open Access</bold>This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">http://creativecommons.org/licenses/by/4.0/</ext-link>.</license-p></license></permissions>",
+      "license_evidence_sha256": "a59dfde68a3a7cbfb811cc145ca5fa4b34be0fe21d7781173e8dae83dd11918f",
+      "recipe_sha256": "b50a11b4121a05b5fb19e708e128ced1e19661455c462bd1a56844db7291fb86",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "schumann-concurrent-2022-01",
+          "locator": "PMC8891239 JATS Sec14 blocks 1; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "a3d40a526af8c7cd59223a9f1c3a6c794a84b2953433887070217f1a423e676b"
+        },
+        {
+          "id": "schumann-concurrent-2022-02",
+          "locator": "PMC8891239 JATS Sec11 blocks 1; Sec11 blocks 2; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "25abc355b174784062f70ba771fb24c98231aea1c679f2749ea20bb67c7010d7"
+        },
+        {
+          "id": "schumann-concurrent-2022-03",
+          "locator": "PMC8891239 JATS Sec13 blocks 1; Sec13 blocks 2; Sec13 blocks 3; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "cc64cd560204f4c808e163b81fb9191f39396e60c912013eed0c1fa5b9a52007"
+        },
+        {
+          "id": "schumann-concurrent-2022-04",
+          "locator": "PMC8891239 JATS Sec13 blocks 4; Sec4; Sec13 paragraphs 7",
+          "text_sha256": "c98bdc7088f8ad699258a20cb991c68433b02b64c7eeb96f288863465705f382"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "ingram-stretch-mechanisms-2025",
+      "identifier": "doi:10.1007/s40279-025-02204-7",
+      "repository_identifier": "PMC12152101",
+      "article_version": "2025-04-03; 2025-01-01",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12152101/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12152101/fullTextXML",
+      "captured_at": "2026-10-23T23:21:34.082446+00:00",
+      "artifact_file": "6a8654edef6e60c493dd4fb4632643dad562617f6d997932139314ff3f0c9463.xml",
+      "artifact_sha256": "6a8654edef6e60c493dd4fb4632643dad562617f6d997932139314ff3f0c9463",
+      "artifact_bytes": 275733,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.niso.org/schemas/ali/1.0/\" xmlns:ns1=\"http://www.w3.org/1999/xlink\"><copyright-statement>© The Author(s) 2025</copyright-statement><copyright-year>2025</copyright-year><license><ns0:license_ref specific-use=\"textmining\" content-type=\"ccbylicense\">https://creativecommons.org/licenses/by/4.0/</ns0:license_ref><license-p><bold>Open Access</bold> This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit <ext-link ext-link-type=\"uri\" ns1:href=\"https://creativecommons.org/licenses/by/4.0/\">http://creativecommons.org/licenses/by/4.0/</ext-link>.</license-p></license></permissions>",
+      "license_evidence_sha256": "84bef27659a3a6e94b7be6f25723141b9309413a17a9a7771d88df4ffa3090f7",
+      "recipe_sha256": "90b525d2c8db21b6acf832d762f326f077c3824e4b67dbf249d294b2095e9812",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "ingram-stretch-mechanisms-2025-01",
+          "locator": "PMC12152101 JATS Sec34 blocks 1; Sec35 blocks 1; Sec5; Sec33",
+          "text_sha256": "73aa84f39f2f8660bb26ae9e1692694c9def915760ac78dddd438739cf6513ee"
+        },
+        {
+          "id": "ingram-stretch-mechanisms-2025-02",
+          "locator": "PMC12152101 JATS Sec23 blocks 1; Sec78 blocks 1; Sec5; Sec33",
+          "text_sha256": "db698b6d5251d034d36b732972bbc8028740397e3303159b2c149f26cfbc8313"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "smart-isometric-hypertension-2023",
+      "identifier": "doi:10.1186/s40885-022-00232-3",
+      "repository_identifier": "PMC10015931",
+      "article_version": "2023-03-15",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10015931/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10015931/fullTextXML",
+      "captured_at": "2026-10-23T23:21:36.525386+00:00",
+      "artifact_file": "c623deaca623367813ada9954f56868bb0e9c56a7f097ef90b4750d580861c75.xml",
+      "artifact_sha256": "c623deaca623367813ada9954f56868bb0e9c56a7f097ef90b4750d580861c75",
+      "artifact_bytes": 148818,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© The Author(s) 2023</copyright-statement><license><license-p><bold>Open Access</bold>This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">http://creativecommons.org/licenses/by/4.0/</ext-link>. The Creative Commons Public Domain Dedication waiver (<ext-link ns0:href=\"https://creativecommons.org/publicdomain/zero/1.0/\" ext-link-type=\"uri\">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated in a credit line to the data.</license-p></license></permissions>",
+      "license_evidence_sha256": "f0e9a88e862fe9da1c06eb0570876581c2f451f48c73aefb151d54f6059f3279",
+      "recipe_sha256": "49982b52ac895ef38a7b06b146e70b66e5895c31dae7994f2b51a7d25cdd30fb",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "smart-isometric-hypertension-2023-01",
+          "locator": "PMC10015931 JATS Sec14 blocks 1; Sec14 blocks 2; Sec14 blocks 3; Sec14 blocks 4; Tab4; Sec13; Sec16",
+          "text_sha256": "3c33d852f6dd9d1b35e07b95ce3f6d4c8f0e092bd5a4322f2ae9717c24fb97e4"
+        },
+        {
+          "id": "smart-isometric-hypertension-2023-02",
+          "locator": "PMC10015931 JATS Sec7 blocks 1; Sec7 blocks 2; Sec7 blocks 3; Sec13; Sec16",
+          "text_sha256": "54eda8f1a967654d199bd4b9ff5a631af540386ec68285fe17445e0f42b9314b"
+        },
+        {
+          "id": "smart-isometric-hypertension-2023-03",
+          "locator": "PMC10015931 JATS Sec2 blocks 1; Sec2 blocks 2; Sec2 blocks 3; Sec2 blocks 4; Sec15 blocks 1; Sec13; Sec16",
+          "text_sha256": "62e17f7f4d295a4d4692eac29caf9072459fe59f0fbbb223769a3155274ec766"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "su-diabetes-exercise-2026",
+      "identifier": "doi:10.3389/fendo.2026.1887543",
+      "repository_identifier": "PMC13539497",
+      "article_version": "2026-08-20",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13539497/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13539497/fullTextXML",
+      "captured_at": "2026-10-23T23:21:39.015790+00:00",
+      "artifact_file": "ffec7a440c4aba33de55152958911bd941a4ce70bbb1705d3f6bb7f0568c7d68.xml",
+      "artifact_sha256": "ffec7a440c4aba33de55152958911bd941a4ce70bbb1705d3f6bb7f0568c7d68",
+      "artifact_bytes": 343013,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>Copyright © 2026 Su, Li, Gou, Yuan, Lin, Lin, Wang, Xiong and Luan.</copyright-statement><license><license-p>This is an open-access article distributed under the terms of the <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">Creative Commons Attribution License (CC BY)</ext-link>. The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.</license-p></license></permissions>",
+      "license_evidence_sha256": "60ac922212c4004887ad7a59d289214a30e84ce0e60b8e4f718c8299b23b5057",
+      "recipe_sha256": "91dc4c983653555dd5f7c60c4e83025220975339afda8f64324f4fb024c8561e",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "su-diabetes-exercise-2026-01",
+          "locator": "PMC13539497 JATS s4_1_1 blocks 1; s4_1_1 blocks 2; s2; s10",
+          "text_sha256": "d5e102a2dd6d1cfaab1fa351d5692c04d9ab3dbe4a41bb29f62cd4ed103d9051"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-02",
+          "locator": "PMC13539497 JATS s4_1_2 blocks 1; s4_1_2 blocks 2; s2; s10",
+          "text_sha256": "404e0405b91b59c759bf337bc5114a3d5f4aba7502b0195386e2fbd0708b2048"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-03",
+          "locator": "PMC13539497 JATS s4_1_3 blocks 1; s4_1_3 blocks 2; s2; s10",
+          "text_sha256": "1ce12ae65da876ccdce5f7d3f65e225ee49b518b6162a91f91174c8060b59cdd"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-04",
+          "locator": "PMC13539497 JATS s4_2 blocks 1; s2; s10",
+          "text_sha256": "5fcd3d7da35563baa21d4b7d3e8682b32913098b119c23b798990029283221c8"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-05",
+          "locator": "PMC13539497 JATS s6 blocks 1; s6 blocks 2; s6 blocks 3; s2; s10",
+          "text_sha256": "c058b1e2253a852f60dac8a103f2beb3ca44711d697517415c237f5c3272aa5a"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-06",
+          "locator": "PMC13539497 JATS s6 blocks 4; s6 blocks 5; s2; s10",
+          "text_sha256": "fbfa235dd1d2cd41f9d04af8de62d2ae98d3929751131de0b9554b1ef61fb268"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-07",
+          "locator": "PMC13539497 JATS s7_1 blocks 1; s7_1 blocks 2; s7_1 blocks 3; s2; s10",
+          "text_sha256": "ddfa8edda7bfe05a62938fa2d00059eda7f7a5d59d874496482e0ea8dd37cc73"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-08",
+          "locator": "PMC13539497 JATS s7_1 blocks 4; s7_1 blocks 5; s2; s10",
+          "text_sha256": "7b0b2358fca3e9a9198bf073752770df07948938e84148da3f108664df5bd5ab"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-09",
+          "locator": "PMC13539497 JATS s7_2 blocks 1; s7_2 blocks 2; s7_2 blocks 3; s2; s10",
+          "text_sha256": "40de1a0cc29d1dc56ead0171baa52c1620f5c6726ebdf97b7c1ee442b44fcc1e"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-10",
+          "locator": "PMC13539497 JATS s7_3 blocks 1; s7_3 blocks 2; s7_3 blocks 3; s2; s10",
+          "text_sha256": "a5d6eea838b857aa85b75d3fd82af154d453496f3a45d3adcd5a9929b184975b"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-11",
+          "locator": "PMC13539497 JATS s7_4 blocks 1; s7_4 blocks 2; s7_4 blocks 3; s2; s10",
+          "text_sha256": "7bce7b3f226402f01aba7ee94786ec2b0e975b8a1cf6e664be517721583abd91"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-12",
+          "locator": "PMC13539497 JATS s7_5 blocks 1; s7_5 blocks 2; s7_5 blocks 3; s2; s10",
+          "text_sha256": "1c717e91e87fbeaffe3d7bfcbe7e4b409c5a8ff60c2ac9242addc450e8aaf625"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-13",
+          "locator": "PMC13539497 JATS s8_1 blocks 1; s8_1 blocks 2; s8_1 blocks 3; s2; s10",
+          "text_sha256": "c72d7514ed2c58c65e24c43c2dcce312bd150f978e5880cf6009b2f095a6add2"
+        },
+        {
+          "id": "su-diabetes-exercise-2026-14",
+          "locator": "PMC13539497 JATS s9 blocks 1; s9 blocks 2; s2; s10",
+          "text_sha256": "cc37b3cfd7e8fad39fc9e7c19a79148abb10667487765c6b12c390da11e99b08"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "lafontant-body-fat-2025",
+      "identifier": "doi:10.1080/15502783.2025.2507949",
+      "repository_identifier": "PMC12107660",
+      "article_version": "2025-05-22",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12107660/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12107660/fullTextXML",
+      "captured_at": "2026-10-23T23:21:41.411668+00:00",
+      "artifact_file": "f468d30bd556014b3a4014b743f9e9c2cdba7f1617bd98b981bb159e99f840da.xml",
+      "artifact_sha256": "f468d30bd556014b3a4014b743f9e9c2cdba7f1617bd98b981bb159e99f840da",
+      "artifact_bytes": 170904,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© 2025 The Author(s). Published by Informa UK Limited, trading as Taylor &amp; Francis Group.</copyright-statement><license><license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">http://creativecommons.org/licenses/by/4.0/</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited. The terms on which this article has been published allow the posting of the Accepted Manuscript in a repository by the author(s) or with their consent.</license-p></license></permissions>",
+      "license_evidence_sha256": "0b7c0f74bfa8d747fe363cfb902d509139fbbcd51ba47cec57b3018abe12519f",
+      "recipe_sha256": "c92b7160a6b13fff3fb6154438bab7fddf5eff9ef4c7ca5c349ca1c338c2c435",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "lafontant-body-fat-2025-01",
+          "locator": "PMC12107660 JATS s0005 blocks 1; s0005 blocks 2; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "857898a759411fb68d255cf40e91dbe85568e90a3e260a32cfa3a8056bd4618f"
+        },
+        {
+          "id": "lafontant-body-fat-2025-02",
+          "locator": "PMC12107660 JATS s0003-s2003 blocks 1; s0003-s2003 blocks 2; s0003-s2003 blocks 3; s0003-s2003 blocks 4; s0003-s2003 blocks 5; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "23d1a8f5f2bc315b89dfcdae276f29dc604da2d0644e8a6710cca8f7e3f5f1e9"
+        },
+        {
+          "id": "lafontant-body-fat-2025-03",
+          "locator": "PMC12107660 JATS s0004 blocks 1; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "56831a99fcf151f03c8ebdd8d4010b006c1fc947428ac24664315a2992258fdb"
+        },
+        {
+          "id": "lafontant-body-fat-2025-04",
+          "locator": "PMC12107660 JATS s0004 blocks 2; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "f9a521ac32dae4a4d7455af3c06fe8e798d0d1b05ab5ebae4f40c964977d71ce"
+        },
+        {
+          "id": "lafontant-body-fat-2025-05",
+          "locator": "PMC12107660 JATS s0004 blocks 3; s0002-s2002; s0004 paragraphs 8",
+          "text_sha256": "c22ca84a341c248d2f8bcdee217c456c2797e3a5852fc8df51540e4ea693710d"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "bao-depp-2026",
+      "identifier": "doi:10.1371/journal.pdig.0001728",
+      "repository_identifier": "PMC13581003",
+      "article_version": "2026-09-16",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13581003/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13581003/fullTextXML",
+      "captured_at": "2026-10-23T23:21:43.992183+00:00",
+      "artifact_file": "c00cafc5df908cda3f32a0acd771f0791c9b816b275d810c2d5fbd1803df73bf.xml",
+      "artifact_sha256": "c00cafc5df908cda3f32a0acd771f0791c9b816b275d810c2d5fbd1803df73bf",
+      "artifact_bytes": 140881,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© 2026 Bao et al</copyright-statement><license><license-p>This is an open access article distributed under the terms of the <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">Creative Commons Attribution License</ext-link>, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.</license-p></license></permissions>",
+      "license_evidence_sha256": "7a96320469a3c7872f2a77a87a54a4175e0e6dcfd0f2a064035357c56f9480e3",
+      "recipe_sha256": "162aaa4b17110cae33f95782419660e6c22de75e0491a654c6cb397f99af073d",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "bao-depp-2026-01",
+          "locator": "PMC13581003 JATS Abstract; sec023 blocks 1; sec022",
+          "text_sha256": "5c6e8456f2bfc3e64274eb2158bdc0f39c7a5cf3396be880222f895fc0d68939"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "source_id": "price-asthma-2025",
+      "identifier": "doi:10.1111/all.16573",
+      "repository_identifier": "PMC12186601",
+      "article_version": "2025-05-06",
+      "requested_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12186601/fullTextXML",
+      "final_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12186601/fullTextXML",
+      "captured_at": "2026-10-23T23:21:46.652448+00:00",
+      "artifact_file": "ad9496904c0b112142394dfa1bf01ecca98de3c9429934ab2e02a7a0e98485e5.xml",
+      "artifact_sha256": "ad9496904c0b112142394dfa1bf01ecca98de3c9429934ab2e02a7a0e98485e5",
+      "artifact_bytes": 249918,
+      "media_type": "application/xml",
+      "extractor": "europepmc-jats-selected-blocks/1",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "<permissions xmlns:ns0=\"http://www.w3.org/1999/xlink\"><copyright-statement>© 2025 The Author(s). <italic>Allergy</italic> published by European Academy of Allergy and Clinical Immunology and John Wiley &amp; Sons Ltd.</copyright-statement><license><license-p>This is an open access article under the terms of the <ext-link ns0:href=\"https://creativecommons.org/licenses/by/4.0/\" ext-link-type=\"uri\">http://creativecommons.org/licenses/by/4.0/</ext-link> License, which permits use, distribution and reproduction in any medium, provided the original work is properly cited.</license-p></license></permissions>",
+      "license_evidence_sha256": "518514462eb0be8fc278a0f40cddf94fd0b066d95e1a8d9ba547cd14affaf33b",
+      "recipe_sha256": "19e9e1056aea324465a6161558aa0e2e66657fe1801b2e7bc84170b4adb2fd78",
+      "scientific_approval": "pending",
+      "chunks": [
+        {
+          "id": "price-asthma-2025-01",
+          "locator": "PMC12186601 JATS all16573-sec-0010 blocks 1; all16573-sec-0010 blocks 2; all16573-sec-0010 blocks 3; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "e662a80358483c761df2731f614931e9654e4224e881eb8bf4c158542f09266b"
+        },
+        {
+          "id": "price-asthma-2025-02",
+          "locator": "PMC12186601 JATS all16573-sec-0010 blocks 4; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "9afdcc87a5de5ce5d12088a3d642aa603809b95912c7d25d41b8ca77f7d64251"
+        },
+        {
+          "id": "price-asthma-2025-03",
+          "locator": "PMC12186601 JATS all16573-sec-0011 blocks 1; all16573-sec-0011 blocks 2; all16573-sec-0011 blocks 3; all16573-sec-0011 blocks 4; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "048b7fa05008369ae3b7162e00e5c841dac68f758b52a900313c31dcf58a5330"
+        },
+        {
+          "id": "price-asthma-2025-04",
+          "locator": "PMC12186601 JATS all16573-sec-0012 blocks 1; all16573-sec-0012 blocks 2; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "48d06aa95b2da9db5bc25b8d3d08619b757efaadc073ecbfd3f40f29fd8203c9"
+        },
+        {
+          "id": "price-asthma-2025-05",
+          "locator": "PMC12186601 JATS all16573-sec-0013 blocks 1; all16573-sec-0013 blocks 2; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "c7974093117fe6ffba28447e79fc4a9861f5079a4a6a4a091b9b60d397ca1718"
+        },
+        {
+          "id": "price-asthma-2025-06",
+          "locator": "PMC12186601 JATS all16573-sec-0017 blocks 1; all16573-sec-0002; all16573-sec-0019",
+          "text_sha256": "e3a5f2dd064721f939769b0e7ff484342fd90498acde74f59bec5eedb9a2b33c"
+        }
+      ]
+    }
+  ],
+  "published": true
+}

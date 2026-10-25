@@ -1,0 +1,143 @@
+{
+  "scope": "exposed_retry_of_previously_failed_goals",
+  "plan": "owner-rag-runtime-20261025T141504Z-plan.json",
+  "checks": {
+    "implementation_unchanged": true,
+    "not_activated": true,
+    "citations_in_provided_passages": true,
+    "current_source_hashes": true,
+    "current_rule_hashes": true,
+    "professional_review_performed": false,
+    "independent_evaluation": false
+  },
+  "accepted_projection": {
+    "name": "Treino para resistência muscular",
+    "objective": "Aumentar a resistência muscular para o corpo inteiro com foco em grupos musculares principais",
+    "items": [
+      {
+        "exercise_name": "Agachamento com peso corporal (Dia A)",
+        "sets": 2,
+        "repetitions": "8-12",
+        "load_guidance": "Peso corporal",
+        "rest_seconds": 60,
+        "equipment_requirement": null,
+        "equipment_model_id": null
+      },
+      {
+        "exercise_name": "Flexão de braços (Dia A)",
+        "sets": 2,
+        "repetitions": "8-12",
+        "load_guidance": "Peso corporal",
+        "rest_seconds": 60,
+        "equipment_requirement": null,
+        "equipment_model_id": null
+      },
+      {
+        "exercise_name": "Remada curvada com halteres (Dia A)",
+        "sets": 2,
+        "repetitions": "8-12",
+        "load_guidance": "Halteres",
+        "rest_seconds": 60,
+        "equipment_requirement": null,
+        "equipment_model_id": null
+      },
+      {
+        "exercise_name": "Abdominal curto (Dia A)",
+        "sets": 2,
+        "repetitions": "12-15",
+        "load_guidance": "Peso corporal",
+        "rest_seconds": 30,
+        "equipment_requirement": null,
+        "equipment_model_id": null
+      }
+    ]
+  },
+  "observed_rule_discrepancies": [
+    {
+      "position": 1,
+      "field": "repetitions",
+      "actual": "8-12",
+      "proposed_rule": "ENDURANCE_SETS",
+      "proposed_minimum": 16,
+      "proposed_maximum": 20
+    },
+    {
+      "position": 2,
+      "field": "repetitions",
+      "actual": "8-12",
+      "proposed_rule": "ENDURANCE_SETS",
+      "proposed_minimum": 16,
+      "proposed_maximum": 20
+    },
+    {
+      "position": 3,
+      "field": "repetitions",
+      "actual": "8-12",
+      "proposed_rule": "ENDURANCE_SETS",
+      "proposed_minimum": 16,
+      "proposed_maximum": 20
+    },
+    {
+      "position": 4,
+      "field": "repetitions",
+      "actual": "12-15",
+      "proposed_rule": "ENDURANCE_SETS",
+      "proposed_minimum": 16,
+      "proposed_maximum": 20
+    }
+  ],
+  "full_rule_adherence_confirmed": false,
+  "outcomes": [
+    {
+      "case_id": "initial-hypertrophy",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "measured_baseline_required_for_external_load",
+      "issues": [
+        {
+          "position": 3,
+          "field": "load_guidance",
+          "reason": "measured_baseline_required_for_external_load"
+        }
+      ],
+      "proposal_count": 0,
+      "elapsed_seconds": 51.42860114300129,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 36.459932486999605,
+        "review": 8.48646784399898,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "initial-muscular-endurance",
+      "status": "proposal",
+      "activated": false,
+      "elapsed_seconds": 35.68772523900043,
+      "stage_calls": {
+        "writer": 2,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 2,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 29.125059895999584,
+        "review": 5.45590955499938,
+        "focus": 0.0
+      }
+    }
+  ]
+}

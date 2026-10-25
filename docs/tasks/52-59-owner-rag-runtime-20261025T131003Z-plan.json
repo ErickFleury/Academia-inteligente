@@ -1,0 +1,50 @@
+{
+  "name": "owner-rag-runtime-20261025T131003Z",
+  "frozen_at": "2026-10-25T13:10:03.176511+00:00",
+  "scope": "exposed_owner_authorized_technical_check",
+  "independent_evaluation": false,
+  "professional_review_performed": false,
+  "authorization_id": "owner-assisted-rag-operation-2026-10-24",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-2",
+    "instruction_version": "owner-rag-3",
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "cases": [
+    {
+      "id": "initial-strength",
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 0
+    },
+    {
+      "id": "retrieval-outage",
+      "repetitions": 1,
+      "expected": "technical_unavailability_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    }
+  ],
+  "timeout_seconds": 360,
+  "deadline_seconds_per_case": 3600,
+  "public_retrieval": "actual_PostgreSQL_BGE_M3_maximum_six_passages",
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "real_client_records_read": false,
+  "clinical_accuracy": "not_evaluated",
+  "implementation_sha256": {
+    "app/modules/training/owner_rag.py": "85057cc892cdae718e183641f544c5fd45dddf90c8b244acde63aafa5f461ab6",
+    "app/modules/training/owner_rag_schema.py": "c981f48a4d1373687d5f3b2b5dd25e83104493e8ad5023f9c2fe0bc6dfe191aa",
+    "app/modules/training/owner-rag-exercises.json": "40733d25f2c2e8782f13bd207c77c132d39aab2ce7c61d98ba49f64fe0f47ab8",
+    "app/modules/training/generation_service.py": "e4c9349d824abe6037f3e27934334c63b97f216a5df4573d23b3caa1f67b139e",
+    "app/modules/training/selection.py": "b87b4e2f5f32c329bd6c7ff19d3711b47fe321879ee0649600f5e264446cbbc3",
+    "app/integrations/ai.py": "8d46cd8118d2595dd16e719688a9e09ee7bd68da598445b861c0445f918429c7"
+  }
+}

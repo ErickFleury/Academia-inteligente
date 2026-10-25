@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { ClientShell } from './components/application-shell'
 import { RouterButtonLink } from './components/router-button-link'
@@ -9,10 +9,14 @@ import { TrainingKnowledgeSources } from './components/training-knowledge-source
 import { EmptyState, LoadingState, PageHeader, StatusNotice } from './components/ui'
 import { createInitialTrainingProposal, getCurrentTrainingPlan, getOwnTrainingDrafts, type CurrentTrainingPlan, type TrainingPlanDraft } from './training-plan'
 import { trainingSessions } from './training-sessions'
+import { trainingRest } from './training-dose'
+import { getRequestInputRequirements, PrescriptionInputRequiredError, type RequestInputRequirements } from './training-prescription'
+import { PrescriptionRequestInputs } from './components/prescription-request-inputs'
 
 type CurrentTrainingPageProps = { accessToken: string; onSignOut: () => void }
 
-function restLabel(restSeconds: number) {
+function restLabel(restSeconds: number | null) {
+  if (restSeconds === null) return 'Descanso: não se aplica'
   return restSeconds === 0 ? 'Sem descanso programado' : `Descanso: ${restSeconds} s`
 }
 
@@ -21,8 +25,20 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
   const [drafts, setDrafts] = useState<TrainingPlanDraft[]>([])
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [requestInputs, setRequestInputs] = useState<{ token: string; requirements: RequestInputRequirements } | null>(null)
+  const [requestScope, setRequestScope] = useState({ accessToken, generation: 0 })
+  const activeScope = useRef(requestScope)
+  const loadRequest = useRef(0)
+  activeScope.current = requestScope
+  if (requestScope.accessToken !== accessToken) {
+    setRequestScope({ accessToken, generation: requestScope.generation + 1 })
+    setPlan(undefined); setDrafts([]); setError(null); setRequestInputs(null); setGenerating(false)
+  }
+  const inputRequirements = requestInputs?.token === accessToken ? requestInputs.requirements : null
 
   async function loadPlan() {
+    const scope = requestScope
+    const request = ++loadRequest.current
     setError(null)
     setPlan(undefined)
     try {
@@ -30,9 +46,11 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
         getCurrentTrainingPlan(accessToken),
         getOwnTrainingDrafts(accessToken),
       ])
+      if (activeScope.current !== scope || loadRequest.current !== request) return
       setPlan(currentPlan)
       setDrafts(ownDrafts)
     } catch (reason) {
+      if (activeScope.current !== scope || loadRequest.current !== request) return
       setError(reason instanceof Error ? reason.message : 'Não foi possível carregar seu treino.')
       setPlan(null)
     }
@@ -41,15 +59,22 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
   useEffect(() => { void loadPlan() }, [accessToken])
 
   async function generateDraft() {
+    const scope = requestScope
     setError(null)
+    setRequestInputs(null)
     setGenerating(true)
     try {
       const draft = await createInitialTrainingProposal(accessToken)
+      if (activeScope.current !== scope) return
       setDrafts((current) => [draft, ...current.filter((item) => item.plan_id !== draft.plan_id || item.version_number !== draft.version_number)])
     } catch (reason) {
+      if (activeScope.current !== scope) return
       setError(reason instanceof Error ? reason.message : 'Não foi possível gerar seu rascunho de treino.')
+      if (reason instanceof PrescriptionInputRequiredError) {
+        try { const requirements = await getRequestInputRequirements(accessToken); if (activeScope.current === scope) setRequestInputs({ token: accessToken, requirements }) } catch { /* Preserve the controlled generation reason and manual path. */ }
+      }
     } finally {
-      setGenerating(false)
+      if (activeScope.current === scope) setGenerating(false)
     }
   }
 
@@ -74,6 +99,7 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
             <Button onClick={() => void loadPlan()} variant="outlined">Tentar novamente</Button>
           </Stack>
         )}
+        {inputRequirements && <PrescriptionRequestInputs key={`${requestScope.generation}:${inputRequirements.snapshot_hash}`} accessToken={accessToken} requirements={inputRequirements} onSaved={() => { if (activeScope.current === requestScope) { setRequestInputs(null); setError(null) } }} />}
         {!error && !plan && (
           <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
             <EmptyState
@@ -111,9 +137,9 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                           <Typography color="primary.main" variant="overline">Exercício {item.displayNumber}</Typography>
                           <Typography component={hasCurrentSessions ? 'h4' : 'h3'} variant="h4" sx={{ overflowWrap: 'anywhere' }}>{item.exercise_name}</Typography>
                           <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', rowGap: 0.75, '& .MuiChip-root': { maxWidth: '100%', height: 'auto' }, '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere' } }}>
-                            <Chip label={`${item.sets} séries`} sx={{ fontSize: '0.95rem', px: 0.5, py: 0.5 }} />
-                            <Chip label={`${item.repetitions} repetições`} sx={{ fontSize: '0.95rem', px: 0.5, py: 0.5 }} />
-                            <Chip label={restLabel(item.rest_seconds)} variant="outlined" sx={{ py: 0.5 }} />
+                            <Chip label={item.sets === null ? 'Dose por atividade' : `${item.sets} séries`} sx={{ fontSize: '0.95rem', px: 0.5, py: 0.5 }} />
+                            <Chip label={item.dose_details ? item.repetitions : `${item.repetitions} repetições`} sx={{ fontSize: '0.95rem', px: 0.5, py: 0.5 }} />
+                            <Chip label={item.dose_details ? trainingRest(item.rest_seconds, item.dose_details) : restLabel(item.rest_seconds)} variant="outlined" sx={{ py: 0.5 }} />
                           </Stack>
                           <Box sx={{ borderLeft: '3px solid', borderColor: 'divider', pl: 1.5 }}>
                             <Typography color="text.secondary" variant="body2">Orientação de carga</Typography>
@@ -144,15 +170,15 @@ export function CurrentTrainingPage({ accessToken, onSignOut }: CurrentTrainingP
                 <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>Objetivo: {draft.objective}</Typography>
                 <Typography>Status: {draft.validation_error ? 'Rascunho inválido' : 'Aguardando revisão do instrutor'}</Typography>
                 {!draft.validation_error && <StatusNotice severity="info">Este é apenas um rascunho. Seu instrutor precisa revisar, aprovar e ativar a ficha antes que ela se torne seu treino atual.</StatusNotice>}
-                {!draft.validation_error && sessions.map((session) => <Stack key={session.label} component="section" aria-label={session.label ? `Treino ${session.label}` : hasSessions ? 'Exercícios sem ficha definida' : 'Exercícios do treino'} spacing={1.5}>
+                {!draft.prescription_review_available && !draft.validation_error && sessions.map((session) => <Stack key={session.label} component="section" aria-label={session.label ? `Treino ${session.label}` : hasSessions ? 'Exercícios sem ficha definida' : 'Exercícios do treino'} spacing={1.5}>
                   {(session.label || hasSessions) && <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.5, alignItems: 'center', justifyContent: 'space-between', borderTop: '3px solid', borderColor: 'primary.main', pt: 2 }}>
                     <Typography component="h3" variant="h3" color="primary.main" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>{session.label ? `Treino ${session.label}` : 'Exercícios sem ficha definida'}</Typography>
                     <Chip label={`${session.items.length} ${session.items.length === 1 ? 'exercício' : 'exercícios'}`} size="small" />
                   </Stack>}
                   <TrainingExerciseTable rows={trainingRows(session.items.map((item) => ({ ...item, position: item.displayNumber })))} />
                 </Stack>)}
-                <TrainingKnowledgeSources {...draft} />
-                <TrainingDraftReviewActions accessToken={accessToken} draft={draft} onSubmitted={(updated) => setDrafts((items) => items.map((item) => item.id === updated.id ? updated : item))} />
+                {!draft.prescription_review_available && <TrainingKnowledgeSources {...draft} />}
+                <TrainingDraftReviewActions accessToken={accessToken} draft={draft} onSubmitted={(updated) => { if (activeScope.current === requestScope) setDrafts((items) => items.map((item) => item.id === updated.id ? updated : item)) }} />
               </Stack>
             </CardContent>
           </Card>

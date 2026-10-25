@@ -21,14 +21,20 @@ class TrainingGenerationProvider(Protocol):
     def analyze_training_request(self, context: dict[str, object]) -> "AiTrainingRequestFocus": ...
     def generate_training(self, context: dict[str, object]) -> "AiTrainingGenerationResponse": ...
     def assess_training(self, context: dict[str, object]) -> "AiTrainingPlanAssessment": ...
+    def generate_prescription(self, context: dict[str, object]): ...
 
 
 class TrainingChatProvider(Protocol):
+    def generate_prescription(self, context: dict[str, object]): ...
+
+    def analyze_training_request(self, context: dict[str, object]) -> "AiTrainingRequestFocus": ...
     def training_chat(self, context: dict[str, object]) -> "AiTrainingChatResponse": ...
     def assess_training(self, context: dict[str, object]) -> "AiTrainingPlanAssessment": ...
 
 
 class TrainingAdaptationProvider(Protocol):
+    def generate_prescription(self, context: dict[str, object]): ...
+
     def generate_adaptation(self, context: dict[str, object]) -> "AiTrainingAdaptationResponse": ...
     def assess_training(self, context: dict[str, object]) -> "AiTrainingPlanAssessment": ...
 
@@ -90,6 +96,12 @@ class AiTrainingRepetitionRecommendation(BaseModel):
     applicability_reason: str = Field(min_length=1, max_length=600)
 
 
+class AiTrainingItemAssessment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    position: int = Field(strict=True, ge=1, le=100)
+    reason: Literal["ambiguous_exercise", "restriction_not_respected"]
+
+
 class AiTrainingSessionAssessment(BaseModel):
     model_config = ConfigDict(extra="forbid")
     label: Literal["", "A", "B", "C", "D", "E", "F", "G"]
@@ -107,6 +119,7 @@ class AiTrainingSessionAssessment(BaseModel):
         ]
     ] = Field(max_length=8)
     repetition_recommendation: AiTrainingRepetitionRecommendation | None = None
+    item_issues: list[AiTrainingItemAssessment] = Field(default_factory=list, max_length=100)
 
 
 class AiTrainingPlanAssessment(BaseModel):
@@ -282,6 +295,44 @@ _TRAINING_GENERATION = (
     + _TRAINING_KNOWLEDGE
     + _TRAINING_SELECTION
 )
+_TRAINING_SESSION_GENERATION = (
+    "Gere SOMENTE a ficha indicada em training_session.label, em português e no JSON pedido. "
+    "O pedido original descreve a rotina inteira; as outras fichas serão geradas separadamente. "
+    "Não escreva outros dias nem duplique exercícios para representar a rotina completa. "
+    "Selecione IDs do dicionário e uma única prescrição por movimento nesta ficha. "
+    "Respeite effective_training_goal e as restrições informadas pelo próprio cliente. "
+    "Se training_focus.scope for full_body, cubra todos os padrões exigidos nesta ficha; "
+    "nos demais focos, não amplie os músculos pedidos. A quantidade depende da cobertura, "
+    "não de listar todas as alternativas. Compare previous_session_exercise_keys: não copie "
+    "um conjunto inteiro já usado. Exercícios individuais podem se repetir entre dias. "
+    "Use as regras aceitas aplicáveis; RM medido não é uma faixa de repetições de trabalho "
+    "nem um valor de RIR. Não use parâmetros com unidade rm_repetitions como se fossem "
+    "repetitions. Não invente kg, observações, diagnósticos ou capacidade medida. "
+    "Use somente orientações qualitativas de carga permitidas. Corrija os campos indicados "
+    "em selection_correction sem ignorar o pedido original. A proposta não pode ser ativada. "
+    + _TRAINING_EQUIPMENT
+    + _TRAINING_KNOWLEDGE
+)
+
+_TRAINING_FLEXIBILITY_GENERATION = (
+    "Gere uma proposta de FLEXIBILIDADE em português e no JSON solicitado. "
+    "Este pedido é de alongamentos com duração e lado; não gere musculação, "
+    "não converta segundos em repetições nem use séries de força. "
+    "Selecione somente as identidades do dicionário recebido e use holds, hold_seconds, "
+    "side, rest_seconds e intensity_instruction_key conforme as regras aceitas recebidas. "
+    "Quando a dose for a mesma em ambos os lados, prefira uma linha com side=each_side. "
+    "Linhas left/right são lados distintos; não duplique uma prescrição para o mesmo lado. "
+    "Não invente amplitude medida, diagnóstico, tolerância observada ou kg. "
+    "A amplitude é confortável, sem forçar dor. Associações agregadas de volume "
+    "não são metas ou limites individuais obrigatórios. Sem dias pedidos, gere apenas A. "
+    "Se houver training_session, escreva SOMENTE sua ficha e varie a seleção em relação "
+    "às anteriores. Cubra o foco solicitado com movimentos complementares. "
+    "Em corpo inteiro, use cobertura de flexibilidade de superiores, inferiores e tronco, "
+    "sem exigir empurrar/puxar de musculação. A ficha não pode ser ativada. "
+    + _TRAINING_EQUIPMENT
+    + _TRAINING_KNOWLEDGE
+)
+
 _TRAINING_FULL_BODY_GENERATION = (
     "Gere fichas COMPLETAS de corpo inteiro em português brasileiro, em JSON no esquema. "
     "Quando fornecido, training_session.label identifica a ÚNICA ficha desta chamada. "
@@ -347,6 +398,12 @@ _TRAINING_COMPLETENESS = (
     "Recursos, equipamentos, grupos musculares ou termos vagos isolados não são exercícios. "
     "Para movimento inexistente, não identificável ou descrição ambígua, marque "
     "ambiguous_exercise e complete=false, mesmo que o título pareça adequado. "
+    "Em item_issues indique a posição global de proposed_plan.items e o motivo para "
+    "cada item ambíguo ou incompatível com restrição; não invente posições. "
+    "Quando prescription_modes indicar atividade aeróbica, flexibilidade, equilíbrio "
+    "ou tarefa funcional, avalie a modalidade e a seleção autorizada em approved_exercises. "
+    "Essas modalidades não exigem movimentos resistidos de empurrar, puxar, joelho e "
+    "quadril; descanso não aplicável não significa descanso zero ou dado ausente. "
     "SOMENTE quando training_focus.scope=full_body ou o pedido explicitamente exigir "
     "corpo inteiro, empurrar e puxar de superiores, movimentos de joelho e quadril de "
     "inferiores e tronco devem estar contemplados. Em treino localizado avalie apenas "
@@ -696,6 +753,34 @@ class _Provider:
         # Constrain local structured decoding to this turn's evidence and authority.
         # Domain validation still rejects any provider that ignores the schema.
         schema = deepcopy(schema)
+        if context.get("owner_rag_basis"):
+            context = {
+                **context,
+                "owner_rag_basis": {
+                    key: context["owner_rag_basis"][key]
+                    for key in (
+                        "authorization_id",
+                        "goal_family",
+                        "professional_review_performed",
+                        "compiled_prescription_qualification",
+                    )
+                },
+            }
+            instructions += (
+                " Este pedido usa RAG assistido autorizado pelo proprietário, sem parecer "
+                "profissional ou avaliação independente. A ausência desses pareceres não é "
+                "motivo para recusar a proposta. Confira exercícios, restrições e fontes "
+                "recebidas, sem inventar fatos ou declarar qualificação clínica."
+                " Não prescreva valores de carga externa em kg sem medição confirmada; "
+                "use a orientação relativa aplicável das regras de consulta."
+            )
+            if context.get("training_session"):
+                instructions += (
+                    " Esta chamada escreve SOMENTE a ficha indicada em training_session.label. "
+                    "A rotina será reunida pelo backend. Compare previous_session_exercise_keys: "
+                    "não copie nenhum conjunto inteiro já usado; mantenha cobertura e restrições. "
+                    "Exercícios individuais podem se repetir."
+                )
         properties = schema.get("properties", {})
         if type_ is AiTrainingGenerationResponse:
             items = properties["plan"]["properties"]["items"]
@@ -720,22 +805,77 @@ class _Provider:
                 items["items"] = {"anyOf": [free_item, machine_item]}
             else:
                 items["items"] = free_item
+            if context.get("owner_rag_basis") and context.get("owner_exercise_dictionary"):
+                from app.modules.training.owner_rag_schema import constrain_item
+
+                items["items"] = free_item
+                constrain_item(items["items"], context)
+                sessions = context.get("training_schedule", {}).get("session_labels", []) or ["A"]
+                items["maxItems"] = min(
+                    100, len(context["owner_exercise_dictionary"]["exercises"]) * len(sessions)
+                )
+        if context.get("owner_rag_basis") and context.get("owner_exercise_dictionary"):
+            from app.modules.training.owner_rag_schema import constrain_writer_schema
+
+            constrain_writer_schema(schema, context)
+            from app.modules.training.owner_rag_schema import constrain_session_schema
+
+            constrain_session_schema(schema, context)
+            from app.modules.training.owner_rag_schema import constrain_session_variation
+
+            constrain_session_variation(schema, context)
+            if len(context.get("training_schedule", {}).get("session_labels", [])) > 1:
+                instructions += (
+                    " Para cada ficha solicitada, preencha a chave correspondente em plan.sessions "
+                    "(ou draft_update.sessions). Cada chave contém sua lista completa "
+                    "de exercícios. "
+                    "Retorne todas as fichas e use seleções distintas de exercícios entre elas, "
+                    "preservando o foco e o objetivo. Não retorne apenas a primeira ficha."
+                )
         if type_ is AiTrainingPlanAssessment:
+            if context.get("owner_training_mode") == "flexibility":
+                instructions += (
+                    " O objetivo é flexibilidade: avalie alongamentos, duração e lado, "
+                    "sem exigir exercícios de musculação. Em corpo inteiro, confira "
+                    "regiões superiores, inferiores e tronco."
+                )
             labels = context.get("training_schedule", {}).get("session_labels", []) or [""]
             properties["sessions"]["minItems"] = len(labels)
             properties["sessions"]["maxItems"] = len(labels)
             schema["$defs"]["AiTrainingSessionAssessment"]["properties"]["label"]["enum"] = labels
             session_schema = schema["$defs"]["AiTrainingSessionAssessment"]
             session_schema["required"].append("repetition_recommendation")
+            positions = list(range(1, len(context.get("proposed_plan", {}).get("items", [])) + 1))
+            if positions:
+                schema["$defs"]["AiTrainingItemAssessment"]["properties"]["position"] = {
+                    "type": "integer",
+                    "enum": positions,
+                }
             identifiers = [
                 chunk["chunk_id"] for chunk in context.get("knowledge", {}).get("chunks", [])[:6]
             ]
-            if identifiers and context.get("previous_sessions"):
+            if identifiers and (context.get("previous_sessions") or len(labels) > 1):
                 schema["$defs"]["AiTrainingRepetitionRecommendation"]["properties"]["chunk_id"][
                     "enum"
                 ] = identifiers
             else:
                 session_schema["properties"]["repetition_recommendation"] = {"type": "null"}
+            if context.get("owner_rag_basis"):
+                from app.modules.training.owner_rag_schema import constrain_review_schema
+
+                constrain_review_schema(schema, context)
+                instructions += (
+                    " Retorne a revisão de cada chave de sessions separadamente. review_index "
+                    "informa a posição GLOBAL e o identificador técnico de cada movimento; "
+                    "use somente posições que pertencem à ficha revisada. Identificadores "
+                    "técnicos presentes não são nomes ambíguos. Ainda avalie cobertura e "
+                    "restrições; uma incompatibilidade real deve ser informada."
+                )
+                instructions += (
+                    " item_issues contém SOMENTE exercícios reprovados, não todos os itens "
+                    "analisados. complete=true exige issues=[] e item_issues=[]. "
+                    "Se houver uma incompatibilidade real, retorne complete=false."
+                )
         if "citations" in properties:
             identifiers = list(
                 dict.fromkeys(
@@ -745,6 +885,8 @@ class _Provider:
             )
             if identifiers:
                 properties["citations"]["items"]["enum"] = identifiers
+                if context.get("owner_rag_basis"):
+                    properties["citations"]["minItems"] = 1
             else:
                 properties["citations"]["maxItems"] = 0
         if "knowledge_limitations" in properties:
@@ -754,10 +896,24 @@ class _Provider:
         if "draft_update" in properties and not context.get("rules", {}).get("may_update_ai_draft"):
             properties["draft_update"] = {"type": "null"}
         try:
-            with urlopen(
-                self._request(context, instructions, schema), timeout=self._timeout
-            ) as response:  # noqa: S310
-                return type_.model_validate_json(self._text(json.load(response)))
+            from app.modules.training.prescription_budget import CURRENT_BUDGET
+
+            budget = CURRENT_BUDGET.get()
+            timeout = budget.remaining(self._timeout) if budget is not None else self._timeout
+            request = self._request(context, instructions, schema)
+            if budget is not None:
+                budget.record_http()
+            with urlopen(request, timeout=timeout) as response:  # noqa: S310
+                payload = self._text(json.load(response))
+                if (
+                    type_ is AiTrainingPlanAssessment
+                    and context.get("owner_rag_basis")
+                    and context.get("training_schedule", {}).get("session_labels")
+                ):
+                    from app.modules.training.owner_rag_schema import materialize_review
+
+                    return type_.model_validate(materialize_review(json.loads(payload), context))
+                return type_.model_validate_json(payload)
         except HTTPError as error:
             raise AiProviderError(
                 "provider_server" if error.code >= 500 or error.code == 429 else "configuration",
@@ -786,11 +942,39 @@ class _Provider:
 
     def generate_training(self, context: dict[str, object]) -> AiTrainingGenerationResponse:
         instructions = (
-            _TRAINING_FULL_BODY_GENERATION
-            if (context.get("training_focus") or {}).get("scope") == "full_body"
-            else _TRAINING_GENERATION
+            _TRAINING_SESSION_GENERATION
+            if context.get("owner_rag_basis") and context.get("training_session")
+            else (
+                _TRAINING_FULL_BODY_GENERATION
+                if (context.get("training_focus") or {}).get("scope") == "full_body"
+                and (not context.get("owner_rag_basis") or context.get("training_session"))
+                else _TRAINING_GENERATION
+            )
         )
+        if context.get("owner_training_mode") == "flexibility":
+            instructions = _TRAINING_FLEXIBILITY_GENERATION
         return self._call(context, instructions, _training_schema(), AiTrainingGenerationResponse)  # type: ignore[return-value]
+
+    def generate_prescription(self, context: dict[str, object]):
+        from app.modules.training.prescription_contract import TypedPrescription
+        from app.modules.training.prescription_writer_schema import prescription_writer_schema
+
+        instructions = (
+            "Produza apenas a prescrição estruturada no schema fornecido. "
+            "Use apenas exercícios, variações, regras e instruções revisadas do contexto. "
+            "Respeite objetivo, escopo, informações confirmadas e restrições. "
+            "Cada dimensão de cada item deve apontar para a regra aplicável recebida. "
+            "Não invente dados, regras, medições, diagnósticos ou referências. "
+            "Não ajuste medicamentos. "
+            "Não gere prosa livre com doses adicionais. A ficha exige revisão do instrutor. "
+            "Copie as versões, o hash das informações e a revisão esperada do contexto."
+            " Copie confirmed_schedule exatamente para schedule. Se for null, devolva "
+            "schedule null e scope session_sheet, sem inventar dias ou frequência semanal. "
+            "As letras das sessões não confirmam uma programação de sete dias."
+        )
+        return self._call(
+            context, instructions, prescription_writer_schema(context), TypedPrescription
+        )
 
     def assess_training(self, context: dict[str, object]) -> AiTrainingPlanAssessment:
         return self._call(
@@ -862,14 +1046,19 @@ class OllamaOnboardingProvider(_Provider):
     def _request(
         self, context: dict[str, object], instructions: str, schema: dict[str, object]
     ) -> Request:
-        structured_training = instructions in (
-            _TRAINING_GENERATION,
-            _TRAINING_FULL_BODY_GENERATION,
-            _TRAINING_COMPLETENESS,
-            _TRAINING_ADAPTATION,
-        ) or (
-            instructions == _TRAINING_CHAT
-            and context.get("rules", {}).get("may_update_ai_draft", False)
+        structured_training = (
+            bool(context.get("owner_rag_basis"))
+            or instructions
+            in (
+                _TRAINING_GENERATION,
+                _TRAINING_FULL_BODY_GENERATION,
+                _TRAINING_COMPLETENESS,
+                _TRAINING_ADAPTATION,
+            )
+            or (
+                instructions == _TRAINING_CHAT
+                and context.get("rules", {}).get("may_update_ai_draft", False)
+            )
         )
         body = {
             "model": self._config.model,
@@ -880,14 +1069,15 @@ class OllamaOnboardingProvider(_Provider):
             "stream": False,
             "format": schema,
             # Use reasoning for structured plans; preserve the interview/plain-chat mode.
-            "think": structured_training,
+            "think": False if context.get("owner_rag_basis") else structured_training,
         }
         if "knowledge" in context or "training_request" in context:
             # Six passages plus health/equipment context must fit without the
             # local server's default 4k window dropping the requested focus.
             body["options"] = {"num_ctx": 16384}
         if (
-            "proposed_plan" in context
+            context.get("owner_rag_basis")
+            or "proposed_plan" in context
             or (context.get("training_focus") or {}).get("scope") == "full_body"
         ):
             body.setdefault("options", {})["temperature"] = 0

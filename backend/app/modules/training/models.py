@@ -119,10 +119,11 @@ class TrainingPlanItem(Base):
     )
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    sets: Mapped[int] = mapped_column(Integer, nullable=False)
+    sets: Mapped[int | None] = mapped_column(Integer)
     repetitions: Mapped[str] = mapped_column(String(100), nullable=False)
     load_guidance: Mapped[str] = mapped_column(String(500), nullable=False)
-    rest_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
+    rest_seconds: Mapped[int | None] = mapped_column(Integer)
+    dose_details: Mapped[dict | None] = mapped_column(JSON)
     equipment_requirement: Mapped[str | None] = mapped_column(String(200))
     equipment_model_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("equipment_model.id")
@@ -233,6 +234,7 @@ class TrainingAdaptationOperation(Base):
     repetitions: Mapped[str | None] = mapped_column(String(100))
     load_guidance: Mapped[str | None] = mapped_column(String(500))
     rest_seconds: Mapped[int | None] = mapped_column(Integer)
+    dose_details: Mapped[dict | None] = mapped_column(JSON)
     equipment_requirement: Mapped[str | None] = mapped_column(String(200))
     equipment_model_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("equipment_model.id")

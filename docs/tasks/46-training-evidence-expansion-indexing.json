@@ -1,0 +1,488 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-24T03:35:42.281996+00:00",
+  "catalog_sha256": "75d95cd342a4c99794e1cd712c3cb5f259530ed15263111399b29a6257c1297f",
+  "model": "bge-m3",
+  "model_digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+  "dimensions": 1024,
+  "runs": [
+    {
+      "chunks": 66,
+      "embedding_calls": 3,
+      "embedded_texts": 47,
+      "elapsed_seconds": 251.802
+    },
+    {
+      "chunks": 66,
+      "embedding_calls": 0,
+      "embedded_texts": 0,
+      "elapsed_seconds": 0.105
+    }
+  ],
+  "vectors": [
+    {
+      "id": "bao-depp-2026-01",
+      "source_id": "bao-depp-2026",
+      "content_hash": "54fd2219e91664f800758dc20c28e3f7c0927d64d198ccdbff96b9173189b354",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "biga-anatomy-1",
+      "source_id": "biga-anatomy",
+      "content_hash": "73c2e9f5c518dbcc5a9f10ee470e36c16565d5458171dc2565ef6fbd616f9350",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "biga-anatomy-2",
+      "source_id": "biga-anatomy",
+      "content_hash": "83b265abc952573d737414469ac757fec3c18493b40e3b6a91344f82e5acfbba",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "ingram-stretch-mechanisms-2025-01",
+      "source_id": "ingram-stretch-mechanisms-2025",
+      "content_hash": "108bd452f174c9d2d6638fb04f7f3f7f8e65ed5cd32f07887bce0ae34b41b17a",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "ingram-stretch-mechanisms-2025-02",
+      "source_id": "ingram-stretch-mechanisms-2025",
+      "content_hash": "b95c8fd149cfaf956a87ab62b847fbf917877c9075d3774918c5e73bb8a33811",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-01",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "ed7235e0937579aed8e3d441656bfc6a9dcfdc4adfb6a78e6a1e9fee45217820",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-02",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "07a81364e3feff0d58a53eaf556b5f42187706ae5f01978d13ddbfcee103652a",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-03",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "4c4a29471b88e4aade04192efc90c5a79deddb2f0c16f6defa3c4e200cc4016f",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-04",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "4488a81d51c06a25d29d6f1fd6c3976d3e6dc396219bb6ceef079a2b1a37a088",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-05",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "214b5d8d9fa6af894646fd01ddd259c3d2479177fc01c4693dd90a66cf3c4a7f",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-06",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "e8b3ee9b907231c25b2edf627da4171de33caf749bf0d939ae2c3b1898f3dcd4",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-07",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "daa6230d427d55e3a00aefdb35e7cda653b48c7c1009331152d3ac9fb2732b41",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-08",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "c0a156a1601d1496e92957dc406a48fbb11c9f4603d24998b042802b977edb24",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "iversen-time-efficient-2021-09",
+      "source_id": "iversen-time-efficient-2021",
+      "content_hash": "2071428022d1dc3ace32cd16f2fb23e16dfd6f1d3597298c9c08eeffb7335f9f",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lafontant-body-fat-2025-01",
+      "source_id": "lafontant-body-fat-2025",
+      "content_hash": "8150f58ea71918ae56d595dda66db972b73863240aa8fad79b43405b0526b21c",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lafontant-body-fat-2025-02",
+      "source_id": "lafontant-body-fat-2025",
+      "content_hash": "b5d01adeb1ea4c78960c92e637390fda02b37eef5d0b4e5132364e740efe101c",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lafontant-body-fat-2025-03",
+      "source_id": "lafontant-body-fat-2025",
+      "content_hash": "36433892f19891a5f2d24ac9be6b7cec35b1534ad064d9093753bde4a12cb25d",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lafontant-body-fat-2025-04",
+      "source_id": "lafontant-body-fat-2025",
+      "content_hash": "4ca579b2e94fae4d9458bfb728943e48e296b4c17d3d95b8422c775f8ae8a6d4",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lafontant-body-fat-2025-05",
+      "source_id": "lafontant-body-fat-2025",
+      "content_hash": "2fe5fea3e871875289220274f787d6d353dc61bd140c39b7e8ccafc094477f42",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lin-knee-proprioception-2025-1",
+      "source_id": "lin-knee-proprioception-2025",
+      "content_hash": "2912b38d8aab4f8c3d48e3ba648ed3edeb139094b38f98d436710d20a93f066a",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lin-knee-proprioception-2025-2",
+      "source_id": "lin-knee-proprioception-2025",
+      "content_hash": "ee2c2e0a82d76a46566b41ed19c057d5f0ea512bb05ea58c46b426b0b4382230",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "lyristakis-strength-2026-dosage",
+      "source_id": "lyristakis-strength-2026",
+      "content_hash": "1fb6e4b3c3ebbf984efd31dce8749091e6d9b7731dc559f026fbef71cb2b330b",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "nhs-balance-1",
+      "source_id": "nhs-balance",
+      "content_hash": "5700eb243abf6fbb22fcd2dab792176a89896fdf87bfde9be081dd2087d28d1d",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "nhs-balance-2",
+      "source_id": "nhs-balance",
+      "content_hash": "2e69e8298aa5ebeec9382d509172a0eb2c619ff253f97302b6fc3d286701d8e6",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "nhs-flexibility-1",
+      "source_id": "nhs-flexibility",
+      "content_hash": "24c66ffb91fcdca715d7faf68fd9284fe4e398ca75bcf0df0960cdd21be0f115",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "nhs-flexibility-2",
+      "source_id": "nhs-flexibility",
+      "content_hash": "a5ac8120bb5996b7339a7bcee80809b3312fdc7ad55ed6972a5f56da671309c1",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "nhs-strength-1",
+      "source_id": "nhs-strength",
+      "content_hash": "7d5e4453d6d918d138dbb1043de60048bb6f7d41b2eff9ce480203602b561b13",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "nhs-strength-2",
+      "source_id": "nhs-strength",
+      "content_hash": "2c391c3ffce8451bf6165ff3ea9a57246dcd771595506f741f41a0216612a3ba",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "pavlova-tendinopathy-2023-1",
+      "source_id": "pavlova-tendinopathy-2023",
+      "content_hash": "6c964f5c8e34024b9d9f476f5059dea340bd21233e7ad45d82f3a35d48266f06",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "pavlova-tendinopathy-2023-2",
+      "source_id": "pavlova-tendinopathy-2023",
+      "content_hash": "23850265c566b51f72859429df799a8676fe5df3da3c533d2f70a77306bfded8",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "price-asthma-2025-01",
+      "source_id": "price-asthma-2025",
+      "content_hash": "87da6324987c8aa575623f828968b2d2236897d7d950a832b4c704c036a838aa",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "price-asthma-2025-02",
+      "source_id": "price-asthma-2025",
+      "content_hash": "308bb7cb68f07a0b92e32e284c65a222a5b582aaa29bb215fda598e4e05d00cd",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "price-asthma-2025-03",
+      "source_id": "price-asthma-2025",
+      "content_hash": "8bc0130c4a0e15e16b759942c09330fdd2c49cd777ffd494f8b0c0999231fee0",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "price-asthma-2025-04",
+      "source_id": "price-asthma-2025",
+      "content_hash": "7a7eac5874928b16833942ebd0453c46197953abe2d023c49a3b546d83aae251",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "price-asthma-2025-05",
+      "source_id": "price-asthma-2025",
+      "content_hash": "221ffa5b6c9d0fe066d4f8867fdb759c8d674e9d5f3dbae6f3be8a769f46f82e",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "price-asthma-2025-06",
+      "source_id": "price-asthma-2025",
+      "content_hash": "08fc4897adab14cfe05af6802b073fdb4f765e0953684499866124232b24d584",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "rojas-deep-squat-2024-1",
+      "source_id": "rojas-deep-squat-2024",
+      "content_hash": "99968b3f066b62eb13200a277bae8f4cf0720e366acde3080b5aad9ce899934e",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "rojas-deep-squat-2024-2",
+      "source_id": "rojas-deep-squat-2024",
+      "content_hash": "313c2f257f059da29ac4494e02d7ab6451736ce9f2da1ffa796eb1d414cbeb28",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "schumann-concurrent-2022-01",
+      "source_id": "schumann-concurrent-2022",
+      "content_hash": "b620f0f1304f44784eec11f26dc365821f68271ba9c8c9b94d59e60b4f145a08",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "schumann-concurrent-2022-02",
+      "source_id": "schumann-concurrent-2022",
+      "content_hash": "391adfb7421068c21c60fc565d0bcb040b1a484b5ba0c28c10c1974960fe4412",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "schumann-concurrent-2022-03",
+      "source_id": "schumann-concurrent-2022",
+      "content_hash": "b78ee9844b01a399aac1a6eaea4b1249ef692718556a6008274a581fb6186085",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "schumann-concurrent-2022-04",
+      "source_id": "schumann-concurrent-2022",
+      "content_hash": "ce4a60967d92961b71bcb28dcbc659aad1bc1aaf47b6f3484acc9d9b9dd721ef",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "singer-rest-2024-01",
+      "source_id": "singer-rest-2024",
+      "content_hash": "fa9805c7e6bc8439f9f4f32db493b9b1f3f9e6c52d581efd1b9590343e047045",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "singer-rest-2024-02",
+      "source_id": "singer-rest-2024",
+      "content_hash": "c42cecdbf512d9fffd5bab6aff810069396a6573a71dd20382fcdc3d1d41fa05",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "singer-rest-2024-03",
+      "source_id": "singer-rest-2024",
+      "content_hash": "ce159270ee385f81a835d6cd67152910c74ffa46582a7ad742b697457c4fdce5",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "smart-isometric-hypertension-2023-01",
+      "source_id": "smart-isometric-hypertension-2023",
+      "content_hash": "6169b0cf0b61bb47a13fea93065a84ba061b343548599352923edaa403f80742",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "smart-isometric-hypertension-2023-02",
+      "source_id": "smart-isometric-hypertension-2023",
+      "content_hash": "4b5947c711bcf97e7c098b3d3d63c7e735c3d0c6e29b47b8049f12dfa9b187d0",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "smart-isometric-hypertension-2023-03",
+      "source_id": "smart-isometric-hypertension-2023",
+      "content_hash": "007e2fade972a5af5611a5cb5e396fc580ac9966c98e80cc76c58faad437ec77",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-01",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "b2fd8778b05e3d46f9f23cef4b2007b32b66770fd5700eda051836548cb6224f",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-02",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "7b43ce8dc2ebeca207e477d4ff00b70cc11b5f7fc7616d2118f379005e7b5d66",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-03",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "c86a355e5f1db3c772db0935b3acde9cce3efad7bbad0a8f1fe5ceb9240233a9",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-04",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "ec5b867269990cbb87c107106288a8e9ad34a6e959e0e281f94e341e06b4fad3",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-05",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "c68d35339f39ff1b3d2da19082b89383f91f7586690cab7c68bc986432a73dc8",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-06",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "52cf92f1bbc82a4ba08b433c75556a74ef3f39497d60ecbe2bc5add09149fa87",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-07",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "c652f8ec8188e2fccf886e3c135da78cc820cd2e6bcd09e0abf78a57512640bf",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-08",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "9c016fdbc6ad1884c0e00151459e0ae1105fd5a37abe29b2839e90da5ed06479",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-09",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "6500a0fdd78b64529ce92d66e2a8bbb1cd2637f817cefc9c12ce486256ec6906",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-10",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "ec3f37eb5f1b1e89e6f0317e4332c39a7f166cabaaf8803a2a9da3fe15d2f34f",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-11",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "a660f0321a5a2edf9e1e468805da90c5c2514160be439e12434b429f4e12c93e",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-12",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "2731360850c4495b8b186065af9ac2f0a77a3e1002cd5024f21350161ce4ee83",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-13",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "92ad0c9adda23dd616dbdbffba0d82f4916e6779563f0dd1e77ff82522c4fe82",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "su-diabetes-exercise-2026-14",
+      "source_id": "su-diabetes-exercise-2026",
+      "content_hash": "d017a7531a0a18f7afc5418639d0593be234979b6eadf3b902838ce5a5373b3b",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "verville-low-back-2023-1",
+      "source_id": "verville-low-back-2023",
+      "content_hash": "58b43f8f625e8d2379c2aca50adeb896bd38bf41c52e2f94945976582c3c208e",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "verville-low-back-2023-2",
+      "source_id": "verville-low-back-2023",
+      "content_hash": "cfe39fbf4356aa74b664a2f479c4a72e5c1a26d21cbb21f738be4c420e45addd",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "wu-rotator-cuff-2025-1",
+      "source_id": "wu-rotator-cuff-2025",
+      "content_hash": "0da5c462c68b03012499b653e3a7d38240d6a6f773e254f85402ee8f6d6bac00",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    },
+    {
+      "id": "wu-rotator-cuff-2025-2",
+      "source_id": "wu-rotator-cuff-2025",
+      "content_hash": "06074a46c3ba1b8661e2c60280ad6a8ebc236d0ae54ef9cfb58824edcd24d8e0",
+      "embedding_model": "bge-m3",
+      "dimensions": 1024
+    }
+  ],
+  "scientific_approval": "pending",
+  "enabled_cohorts": []
+}

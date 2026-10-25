@@ -1,0 +1,526 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T141504Z",
+  "results": [
+    {
+      "case_id": "initial-hypertrophy",
+      "status": "rejected",
+      "category": "missing_input",
+      "reason": "measured_baseline_required_for_external_load",
+      "issues": [
+        {
+          "position": 3,
+          "field": "load_guidance",
+          "reason": "measured_baseline_required_for_external_load"
+        }
+      ],
+      "proposal_count": 0,
+      "elapsed_seconds": 51.42860114300129,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 36.459932486999605,
+        "review": 8.48646784399898,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "initial-muscular-endurance",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "Treino para resistência muscular",
+        "objective": "Aumentar a resistência muscular para o corpo inteiro com foco em grupos musculares principais",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "12-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 30,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "biga-anatomy-1",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — adaptações musculares",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-operation-2026-10-24",
+            "goal_family": "muscular_endurance",
+            "onboarding_sha256": "72f8d37b07a9225d42645748dbf22226f4af177db76c64225d3983767daf57a0",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf",
+              "pavlova-tendinopathy-2023": "f17ce2542835bc6ed011c0a29a8e3163eae5aa5c4fddd4a4eb66669f10ddd416"
+            },
+            "rule_hashes": {
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "NOVICE_LOADING": "7e84daccd9ff24659f56a5009a1680abbbfe603f1819f4bc386827daddd68d8a",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "ENDURANCE_DOSE": "dca44d3e078365fdda2c4043db4136d34b2c4323051e0ac7fcdcfbcb3989b36c",
+              "ENDURANCE_SETS": "29b1aeec1b54a501d1e1b911414a170e8524658365feccded1eeb512189eebe5",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "biga-anatomy-2",
+              "iversen-time-efficient-2021-03",
+              "nhs-strength-1",
+              "pavlova-tendinopathy-2023-1"
+            ],
+            "exercise_dictionary_sha256": "da122fc022bfcee8d045571e35ef3723404a58c26344c09a28d5ca9c6a343274",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-1",
+            "writer_configuration_sha256": "34e5f515cd94b04143ee5c3553bda2ae4eb8e8ac67cc922c1efed3b9a15da2e8",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "e0b35c9dcfcecd2f3debb18be91301d4e815e6fcf826b684e582b327e5e651b9"
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-06",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-operation-2026-10-24",
+            "goal_family": "muscular_endurance",
+            "onboarding_sha256": "72f8d37b07a9225d42645748dbf22226f4af177db76c64225d3983767daf57a0",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf",
+              "pavlova-tendinopathy-2023": "f17ce2542835bc6ed011c0a29a8e3163eae5aa5c4fddd4a4eb66669f10ddd416"
+            },
+            "rule_hashes": {
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "NOVICE_LOADING": "7e84daccd9ff24659f56a5009a1680abbbfe603f1819f4bc386827daddd68d8a",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "ENDURANCE_DOSE": "dca44d3e078365fdda2c4043db4136d34b2c4323051e0ac7fcdcfbcb3989b36c",
+              "ENDURANCE_SETS": "29b1aeec1b54a501d1e1b911414a170e8524658365feccded1eeb512189eebe5",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "biga-anatomy-2",
+              "iversen-time-efficient-2021-03",
+              "nhs-strength-1",
+              "pavlova-tendinopathy-2023-1"
+            ],
+            "exercise_dictionary_sha256": "da122fc022bfcee8d045571e35ef3723404a58c26344c09a28d5ca9c6a343274",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-1",
+            "writer_configuration_sha256": "34e5f515cd94b04143ee5c3553bda2ae4eb8e8ac67cc922c1efed3b9a15da2e8",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "e0b35c9dcfcecd2f3debb18be91301d4e815e6fcf826b684e582b327e5e651b9"
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-operation-2026-10-24",
+            "goal_family": "muscular_endurance",
+            "onboarding_sha256": "72f8d37b07a9225d42645748dbf22226f4af177db76c64225d3983767daf57a0",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf",
+              "pavlova-tendinopathy-2023": "f17ce2542835bc6ed011c0a29a8e3163eae5aa5c4fddd4a4eb66669f10ddd416"
+            },
+            "rule_hashes": {
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "NOVICE_LOADING": "7e84daccd9ff24659f56a5009a1680abbbfe603f1819f4bc386827daddd68d8a",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "ENDURANCE_DOSE": "dca44d3e078365fdda2c4043db4136d34b2c4323051e0ac7fcdcfbcb3989b36c",
+              "ENDURANCE_SETS": "29b1aeec1b54a501d1e1b911414a170e8524658365feccded1eeb512189eebe5",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "biga-anatomy-2",
+              "iversen-time-efficient-2021-03",
+              "nhs-strength-1",
+              "pavlova-tendinopathy-2023-1"
+            ],
+            "exercise_dictionary_sha256": "da122fc022bfcee8d045571e35ef3723404a58c26344c09a28d5ca9c6a343274",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-1",
+            "writer_configuration_sha256": "34e5f515cd94b04143ee5c3553bda2ae4eb8e8ac67cc922c1efed3b9a15da2e8",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "e0b35c9dcfcecd2f3debb18be91301d4e815e6fcf826b684e582b327e5e651b9"
+          }
+        },
+        {
+          "chunk_id": "nhs-strength-1",
+          "source_id": "nhs-strength",
+          "section": "Progressão de exercícios de força / Introduction",
+          "title": "Strength exercises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+          "authors": [
+            "NHS / Department of Health and Social Care"
+          ],
+          "license": "OGL-3.0",
+          "license_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+          "attribution": "Information from the NHS website, as at 131026. Information from the NHS website is licensed under the Open Government Licence v3.0.",
+          "content_note": "Trechos originais em inglês, capturados em 13/10/2026; sem imagens, vídeos, marcas ou conteúdo de terceiros. Não implica endosso da instituição.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-operation-2026-10-24",
+            "goal_family": "muscular_endurance",
+            "onboarding_sha256": "72f8d37b07a9225d42645748dbf22226f4af177db76c64225d3983767daf57a0",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf",
+              "pavlova-tendinopathy-2023": "f17ce2542835bc6ed011c0a29a8e3163eae5aa5c4fddd4a4eb66669f10ddd416"
+            },
+            "rule_hashes": {
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "NOVICE_LOADING": "7e84daccd9ff24659f56a5009a1680abbbfe603f1819f4bc386827daddd68d8a",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "ENDURANCE_DOSE": "dca44d3e078365fdda2c4043db4136d34b2c4323051e0ac7fcdcfbcb3989b36c",
+              "ENDURANCE_SETS": "29b1aeec1b54a501d1e1b911414a170e8524658365feccded1eeb512189eebe5",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "biga-anatomy-2",
+              "iversen-time-efficient-2021-03",
+              "nhs-strength-1",
+              "pavlova-tendinopathy-2023-1"
+            ],
+            "exercise_dictionary_sha256": "da122fc022bfcee8d045571e35ef3723404a58c26344c09a28d5ca9c6a343274",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-1",
+            "writer_configuration_sha256": "34e5f515cd94b04143ee5c3553bda2ae4eb8e8ac67cc922c1efed3b9a15da2e8",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "e0b35c9dcfcecd2f3debb18be91301d4e815e6fcf826b684e582b327e5e651b9"
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. Componentes de dose foram mal reportados; associações agregadas não determinam carga segura individual. Populações tinham tendinopatias avaliadas; dor relatada no chat não confirma tendinopatia. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "elapsed_seconds": 35.68772523900043,
+      "stage_calls": {
+        "writer": 2,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 2,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 29.125059895999584,
+        "review": 5.45590955499938,
+        "focus": 0.0
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "case_id": "initial-hypertrophy",
+      "stage": "writer",
+      "context_characters": 33604,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para hipertrofia muscular\",\n    \"objective\": \"Hipertrofia muscular\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 3,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres (2,5kg por braço)\",\n        \"rest_seconds\": 120,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"iversen-time-efficient-2021-07\", \"nhs-strength-1\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-hypertrophy",
+      "stage": "review",
+      "context_characters": 34340,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "RESISTANCE_EFFORT",
+        "SELECT_RESISTANCE",
+        "STRENGTH_DOSE",
+        "HYPERTROPHY_VOLUME",
+        "HYPERTROPHY_LOADING",
+        "HYPERTROPHY_REST",
+        "LOAD_PROGRESSION",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    },
+    {
+      "case_id": "initial-muscular-endurance",
+      "stage": "writer",
+      "context_characters": 27250,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "SELECT_RESISTANCE",
+        "NOVICE_LOADING",
+        "LOAD_PROGRESSION",
+        "ENDURANCE_DOSE",
+        "ENDURANCE_SETS",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\"plan\": {\"name\": \"Treino de resistência muscular para iniciantes\", \"objective\": \"Melhorar a resistência muscular com foco em grupos musculares principais\", \"items\": [{\"exercise_name\": \"bodyweight_squat (Dia A)\", \"sets\": 2, \"repetitions\": \"8-12\", \"load_guidance\": \"Peso corporal\", \"rest_seconds\": 60, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"push_up (Dia A)\", \"sets\": 2, \"repetitions\": \"8-12\", \"load_guidance\": \"Peso corporal\", \"rest_seconds\": 60, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"dumbbell_row (Dia A)\", \"sets\": 2, \"repetitions\": \"8-1\", \"load_guidance\": \"Halteres\", \"rest_seconds\": 60, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"abdominal_curlup (Dia A)\", \"sets\": 2, \"repetitions\": \"12\", \"load_guidance\": \"Peso corporal\", \"rest_seconds\": 60, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"standing_calf_raise (Dia A)\", \"sets\": 1, \"repetitions\": \"15\", \"load_guidance\": \"Peso corporal\", \"rest_seconds\": 60, \"equipment_requirement\": null, \"equipment_model_id\": null}, {\"exercise_name\": \"dumbbell_curl (Dia A)\", \"sets\": 2, \"repetitions\": \"12\", \"load_guidance\": \"Halteres\", \"rest_seconds\": 60, \"equipment_requirement\": null, \"equipment_model_id\": null}]}, \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"nhs-strength-1\", \"pavlova-tendinopathy-2023-1\"], \"knowledge_status\": \"supported\", \"knowledge_limitations\": \"\"}"
+    },
+    {
+      "case_id": "initial-muscular-endurance",
+      "stage": "writer",
+      "context_characters": 27504,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "SELECT_RESISTANCE",
+        "NOVICE_LOADING",
+        "LOAD_PROGRESSION",
+        "ENDURANCE_DOSE",
+        "ENDURANCE_SETS",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para resistência muscular\",\n    \"objective\": \"Aumentar a resistência muscular para o corpo inteiro com foco em grupos musculares principais\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres\",\n        \"rest_seconds\": 60,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"abdominal_curlup (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"12-15\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 30,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"iversen-time-efficient-2021-06\", \"iversen-time-efficient-2021-03\", \"nhs-strength-1\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "initial-muscular-endurance",
+      "stage": "review",
+      "context_characters": 28232,
+      "passage_count": 6,
+      "provided_rule_ids": [
+        "SELECT_RESISTANCE",
+        "NOVICE_LOADING",
+        "LOAD_PROGRESSION",
+        "ENDURANCE_DOSE",
+        "ENDURANCE_SETS",
+        "RESTRICTIONS",
+        "RESISTANCE_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    }
+  ],
+  "retrieved": [
+    [
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-1"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-06"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-03"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-07"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-1"
+      },
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-2"
+      }
+    ],
+    [
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-1"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-06"
+      },
+      {
+        "source_id": "biga-anatomy",
+        "chunk_id": "biga-anatomy-2"
+      },
+      {
+        "source_id": "iversen-time-efficient-2021",
+        "chunk_id": "iversen-time-efficient-2021-03"
+      },
+      {
+        "source_id": "nhs-strength",
+        "chunk_id": "nhs-strength-1"
+      },
+      {
+        "source_id": "pavlova-tendinopathy-2023",
+        "chunk_id": "pavlova-tendinopathy-2023-1"
+      }
+    ]
+  ],
+  "implementation_unchanged": true,
+  "independent_evaluation": false,
+  "professional_review_performed": false
+}

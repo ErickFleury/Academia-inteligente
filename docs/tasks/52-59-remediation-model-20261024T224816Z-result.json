@@ -1,0 +1,13 @@
+{
+  "plan_name": "remediation-model-20261024T224816Z",
+  "status": "interrupted",
+  "reason": "Agent restarted the backend container to load migration 37 while this isolated diagnostic was running through docker exec.",
+  "actual_model_http_calls": null,
+  "stage_seconds": null,
+  "outputs": null,
+  "observation": "Process ended before its result recorder completed. Call counts and model results cannot be recovered from this record and are not treated as zero or scored.",
+  "persistence": "in_memory_sqlite_only",
+  "real_policy_or_retrieval": false,
+  "independent_evaluation": false,
+  "clinical_accuracy": "not_evaluated"
+}

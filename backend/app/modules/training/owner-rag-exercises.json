@@ -1,0 +1,277 @@
+{
+  "version": "2026-10-25-owner-rag-4",
+  "artifact_kind": "technical_exercise_identity_dictionary",
+  "contains_prescription_doses": false,
+  "professional_review_performed": false,
+  "exercises": [
+    {
+      "key": "bodyweight_squat",
+      "label_pt_br": "Agachamento com peso corporal",
+      "aliases": [
+        "Agachamento"
+      ],
+      "groups": [
+        "pernas",
+        "quadríceps",
+        "glúteos"
+      ],
+      "load_capability": "bodyweight",
+      "movement_patterns": [
+        "lower_knee"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "goblet_squat",
+      "label_pt_br": "Agachamento goblet com halter",
+      "aliases": [],
+      "groups": [
+        "pernas",
+        "quadríceps",
+        "glúteos"
+      ],
+      "load_capability": "external_unmeasured",
+      "movement_patterns": [
+        "lower_knee"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "stationary_lunge",
+      "label_pt_br": "Afundo estacionário",
+      "aliases": [],
+      "groups": [
+        "pernas",
+        "quadríceps",
+        "glúteos"
+      ],
+      "load_capability": "bodyweight",
+      "movement_patterns": [
+        "lower_knee"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "dumbbell_rdl",
+      "label_pt_br": "Levantamento terra romeno com halteres",
+      "aliases": [],
+      "groups": [
+        "pernas",
+        "posterior de coxa",
+        "glúteos"
+      ],
+      "load_capability": "external_unmeasured",
+      "movement_patterns": [
+        "lower_hip"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "hip_bridge",
+      "label_pt_br": "Elevação de quadril no solo",
+      "aliases": [],
+      "groups": [
+        "pernas",
+        "posterior de coxa",
+        "glúteos"
+      ],
+      "load_capability": "bodyweight",
+      "movement_patterns": [
+        "lower_hip"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "push_up",
+      "label_pt_br": "Flexão de braços",
+      "aliases": [],
+      "groups": [
+        "peito",
+        "peitoral",
+        "tríceps",
+        "braços"
+      ],
+      "load_capability": "bodyweight",
+      "movement_patterns": [
+        "upper_push"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "dumbbell_floor_press",
+      "label_pt_br": "Supino no solo com halteres",
+      "aliases": [],
+      "groups": [
+        "peito",
+        "peitoral",
+        "tríceps",
+        "braços"
+      ],
+      "load_capability": "external_unmeasured",
+      "movement_patterns": [
+        "upper_push"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "dumbbell_row",
+      "label_pt_br": "Remada curvada com halteres",
+      "aliases": [],
+      "groups": [
+        "costas",
+        "dorsais",
+        "bíceps",
+        "braços"
+      ],
+      "load_capability": "external_unmeasured",
+      "movement_patterns": [
+        "upper_pull"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "dumbbell_overhead_press",
+      "label_pt_br": "Desenvolvimento de ombros com halteres",
+      "aliases": [],
+      "groups": [
+        "ombros",
+        "deltoides",
+        "tríceps",
+        "braços"
+      ],
+      "load_capability": "external_unmeasured",
+      "movement_patterns": [
+        "upper_push"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "abdominal_curlup",
+      "label_pt_br": "Abdominal curto",
+      "aliases": [],
+      "groups": [
+        "abdômen",
+        "abdominais",
+        "core",
+        "tronco"
+      ],
+      "load_capability": "bodyweight",
+      "movement_patterns": [
+        "trunk"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "standing_calf_raise",
+      "label_pt_br": "Elevação de panturrilhas em pé",
+      "aliases": [],
+      "groups": [
+        "pernas",
+        "panturrilhas"
+      ],
+      "load_capability": "bodyweight",
+      "movement_patterns": [
+        "lower_accessory"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "dumbbell_curl",
+      "label_pt_br": "Rosca direta com halteres",
+      "aliases": [],
+      "groups": [
+        "bíceps",
+        "braços"
+      ],
+      "load_capability": "external_unmeasured",
+      "movement_patterns": [
+        "upper_accessory"
+      ],
+      "mode": "resistance"
+    },
+    {
+      "key": "standing_calf_stretch",
+      "label_pt_br": "Alongamento de panturrilha em pé",
+      "aliases": [],
+      "groups": [
+        "panturrilhas",
+        "pernas"
+      ],
+      "load_capability": "no_external_load",
+      "movement_patterns": [
+        "flexibility_lower"
+      ],
+      "mode": "flexibility"
+    },
+    {
+      "key": "standing_quadriceps_stretch",
+      "label_pt_br": "Alongamento de quadríceps em pé",
+      "aliases": [],
+      "groups": [
+        "quadríceps",
+        "pernas"
+      ],
+      "load_capability": "no_external_load",
+      "movement_patterns": [
+        "flexibility_lower"
+      ],
+      "mode": "flexibility"
+    },
+    {
+      "key": "seated_hamstring_stretch",
+      "label_pt_br": "Alongamento de posterior de coxa sentado",
+      "aliases": [],
+      "groups": [
+        "posterior de coxa",
+        "pernas"
+      ],
+      "load_capability": "no_external_load",
+      "movement_patterns": [
+        "flexibility_lower"
+      ],
+      "mode": "flexibility"
+    },
+    {
+      "key": "chest_stretch",
+      "label_pt_br": "Alongamento de peitoral",
+      "aliases": [],
+      "groups": [
+        "peito",
+        "peitoral"
+      ],
+      "load_capability": "no_external_load",
+      "movement_patterns": [
+        "flexibility_upper"
+      ],
+      "mode": "flexibility"
+    },
+    {
+      "key": "cross_body_shoulder_stretch",
+      "label_pt_br": "Alongamento de ombro com braço cruzado",
+      "aliases": [],
+      "groups": [
+        "ombros",
+        "braços"
+      ],
+      "load_capability": "no_external_load",
+      "movement_patterns": [
+        "flexibility_upper"
+      ],
+      "mode": "flexibility"
+    },
+    {
+      "key": "seated_trunk_rotation_stretch",
+      "label_pt_br": "Alongamento de tronco com rotação sentada",
+      "aliases": [],
+      "groups": [
+        "tronco",
+        "costas"
+      ],
+      "load_capability": "no_external_load",
+      "movement_patterns": [
+        "flexibility_trunk"
+      ],
+      "mode": "flexibility"
+    }
+  ]
+}

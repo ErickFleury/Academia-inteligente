@@ -1,0 +1,25 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T131003Z",
+  "outputs": [
+    {
+      "stage": "writer",
+      "context_characters": 21219,
+      "passage_count": 6
+    },
+    {
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"Treino para ganhar força (Iniciante)\",\n    \"objective\": \"Aumentar a força muscular através de exercícios de resistência com foco nos grupos musculares principais, seguindo recomendações para iniciantes.\",\n    \"items\": [\n      {\n        \"exercise_name\": \"bodyweight_squat (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"push_up (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Peso corporal\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"dumbbell_row (Dia A)\",\n        \"sets\": 2,\n        \"repetitions\": \"8-12\",\n        \"load_guidance\": \"Halteres\",\n        \"rest_seconds\": 180,\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"biga-anatomy-1\", \"nhs-strength-1\", \"biga-anatomy-2\", \"pavlova-tendinopathy-2023-1\", \"iversen-time-efficient-2021-06\", \"nhs-strength-2\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n\n  }"
+    },
+    {
+      "stage": "review",
+      "context_characters": 22066,
+      "passage_count": 6
+    },
+    {
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": [\n    {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  ]\n}"
+    }
+  ],
+  "captured_at": "2026-10-25T13:10:46.738926+00:00",
+  "independent_evaluation": false
+}

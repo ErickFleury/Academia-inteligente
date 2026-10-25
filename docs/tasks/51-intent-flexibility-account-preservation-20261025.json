@@ -1,0 +1,7 @@
+{
+  "designated_account_only": true,
+  "transaction_read_only": true,
+  "all_saved_version_and_item_rows_unchanged": true,
+  "private_rows_exported": false,
+  "post_deployment_recheck_passed": true
+}

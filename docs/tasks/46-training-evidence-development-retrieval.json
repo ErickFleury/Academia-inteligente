@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-23T14:54:41.896864+00:00",
+  "purpose": "development_only_technical_probe",
+  "catalog_sha256": "c6f0448559ae7e53168e21c7f4415e1b9001a585e66b01628e1930c975b9fb54",
+  "embedding_model": "bge-m3",
+  "query": "Resistance training dosage strength volume intensity duration untrained limitations",
+  "indexed_source_passages": [
+    "lyristakis-strength-2026-dosage"
+  ],
+  "selected_passages": [
+    "lyristakis-strength-2026-dosage",
+    "pavlova-tendinopathy-2023-1",
+    "pavlova-tendinopathy-2023-2",
+    "biga-anatomy-1",
+    "biga-anatomy-2",
+    "nhs-strength-1"
+  ],
+  "selected_source_passages": [
+    "lyristakis-strength-2026-dosage"
+  ],
+  "final_passage_limit": 6,
+  "status": "supported",
+  "elapsed_seconds": 0.106,
+  "context_characters": 8608,
+  "reviewed_development_cases": 0,
+  "dimension_coverage": "not_assessed",
+  "enabled_cohorts": [],
+  "remaining_gate": "Reviewed cases/rules/inputs and sealed evaluation are absent."
+}

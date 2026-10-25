@@ -6,7 +6,7 @@ import { WorkspaceIcon, navigationLinkSx, type WorkspaceIconName } from './compo
 import { SidebarShell } from './components/application-shell'
 import { RouterButtonLink } from './components/router-button-link'
 
-const icons: WorkspaceIconName[] = ['feed', 'pending', 'training', 'plans', 'clients', 'equipment', 'profile']
+const icons: WorkspaceIconName[] = ['feed', 'pending', 'training', 'plans', 'clients', 'equipment', 'plans', 'profile']
 const links = [
   ['Feed', '/instrutor/feed'],
   ['Planos pendentes', '/instrutor/planos-pendentes'],
@@ -14,6 +14,7 @@ const links = [
   ['Todos os planos', '/instrutor/todos-os-planos'],
   ['Clientes', '/instrutor/clientes'],
   ['Equipamentos', '/instrutor/equipamentos'],
+  ['Revisão de evidências', '/instrutor/evidencias'],
   ['Perfil', '/instrutor/perfil'],
 ] as const
 

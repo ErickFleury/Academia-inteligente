@@ -1,0 +1,164 @@
+{
+  "name": "owner-rag-runtime-20261025T170409Z",
+  "frozen_at": "2026-10-25T17:04:09.400542+00:00",
+  "scope": "exposed_owner_authorized_technical_check",
+  "independent_evaluation": false,
+  "professional_review_performed": false,
+  "authorization_id": "owner-assisted-rag-optional-schedule-2026-10-25",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-5",
+    "instruction_version": "owner-rag-6",
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "cases": [
+    {
+      "id": "abc-strength",
+      "onboarding": {
+        "training_goal": "Hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "request": "Gere uma ficha de treino de força em três dias diferentes (treinos A, B, C).",
+      "expected_session_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected_goal_family": "strength"
+    },
+    {
+      "id": "abc-hypertrophy",
+      "onboarding": {
+        "training_goal": "Hipertrofia",
+        "training_experience": "intermediate"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "request": "Gere uma ficha de hipertrofia em três dias, fichas A/B/C.",
+      "expected_session_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected_goal_family": "hypertrophy"
+    },
+    {
+      "id": "abc-full-body",
+      "onboarding": {},
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "request": "Gere um treino de corpo inteiro para força em três dias, A/B/C.",
+      "expected_session_labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "expected_goal_family": "strength"
+    },
+    {
+      "id": "two-day-hypertrophy",
+      "onboarding": {
+        "training_goal": "Hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "request": "Gere um treino de hipertrofia em dois dias, fichas A e B.",
+      "expected_session_labels": [
+        "A",
+        "B"
+      ],
+      "expected_goal_family": "hypertrophy"
+    },
+    {
+      "id": "initial-hypertrophy",
+      "onboarding": {
+        "training_goal": "Hipertrofia"
+      },
+      "repetitions": 1,
+      "expected": "reviewable_proposal_without_activation",
+      "maximum_writer_http_calls": 4,
+      "maximum_review_http_calls": 4,
+      "maximum_focus_http_calls": 2,
+      "expected_session_labels": [
+        "A"
+      ],
+      "expected_goal_family": "hypertrophy"
+    },
+    {
+      "id": "ambiguous-goal",
+      "onboarding": {},
+      "request": "Gere força e hipertrofia em três dias A/B/C.",
+      "repetitions": 1,
+      "expected": "clarification_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    },
+    {
+      "id": "conflicting-schedule",
+      "onboarding": {},
+      "request": "Gere hipertrofia em dois dias com fichas A/B/C.",
+      "repetitions": 1,
+      "expected": "clarification_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    },
+    {
+      "id": "retrieval-outage",
+      "onboarding": {},
+      "repetitions": 1,
+      "expected": "technical_unavailability_without_writer_or_save",
+      "maximum_model_http_calls": 0
+    }
+  ],
+  "expected_accepted_proposals": 5,
+  "expected_load_mode": "qualitative_unmeasured",
+  "synthetic_onboarding_defaults": {
+    "training_goal": "Ganhar força",
+    "training_experience": "beginner",
+    "height_cm": 170,
+    "weight_kg": "70.50",
+    "has_limitations_or_complaints": false,
+    "limitations_or_complaints": null,
+    "has_health_conditions": false,
+    "health_conditions": null,
+    "uses_medications": false,
+    "medications": null
+  },
+  "timeout_seconds": 360,
+  "deadline_seconds_per_case": 3600,
+  "public_retrieval": "actual_PostgreSQL_BGE_M3_maximum_six_passages",
+  "persistence": "synthetic_in_memory_sqlite_only",
+  "real_client_records_read": false,
+  "clinical_accuracy": "not_evaluated",
+  "implementation_sha256": {
+    "app/modules/training/owner_rag.py": "007cc7d378c841f810f6308239e2ed752e430e35b8c85b01c6bd9b48319f5434",
+    "app/modules/training/owner_rag_schema.py": "8f45789f2d36d86558e344d2b0c63cf633f7e756ec82a5c654e3f0a7052eb2db",
+    "app/modules/training/owner_rag_load.py": "82b9664dd573a8bd8fa9d9ef9bf5ccc4ddda1f3b63956ea9f27025d252008658",
+    "app/modules/training/owner-rag-exercises.json": "15736c0c9bf5b9cd32253ff01f60c437fa8d74581083bda62cec1f40bc6278c9",
+    "app/modules/training/generation_service.py": "900f338e6f474369cce6f843695b89b2e544e49d41bafac813521e24bc352ead",
+    "app/modules/training/chat_service.py": "7204b075798854460b60b4dee55fa60eb5b71905e165ff834de065d7adc4838b",
+    "app/modules/training/adaptation_service.py": "a89f8f852544f6acc02ff3379813f9517ae430faf9660a60632c71a13a6b6753",
+    "app/modules/training/selection.py": "decde37e2a7f5f275a40f7b9dcb7b384ccccaef77d04fbd251571407d6790879",
+    "app/modules/training/completeness.py": "9fd1ac2fee9ba8f680694c55ccb844bd090e5643f1ca47452fae6586c792584b",
+    "app/modules/training/focus.py": "c6dbf50f062bed428336bbffaac537abc2d5eba837ca9f600dd683a8bf85e523",
+    "app/integrations/ai.py": "2190131831e02044d5e13573bff7ed8f163e0325da4e8de4c5862cd2bd8a8ec0",
+    "app/integrations/ai_diagnostics.py": "7d9342b804292f188d7ef1b521ace1bc0436f403157ad6a74b81999c8936ebc9"
+  }
+}

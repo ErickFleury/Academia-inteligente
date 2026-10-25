@@ -1,0 +1,2107 @@
+{
+  "version": 1,
+  "scope": "exposed_hypertrophy_qualitative_load_implementation_check",
+  "professional_review_performed": false,
+  "independent_evaluation": false,
+  "expected_proposals": 5,
+  "accepted_proposals": 5,
+  "checks": [
+    {
+      "case_id": "initial-hypertrophy-repeat-1",
+      "one_saved_draft_without_activation": true,
+      "qualitative_loads_only": true,
+      "citations_in_provided_passages": true,
+      "source_hashes_current": true,
+      "rule_hashes_current": true,
+      "content_hash_matches": true,
+      "no_false_appraisal": true
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-2",
+      "one_saved_draft_without_activation": true,
+      "qualitative_loads_only": true,
+      "citations_in_provided_passages": true,
+      "source_hashes_current": true,
+      "rule_hashes_current": true,
+      "content_hash_matches": true,
+      "no_false_appraisal": true
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-3",
+      "one_saved_draft_without_activation": true,
+      "qualitative_loads_only": true,
+      "citations_in_provided_passages": true,
+      "source_hashes_current": true,
+      "rule_hashes_current": true,
+      "content_hash_matches": true,
+      "no_false_appraisal": true
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-4",
+      "one_saved_draft_without_activation": true,
+      "qualitative_loads_only": true,
+      "citations_in_provided_passages": true,
+      "source_hashes_current": true,
+      "rule_hashes_current": true,
+      "content_hash_matches": true,
+      "no_false_appraisal": true
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-5",
+      "one_saved_draft_without_activation": true,
+      "qualitative_loads_only": true,
+      "citations_in_provided_passages": true,
+      "source_hashes_current": true,
+      "rule_hashes_current": true,
+      "content_hash_matches": true,
+      "no_false_appraisal": true
+    }
+  ],
+  "mean_seconds": 27.4092106574004,
+  "median_seconds": 21.410004606997973,
+  "backend_tests_passed": 1206,
+  "owner_rag_tests_passed": 40,
+  "critical_controls": [
+    {
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "reason": "goal_priority_confirmation_required",
+      "model_calls": 0,
+      "proposals": 0
+    },
+    {
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "reason": "retrieval_unavailable",
+      "model_calls": 0,
+      "proposals": 0
+    }
+  ],
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-3",
+    "instruction_version": "owner-rag-4",
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "results": [
+    {
+      "case_id": "initial-hypertrophy-repeat-1",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "Treino para Hipertrofia Muscular (Intermediário)",
+        "objective": "Hipertrofia muscular",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "biga-anatomy-1",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — adaptações musculares",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c093d1e142c089f0e705580723a623a03b230512474b213c5d4638fff6c3cddb",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-06",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c093d1e142c089f0e705580723a623a03b230512474b213c5d4638fff6c3cddb",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c093d1e142c089f0e705580723a623a03b230512474b213c5d4638fff6c3cddb",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-07",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c093d1e142c089f0e705580723a623a03b230512474b213c5d4638fff6c3cddb",
+            "preserved_item_hashes": []
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "proposal_count": 1,
+      "elapsed_seconds": 58.251498306999565,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 44.081364871002734,
+        "review": 9.330354625999462,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-2",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "Treino para Hipertrofia Muscular - 3 dias completos",
+        "objective": "Hipertrofia muscular",
+        "items": [
+          {
+            "exercise_name": "Elevação de panturrilhas em pé (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Agachamento goblet com halter (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "biga-anatomy-1",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — adaptações musculares",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "8ad44c931cc53fad2b9306e6b01fe764b730e2efd628e3447fa10d40ff1003d4",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-06",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "8ad44c931cc53fad2b9306e6b01fe764b730e2efd628e3447fa10d40ff1003d4",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "8ad44c931cc53fad2b9306e6b01fe764b730e2efd628e3447fa10d40ff1003d4",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-07",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "8ad44c931cc53fad2b9306e6b01fe764b730e2efd628e3447fa10d40ff1003d4",
+            "preserved_item_hashes": []
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "proposal_count": 1,
+      "elapsed_seconds": 22.48143826100204,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 17.6133182199992,
+        "review": 3.743847798999923,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-3",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "Treino para Hipertrofia muscular (Intermediário)",
+        "objective": "Aumentar o diâmetro das fibras musculares através de resistência controlada e sobrecarga progressiva, sem dor ou lesão.",
+        "items": [
+          {
+            "exercise_name": "Elevação de panturrilhas em pé (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Rosca direta com halteres (Dia A)",
+            "sets": 2,
+            "repetitions": "10-15",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 2,
+            "repetitions": "12-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Agachamento goblet com halter (Dia A)",
+            "sets": 2,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 2,
+            "repetitions": "10-15",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "12-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "biga-anatomy-1",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — adaptações musculares",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "ca17468b013a0bf704177bc4d299e61fb45990cf3d0697e57b65e4cae19a8a05",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-06",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "ca17468b013a0bf704177bc4d299e61fb45990cf3d0697e57b65e4cae19a8a05",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "ca17468b013a0bf704177bc4d299e61fb45990cf3d0697e57b65e4cae19a8a05",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-07",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "ca17468b013a0bf704177bc4d299e61fb45990cf3d0697e57b65e4cae19a8a05",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "nhs-strength-1",
+          "source_id": "nhs-strength",
+          "section": "Progressão de exercícios de força / Introduction",
+          "title": "Strength exercises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+          "authors": [
+            "NHS / Department of Health and Social Care"
+          ],
+          "license": "OGL-3.0",
+          "license_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+          "attribution": "Information from the NHS website, as at 131026. Information from the NHS website is licensed under the Open Government Licence v3.0.",
+          "content_note": "Trechos originais em inglês, capturados em 13/10/2026; sem imagens, vídeos, marcas ou conteúdo de terceiros. Não implica endosso da instituição.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "ca17468b013a0bf704177bc4d299e61fb45990cf3d0697e57b65e4cae19a8a05",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "biga-anatomy-2",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — recuperação",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "ca17468b013a0bf704177bc4d299e61fb45990cf3d0697e57b65e4cae19a8a05",
+            "preserved_item_hashes": []
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "proposal_count": 1,
+      "elapsed_seconds": 21.410004606997973,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 17.977701733001595,
+        "review": 3.0320930699999735,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-4",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "Treino para hipertrofia muscular - intermediário",
+        "objective": "Hipertrofia muscular",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "10-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "biga-anatomy-1",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — adaptações musculares",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "7060e34eafa51242f949bcf61fd432aefe5295cc8fb5fcd91155c7b5b4883dea",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-06",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "7060e34eafa51242f949bcf61fd432aefe5295cc8fb5fcd91155c7b5b4883dea",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "7060e34eafa51242f949bcf61fd432aefe5295cc8fb5fcd91155c7b5b4883dea",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-07",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "7060e34eafa51242f949bcf61fd432aefe5295cc8fb5fcd91155c7b5b4883dea",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "nhs-strength-1",
+          "source_id": "nhs-strength",
+          "section": "Progressão de exercícios de força / Introduction",
+          "title": "Strength exercises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+          "authors": [
+            "NHS / Department of Health and Social Care"
+          ],
+          "license": "OGL-3.0",
+          "license_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+          "attribution": "Information from the NHS website, as at 131026. Information from the NHS website is licensed under the Open Government Licence v3.0.",
+          "content_note": "Trechos originais em inglês, capturados em 13/10/2026; sem imagens, vídeos, marcas ou conteúdo de terceiros. Não implica endosso da instituição.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "7060e34eafa51242f949bcf61fd432aefe5295cc8fb5fcd91155c7b5b4883dea",
+            "preserved_item_hashes": []
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "proposal_count": 1,
+      "elapsed_seconds": 16.873925378000422,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 12.761860308997711,
+        "review": 3.686997954999242,
+        "focus": 0.0
+      }
+    },
+    {
+      "case_id": "initial-hypertrophy-repeat-5",
+      "status": "proposal",
+      "activated": false,
+      "projection": {
+        "name": "Proposta de treino para hipertrofia muscular",
+        "objective": "Aumentar o diâmetro das fibras musculares através de treinamento resistido com foco em músculos específicos e corpo inteiro, seguindo orientações de tempo eficiente para adultos com experiência intermediária.",
+        "items": [
+          {
+            "exercise_name": "Agachamento com peso corporal (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Flexão de braços (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Remada curvada com halteres (Dia A)",
+            "sets": 3,
+            "repetitions": "8-12",
+            "load_guidance": "Halteres; carga a definir na revisão do instrutor.",
+            "rest_seconds": 120,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          },
+          {
+            "exercise_name": "Abdominal curto (Dia A)",
+            "sets": 2,
+            "repetitions": "10-15",
+            "load_guidance": "Peso corporal",
+            "rest_seconds": 60,
+            "equipment_requirement": null,
+            "equipment_model_id": null
+          }
+        ]
+      },
+      "citations": [
+        {
+          "chunk_id": "biga-anatomy-1",
+          "source_id": "biga-anatomy",
+          "section": "10.6 Exercise and Muscle Performance — adaptações musculares",
+          "title": "Anatomy & Physiology (2019)",
+          "url": "https://open.oregonstate.education/anatomy/",
+          "authors": [
+            "Lindsay M. Biga",
+            "Staci Bronson",
+            "Sierra Dawson",
+            "Amy Harwell",
+            "Robin Hopkins",
+            "Joel Kaufmann",
+            "Mike LeMaster",
+            "Philip Matern",
+            "Katie Morrison-Graham",
+            "Kristen Oja",
+            "Devon Quick",
+            "Jon Runyeon",
+            "OSU OERU",
+            "OpenStax"
+          ],
+          "license": "CC-BY-SA-4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "attribution": "Lindsay M. Biga; Staci Bronson; Sierra Dawson; Amy Harwell; Robin Hopkins; Joel Kaufmann; Mike LeMaster; Philip Matern; Katie Morrison-Graham; Kristen Oja; Devon Quick; Jon Runyeon; OSU OERU; OpenStax. Anatomy & Physiology (2019).",
+          "content_note": "Resumo traduzido e adaptado da seção 10.6, distribuído sob CC BY-SA 4.0. Compartilhamento pela mesma licença aplica-se a este resumo; sem imagens ou materiais de terceiros.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c1d0c93224b2b565e1d449c456ef8d8fdf52e6886f3fa299a3d8db3974d3be28",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-06",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec9 blocks 1; Sec9 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c1d0c93224b2b565e1d449c456ef8d8fdf52e6886f3fa299a3d8db3974d3be28",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-03",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec3 blocks 1; Sec3 blocks 2; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c1d0c93224b2b565e1d449c456ef8d8fdf52e6886f3fa299a3d8db3974d3be28",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "iversen-time-efficient-2021-07",
+          "source_id": "iversen-time-efficient-2021",
+          "section": "PMC8449772 JATS Sec13 blocks 1; Abstract; Sec23",
+          "title": "No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review",
+          "url": "https://doi.org/10.1007/s40279-021-01490-1",
+          "authors": [
+            "Vegard M Iversen",
+            "Martin Norum",
+            "Brad J Schoenfeld",
+            "Marius S Fimland"
+          ],
+          "license": "CC-BY-4.0",
+          "license_url": "https://creativecommons.org/licenses/by/4.0/",
+          "attribution": "Vegard M Iversen; Martin Norum; Brad J Schoenfeld; Marius S Fimland (2021). No Time to Lift? Designing Time-Efficient Training Programs for Strength and Hypertrophy: A Narrative Review. DOI 10.1007/s40279-021-01490-1. CC BY 4.0. Original English JATS prose selected; whitespace normalized; context sections repeat deliberately. Table text only where explicitly selected. No translation, third-party media or supplements.",
+          "content_note": "Narrative review of time-efficient strength/hypertrophy training; compare against newer evidence, not a universal optimum.",
+          "captured_at": "2026-10-23",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c1d0c93224b2b565e1d449c456ef8d8fdf52e6886f3fa299a3d8db3974d3be28",
+            "preserved_item_hashes": []
+          }
+        },
+        {
+          "chunk_id": "nhs-strength-1",
+          "source_id": "nhs-strength",
+          "section": "Progressão de exercícios de força / Introduction",
+          "title": "Strength exercises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+          "authors": [
+            "NHS / Department of Health and Social Care"
+          ],
+          "license": "OGL-3.0",
+          "license_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+          "attribution": "Information from the NHS website, as at 131026. Information from the NHS website is licensed under the Open Government Licence v3.0.",
+          "content_note": "Trechos originais em inglês, capturados em 13/10/2026; sem imagens, vídeos, marcas ou conteúdo de terceiros. Não implica endosso da instituição.",
+          "captured_at": "2026-10-13",
+          "owner_rag": {
+            "authorization_id": "owner-assisted-rag-qualitative-load-2026-10-25",
+            "goal_family": "hypertrophy",
+            "onboarding_sha256": "08a638290b96c4735921a3bff99a9e5095a0faac6e9eef06ff077f4d46af58f3",
+            "onboarding_keys": [
+              "has_health_conditions",
+              "has_limitations_or_complaints",
+              "health_conditions",
+              "height_cm",
+              "limitations_or_complaints",
+              "medications",
+              "training_experience",
+              "training_goal",
+              "uses_medications",
+              "weight_kg"
+            ],
+            "source_hashes": {
+              "biga-anatomy": "7efcc2773592c03274cd97eeabbbdacaf66e8cbd3c65d778c9ad0d23073471dd",
+              "iversen-time-efficient-2021": "7dae404f4e2c54e73db3e22cb3c13ac3216974ef6ecbc0237c041df066dc45a4",
+              "nhs-strength": "99f3995abeb25c5a47b87045f6ba3d0bcbc35a68e6eeeb98fc3f78d0c84499bf"
+            },
+            "rule_hashes": {
+              "RESISTANCE_EFFORT": "f854e56c665b6daa2b7d3e764177008c09f50117c8df2e2f4b9737049eba47a1",
+              "SELECT_RESISTANCE": "b216c566159330b80c5dd8dabae0ac258c62509faf345f9f52e3d3dd3ffd8ae8",
+              "STRENGTH_DOSE": "9b064a5c49dd121d3722ed241b533eee047cf3af14a0401eb6bb6f899d29cb8c",
+              "HYPERTROPHY_VOLUME": "f2f1690a72f7f4e63a23ef6dc2d4573a1b707f631523d082557d5315fd1f2ebe",
+              "HYPERTROPHY_LOADING": "53b36ed13acc82f17b2ce1fa59034ddcdc7d1dc20eacfe8cb9eec2db660face7",
+              "HYPERTROPHY_REST": "36b12be28e3b4332da391295657632524aae14db7ec80b26e3b240391a3c602e",
+              "LOAD_PROGRESSION": "4c8285e1f4b68f84b4b0e9caa41c541846ddf259cce92a536e2615af9c1a466e",
+              "RESTRICTIONS": "90e982f5edd7fa245165cce1939c556acbcecc8dfcae518f9e9c18d53e12a9fa",
+              "RESISTANCE_ACCOUNTING": "de4e8cab7a6ae9a273951142eadfd4fab6361fe3922af98cc99545b14a33218c"
+            },
+            "provided_passage_ids": [
+              "biga-anatomy-1",
+              "iversen-time-efficient-2021-06",
+              "iversen-time-efficient-2021-03",
+              "iversen-time-efficient-2021-07",
+              "nhs-strength-1",
+              "biga-anatomy-2"
+            ],
+            "exercise_dictionary_sha256": "f17b8394a203ed4261c024c70bc0d0aecbf996c270906bcc8a91035332bb40f0",
+            "exercise_dictionary_version": "2026-10-25-owner-rag-2",
+            "writer_configuration_sha256": "2d87405842e48551231f33c14bf410d6a472d72991bdfa8601bdd1b30dc9513e",
+            "professional_review_performed": false,
+            "independent_evaluation_performed": false,
+            "compiled_prescription_qualification": false,
+            "content_sha256": "c1d0c93224b2b565e1d449c456ef8d8fdf52e6886f3fa299a3d8db3974d3be28",
+            "preserved_item_hashes": []
+          }
+        }
+      ],
+      "knowledge_limitations": "Proposta assistida por RAG, autorizada pelo proprietário, sem parecer profissional ou avaliação independente. As fontes são de consulta; a ficha depende da revisão do instrutor antes da ativação. Livro de fundamentos de fisiologia, não diretriz clínica; não estabelece cargas adequadas a cada cliente. Revisão técnica de licença e extração; avaliação metodológica e aprovação profissional pendentes. Não comprova suporte para todas as combinações de objetivos, experiência, lesões, queixas e medicamentos. Não autoriza diagnósticos, alterações de medicamentos ou ativação automática de treino. Orientações gerais de força e mobilidade; não são prescrição individual nem diagnóstico. As fontes não permitem inferir diagnósticos nem substituem avaliação profissional. Alterações de treino dependem da revisão e aprovação de um instrutor.",
+      "proposal_count": 1,
+      "elapsed_seconds": 18.029186734001996,
+      "stage_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "stage_seconds": {
+        "writer": 13.878880760999891,
+        "review": 3.7660816330026137,
+        "focus": 0.0
+      }
+    }
+  ],
+  "implementation_unchanged": true
+}

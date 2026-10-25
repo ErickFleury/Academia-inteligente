@@ -203,6 +203,75 @@ provisioning or its explicit reconciliation completed.
 
 ## Next executable task
 
+### Evidence-qualified prescription follow-up — specification, 2026-10-22
+
+The owner requested the planning sequence below to research prescription evidence,
+download/vectorize eligible material, and discard unsupported AI-generated
+workouts. Canonical scope: EXT-RF-AI-02 and EXT-DEC-AI-02 in requirements.md.
+See [feature specification](evidence-qualified-training-specification.md).
+Task 45 prespecifies the [methodological protocol](training-evidence-methodology.md);
+Tasks 47 and 51 consume its appraisal, evidence-to-decision and independent
+evaluation records. Scientific criteria, technical constraints and product
+release policies remain distinct under EXT-CA-AI-02.14.
+Task 45's bounded research/documentation is delivered in the
+[source review](training-evidence-source-review.md); independent human appraisals
+and named governance remain pending. Task 46's bounded acquisition and real
+indexing are verified; Task 47 has draft contracts and a technical retrieval
+probe. The owner-approved sequencing exception now permits isolated Tasks 48–50
+development; their validator, lifecycle harness and reusable UI are tested.
+Operational integration is implemented; final-layout expansion indexing and
+PostgreSQL migration are verified. Independent evaluation and release remain pending. See the
+[execution status](tasks/51-training-prescription-verification-report.md).
+No professional policy or release is approved; older pending work stays open.
+
+| Task | Feature task | Scope | Prerequisites | Status |
+| --- | --- | --- | --- | --- |
+| [45](tasks/45-training-evidence-discovery.md) | EVID-IMPL-01 | Source discovery, license screening and coverage gaps | Existing knowledge/onboarding/training inspection | Research delivered; human appraisal/governance pending |
+| [46](tasks/46-training-evidence-ingestion.md) | EVID-IMPL-02 | Actual eligible downloads, extraction and vectorization | 45 eligible subset | Expanded 66-vector corpus indexed; unchanged second run and nine technical topic queries verified |
+| [47](tasks/47-training-prescription-policies.md) | EVID-IMPL-03 | Professionally reviewed computable prescription rules | 45–46; professional decisions for enabled cohorts | Draft schemas/probe and in-app instructor judgments/custody implemented; actual approvals/feasibility/seal pending |
+| [48](tasks/48-training-prescription-evidence-gate.md) | EVID-IMPL-04 | Applicable retrieval, coverage checks and validation trace | 46–47; approved isolated-development exception | Shared core and operational adapters implemented; PostgreSQL migration verified; enablement pending |
+| [49](tasks/49-training-generation-abstention.md) | EVID-IMPL-05 | Shared atomic generation/abstention gate on all prescriptive paths | 48 | Operational generation/chat/adaptation/review integration implemented; real-provider evaluation pending |
+| [50](tasks/50-training-evidence-review-ui.md) | EVID-IMPL-06 | Client abstention and instructor evidence-review UX | 49; established frontend design | Production views and instructor review/custody workspace connected; browser and intended-user review pending |
+| [51](tasks/51-training-prescription-verification.md) | EVID-IMPL-07 | Independent evaluation and limited release report | 45–50; professional evaluation decisions | Status report delivered; independent operational evaluation/release unexecuted |
+
+Research/eligible acquisition can proceed without invented clinical rules.
+Unapproved or unmeasured profiles remain unsupported. Follow each task's gates;
+no commit/push or professional approval is implied.
+
+### Prescription remediation specification — 2026-10-24
+
+**Implementation update — 2026-10-25:** the owner waived independent evaluator/
+held-out-case prerequisites for assisted RAG. The owner-authorized mode now has a
+successful actual local retrieval/writer/reviewer run and an outage control.
+See the [delivery and exact scope](tasks/46-59-owner-rag-delivery.md). Compiled
+clinical qualification is separate; manual browser QA remains unexecuted.
+
+The owner requested a specific specification for the rejected-sheet and approved-
+rule test failures. Canonical scope: EXT-CA-AI-02.26–33, refining RF-15/RF-18/RF-19.
+The [remediation specification](training-prescription-remediation-spec.md) supplies
+the incident matrix, contracts, decision gates and concrete verification cases.
+This is planned work, not a claim that the policies or release are complete.
+The later owner source/rule approval amendment governs that approval scope;
+historical professional-review-only descriptions above remain historical context.
+
+| Task | Feature task | Deliverable | Dependencies | Status |
+| --- | --- | --- | --- | --- |
+| 52 | PRES-REM-01 | Executable-policy inventory, coherent branches and truthful approval basis | Existing 45–51 artifacts; exact owner decision | Compiler/readiness/owner authorization implemented; clinical bundle publication remains separate |
+| 53 | PRES-REM-02 | Versioned exercise identities and supported modality representation | 52 scope/branch definitions | Typed modes and round trips implemented; twelve stable free-exercise IDs used by assisted RAG |
+| 54 | PRES-REM-03 | Authoritative load, progression and modality accounting calculations | 52–53 contracts | Decimal accounting/calculations implemented; five observed wrong quantities have regression oracles |
+| 55 | PRES-REM-04 | Constrained writer schema and representation-only adapters | 52–54 envelope | Strict/scoped schemas and deterministic ID/alias rendering implemented; actual local run passes |
+| 56 | PRES-REM-05 | Exact bounds, interruption/regression and clarification actions | 52–55 | Open/exclusive bounds, stop/regress, authority and field feedback implemented/tested |
+| 57 | PRES-REM-06 | Applicable branch/rule/exercise/passage selection | 52–56; existing knowledge filters | Scoped rules/IDs and whole-passage context budgeting implemented; maximum six preserved |
+| 58 | PRES-REM-07 | Single correction, shared budgets and atomic lifecycle integration | 52–57 | Shared 4/4/2 budgets, deadlines, correction, revalidation and atomic persistence implemented |
+| 59 | PRES-REM-08 | Failure regressions, genuine positive paths, bounded model runs and release evidence | 52–58 for complete operational cases | Offline and exposed actual-model checks executed; owner RAG authorization replaces independent-release prerequisite for that mode |
+
+Offline harness and baseline tests for 59 may be prepared alongside 52. End-to-end
+completion and release depend on finished executable contracts and the existing
+evaluation/release gates. No automatic implementation, model change, commit or
+push is authorized by this planning entry.
+
+### Earlier facial-access execution checkpoint
+
 The user explicitly selected the controlled facial-access pilot as the next
 implementation sequence. See [specification](facial-access-specification.md).
 Historical task coverage above is not a claim that unrelated planned work should

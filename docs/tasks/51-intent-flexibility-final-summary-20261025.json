@@ -1,0 +1,288 @@
+{
+  "frozen_run": "owner-rag-runtime-20261025T214009Z",
+  "configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "owner-assisted-rag-12",
+    "instruction_version": "owner-rag-13",
+    "sampling_temperature": 0,
+    "structured_reasoning": false,
+    "context_character_budget": 35000
+  },
+  "implementation_unchanged_during_run": true,
+  "generation_passed": 7,
+  "generation_total": 7,
+  "native_flexibility_passed": 5,
+  "native_flexibility_total": 5,
+  "expected_refusals_passed": 3,
+  "expected_refusals_total": 3,
+  "backend_tests_passed": 1299,
+  "backend_test_seconds": 117.32,
+  "focused_new_tests_passed": 39,
+  "related_chat_tests_passed": 157,
+  "frontend_contract_tests_passed": 20,
+  "all_saved_bindings_revalidated_read_only": true,
+  "automatic_activation": false,
+  "professional_review_performed": false,
+  "independent_evaluation_performed": false,
+  "compiled_prescription_qualification": false,
+  "cases": [
+    {
+      "case_id": "flexibility-plain",
+      "status": "proposal",
+      "elapsed_seconds": 42.95321208899986,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "goal_family": "mobility_flexibility",
+      "labels": [
+        "A"
+      ],
+      "row_counts": {
+        "A": 6
+      },
+      "distinct_movement_counts": {
+        "A": 3
+      },
+      "source_ids": [
+        "ingram-stretch-mechanisms-2025",
+        "iversen-time-efficient-2021"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": true
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "status": "proposal",
+      "elapsed_seconds": 20.441241487998923,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "goal_family": "mobility_flexibility",
+      "labels": [
+        "A"
+      ],
+      "row_counts": {
+        "A": 6
+      },
+      "distinct_movement_counts": {
+        "A": 3
+      },
+      "source_ids": [
+        "ingram-stretch-mechanisms-2025",
+        "iversen-time-efficient-2021"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": true
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "status": "proposal",
+      "elapsed_seconds": 26.705026702002215,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "goal_family": "mobility_flexibility",
+      "labels": [
+        "A"
+      ],
+      "row_counts": {
+        "A": 6
+      },
+      "distinct_movement_counts": {
+        "A": 6
+      },
+      "source_ids": [
+        "ingram-stretch-mechanisms-2025",
+        "iversen-time-efficient-2021"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": true
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "status": "proposal",
+      "elapsed_seconds": 124.70568580200052,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 3,
+        "focus": 1
+      },
+      "goal_family": "mobility_flexibility",
+      "labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "row_counts": {
+        "A": 6,
+        "B": 3,
+        "C": 6
+      },
+      "distinct_movement_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 4
+      },
+      "source_ids": [
+        "ingram-stretch-mechanisms-2025",
+        "iversen-time-efficient-2021"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": true
+    },
+    {
+      "case_id": "flexibility-negated-goal",
+      "status": "proposal",
+      "elapsed_seconds": 52.62768231600057,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 1
+      },
+      "goal_family": "mobility_flexibility",
+      "labels": [
+        "A"
+      ],
+      "row_counts": {
+        "A": 6
+      },
+      "distinct_movement_counts": {
+        "A": 3
+      },
+      "source_ids": [
+        "ingram-stretch-mechanisms-2025",
+        "iversen-time-efficient-2021"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": true
+    },
+    {
+      "case_id": "abc-strength",
+      "status": "proposal",
+      "elapsed_seconds": 52.029913190002844,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 3,
+        "review": 3,
+        "focus": 1
+      },
+      "goal_family": "strength",
+      "labels": [
+        "A",
+        "B",
+        "C"
+      ],
+      "row_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 3
+      },
+      "distinct_movement_counts": {
+        "A": 3,
+        "B": 3,
+        "C": 3
+      },
+      "source_ids": [
+        "biga-anatomy",
+        "iversen-time-efficient-2021",
+        "nhs-strength",
+        "pavlova-tendinopathy-2023"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": false
+    },
+    {
+      "case_id": "initial-hypertrophy",
+      "status": "proposal",
+      "elapsed_seconds": 27.94201256600354,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 1,
+        "review": 1,
+        "focus": 0
+      },
+      "goal_family": "hypertrophy",
+      "labels": [
+        "A"
+      ],
+      "row_counts": {
+        "A": 5
+      },
+      "distinct_movement_counts": {
+        "A": 5
+      },
+      "source_ids": [
+        "biga-anatomy",
+        "iversen-time-efficient-2021",
+        "nhs-strength",
+        "pavlova-tendinopathy-2023"
+      ],
+      "saved_binding_revalidated_read_only": true,
+      "native_flexibility_verified": false
+    },
+    {
+      "case_id": "ambiguous-goal",
+      "status": "rejected",
+      "elapsed_seconds": 0.12357530599547317,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "reason": "goal_priority_confirmation_required",
+      "expected_control_passed": true
+    },
+    {
+      "case_id": "conflicting-schedule",
+      "status": "rejected",
+      "elapsed_seconds": 0.03724708100344287,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "reason": "training_schedule_confirmation_required",
+      "expected_control_passed": true
+    },
+    {
+      "case_id": "retrieval-outage",
+      "status": "rejected",
+      "elapsed_seconds": 0.0308573950023856,
+      "content_corrections": 0,
+      "actual_model_http_calls": {
+        "writer": 0,
+        "review": 0,
+        "focus": 0
+      },
+      "reason": "retrieval_unavailable",
+      "expected_control_passed": true
+    }
+  ],
+  "provider_failures": {},
+  "deployment": {
+    "backend_recreated": true,
+    "backend_health": "healthy",
+    "health_status": "ok",
+    "rag_authorized": true,
+    "public_vectors": 66,
+    "owner_accepted_rules": 37,
+    "blockers": [],
+    "designated_account_saved_plans_unchanged": true,
+    "preexisting_running_services_restored_after_desktop_restart": true,
+    "diagnostic_writer_model_unloaded_without_removing_models": true
+  }
+}

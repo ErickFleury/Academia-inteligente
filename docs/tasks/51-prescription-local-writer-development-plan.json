@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "purpose": "exposed_synthetic_development_probe_not_independent_evaluation",
+  "frozen_at": "2026-10-24T14:55:09.152498+00:00",
+  "provider": "ollama",
+  "model": "qwen3:4b",
+  "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "server_version": "0.34.1",
+  "maximum_writer_calls": 1,
+  "retries": 0,
+  "timeout_seconds": 360,
+  "expected_technical_outcome": "typed_candidate_passes_synthetic_fixture_core",
+  "input_sha256": "b1789ab984d2d7b0c8f48ec3afe65a6a7a1066b9bcc3e1f5a5deb3ae9fd728dd",
+  "writer_schema_sha256": "2ae50b6423e372fad66e068e75f3198e9b59ca4e21c2881fb022bb9bbc62437b",
+  "synthetic_fixture_sha256": "af31574aac8a0effc66a903b9b612341ce9b0a1f10dc6c0540f04ef4fae73fe2",
+  "synthetic_policy_fixture_sha256": "5011ab28bc736617736c6668010c1281a918d2a924861a6d7042bf7c2cb0eff1",
+  "adapter_sha256": "5ad863af91cbecbaafd9211fe49add77efe3ccf2bde3c1164928fe69bee88c4a",
+  "uses_real_corpus_or_embedding_provider": false,
+  "database_configured": false,
+  "enabled_cohorts": []
+}

@@ -198,6 +198,7 @@ def adaptation_response(
                 "repetitions": item.repetitions,
                 "load_guidance": item.load_guidance,
                 "rest_seconds": item.rest_seconds,
+                **({"dose_details": item.dose_details} if item.dose_details else {}),
             }
             for item in base_items
         ],
@@ -210,6 +211,7 @@ def adaptation_response(
                 "repetitions": item.repetitions,
                 "load_guidance": item.load_guidance,
                 "rest_seconds": item.rest_seconds,
+                **({"dose_details": item.dose_details} if item.dose_details else {}),
                 "equipment_requirement": item.equipment_requirement,
                 "equipment_model_id": str(item.equipment_model_id)
                 if item.equipment_model_id
@@ -263,6 +265,7 @@ def version_response(session: Session, version: TrainingPlanVersion) -> dict[str
                 "repetitions": item.repetitions,
                 "load_guidance": item.load_guidance,
                 "rest_seconds": item.rest_seconds,
+                **({"dose_details": item.dose_details} if item.dose_details else {}),
                 "position": item.position,
                 "equipment_requirement": item.equipment_requirement,
                 "equipment_model_id": str(item.equipment_model_id)
@@ -280,6 +283,10 @@ def version_response(session: Session, version: TrainingPlanVersion) -> dict[str
         response["validation_error"] = (
             "Este rascunho contém exercícios inválidos e precisa ser gerado novamente."
         )
+    from app.modules.training.prescription_runtime import _existing_record, enforcement_enabled
+
+    if enforcement_enabled() or _existing_record(session, version) is not None:
+        response["prescription_review_available"] = True
     return response
 
 
@@ -340,6 +347,7 @@ def append_pending_to_current(
             current_version_id=payload.current_version_id,
             expected_current_revision=payload.expected_current_revision,
             selected_positions=payload.selected_positions,
+            actor=instructor.subject,
         )
         return dict(version_response(session, version), **review_metadata(session, version))
     except (

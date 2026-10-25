@@ -118,8 +118,8 @@ export function TrainingChatPage({ accessToken, onSignOut }: TrainingChatPagePro
             <Typography component="h2" variant="h3">{trainingTitle(draft.name)}</Typography>
             <Typography>Objetivo: {draft.objective}</Typography>
             <Typography>Status: {draft.validation_error ? 'Rascunho inválido' : 'Aguardando revisão do instrutor'}</Typography>
-            {!draft.validation_error && <TrainingExerciseTable rows={trainingRows(draft.items)} />}
-            <TrainingKnowledgeSources {...draft} />
+            {!draft.prescription_review_available && !draft.validation_error && <TrainingExerciseTable rows={trainingRows(draft.items)} />}
+            {!draft.prescription_review_available && <TrainingKnowledgeSources {...draft} />}
           </>}
           <TrainingDraftReviewActions accessToken={accessToken} draft={draft} disabled={busy} onSubmitted={(updated) => setChat((previous) => previous && (!previous.draft || previous.draft.revision <= updated.revision) ? { ...previous, draft: updated } : previous)} />
         </Stack></CardContent></Card>}

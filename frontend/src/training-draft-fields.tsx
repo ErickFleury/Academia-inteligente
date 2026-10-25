@@ -2,6 +2,7 @@ import { Button, Card, CardContent, MenuItem, Stack, TextField, Typography } fro
 import { useEffect, useState } from 'react'
 import { getUsableEquipment, type UsableEquipmentModel } from './instructor-equipment'
 import { StatusNotice } from './components/ui'
+import { TrainingModalityFields } from './components/training-modality-fields'
 import type { ReviewContent, ReviewItem } from './training-review'
 const emptyItem = (): ReviewItem => ({ exercise_name: '', sets: 3, repetitions: '', load_guidance: '', rest_seconds: 60, equipment_requirement: null, equipment_model_id: null })
 export function TrainingDraftFields({ accessToken, draft, onChange }: { accessToken: string; draft: ReviewContent; onChange: (value: ReviewContent) => void }) {
@@ -29,11 +30,12 @@ export function TrainingDraftFields({ accessToken, draft, onChange }: { accessTo
           <Typography component="h3" variant="h4" sx={{ color: 'primary.main', pb: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>Exercício {index + 1}</Typography>
           <TextField required label={`Nome do exercício ${index + 1}`} value={item.exercise_name} onChange={(event) => changeItem(index, { exercise_name: event.target.value })} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <TextField fullWidth required label={`Séries ${index + 1}`} type="number" value={item.sets} onChange={(event) => changeItem(index, { sets: Number(event.target.value) })} />
-            <TextField fullWidth required label={`Repetições ${index + 1}`} value={item.repetitions} onChange={(event) => changeItem(index, { repetitions: event.target.value })} />
+            {item.sets !== null && <TextField fullWidth required label={`Séries ${index + 1}`} type="number" value={item.sets} onChange={(event) => { const sets = Number(event.target.value); changeItem(index, { sets, ...(item.dose_details?.group ? { dose_details: { ...item.dose_details, group: { ...item.dose_details.group, rounds: sets } } } : {}) }) }} />}
+            {!item.dose_details && <TextField fullWidth required label={`Repetições ${index + 1}`} value={item.repetitions} onChange={(event) => changeItem(index, { repetitions: event.target.value })} />}
           </Stack>
+          {item.dose_details && <TrainingModalityFields details={item.dose_details} index={index} onChange={(dose_details) => changeItem(index, { dose_details })} />}
           <TextField required label={`Orientação de carga ${index + 1}`} value={item.load_guidance} onChange={(event) => changeItem(index, { load_guidance: event.target.value })} />
-          <TextField required label={`Descanso em segundos ${index + 1}`} type="number" value={item.rest_seconds} onChange={(event) => changeItem(index, { rest_seconds: Number(event.target.value) })} />
+          <TextField required disabled={item.dose_details?.rest?.kind === 'not_applicable'} label={`Descanso em segundos ${index + 1}`} type={item.dose_details?.rest?.kind === 'not_applicable' ? 'text' : 'number'} value={item.dose_details?.rest?.kind === 'not_applicable' ? 'Não se aplica' : item.dose_details?.group?.rest.seconds ?? item.rest_seconds ?? ''} onChange={(event) => { const seconds = Number(event.target.value); const details = item.dose_details; changeItem(index, details?.group ? { dose_details: { ...details, group: { ...details.group, rest: { ...details.group.rest, seconds } } } } : details?.rest ? { rest_seconds: seconds, dose_details: { ...details, rest: { ...details.rest, seconds } } } : { rest_seconds: seconds }) }} />
           {item.equipment_model_id && <Typography>Referência preservada: {item.equipment_requirement ?? 'Equipamento do catálogo'}</Typography>}
           <TextField select disabled={loading || error} label={`Equipamento do catálogo ${index + 1}`} value={item.equipment_model_id ?? ''} helperText="Novas escolhas exigem modelo ativo com unidade operacional. A referência preservada só pode ser mantida sem alterar o item aprovado." onChange={(event) => { const model = models.find((value) => value.id === event.target.value); changeItem(index, { equipment_model_id: model?.id ?? null, equipment_requirement: model?.name ?? null }) }}>
             <MenuItem value="">Sem equipamento do catálogo</MenuItem>

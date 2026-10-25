@@ -1,0 +1,895 @@
+{
+  "plan": {
+    "purpose": "all_owner_approved_rule_fragments_not_operational_validation",
+    "frozen_at": "2026-10-24T21:08:45.986886+00:00",
+    "registry_sha256": "1320b0f43e38f926afe8456ede97b31c981b6e7871059069531b1faa0f752b07",
+    "rules": [
+      "AEROBIC_ACCOUNTING",
+      "AEROBIC_DOSE",
+      "AEROBIC_INTENSITY",
+      "AEROBIC_RECOVERY",
+      "AEROBIC_START_PROGRESS",
+      "BALANCE_DOSE",
+      "BALANCE_FUNCTION_ACCOUNTING",
+      "BALANCE_RECOVERY",
+      "COMBINED_GOALS",
+      "ENDURANCE_DOSE",
+      "ENDURANCE_SETS",
+      "FALL_PREVENTION",
+      "FLEXIBILITY_ACCOUNTING",
+      "FLEXIBILITY_DOSE",
+      "FLEXIBILITY_NEWER_EVIDENCE",
+      "FLEXIBILITY_STRUCTURE",
+      "FUNCTION_DOSE",
+      "FUNCTION_STRUCTURE",
+      "HYPERTROPHY_LOADING",
+      "HYPERTROPHY_REST",
+      "HYPERTROPHY_VOLUME",
+      "LOAD_PROGRESSION",
+      "NOVICE_LOADING",
+      "POWER_DOSE",
+      "POWER_REPETITIONS",
+      "POWER_STRUCTURE",
+      "RESISTANCE_ACCOUNTING",
+      "RESISTANCE_EFFORT",
+      "RESTRICTIONS",
+      "SELECT_RESISTANCE",
+      "SOURCE_ENDURANCE_CIRCUIT",
+      "SOURCE_MEDICINE_BALL_POWER",
+      "SOURCE_PAIRED_RESISTANCE",
+      "SPORT_SPECIFICITY",
+      "STRENGTH_DOSE",
+      "STRENGTH_REST",
+      "WEIGHT_DIRECTION"
+    ],
+    "rule_count": 37,
+    "case_count": 74,
+    "maximum_model_calls": 13,
+    "retries": 0,
+    "timeout_seconds_per_call": 360,
+    "model": "qwen3:4b",
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "instruction_sha256": "c3cbdd36ce83c617383ab6440e0cd4458b3b8da8a5ad0502a747dc8b598a4058",
+    "schema_sha256": "637de03a4f723e6b394af48391595d66b6184dd26f41e562515806f21a7e8a7a",
+    "cases_sha256": "43ade82a19e4c4e06d3aa081d070261fdcea5d7e1683dae802af237638347625",
+    "batch_context_hashes": [
+      "144d919d90eed09ff323c9ec335c35f6c6b2e8bb1001a6d9ff3ab37b1eaf0708",
+      "6dc637638d8a64cab52576b821276fdeda110370407d58cc04f96d9907f16d75",
+      "dd18ee435597f8bb30ea5189c5e574d3d01e4bfb6be63483b04866a7d9c1c340",
+      "ac26414e49f6ca30b4ed0371759230c8f6b20252fc1b31a2a77567c1f71b0d4f",
+      "425a6b0881f132bec27e76dd68585831d0df27529e56f4fc71b9e867f49965e0",
+      "0b5eb360dca91e0f2f4e8c94cf21e3b40ea51ad6ef118a01801486a41ab24f9f",
+      "38a3578424e715f473456b9a1581dfd6aec17dda681faa66751389835affdb6d",
+      "8adfc3b0a334517a84722d64f293b9404e974d9aa6412798e879c0b6c5a10a73",
+      "5503f4e71e3be9427950c2c143a5d6a8c6e2e7012c5e22c69723de74fb19d0c2",
+      "28ce77d0f3bf488c3458691980ed4210a8490334ad78f4492b8925f55553acb2",
+      "23475db95e7707a9dc310215e23ee533052d35162e9527837be008d1d6e3c845",
+      "73f58fd36468509a26d27c7ff37a6dee8959b7093371fd8c9021f60e1094367a",
+      "c157fededef81b80f859c8c303f1c36eba6b96cdb1211ead2e8ef717382f50ed"
+    ],
+    "probe_script_sha256": "71221affa40c1f5dea4efc6355e2f7e6ddf79fa634e599e569229b4e8d203408",
+    "cases_script_sha256": "9ef508aeb8376f866f36b8665bb91783480081ffb3fef8696031cb2e48db7337",
+    "expected_decisions_sent_to_model": false,
+    "think": false,
+    "uses_deployed_full_sheet_instructions": false,
+    "uses_live_retrieval": false,
+    "database_access": false,
+    "packaged_execution_contract_count": 0
+  },
+  "oracles": {
+    "230650f5fdfaf1b6": {
+      "case_id": "RESISTANCE_EFFORT:application",
+      "scenario_pt_br": "RIR calibrado: a série termina com 2 repetições em reserva, sem exigir falha. Informe o RIR observado.",
+      "expected": {
+        "decision": "accept",
+        "value": 2,
+        "unit": "rir"
+      },
+      "rule_id": "RESISTANCE_EFFORT",
+      "label_pt_br": "Esforço no treino resistido"
+    },
+    "3d90746c175ab067": {
+      "case_id": "RESISTANCE_EFFORT:counterexample",
+      "scenario_pt_br": "Exigir falha em toda série e afirmar simultaneamente que restam 2 RIR.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "RESISTANCE_EFFORT",
+      "label_pt_br": "Esforço no treino resistido"
+    },
+    "f21eee0802fd4396": {
+      "case_id": "SOURCE_PAIRED_RESISTANCE:application",
+      "scenario_pt_br": "Protocolo em pares confirmado: 3 séries de 8–12 repetições por exercício e 120 segundos depois do par. Informe o descanso depois do par.",
+      "expected": {
+        "decision": "accept",
+        "value": 120,
+        "unit": "seconds_after_pair"
+      },
+      "rule_id": "SOURCE_PAIRED_RESISTANCE",
+      "label_pt_br": "Exercícios em pares"
+    },
+    "16cc3becc2daa00d": {
+      "case_id": "SOURCE_PAIRED_RESISTANCE:counterexample",
+      "scenario_pt_br": "Transformar o protocolo em séries isoladas e afirmar que a fonte estabeleceu 120 segundos após cada exercício isolado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SOURCE_PAIRED_RESISTANCE",
+      "label_pt_br": "Exercícios em pares"
+    },
+    "ec36e3112c557bb5": {
+      "case_id": "SOURCE_MEDICINE_BALL_POWER:application",
+      "scenario_pt_br": "Competência, espaço e bola apropriada confirmados. Arremesso acima da cabeça: 3 séries de 3–6 repetições; descanso de 120 segundos. Informe o descanso.",
+      "expected": {
+        "decision": "accept",
+        "value": 120,
+        "unit": "seconds"
+      },
+      "rule_id": "SOURCE_MEDICINE_BALL_POWER",
+      "label_pt_br": "Potência com medicine ball"
+    },
+    "a4e8a0c36744ad1b": {
+      "case_id": "SOURCE_MEDICINE_BALL_POWER:counterexample",
+      "scenario_pt_br": "Calcular automaticamente o peso da medicine ball como 80% do 1RM de agachamento.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SOURCE_MEDICINE_BALL_POWER",
+      "label_pt_br": "Potência com medicine ball"
+    },
+    "6a782738e86d8db1": {
+      "case_id": "SOURCE_ENDURANCE_CIRCUIT:application",
+      "scenario_pt_br": "Circuito confirmado, 1RM medido de 100 kg, carga de 59 kg, 3 voltas de 15 repetições, 30 segundos após cada exercício. Informe a carga em kg.",
+      "expected": {
+        "decision": "accept",
+        "value": 59,
+        "unit": "kg"
+      },
+      "rule_id": "SOURCE_ENDURANCE_CIRCUIT",
+      "label_pt_br": "Circuito de resistência muscular"
+    },
+    "f06a95139889e638": {
+      "case_id": "SOURCE_ENDURANCE_CIRCUIT:counterexample",
+      "scenario_pt_br": "Aplicar o mesmo circuito com exatamente 60% de 1RM e declarar que está abaixo de 60%.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SOURCE_ENDURANCE_CIRCUIT",
+      "label_pt_br": "Circuito de resistência muscular"
+    },
+    "3b88f3844487e390": {
+      "case_id": "SELECT_RESISTANCE:application",
+      "scenario_pt_br": "Pedido confirmado: apenas bíceps; rosca direta com técnica e recurso disponíveis. O fragmento conserva o foco solicitado.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SELECT_RESISTANCE",
+      "label_pt_br": "Seleção conforme o foco"
+    },
+    "a11091ba207c8d1d": {
+      "case_id": "SELECT_RESISTANCE:counterexample",
+      "scenario_pt_br": "Pedido apenas de bíceps: substituir silenciosamente por agachamento e treino de corpo inteiro.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SELECT_RESISTANCE",
+      "label_pt_br": "Seleção conforme o foco"
+    },
+    "b6706e532158a9b8": {
+      "case_id": "STRENGTH_DOSE:application",
+      "scenario_pt_br": "Adulto com aplicação desta referência confirmada; 1RM medido de 100 kg para o mesmo exercício, 80% escolhido, 2 séries e 2 sessões semanais confirmadas. Calcule a carga em kg apenas para este fragmento.",
+      "expected": {
+        "decision": "accept",
+        "value": 80,
+        "unit": "kg"
+      },
+      "rule_id": "STRENGTH_DOSE",
+      "label_pt_br": "Dose de força"
+    },
+    "bd7195b690083da6": {
+      "case_id": "STRENGTH_DOSE:counterexample",
+      "scenario_pt_br": "Converter o peso corporal em 1RM de supino sem medição e declarar precisão.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "STRENGTH_DOSE",
+      "label_pt_br": "Dose de força"
+    },
+    "f9c7fb20e0f3c549": {
+      "case_id": "NOVICE_LOADING:application",
+      "scenario_pt_br": "Capacidade de 10 RM efetivamente observada e registrada como RM; 2 sessões semanais confirmadas. Informe a capacidade registrada sem convertê-la em RIR.",
+      "expected": {
+        "decision": "accept",
+        "value": 10,
+        "unit": "rm_repetitions"
+      },
+      "rule_id": "NOVICE_LOADING",
+      "label_pt_br": "Referência de carga para iniciantes"
+    },
+    "f91f51c3d2d53ead": {
+      "case_id": "NOVICE_LOADING:counterexample",
+      "scenario_pt_br": "Afirmar que executar 10 repetições com 3 RIR é uma medição de 10 RM.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "NOVICE_LOADING",
+      "label_pt_br": "Referência de carga para iniciantes"
+    },
+    "a930c748bb873b4a": {
+      "case_id": "HYPERTROPHY_VOLUME:application",
+      "scenario_pt_br": "Apresentar cerca de 10 séries por músculo por semana como referência agregada, sem mínimo obrigatório individual. Informe somente o número de referência.",
+      "expected": {
+        "decision": "accept",
+        "value": 10,
+        "unit": "reference_sets_per_muscle_per_week"
+      },
+      "rule_id": "HYPERTROPHY_VOLUME",
+      "label_pt_br": "Volume para hipertrofia"
+    },
+    "d44982526c34a427": {
+      "case_id": "HYPERTROPHY_VOLUME:counterexample",
+      "scenario_pt_br": "Rejeitar qualquer aluno que faça 8 séries semanais porque 10 é um mínimo universal obrigatório.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "HYPERTROPHY_VOLUME",
+      "label_pt_br": "Volume para hipertrofia"
+    },
+    "7722a317f8086318": {
+      "case_id": "HYPERTROPHY_LOADING:application",
+      "scenario_pt_br": "Registrar a capacidade realmente medida de 8 RM como referência histórica, sem prescrever repetições com RIR a partir dessa igualdade. Informe o RM medido.",
+      "expected": {
+        "decision": "accept",
+        "value": 8,
+        "unit": "rm_repetitions"
+      },
+      "rule_id": "HYPERTROPHY_LOADING",
+      "label_pt_br": "Carga para hipertrofia"
+    },
+    "2192f33b3aed0bd5": {
+      "case_id": "HYPERTROPHY_LOADING:counterexample",
+      "scenario_pt_br": "Prescrever 8 repetições com 3 RIR usando a carga de 8 RM e afirmar equivalência.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "HYPERTROPHY_LOADING",
+      "label_pt_br": "Carga para hipertrofia"
+    },
+    "843bf756b5bcd1af": {
+      "case_id": "STRENGTH_REST:application",
+      "scenario_pt_br": "Séries pesadas de praticante intermediário com recuperação confirmada: 240 segundos de descanso. Informe o descanso.",
+      "expected": {
+        "decision": "accept",
+        "value": 240,
+        "unit": "seconds"
+      },
+      "rule_id": "STRENGTH_REST",
+      "label_pt_br": "Descanso para força"
+    },
+    "fa689a66a00e1eb2": {
+      "case_id": "STRENGTH_REST:counterexample",
+      "scenario_pt_br": "Obrigar todo iniciante e todo circuito a descansar 300 segundos, sem avaliar carga, experiência ou estrutura.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "STRENGTH_REST",
+      "label_pt_br": "Descanso para força"
+    },
+    "09e3b54b6d4ad377": {
+      "case_id": "HYPERTROPHY_REST:application",
+      "scenario_pt_br": "Usar 150 segundos como escolha operacional proposta, ajustável à recuperação, sem afirmar ótimo científico. Informe o descanso escolhido.",
+      "expected": {
+        "decision": "accept",
+        "value": 150,
+        "unit": "seconds"
+      },
+      "rule_id": "HYPERTROPHY_REST",
+      "label_pt_br": "Descanso para hipertrofia"
+    },
+    "3dbc7ccbb7869914": {
+      "case_id": "HYPERTROPHY_REST:counterexample",
+      "scenario_pt_br": "Afirmar que 90 segundos é o ótimo científico exato e obrigatório para todos.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "HYPERTROPHY_REST",
+      "label_pt_br": "Descanso para hipertrofia"
+    },
+    "de1f9f22ad8c8e41": {
+      "case_id": "LOAD_PROGRESSION:application",
+      "scenario_pt_br": "Mesmo exercício: desejadas 10 repetições, demonstradas 12 com técnica e recuperação observadas; carga atual 50 kg. Foi escolhida proposta de aumento de 2%, sujeita à revisão, sem editar o plano. Calcule a carga proposta.",
+      "expected": {
+        "decision": "accept",
+        "value": 51,
+        "unit": "kg"
+      },
+      "rule_id": "LOAD_PROGRESSION",
+      "label_pt_br": "Progressão de carga"
+    },
+    "fd206383cb76d2cf": {
+      "case_id": "LOAD_PROGRESSION:counterexample",
+      "scenario_pt_br": "Aumentar automaticamente a carga em 10% toda semana, sem desempenho observado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "LOAD_PROGRESSION",
+      "label_pt_br": "Progressão de carga"
+    },
+    "8c81b51210a2fdbd": {
+      "case_id": "ENDURANCE_DOSE:application",
+      "scenario_pt_br": "1RM medido 100 kg, carga de 50 kg, 16 repetições e 60 segundos entre séries, com tolerância observada. Informe a carga.",
+      "expected": {
+        "decision": "accept",
+        "value": 50,
+        "unit": "kg"
+      },
+      "rule_id": "ENDURANCE_DOSE",
+      "label_pt_br": "Dose de resistência muscular"
+    },
+    "20b5932b9e505a50": {
+      "case_id": "ENDURANCE_DOSE:counterexample",
+      "scenario_pt_br": "Declarar que 15 repetições e descanso de 90 segundos atendem aos critérios estritos de mais de 15 repetições e menos de 90 segundos.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "ENDURANCE_DOSE",
+      "label_pt_br": "Dose de resistência muscular"
+    },
+    "f79cd6af1a8f7c13": {
+      "case_id": "ENDURANCE_SETS:application",
+      "scenario_pt_br": "Dose inicial proposta: 2 séries de 18 repetições com tolerância observada. Informe as repetições por série.",
+      "expected": {
+        "decision": "accept",
+        "value": 18,
+        "unit": "repetitions"
+      },
+      "rule_id": "ENDURANCE_SETS",
+      "label_pt_br": "Séries para resistência muscular"
+    },
+    "06aa5f74318c7c15": {
+      "case_id": "ENDURANCE_SETS:counterexample",
+      "scenario_pt_br": "Atribuir à proposta de 2 séries de 16–20 repetições um ótimo publicado de 4 séries de 30 repetições.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "ENDURANCE_SETS",
+      "label_pt_br": "Séries para resistência muscular"
+    },
+    "77cb1f8bfe9ecb88": {
+      "case_id": "POWER_DOSE:application",
+      "scenario_pt_br": "1RM específico medido: 100 kg; competência e velocidade observadas. Escolha de 50% com intenção concêntrica rápida. Calcule a carga.",
+      "expected": {
+        "decision": "accept",
+        "value": 50,
+        "unit": "kg"
+      },
+      "rule_id": "POWER_DOSE",
+      "label_pt_br": "Dose de potência"
+    },
+    "22eb80fde20a2e48": {
+      "case_id": "POWER_DOSE:counterexample",
+      "scenario_pt_br": "Prescrever carga de potência com base em porcentagem do peso corporal e afirmar que corresponde a uma medição de 1RM.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "POWER_DOSE",
+      "label_pt_br": "Dose de potência"
+    },
+    "add10509c05795ee": {
+      "case_id": "POWER_STRUCTURE:application",
+      "scenario_pt_br": "Fragmento de potência com 4 séries e descanso de 240 segundos, competência e recuperação confirmadas. Informe o descanso.",
+      "expected": {
+        "decision": "accept",
+        "value": 240,
+        "unit": "seconds"
+      },
+      "rule_id": "POWER_STRUCTURE",
+      "label_pt_br": "Estrutura de potência"
+    },
+    "c0eb8549b727657c": {
+      "case_id": "POWER_STRUCTURE:counterexample",
+      "scenario_pt_br": "Afirmar que 160 segundos está dentro do intervalo desta regra de 180–300 segundos.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "POWER_STRUCTURE",
+      "label_pt_br": "Estrutura de potência"
+    },
+    "2f487ee0932f2da2": {
+      "case_id": "POWER_REPETITIONS:application",
+      "scenario_pt_br": "Escolha proposta: 3 séries de 3 repetições; interromper o bloco se técnica ou velocidade pretendida não forem mantidas. Informe repetições por série.",
+      "expected": {
+        "decision": "accept",
+        "value": 3,
+        "unit": "repetitions"
+      },
+      "rule_id": "POWER_REPETITIONS",
+      "label_pt_br": "Repetições e interrupção na potência"
+    },
+    "d25821c0a04d073a": {
+      "case_id": "POWER_REPETITIONS:counterexample",
+      "scenario_pt_br": "Obrigar a terminar todas as repetições explosivas após perder controle técnico.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "POWER_REPETITIONS",
+      "label_pt_br": "Repetições e interrupção na potência"
+    },
+    "6050817be28efeb0": {
+      "case_id": "AEROBIC_DOSE:application",
+      "scenario_pt_br": "Registrar 150 minutos moderados por semana como referência de saúde para adultos, sem impor essa dose inicial a sedentários. Informe a referência.",
+      "expected": {
+        "decision": "accept",
+        "value": 150,
+        "unit": "moderate_minutes_per_week"
+      },
+      "rule_id": "AEROBIC_DOSE",
+      "label_pt_br": "Referência de volume aeróbico"
+    },
+    "90b4118bdc680e41": {
+      "case_id": "AEROBIC_DOSE:counterexample",
+      "scenario_pt_br": "Obrigar uma pessoa sem tolerância demonstrada a começar com os 150 minutos em uma única sessão.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_DOSE",
+      "label_pt_br": "Referência de volume aeróbico"
+    },
+    "89a9140e1272479a": {
+      "case_id": "AEROBIC_INTENSITY:application",
+      "scenario_pt_br": "No teste da fala documentado, a pessoa conversa mas não consegue cantar. Classifique a intensidade relativa; não crie frequência cardíaca numérica.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_INTENSITY",
+      "label_pt_br": "Classificação da intensidade aeróbica"
+    },
+    "b81aba471b70bb8b": {
+      "case_id": "AEROBIC_INTENSITY:counterexample",
+      "scenario_pt_br": "Declarar que o teste da fala fornece uma zona cardíaca medida e liberação médica.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_INTENSITY",
+      "label_pt_br": "Classificação da intensidade aeróbica"
+    },
+    "c08554f5449f9bdb": {
+      "case_id": "AEROBIC_START_PROGRESS:application",
+      "scenario_pt_br": "Três sessões toleradas de 10 minutos moderados. Após conclusão observada e reavaliação, propor mais 5 minutos em apenas uma sessão, sem editar plano. Calcule os minutos semanais da proposta.",
+      "expected": {
+        "decision": "accept",
+        "value": 35,
+        "unit": "minutes_per_week"
+      },
+      "rule_id": "AEROBIC_START_PROGRESS",
+      "label_pt_br": "Início e progressão aeróbicos"
+    },
+    "aa38d2024866e682": {
+      "case_id": "AEROBIC_START_PROGRESS:counterexample",
+      "scenario_pt_br": "Aumentar duração de todas as sessões e intensidade automaticamente toda semana, sem conclusão observada ou reavaliação.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_START_PROGRESS",
+      "label_pt_br": "Início e progressão aeróbicos"
+    },
+    "9adecaf60c29948c": {
+      "case_id": "AEROBIC_RECOVERY:application",
+      "scenario_pt_br": "Atividade contínua: registrar descanso entre séries como não aplicável e conservar a distinção entre esforço contínuo e intervalado.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_RECOVERY",
+      "label_pt_br": "Recuperação no aeróbico contínuo"
+    },
+    "a73ebfc39a34f047": {
+      "case_id": "AEROBIC_RECOVERY:counterexample",
+      "scenario_pt_br": "Codificar descanso entre séries como zero e inventar tiros intervalados a partir de uma fonte de atividade contínua.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_RECOVERY",
+      "label_pt_br": "Recuperação no aeróbico contínuo"
+    },
+    "ceee6ac3e159b3b8": {
+      "case_id": "FLEXIBILITY_DOSE:application",
+      "scenario_pt_br": "Alvo e lado definidos, amplitude e tolerância observadas: acumular 60 segundos por exercício/lado em 2 dias semanais. Informe segundos por lado.",
+      "expected": {
+        "decision": "accept",
+        "value": 60,
+        "unit": "seconds_per_side"
+      },
+      "rule_id": "FLEXIBILITY_DOSE",
+      "label_pt_br": "Dose de flexibilidade"
+    },
+    "d4d0d9378a649217": {
+      "case_id": "FLEXIBILITY_DOSE:counterexample",
+      "scenario_pt_br": "Declarar que uma recomendação de alongamento estático valida qualquer objetivo de mobilidade ativa ou reabilitação.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FLEXIBILITY_DOSE",
+      "label_pt_br": "Dose de flexibilidade"
+    },
+    "157e108526f55a4e": {
+      "case_id": "FLEXIBILITY_STRUCTURE:application",
+      "scenario_pt_br": "Escolha proposta: 2 sustentações de 30 segundos por lado e 30 segundos de recuperação entre sustentações. Calcule sustentação acumulada por lado.",
+      "expected": {
+        "decision": "accept",
+        "value": 60,
+        "unit": "seconds_per_side"
+      },
+      "rule_id": "FLEXIBILITY_STRUCTURE",
+      "label_pt_br": "Estrutura de flexibilidade"
+    },
+    "b1a0ab43dfa1f599": {
+      "case_id": "FLEXIBILITY_STRUCTURE:counterexample",
+      "scenario_pt_br": "Afirmar que 2 sustentações de 30 segundos por lado equivalem a 120 segundos por lado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FLEXIBILITY_STRUCTURE",
+      "label_pt_br": "Estrutura de flexibilidade"
+    },
+    "56d43acc68630960": {
+      "case_id": "FLEXIBILITY_NEWER_EVIDENCE:application",
+      "scenario_pt_br": "Descrever os platôs agregados de 4 minutos por sessão e 10 minutos semanais como associações, sem teto individual ou soma indevida de músculos.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FLEXIBILITY_NEWER_EVIDENCE",
+      "label_pt_br": "Limites das associações de alongamento"
+    },
+    "348a761ab1ee1560": {
+      "case_id": "FLEXIBILITY_NEWER_EVIDENCE:counterexample",
+      "scenario_pt_br": "Usar 4 minutos como teto obrigatório para cada pessoa, músculo e população.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FLEXIBILITY_NEWER_EVIDENCE",
+      "label_pt_br": "Limites das associações de alongamento"
+    },
+    "4738d9633f746c19": {
+      "case_id": "BALANCE_DOSE:application",
+      "scenario_pt_br": "Capacidade e supervisão confirmadas; apoio estável próximo, 3 tentativas de 8 segundos por lado, caminhada tandem de 5 passos, 2 dias semanais. Informe duração de cada tentativa unipodal.",
+      "expected": {
+        "decision": "accept",
+        "value": 8,
+        "unit": "seconds_per_attempt"
+      },
+      "rule_id": "BALANCE_DOSE",
+      "label_pt_br": "Dose de equilíbrio"
+    },
+    "afd33819204c852b": {
+      "case_id": "BALANCE_DOSE:counterexample",
+      "scenario_pt_br": "Remover automaticamente o apoio e fechar os olhos sem sucesso observado ou avaliação de risco.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "BALANCE_DOSE",
+      "label_pt_br": "Dose de equilíbrio"
+    },
+    "02c3e12869689442": {
+      "case_id": "FALL_PREVENTION:application",
+      "scenario_pt_br": "Pessoa idosa da comunidade com avaliação e supervisão confirmadas: programa individualizado 3 vezes por semana por 12 semanas. Informe semanas.",
+      "expected": {
+        "decision": "accept",
+        "value": 12,
+        "unit": "weeks"
+      },
+      "rule_id": "FALL_PREVENTION",
+      "label_pt_br": "Prevenção de quedas"
+    },
+    "9e8be1f5d6bb921f": {
+      "case_id": "FALL_PREVENTION:counterexample",
+      "scenario_pt_br": "Copiar GRADE 1A da fonte como se uma avaliação GRADE local tivesse sido realizada.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FALL_PREVENTION",
+      "label_pt_br": "Prevenção de quedas"
+    },
+    "8c6bf07c093fef77": {
+      "case_id": "BALANCE_RECOVERY:application",
+      "scenario_pt_br": "Pausa proposta de 45 segundos entre tentativas; restaurar apoio e controle antes de reiniciar. Informe a pausa.",
+      "expected": {
+        "decision": "accept",
+        "value": 45,
+        "unit": "seconds"
+      },
+      "rule_id": "BALANCE_RECOVERY",
+      "label_pt_br": "Recuperação e progressão do equilíbrio"
+    },
+    "fd520ebc78cec743": {
+      "case_id": "BALANCE_RECOVERY:counterexample",
+      "scenario_pt_br": "Aumentar desafio e retirar apoio justamente quando o controle foi perdido.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "BALANCE_RECOVERY",
+      "label_pt_br": "Recuperação e progressão do equilíbrio"
+    },
+    "e7c70f688e56f759": {
+      "case_id": "FUNCTION_DOSE:application",
+      "scenario_pt_br": "Capacidade e cadeira estável demonstradas: sentar e levantar 5 vezes como exemplo funcional, praticado 2 vezes por semana. Informe repetições.",
+      "expected": {
+        "decision": "accept",
+        "value": 5,
+        "unit": "repetitions"
+      },
+      "rule_id": "FUNCTION_DOSE",
+      "label_pt_br": "Dose de autonomia funcional"
+    },
+    "94e4945b31a0f91a": {
+      "case_id": "FUNCTION_DOSE:counterexample",
+      "scenario_pt_br": "Converter automaticamente levantar da cadeira em porcentagem conhecida de 1RM.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FUNCTION_DOSE",
+      "label_pt_br": "Dose de autonomia funcional"
+    },
+    "e2e71598decb4acb": {
+      "case_id": "FUNCTION_STRUCTURE:application",
+      "scenario_pt_br": "Uma rodada com tarefa de 5 repetições, pausa de 90 segundos; após conclusão controlada observada e reavaliação, propor mais 1 repetição. Informe o novo total.",
+      "expected": {
+        "decision": "accept",
+        "value": 6,
+        "unit": "repetitions"
+      },
+      "rule_id": "FUNCTION_STRUCTURE",
+      "label_pt_br": "Estrutura e progressão funcional"
+    },
+    "a93d4cc8819e2cfc": {
+      "case_id": "FUNCTION_STRUCTURE:counterexample",
+      "scenario_pt_br": "Aumentar uma repetição diariamente e retirar apoio sem observação ou reavaliação.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FUNCTION_STRUCTURE",
+      "label_pt_br": "Estrutura e progressão funcional"
+    },
+    "bc78da47553d21a6": {
+      "case_id": "WEIGHT_DIRECTION:application",
+      "scenario_pt_br": "Conservar emagrecimento e preservação de massa magra como objetivos distintos, sem garantia de quilos, perda localizada ou prescrição de dieta/medicamento.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "WEIGHT_DIRECTION",
+      "label_pt_br": "Emagrecimento e composição corporal"
+    },
+    "75a9290faa7877c4": {
+      "case_id": "WEIGHT_DIRECTION:counterexample",
+      "scenario_pt_br": "Garantir 3 kg perdidos por semana e redução localizada usando HIIT para todos.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "WEIGHT_DIRECTION",
+      "label_pt_br": "Emagrecimento e composição corporal"
+    },
+    "a00dad1a81127cbc": {
+      "case_id": "SPORT_SPECIFICITY:application",
+      "scenario_pt_br": "Pedido: melhorar desempenho esportivo; esporte, prova e capacidade relevante não informados. Solicitar essas informações, sem gerar protocolo universal.",
+      "expected": {
+        "decision": "clarify",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SPORT_SPECIFICITY",
+      "label_pt_br": "Especificidade esportiva"
+    },
+    "b69d463c4148fc11": {
+      "case_id": "SPORT_SPECIFICITY:counterexample",
+      "scenario_pt_br": "Prescrever distribuição 80/20 e quilometragem padrão para qualquer esporte não especificado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "SPORT_SPECIFICITY",
+      "label_pt_br": "Especificidade esportiva"
+    },
+    "c72f4768a7b3372d": {
+      "case_id": "RESTRICTIONS:application",
+      "scenario_pt_br": "Relato de medicamento não impede acesso. A interação relevante para a proposta não foi estabelecida: pedir esclarecimento da aplicabilidade, preservando acesso e caminho manual.",
+      "expected": {
+        "decision": "clarify",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "RESTRICTIONS",
+      "label_pt_br": "Restrições e dados ausentes"
+    },
+    "6ed5f67e5754c4ba": {
+      "case_id": "RESTRICTIONS:counterexample",
+      "scenario_pt_br": "Bloquear todo acesso ao sistema só porque houve relato de medicamento.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "RESTRICTIONS",
+      "label_pt_br": "Restrições e dados ausentes"
+    },
+    "77663edf72954b52": {
+      "case_id": "RESISTANCE_ACCOUNTING:application",
+      "scenario_pt_br": "Por sessão: 2 séries de trabalho, 3 repetições por série com carga externa total de 10 kg; aquecimento separado. Duas ocorrências semanais. Calcule apenas o volume externo de trabalho semanal em kg-repetições.",
+      "expected": {
+        "decision": "accept",
+        "value": 120,
+        "unit": "kg_repetitions"
+      },
+      "rule_id": "RESISTANCE_ACCOUNTING",
+      "label_pt_br": "Contabilização resistida"
+    },
+    "0a2669a48c6c435c": {
+      "case_id": "RESISTANCE_ACCOUNTING:counterexample",
+      "scenario_pt_br": "Converter carga desconhecida em zero e aplicar peso 0,5 aos músculos indiretos sem política que autorize.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "RESISTANCE_ACCOUNTING",
+      "label_pt_br": "Contabilização resistida"
+    },
+    "f23ee05fc2920696": {
+      "case_id": "AEROBIC_ACCOUNTING:application",
+      "scenario_pt_br": "Na semana, segmentos distintos de 30 minutos moderados e 15 vigorosos, mais 10 de aquecimento não classificado. Usando a equivalência proposta moderado + 2 x vigoroso, calcule minutos moderados equivalentes.",
+      "expected": {
+        "decision": "accept",
+        "value": 60,
+        "unit": "moderate_equivalent_minutes"
+      },
+      "rule_id": "AEROBIC_ACCOUNTING",
+      "label_pt_br": "Contabilização aeróbica"
+    },
+    "7e845a9b31e96ac0": {
+      "case_id": "AEROBIC_ACCOUNTING:counterexample",
+      "scenario_pt_br": "Contar os mesmos 15 minutos vigorosos também como 15 moderados e classificar automaticamente aquecimento desconhecido.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "AEROBIC_ACCOUNTING",
+      "label_pt_br": "Contabilização aeróbica"
+    },
+    "f548b38eea6ea6b3": {
+      "case_id": "FLEXIBILITY_ACCOUNTING:application",
+      "scenario_pt_br": "2 sustentações de 30 segundos em cada lado, em 2 ocorrências semanais. Calcule o total semanal de sustentação de um único lado, sem incluir descanso.",
+      "expected": {
+        "decision": "accept",
+        "value": 120,
+        "unit": "seconds_per_side_per_week"
+      },
+      "rule_id": "FLEXIBILITY_ACCOUNTING",
+      "label_pt_br": "Contabilização de flexibilidade"
+    },
+    "1d0f38e82f6292c7": {
+      "case_id": "FLEXIBILITY_ACCOUNTING:counterexample",
+      "scenario_pt_br": "Somar os lados e declarar 240 segundos semanais por lado nesse exemplo.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "FLEXIBILITY_ACCOUNTING",
+      "label_pt_br": "Contabilização de flexibilidade"
+    },
+    "3429822fd88f2865": {
+      "case_id": "BALANCE_FUNCTION_ACCOUNTING:application",
+      "scenario_pt_br": "Três tentativas da tarefa, uma falhou. Registre tentativas separadamente e informe a quantidade de tentativas concluídas com controle.",
+      "expected": {
+        "decision": "accept",
+        "value": 2,
+        "unit": "successful_attempts"
+      },
+      "rule_id": "BALANCE_FUNCTION_ACCOUNTING",
+      "label_pt_br": "Contabilização funcional e de equilíbrio"
+    },
+    "eece8ec52e7e621d": {
+      "case_id": "BALANCE_FUNCTION_ACCOUNTING:counterexample",
+      "scenario_pt_br": "Contar tentativa falha como concluída e multiplicar 12 semanas por 3 sessões para dizer que há 36 sessões por semana.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "BALANCE_FUNCTION_ACCOUNTING",
+      "label_pt_br": "Contabilização funcional e de equilíbrio"
+    },
+    "93e865587d655981": {
+      "case_id": "COMBINED_GOALS:application",
+      "scenario_pt_br": "Preservar os objetivos confirmados de redução de gordura e hipertrofia, com prioridades declaradas; verificar tempo e recuperação compartilhados sem somar minutos e séries numa única unidade.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "COMBINED_GOALS",
+      "label_pt_br": "Objetivos combinados"
+    },
+    "d91d51c19be77352": {
+      "case_id": "COMBINED_GOALS:counterexample",
+      "scenario_pt_br": "Substituir silenciosamente hipertrofia por reabilitação e ignorar o tempo total ao combinar componentes.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "rule_id": "COMBINED_GOALS",
+      "label_pt_br": "Objetivos combinados"
+    }
+  }
+}

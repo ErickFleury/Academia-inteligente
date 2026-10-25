@@ -1,0 +1,7 @@
+{
+  "requested_account_only": true,
+  "transaction_read_only": true,
+  "version_structure_matches_initial_inspection": true,
+  "private_records_exported": false,
+  "post_deployment_recheck_passed": true
+}

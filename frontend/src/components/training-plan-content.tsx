@@ -1,6 +1,7 @@
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import type { ReviewContent } from '../training-review'
 import { trainingSessions } from '../training-sessions'
+import { trainingCount, trainingRest } from '../training-dose'
 
 export function TrainingPlanContent({ plan }: { plan: ReviewContent }) {
   const sessions = trainingSessions(plan.items)
@@ -28,9 +29,9 @@ export function TrainingPlanContent({ plan }: { plan: ReviewContent }) {
           <Stack spacing={2} sx={{ p: { xs: 2, sm: 2.5 } }}>
             <Box component="dl" sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1.5, m: 0, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
               {[
-                ['Séries', String(item.sets)],
+                ['Séries', trainingCount(item.sets)],
                 ['Repetições ou duração', item.repetitions],
-                ['Descanso', `${item.rest_seconds} s`],
+                ['Descanso', trainingRest(item.rest_seconds, item.dose_details)],
               ].map(([label, value]) => <Box key={label} sx={{ minWidth: 0 }}>
                 <Typography component="dt" variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{label}</Typography>
                 <Typography component="dd" sx={{ m: 0, mt: 0.25, fontWeight: 750, overflowWrap: 'anywhere' }}>{value}</Typography>

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "source_id": "lyristakis-strength-2026",
+  "identifier": "doi:10.1007/s40279-026-02432-5",
+  "article_version": "2026-04-17",
+  "requested_url": "https://link.springer.com/article/10.1007/s40279-026-02432-5",
+  "final_url": "https://link.springer.com/article/10.1007/s40279-026-02432-5",
+  "captured_at": "2026-10-23T14:46:06.577329+00:00",
+  "artifact_file": "02eba4f1486e7a2a37949fb29bc3e2677699184bbc91651270a8e911f1465711.html",
+  "artifact_sha256": "02eba4f1486e7a2a37949fb29bc3e2677699184bbc91651270a8e911f1465711",
+  "artifact_bytes": 486495,
+  "media_type": "text/html",
+  "extractor": "springer-heading-paragraphs/1",
+  "python_version": "3.13.15",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "license_evidence": "Open Access This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit http://creativecommons.org/licenses/by/4.0/.\nReprints and permissions",
+  "license_evidence_sha256": "413a5c692fc4c44c1f751c9809f6870abc86a3afffc3413ec034cce7adcde3f6",
+  "recipe_sha256": "7fe6d123d6d37a3d9146aac88728483622ce33f9fbef3c5a12859afb91f0debb",
+  "scientific_approval": "pending",
+  "chunks": [
+    {
+      "id": "lyristakis-strength-2026-dosage",
+      "locator": "HTML Sec16 / 6 Conclusions; Sec5 / 2.2 eligibility; Sec15 / 5 Limitations (complete paragraphs)",
+      "text_sha256": "a70e48b3b4b960c873303491abda2ea237c401e408f3dcc02aefa3b1bf5e5796"
+    }
+  ]
+}

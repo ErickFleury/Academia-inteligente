@@ -6,6 +6,11 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
+
+from app.integrations.embeddings import EmbeddingProviderError
+from app.modules.knowledge import startup
+
 
 def test_fresh_interpreter_initializes_catalogue_after_migrations_and_on_restart():
     result = subprocess.run(
@@ -50,8 +55,8 @@ def test_fresh_interpreter_initializes_catalogue_after_migrations_and_on_restart
                 assert events.count("embed") == embedding_calls
 
                 with Session(engine) as session:
-                    assert session.scalar(select(func.count()).select_from(KnowledgeSource)) == 14
-                    assert session.scalar(select(func.count()).select_from(KnowledgeChunk)) == 18
+                    assert session.scalar(select(func.count()).select_from(KnowledgeSource)) == 24
+                    assert session.scalar(select(func.count()).select_from(KnowledgeChunk)) == 66
                 """
             ),
         ],
@@ -63,3 +68,17 @@ def test_fresh_interpreter_initializes_catalogue_after_migrations_and_on_restart
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_bootstrap_failure_propagates_without_a_successful_start(monkeypatch):
+    events = []
+    monkeypatch.setattr(startup.subprocess, "run", lambda *args, **kwargs: events.append("migrate"))
+    monkeypatch.setattr(startup, "seed_demo_accounts", lambda: events.append("demo"))
+
+    def fail():
+        raise EmbeddingProviderError("embedding_unavailable")
+
+    monkeypatch.setattr(startup, "seed_knowledge", fail)
+    with pytest.raises(EmbeddingProviderError):
+        startup.main()
+    assert events == ["migrate", "demo"]

@@ -1,6 +1,7 @@
 import { ApiRequestError } from './clients'
 import type { CurrentTrainingItem } from './training-plan'
 import type { TrainingKnowledge } from './training-knowledge'
+import { prescriptionRejectionMessage } from './training-prescription'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 export type ReviewItem = Omit<CurrentTrainingItem, 'position'> & {
@@ -14,6 +15,7 @@ export type PendingPlan = ReviewContent & TrainingKnowledge & {
   created_at: string; updated_at: string
   current_responsible_instructor_name: string | null
   append_target?: (ReviewContent & { id: string; revision: number }) | null
+  prescription_review_available?: boolean
 }
 export type PendingPage = { items: PendingPlan[]; next_offset: number | null }
 
@@ -22,6 +24,12 @@ async function request<T>(token: string, path: string, init?: RequestInit): Prom
     ...init, cache: 'no-store', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
   })
   if (!response.ok) {
+    if (response.status === 422) {
+      let detail: unknown
+      try { detail = (await response.json() as { detail?: unknown }).detail } catch { /* Controlled fallback. */ }
+      const rejection = prescriptionRejectionMessage(detail)
+      if (rejection) throw new ApiRequestError(rejection, response.status)
+    }
     const message = response.status === 409 ? 'Este rascunho mudou. Recarregue e revise antes de continuar.'
       : response.status === 404 ? 'Este rascunho não está mais pendente. Recarregue a lista.'
       : response.status === 422 ? 'Verifique os campos. Itens novos ou alterados exigem equipamento com unidade ativa e operacional. Recarregue as opções de equipamento.'

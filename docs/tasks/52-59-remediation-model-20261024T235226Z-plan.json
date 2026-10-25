@@ -1,0 +1,34 @@
+{
+  "name": "remediation-model-20261024T235226Z",
+  "frozen_at": "2026-10-24T23:52:26.353462+00:00",
+  "scope": "exposed_software_diagnostic_synthetic_contract_and_evidence",
+  "real_policy_or_retrieval": false,
+  "independent_evaluation": false,
+  "case": "aerobic_continuous_no_resistance_fields",
+  "repetitions": 1,
+  "expected": "Reviewable synthetic proposal if the actual model follows the supplied envelope; all failures retained",
+  "clinical_accuracy": "not_evaluated",
+  "explanation": "not_graded_no_free_prose",
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+  },
+  "writer_configuration": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "contract": "typed-prescription-1",
+    "instruction_version": "operational-prescription-2"
+  },
+  "timeout_seconds": 360,
+  "deadline_seconds": 3600,
+  "max_http_calls": {
+    "writer": 4,
+    "review": 4,
+    "focus": 0,
+    "total": 8
+  },
+  "contract_sha256": "bdd85bb0202bdfc1b546a909b84b5ebd8fc810e2c822c8d244a62fc05deb722e",
+  "dictionary_sha256": "0eedc45834edc13af7cbbd49e7ddc6f003e68812a073700a9fe7eb5a7396fef1",
+  "source_support": "Synthetic fixture; no scientific support claim",
+  "persistence": "in_memory_sqlite_only_no_real_clients_or_release"
+}

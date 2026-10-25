@@ -14,6 +14,27 @@ def _cell(value: object) -> str:
     return " ".join(str(value).split()).replace("|", r"\|")
 
 
+def rest_text(item):
+    details = getattr(item, "dose_details", None)
+    if hasattr(details, "model_dump"):
+        details = details.model_dump(mode="json")
+    if details:
+        rest = (details.get("group") or {}).get("rest") or details.get("rest")
+        if rest and rest["kind"] == "not_applicable":
+            return "Não se aplica"
+        if rest:
+            relations = {
+                "after_pair": "após o par",
+                "after_round": "após a volta",
+                "after_exercise": "após o exercício",
+                "between_attempts": "entre tentativas",
+                "between_holds": "entre sustentações",
+                "between_tasks": "entre tarefas",
+            }
+            return f"{rest['seconds']} s {relations.get(rest['kind'], '')}".strip()
+    return "Não se aplica" if item.rest_seconds is None else f"{item.rest_seconds} s"
+
+
 def proposal_preview(session: Session, version: TrainingPlanVersion) -> str:
     items = session.scalars(
         select(TrainingPlanItem)
@@ -57,10 +78,10 @@ def _session_preview(name: str, objective: str, rows: list) -> str:
         values = (
             position,
             exercise_name,
-            item.sets,
+            item.sets if item.sets is not None else "—",
             item.repetitions,
             item.load_guidance,
-            f"{item.rest_seconds} s",
+            rest_text(item),
         )
         lines.append("| " + " | ".join(_cell(value) for value in values) + " |")
     return "\n".join(lines)

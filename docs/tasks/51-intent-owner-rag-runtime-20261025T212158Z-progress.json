@@ -1,0 +1,404 @@
+{
+  "plan_name": "owner-rag-runtime-20261025T212158Z",
+  "outputs": [
+    {
+      "case_id": "flexibility-plain",
+      "stage": "focus",
+      "context_characters": 153,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "context_characters": 32978,
+      "passage_count": 3,
+      "session_labels": [],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "review",
+      "context_characters": 37263,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-plain",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "focus",
+      "context_characters": 153,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "writer",
+      "context_characters": 32978,
+      "passage_count": 3,
+      "session_labels": [],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "review",
+      "context_characters": 37263,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-copied-header",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "focus",
+      "context_characters": 166,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "writer",
+      "context_characters": 32997,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "review",
+      "context_characters": 37279,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-one-day",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "focus",
+      "context_characters": 163,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "focus",
+      "structured_answer": "{\"scope\": \"unspecified\", \"muscle_groups\": [], \"goal\": \"flexibilidade\"}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 33142,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_quadriceps_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia A)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 3, \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\n    \"ingram-stretch-mechanisms-2025-02\",\n    \"ingram-stretch-mechanisms-2025-01\",\n    \"iversen-time-efficient-2021-09\"\n  ],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "review",
+      "context_characters": 37424,
+      "passage_count": 3,
+      "session_labels": [
+        "A"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "review",
+      "structured_answer": "{\n  \"sessions\": {\n    \"A\": {\n      \"label\": \"A\",\n      \"complete\": true,\n      \"issues\": [],\n      \"repetition_recommendation\": null,\n      \"item_issues\": []\n    }\n  }\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 36754,
+      "passage_count": 3,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "structured_answer": "{\n  \"plan\": {\n    \"name\": \"FLEXIBILITY_PROPOSAL\",\n    \"objective\": \"Flexibilidade\",\n    \"items\": [\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"seated_hamstring_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"left\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      },\n      {\n        \"exercise_name\": \"standing_calf_stretch (Dia B)\",\n        \"holds\": 2,\n        \"hold_seconds\": 30,\n        \"side\": \"right\",\n        \"rest_seconds\": 30,\n        \"intensity_instruction_key\": \"comfortable_range_without_pain\",\n        \"equipment_requirement\": null,\n        \"equipment_model_id\": null\n      }\n    ]\n  },\n  \"citations\": [\"ingram-stretch-mechanisms-2025-01\", \"ingram-stretch-mechanisms-2025-02\", \"iversen-time-efficient-2021-09\"],\n  \"knowledge_status\": \"supported\",\n  \"knowledge_limitations\": \"\"\n}"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 41824,
+      "passage_count": 3,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [
+        {
+          "position": 5,
+          "duplicate_of": 3,
+          "field": "exercise_name",
+          "exercise_name": "Alongamento de panturrilha em pé (Dia B)",
+          "reason": "duplicate_exercise_within_session"
+        }
+      ],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "flexibility-three-days",
+      "stage": "writer",
+      "context_characters": 41824,
+      "passage_count": 3,
+      "session_labels": [
+        "B"
+      ],
+      "focus_scope": "unspecified",
+      "goal_family": "mobility_flexibility",
+      "correction_issues": [
+        {
+          "position": 5,
+          "duplicate_of": 3,
+          "field": "exercise_name",
+          "exercise_name": "Alongamento de panturrilha em pé (Dia B)",
+          "reason": "duplicate_exercise_within_session"
+        }
+      ],
+      "provided_rule_ids": [
+        "FLEXIBILITY_DOSE",
+        "FLEXIBILITY_STRUCTURE",
+        "FLEXIBILITY_NEWER_EVIDENCE",
+        "RESTRICTIONS",
+        "FLEXIBILITY_ACCOUNTING"
+      ]
+    },
+    {
+      "stage": "writer",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "flexibility-negated-goal",
+      "stage": "focus",
+      "context_characters": 166,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "flexibility-negated-goal",
+      "stage": "focus",
+      "context_characters": 166,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "focus",
+      "context_characters": 155,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    },
+    {
+      "case_id": "abc-strength",
+      "stage": "focus",
+      "context_characters": 155,
+      "passage_count": 0,
+      "session_labels": [],
+      "focus_scope": null,
+      "goal_family": null,
+      "correction_issues": [],
+      "provided_rule_ids": []
+    },
+    {
+      "stage": "focus",
+      "provider_failure_category": "timeout_or_network"
+    }
+  ],
+  "independent_evaluation": false
+}

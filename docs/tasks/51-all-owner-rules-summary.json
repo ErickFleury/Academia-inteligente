@@ -1,0 +1,924 @@
+{
+  "rule_count": 37,
+  "distinct_cases": 74,
+  "strict_passed_cases": 55,
+  "strict_passed_rules": 20,
+  "decision_matches": 69,
+  "new_rule_count": 25,
+  "new_rules_with_two_strict_passes": 13,
+  "model_calls": 23,
+  "initial_invalid_batches": 4,
+  "isolated_diagnostic_rule_count": 10,
+  "no_student_writes": true,
+  "rows": [
+    {
+      "rule_id": "AEROBIC_ACCOUNTING",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "f23ee05fc2920696",
+        "decision": "accept",
+        "value": 30.0,
+        "unit": "moderate_equivalent_minutes",
+        "explanation_pt_br": "30 minutos moderados + (15 minutos vigorosos * 2) = 30 + 30 = 60 minutos moderados equivalentes. Aquecimento não classificado não é contado."
+      },
+      "failures": [
+        {
+          "case_id": "f23ee05fc2920696",
+          "rule_id": "AEROBIC_ACCOUNTING",
+          "case_kind": "application",
+          "scenario_pt_br": "Na semana, segmentos distintos de 30 minutos moderados e 15 vigorosos, mais 10 de aquecimento não classificado. Usando a equivalência proposta moderado + 2 x vigoroso, calcule minutos moderados equivalentes.",
+          "expected": {
+            "decision": "accept",
+            "value": 60,
+            "unit": "moderate_equivalent_minutes"
+          },
+          "actual": {
+            "case_id": "f23ee05fc2920696",
+            "decision": "accept",
+            "value": 30.0,
+            "unit": "moderate_equivalent_minutes",
+            "explanation_pt_br": "30 minutos moderados + (15 minutos vigorosos * 2) = 30 + 30 = 60 minutos moderados equivalentes. Aquecimento não classificado não é contado."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "AEROBIC_DOSE",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "6050817be28efeb0",
+        "decision": "accept",
+        "value": 150.0,
+        "unit": "moderate_minutes_per_week",
+        "explanation_pt_br": "A regra AEROBIC_DOSE define 150 minutos moderados por semana como referência para adultos. O caso sintético confirma que é uma referência de saúde sem impor dose inicial a sedentários, então está correto."
+      },
+      "failures": [
+        {
+          "case_id": "90b4118bdc680e41",
+          "rule_id": "AEROBIC_DOSE",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Obrigar uma pessoa sem tolerância demonstrada a começar com os 150 minutos em uma única sessão.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "90b4118bdc680e41",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "A regra AEROBIC_DOSE afirma que 150 minutos moderados por semana é uma referência, mas não deve ser imposto como dose inicial a pessoas sem tolerância demonstrada. O caso sugere obrigar a começar com 150 minutos em uma única sessão, o que é"
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "AEROBIC_INTENSITY",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "89a9140e1272479a",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso descreve corretamente a regra AEROBIC_INTENSITY: a pessoa conversa mas não consegue cantar, o que classifica como intensidade moderada (não permite cantar). Não há necessidade de calcular frequência cardíaca numérica, conforme a regr"
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "AEROBIC_RECOVERY",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "9adecaf60c29948c",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "Atividade contínua: registrado descanso entre séries como não aplicável (not_applicable) e mantida a distinção entre esforço contínuo e intervalado, conforme a regra AEROBIC_RECOVERY."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "AEROBIC_START_PROGRESS",
+      "new_since_previous_probe": true,
+      "strict_passes": 0,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "c08554f5449f9bdb",
+        "decision": "accept",
+        "value": 30.0,
+        "unit": "minutes_per_week",
+        "explanation_pt_br": "Três sessões de 10 minutos moderadas, observadas e reavaliadas, com o aumento de 5 minutos em uma sessão: 10 * 3 = 30 minutos semanais, sem alteração na frequência (3 sessões por semana)."
+      },
+      "failures": [
+        {
+          "case_id": "c08554f5449f9bdb",
+          "rule_id": "AEROBIC_START_PROGRESS",
+          "case_kind": "application",
+          "scenario_pt_br": "Três sessões toleradas de 10 minutos moderados. Após conclusão observada e reavaliação, propor mais 5 minutos em apenas uma sessão, sem editar plano. Calcule os minutos semanais da proposta.",
+          "expected": {
+            "decision": "accept",
+            "value": 35,
+            "unit": "minutes_per_week"
+          },
+          "actual": {
+            "case_id": "c08554f5449f9bdb",
+            "decision": "accept",
+            "value": 30.0,
+            "unit": "minutes_per_week",
+            "explanation_pt_br": "Três sessões de 10 minutos moderadas, observadas e reavaliadas, com o aumento de 5 minutos em uma sessão: 10 * 3 = 30 minutos semanais, sem alteração na frequência (3 sessões por semana)."
+          },
+          "passed": false
+        },
+        {
+          "case_id": "aa38d2024866e682",
+          "rule_id": "AEROBIC_START_PROGRESS",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Aumentar duração de todas as sessões e intensidade automaticamente toda semana, sem conclusão observada ou reavaliação.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "aa38d2024866e682",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "Aumentar duração de todas as sessões e intensidade automaticamente toda semana sem conclusão observada ou reavaliação viola a regra AEROBIC_START_PROGRESS que exige conclusão observada e reavaliação antes de ajustes."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "BALANCE_DOSE",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "4738d9633f746c19",
+        "decision": "accept",
+        "value": 8.0,
+        "unit": "seconds_per_attempt",
+        "explanation_pt_br": "O caso descreve 3 tentativas de 8 segundos por lado, que corresponde ao parâmetro single_leg_hold (5-10 segundos) com 3 tentativas (mínimo 3). A duração de cada tentativa unipodal é 8 segundos."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "BALANCE_FUNCTION_ACCOUNTING",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "3429822fd88f2865",
+        "decision": "accept",
+        "value": 2.0,
+        "unit": "successful_attempts",
+        "explanation_pt_br": "Três tentativas, uma falhou, então duas tentativas concluídas com controle."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "BALANCE_RECOVERY",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 1,
+      "application_output": {
+        "case_id": "8c6bf07c093fef77",
+        "decision": "accept",
+        "value": 45.0,
+        "unit": "seconds",
+        "explanation_pt_br": "A pausa proposta é de 45 segundos, dentro do intervalo 30-60 segundos do parâmetro proposed_between_attempt_rest."
+      },
+      "failures": [
+        {
+          "case_id": "fd520ebc78cec743",
+          "rule_id": "BALANCE_RECOVERY",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Aumentar desafio e retirar apoio justamente quando o controle foi perdido.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "fd520ebc78cec743",
+            "decision": "accept",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra BALANCE_RECOVERY sugere aumentar desafio e retirar apoio quando controle é perdido, o que corresponde à ação descrita."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "COMBINED_GOALS",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "93e865587d655981",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso descreve corretamente a regra: preserva objetivos confirmados (redução de gordura e hipertrofia), confirma prioridades, verifica tempo e recuperação compartilhados sem somar unidades (minutos e séries). Não há redefinição de saúde ou"
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "ENDURANCE_DOSE",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 1,
+      "application_output": {
+        "case_id": "8c81b51210a2fdbd",
+        "decision": "accept",
+        "value": 50.0,
+        "unit": "kg",
+        "explanation_pt_br": "Carga de 50 kg está dentro do intervalo de 40% a 60% do 1RM (100 kg). 16 repetições está dentro do intervalo mínimo exclusivo (15) e máximo (não limitado). Descanso de 60 segundos está dentro do limite máximo exclusivo (90 segundos)."
+      },
+      "failures": [
+        {
+          "case_id": "20b5932b9e505a50",
+          "rule_id": "ENDURANCE_DOSE",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Declarar que 15 repetições e descanso de 90 segundos atendem aos critérios estritos de mais de 15 repetições e menos de 90 segundos.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "20b5932b9e505a50",
+            "decision": "accept",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "15 repetições é o mínimo exclusivo (15) e descanso de 90 segundos é o limite máximo exclusivo (90) conforme regra ENDURANCE_DOSE."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "ENDURANCE_SETS",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "f79cd6af1a8f7c13",
+        "decision": "accept",
+        "value": 18.0,
+        "unit": "repetições",
+        "explanation_pt_br": "18 repetições está dentro do intervalo mínimo (16) e máximo (20) proposto pela regra ENDURANCE_SETS."
+      },
+      "failures": [
+        {
+          "case_id": "f79cd6af1a8f7c13",
+          "rule_id": "ENDURANCE_SETS",
+          "case_kind": "application",
+          "scenario_pt_br": "Dose inicial proposta: 2 séries de 18 repetições com tolerância observada. Informe as repetições por série.",
+          "expected": {
+            "decision": "accept",
+            "value": 18,
+            "unit": "repetitions"
+          },
+          "actual": {
+            "case_id": "f79cd6af1a8f7c13",
+            "decision": "accept",
+            "value": 18.0,
+            "unit": "repetições",
+            "explanation_pt_br": "18 repetições está dentro do intervalo mínimo (16) e máximo (20) proposto pela regra ENDURANCE_SETS."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "FALL_PREVENTION",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "02c3e12869689442",
+        "decision": "accept",
+        "value": 12.0,
+        "unit": "weeks",
+        "explanation_pt_br": "O programa individualizado é 3 vezes por semana por 12 semanas, que corresponde ao parâmetro program_duration (mínimo 12 semanas)."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "FLEXIBILITY_ACCOUNTING",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "f548b38eea6ea6b3",
+        "decision": "accept",
+        "value": 60.0,
+        "unit": "seconds_per_side_per_week",
+        "explanation_pt_br": "2 sustentações de 30 segundos por lado * 2 ocorrências semanais = 60 segundos por lado por semana."
+      },
+      "failures": [
+        {
+          "case_id": "f548b38eea6ea6b3",
+          "rule_id": "FLEXIBILITY_ACCOUNTING",
+          "case_kind": "application",
+          "scenario_pt_br": "2 sustentações de 30 segundos em cada lado, em 2 ocorrências semanais. Calcule o total semanal de sustentação de um único lado, sem incluir descanso.",
+          "expected": {
+            "decision": "accept",
+            "value": 120,
+            "unit": "seconds_per_side_per_week"
+          },
+          "actual": {
+            "case_id": "f548b38eea6ea6b3",
+            "decision": "accept",
+            "value": 60.0,
+            "unit": "seconds_per_side_per_week",
+            "explanation_pt_br": "2 sustentações de 30 segundos por lado * 2 ocorrências semanais = 60 segundos por lado por semana."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "FLEXIBILITY_DOSE",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "ceee6ac3e159b3b8",
+        "decision": "accept",
+        "value": 60.0,
+        "unit": "seconds_per_side",
+        "explanation_pt_br": "O caso pede acumular 60 segundos por exercício/lado em 2 dias semanais. A regra FLEXIBILITY_DOSE define um mínimo de 60 segundos por exercício por sessão, com frequência mínima de 2 dias por semana. Portanto, o valor correto é 60 segundos/l"
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "FLEXIBILITY_NEWER_EVIDENCE",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "56d43acc68630960",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O fragmento descreve corretamente os platôs agregados de 4 minutos por sessão e 10 minutos semanais como associações, sem teto individual ou soma indevida de músculos, conforme a regra FLEXIBILITY_NEWER_EVIDENCE."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "FLEXIBILITY_STRUCTURE",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "157e108526f55a4e",
+        "decision": "accept",
+        "value": 60.0,
+        "unit": "seconds_per_side",
+        "explanation_pt_br": "A afirmação proposta descreve 2 sustentações de 30 segundos por lado, ou seja, 2 * 30 = 60 segundos por lado. O cálculo está correto e corresponde à regra de 2 sustentações de 30 segundos por lado com recuperação de 30 segundos entre elas ("
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "FUNCTION_DOSE",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "e7c70f688e56f759",
+        "decision": "accept",
+        "value": 5.0,
+        "unit": "repetitions",
+        "explanation_pt_br": "A capacidade e cadeira estável demonstradas correspondem aos parâmetros mínimos e máximos da regra FUNCTION_DOSE: sit_to_stand=5, supported_mini_squat=5, frequency=2. O cálculo é direto com os valores fornecidos."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "FUNCTION_STRUCTURE",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "e2e71598decb4acb",
+        "decision": "accept",
+        "value": 6.0,
+        "unit": "repetitions",
+        "explanation_pt_br": "O caso descreve uma rodada com 5 repetições, pausa de 90 segundos (dentro de 60-120s) e depois uma repetição extra. O novo total é 5 + 1 = 6 repetições."
+      },
+      "failures": [
+        {
+          "case_id": "a93d4cc8819e2cfc",
+          "rule_id": "FUNCTION_STRUCTURE",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Aumentar uma repetição diariamente e retirar apoio sem observação ou reavaliação.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "a93d4cc8819e2cfc",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "A regra FUNCTION_STRUCTURE não permite aumentar repetições diariamente sem observação ou reavaliação, já que a regra exige 'reassess before adding load or removing support'. O caso sugere aumento diário sem esse procedimento."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "HYPERTROPHY_LOADING",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "7722a317f8086318",
+        "decision": "accept",
+        "value": 8.0,
+        "unit": "rm_repetitions",
+        "explanation_pt_br": "A capacidade medida de 8 RM é registrada sem conversão para RIR, conforme a regra HYPERTROPHY_LOADING."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "HYPERTROPHY_REST",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "09e3b54b6d4ad377",
+        "decision": "accept",
+        "value": 150.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O caso sugere usar 150 segundos como escolha operacional ajustável, o que está dentro do intervalo proposto (120-180 segundos) e não afirma ótimo científico, conforme a regra."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "HYPERTROPHY_VOLUME",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "a930c748bb873b4a",
+        "decision": "accept",
+        "value": 10.0,
+        "unit": "reference_sets_per_muscle_per_week",
+        "explanation_pt_br": "A referência de 10 séries por músculo por semana é apresentada sem mínimo obrigatório, conforme a regra HYPERTROPHY_VOLUME."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "LOAD_PROGRESSION",
+      "new_since_previous_probe": false,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "de1f9f22ad8c8e41",
+        "decision": "accept",
+        "value": 50.1,
+        "unit": "kg",
+        "explanation_pt_br": "Com 12 repetições demonstradas (2 além de 10 desejadas), o aumento de carga é 2% do atual (50 kg), resultando em 50.1 kg. A proposta respeita os limites de 2-10% e os critérios de desempenho observado."
+      },
+      "failures": [
+        {
+          "case_id": "de1f9f22ad8c8e41",
+          "rule_id": "LOAD_PROGRESSION",
+          "case_kind": "application",
+          "scenario_pt_br": "Mesmo exercício: desejadas 10 repetições, demonstradas 12 com técnica e recuperação observadas; carga atual 50 kg. Foi escolhida proposta de aumento de 2%, sujeita à revisão, sem editar o plano. Calcule a carga proposta.",
+          "expected": {
+            "decision": "accept",
+            "value": 51,
+            "unit": "kg"
+          },
+          "actual": {
+            "case_id": "de1f9f22ad8c8e41",
+            "decision": "accept",
+            "value": 50.1,
+            "unit": "kg",
+            "explanation_pt_br": "Com 12 repetições demonstradas (2 além de 10 desejadas), o aumento de carga é 2% do atual (50 kg), resultando em 50.1 kg. A proposta respeita os limites de 2-10% e os critérios de desempenho observado."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "NOVICE_LOADING",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "f9c7fb20e0f3c549",
+        "decision": "accept",
+        "value": 10.0,
+        "unit": "rm_repetitions",
+        "explanation_pt_br": "A capacidade registrada de 10 RM é efetivamente observada e confirmada como RM sem conversão para RIR, conforme a regra NOVICE_LOADING."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "POWER_DOSE",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "77cb1f8bfe9ecb88",
+        "decision": "accept",
+        "value": 50.0,
+        "unit": "kg",
+        "explanation_pt_br": "50 kg é 50% do 1RM (100 kg) e está dentro do intervalo mínimo (30%) e máximo (70%) para carga de potência."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "POWER_REPETITIONS",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "2f487ee0932f2da2",
+        "decision": "accept",
+        "value": 3.0,
+        "unit": "repetitions",
+        "explanation_pt_br": "A regra POWER_REPETITIONS especifica 3 séries de 3 repetições como proposta. O caso sintético confirma que a escolha proposta é 3 séries de 3 repetições, então o valor correto é 3 repetições por série."
+      },
+      "failures": [
+        {
+          "case_id": "d25821c0a04d073a",
+          "rule_id": "POWER_REPETITIONS",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Obrigar a terminar todas as repetições explosivas após perder controle técnico.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "d25821c0a04d073a",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "A regra POWER_REPETITIONS diz que deve-se interromper o bloco se não houver manutenção da técnica ou velocidade pretendida, não obrigar a terminar as repetições após perder controle técnico. Portanto, o caso sugere uma ação contrária à regr"
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "POWER_STRUCTURE",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 1,
+      "application_output": {
+        "case_id": "add10509c05795ee",
+        "decision": "accept",
+        "value": 240.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O descanso de 240 segundos está dentro do intervalo de 180-300 segundos definido pela regra POWER_STRUCTURE. O caso sintético confirma competência técnica e recuperação, então não há contradição com a regra."
+      },
+      "failures": [
+        {
+          "case_id": "c0eb8549b727657c",
+          "rule_id": "POWER_STRUCTURE",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Afirmar que 160 segundos está dentro do intervalo desta regra de 180–300 segundos.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "c0eb8549b727657c",
+            "decision": "accept",
+            "value": 160.0,
+            "unit": "seconds",
+            "explanation_pt_br": "O valor 160 segundos está fora do intervalo mínimo de 180 segundos da regra POWER_STRUCTURE, portanto, não está dentro do intervalo estabelecido. A regra exige descanso mínimo de 180 segundos, então 160 segundos é inválido."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "RESISTANCE_ACCOUNTING",
+      "new_since_previous_probe": false,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "77663edf72954b52",
+        "decision": "accept",
+        "value": 60.0,
+        "unit": "kg_repetitions",
+        "explanation_pt_br": "Calcular volume externo de trabalho semanal: 2 séries x 3 repetições x 10 kg = 60 kg_repetições (apenas carga externa, sem aquecimento)."
+      },
+      "failures": [
+        {
+          "case_id": "77663edf72954b52",
+          "rule_id": "RESISTANCE_ACCOUNTING",
+          "case_kind": "application",
+          "scenario_pt_br": "Por sessão: 2 séries de trabalho, 3 repetições por série com carga externa total de 10 kg; aquecimento separado. Duas ocorrências semanais. Calcule apenas o volume externo de trabalho semanal em kg-repetições.",
+          "expected": {
+            "decision": "accept",
+            "value": 120,
+            "unit": "kg_repetitions"
+          },
+          "actual": {
+            "case_id": "77663edf72954b52",
+            "decision": "accept",
+            "value": 60.0,
+            "unit": "kg_repetitions",
+            "explanation_pt_br": "Calcular volume externo de trabalho semanal: 2 séries x 3 repetições x 10 kg = 60 kg_repetições (apenas carga externa, sem aquecimento)."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "RESISTANCE_EFFORT",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "230650f5fdfaf1b6",
+        "decision": "accept",
+        "value": 2.0,
+        "unit": "rir",
+        "explanation_pt_br": "A regra indica que RIR é um valor de estimativa calibrada. O caso descreve uma série que termina com 2 repetições em reserva sem exigir falha, o que corresponde à definição de RIR calibrado (2 RIR)."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "RESTRICTIONS",
+      "new_since_previous_probe": false,
+      "strict_passes": 1,
+      "decision_matches": 1,
+      "application_output": {
+        "case_id": "c72f4768a7b3372d",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso pede esclarecimento sobre aplicabilidade da interação relevante, preservando acesso e caminho manual, conforme a regra RESTRICTIONS que requer que interações não estabelecidas não bloqueiem acesso."
+      },
+      "failures": [
+        {
+          "case_id": "c72f4768a7b3372d",
+          "rule_id": "RESTRICTIONS",
+          "case_kind": "application",
+          "scenario_pt_br": "Relato de medicamento não impede acesso. A interação relevante para a proposta não foi estabelecida: pedir esclarecimento da aplicabilidade, preservando acesso e caminho manual.",
+          "expected": {
+            "decision": "clarify",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "c72f4768a7b3372d",
+            "decision": "accept",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "O caso pede esclarecimento sobre aplicabilidade da interação relevante, preservando acesso e caminho manual, conforme a regra RESTRICTIONS que requer que interações não estabelecidas não bloqueiem acesso."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "SELECT_RESISTANCE",
+      "new_since_previous_probe": false,
+      "strict_passes": 0,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "3b88f3844487e390",
+        "decision": "accept",
+        "value": null,
+        "unit": "null",
+        "explanation_pt_br": "O fragmento conserva o foco solicitado (bíceps) com rosca direta e técnica, sem substituições silenciosas, seguindo a regra."
+      },
+      "failures": [
+        {
+          "case_id": "a11091ba207c8d1d",
+          "rule_id": "SELECT_RESISTANCE",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Pedido apenas de bíceps: substituir silenciosamente por agachamento e treino de corpo inteiro.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "a11091ba207c8d1d",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "A regra exige priorizar o movimento solicitado, mas o fragmento sugere substituir silenciosamente por agachamento sem aprovação explícita, o que viola a regra de não silenciosamente substituir."
+          },
+          "passed": false
+        },
+        {
+          "case_id": "3b88f3844487e390",
+          "rule_id": "SELECT_RESISTANCE",
+          "case_kind": "application",
+          "scenario_pt_br": "Pedido confirmado: apenas bíceps; rosca direta com técnica e recurso disponíveis. O fragmento conserva o foco solicitado.",
+          "expected": {
+            "decision": "accept",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "3b88f3844487e390",
+            "decision": "accept",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "O fragmento conserva o foco solicitado (bíceps) com rosca direta e técnica, sem substituições silenciosas, seguindo a regra."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "SOURCE_ENDURANCE_CIRCUIT",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "6a782738e86d8db1",
+        "decision": "accept",
+        "value": 59.0,
+        "unit": "kg",
+        "explanation_pt_br": "O fragmento calcula corretamente a carga como 59 kg (60% de 100 kg = 60 kg, mas carga máxima permitida é 59 kg para estar abaixo de 60% 1RM)."
+      },
+      "failures": [
+        {
+          "case_id": "f06a95139889e638",
+          "rule_id": "SOURCE_ENDURANCE_CIRCUIT",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Aplicar o mesmo circuito com exatamente 60% de 1RM e declarar que está abaixo de 60%.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "f06a95139889e638",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "A regra exige que a carga esteja abaixo de 60% 1RM, mas a afirmação declara que está abaixo de 60% sem validação de 1RM. O fragmento não confirma se a carga é realmente abaixo de 60% 1RM, apenas afirma que está abaixo de 60%."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "SOURCE_MEDICINE_BALL_POWER",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "ec36e3112c557bb5",
+        "decision": "accept",
+        "value": 120.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O caso confirma competência, espaço e bola apropriada. A regra especifica descanso de 120 segundos entre séries. O cálculo é direto e corresponde à regra."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "SOURCE_PAIRED_RESISTANCE",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "f21eee0802fd4396",
+        "decision": "accept",
+        "value": 120.0,
+        "unit": "seconds_after_pair",
+        "explanation_pt_br": "O protocolo em pares confirmado segue a regra: 3 séries de 8–12 repetições por exercício com descanso de 120 segundos após cada par. A regra especifica que o descanso é após o par, não após cada exercício isolado."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "SPORT_SPECIFICITY",
+      "new_since_previous_probe": true,
+      "strict_passes": 1,
+      "decision_matches": 1,
+      "application_output": {
+        "case_id": "a00dad1a81127cbc",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso pede solicitar informações específicas (esporte, prova e capacidade relevante) sem gerar protocolo universal, conforme a regra SPORT_SPECIFICITY que exige essas informações antes de selecionar um protocolo."
+      },
+      "failures": [
+        {
+          "case_id": "a00dad1a81127cbc",
+          "rule_id": "SPORT_SPECIFICITY",
+          "case_kind": "application",
+          "scenario_pt_br": "Pedido: melhorar desempenho esportivo; esporte, prova e capacidade relevante não informados. Solicitar essas informações, sem gerar protocolo universal.",
+          "expected": {
+            "decision": "clarify",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "a00dad1a81127cbc",
+            "decision": "accept",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "O caso pede solicitar informações específicas (esporte, prova e capacidade relevante) sem gerar protocolo universal, conforme a regra SPORT_SPECIFICITY que exige essas informações antes de selecionar um protocolo."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "STRENGTH_DOSE",
+      "new_since_previous_probe": false,
+      "strict_passes": 1,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "b6706e532158a9b8",
+        "decision": "accept",
+        "value": 80.0,
+        "unit": "kg",
+        "explanation_pt_br": "O fragmento calcula corretamente a carga como 80% de 100 kg = 80 kg."
+      },
+      "failures": [
+        {
+          "case_id": "bd7195b690083da6",
+          "rule_id": "STRENGTH_DOSE",
+          "case_kind": "counterexample",
+          "scenario_pt_br": "Converter o peso corporal em 1RM de supino sem medição e declarar precisão.",
+          "expected": {
+            "decision": "reject",
+            "value": null,
+            "unit": null
+          },
+          "actual": {
+            "case_id": "bd7195b690083da6",
+            "decision": "reject",
+            "value": null,
+            "unit": "null",
+            "explanation_pt_br": "A regra exige que o 1RM seja medido, mas o fragmento menciona converter peso corporal em 1RM sem medição, o que não é permitido."
+          },
+          "passed": false
+        }
+      ]
+    },
+    {
+      "rule_id": "STRENGTH_REST",
+      "new_since_previous_probe": false,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "843bf756b5bcd1af",
+        "decision": "accept",
+        "value": 240.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O caso descreve séries pesadas de praticante intermediário com recuperação confirmada, o que está dentro dos parâmetros da regra (180-300 segundos). O descanso de 240 segundos é válido."
+      },
+      "failures": []
+    },
+    {
+      "rule_id": "WEIGHT_DIRECTION",
+      "new_since_previous_probe": true,
+      "strict_passes": 2,
+      "decision_matches": 2,
+      "application_output": {
+        "case_id": "bc78da47553d21a6",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A descrição corresponde exatamente à regra WEIGHT_DIRECTION: conservar emagrecimento e preservação de massa magra como objetivos distintos, sem garantia de quilos, perda localizada ou prescrição de dieta/medicamento."
+      },
+      "failures": []
+    }
+  ],
+  "failure_categories": {
+    "decision": 5,
+    "quantity": 5,
+    "unit_or_null": 9
+  },
+  "full_qualified_generation_preflight": {
+    "tested_goal_families": 11,
+    "blocked": 11,
+    "category": "insufficient_support",
+    "reason": "approved_goal_policy_required",
+    "saved_student_plans": 0
+  },
+  "free_text_rationale_graded": false
+}

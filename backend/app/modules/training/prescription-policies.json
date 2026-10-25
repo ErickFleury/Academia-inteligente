@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "version": "2026-10-23-draft-1",
+  "dictionary": {
+    "version": "2026-10-23-draft-1",
+    "status": "pending",
+    "exercises": [],
+    "review_records": []
+  },
+  "policies": [
+    {
+      "id": "adult-strength-initial-slice",
+      "version": "2026-10-23-draft-1",
+      "status": "pending",
+      "goal_family": "strength",
+      "exact_goal_mappings": [],
+      "experience_levels": ["none", "beginner"],
+      "population": "Confirmed adults without reported restrictions, conditions or medication use; eligibility confirmation authority pending.",
+      "exclusions": ["Unknown population", "Combined or unreviewed restrictions", "Unknown or mixed goals"],
+      "restriction_interactions": "No restriction combination is approved; absence of reported restrictions is not a diagnosis of health.",
+      "decisions": [],
+      "review_records": [],
+      "unresolved_decisions": [
+        "Complete independent methodological and professional appraisal/certainty records.",
+        "Approve all seven prescription dimensions and evidence-to-decision derivations.",
+        "Approve minimal input authority, confirmation, validity and conflict handling.",
+        "Approve dictionary entries, accounting method and goal mappings.",
+        "Run reviewed development-case retrieval feasibility and seal independent evaluation before Task 48."
+      ]
+    }
+  ]
+}

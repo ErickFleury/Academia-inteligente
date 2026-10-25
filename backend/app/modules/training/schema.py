@@ -1,9 +1,10 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from app.integrations.ai import KnowledgeStatus
+from app.modules.training.prescription_modes import ProjectionDetails
 
 PlanOrigin = Literal["ai", "instructor"]
 PlanStatus = Literal["proposal", "approved", "current", "superseded"]
@@ -32,12 +33,64 @@ class TrainingKnowledgeResponse(BaseModel):
 class TrainingPlanItemInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     exercise_name: str = Field(min_length=1, max_length=200)
-    sets: int = Field(gt=0, le=100)
+    sets: int | None = Field(gt=0, le=100)
     repetitions: str = Field(min_length=1, max_length=100)
     load_guidance: str = Field(min_length=1, max_length=500)
-    rest_seconds: int = Field(ge=0, le=3600)
+    rest_seconds: int | None = Field(ge=0, le=3600)
+    dose_details: ProjectionDetails | None = None
     equipment_requirement: str | None = Field(default=None, max_length=200)
     equipment_model_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def explicit_projection_mode(self):
+        if self.dose_details is None:
+            if self.sets is None or self.rest_seconds is None:
+                raise ValueError("legacy_resistance_quantities_required")
+        elif self.dose_details.mode != "resistance":
+            if self.sets is not None or self.rest_seconds != self.dose_details.rest.seconds:
+                raise ValueError("projection_quantity_mismatch")
+        elif self.rest_seconds is not None or self.sets != self.dose_details.group.rounds:
+            raise ValueError("group_projection_quantity_mismatch")
+        if self.dose_details is not None:
+            from types import SimpleNamespace
+
+            from app.modules.training.prescription_mode_validation import modality_dose_text
+            from app.modules.training.prescription_modes import (
+                AerobicDose,
+                FlexibilityDose,
+                TaskDose,
+            )
+
+            mode = self.dose_details.mode
+            if mode != "resistance":
+                model = {
+                    "aerobic": AerobicDose,
+                    "flexibility": FlexibilityDose,
+                    "balance": TaskDose,
+                    "functional": TaskDose,
+                }[mode]
+                self.repetitions = modality_dose_text(
+                    SimpleNamespace(mode=mode, dose=model.model_validate(self.dose_details.dose))
+                )
+            else:
+                from app.modules.training.prescription_contract import Duration, Repetitions
+                from app.modules.training.prescription_validation import _range_text
+
+                value = self.dose_details.dose
+                dose = (
+                    Repetitions if value.get("kind") == "repetitions" else Duration
+                ).model_validate(value)
+                self.repetitions = _range_text(dose.minimum, dose.maximum) + (
+                    " s" if dose.kind == "duration_seconds" else ""
+                )
+        return self
+
+    @model_serializer(mode="wrap")
+    def serialize_projection(self, handler):
+        data = handler(self)
+        if self.dose_details is None:
+            data.pop("dose_details", None)
+        return data
 
 
 class TrainingPlanVersionInput(BaseModel):

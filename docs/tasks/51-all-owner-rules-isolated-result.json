@@ -1,0 +1,732 @@
+{
+  "plan": {
+    "purpose": "all_owner_approved_rule_fragments_not_operational_validation",
+    "frozen_at": "2026-10-24T21:12:20.326152+00:00",
+    "registry_sha256": "1320b0f43e38f926afe8456ede97b31c981b6e7871059069531b1faa0f752b07",
+    "rules": [
+      "COMBINED_GOALS",
+      "FLEXIBILITY_DOSE",
+      "FLEXIBILITY_NEWER_EVIDENCE",
+      "FLEXIBILITY_STRUCTURE",
+      "HYPERTROPHY_REST",
+      "LOAD_PROGRESSION",
+      "RESISTANCE_EFFORT",
+      "SOURCE_MEDICINE_BALL_POWER",
+      "SOURCE_PAIRED_RESISTANCE",
+      "STRENGTH_REST"
+    ],
+    "rule_count": 10,
+    "case_count": 20,
+    "maximum_model_calls": 10,
+    "retries": 0,
+    "timeout_seconds_per_call": 360,
+    "model": "qwen3:4b",
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "instruction_sha256": "c3cbdd36ce83c617383ab6440e0cd4458b3b8da8a5ad0502a747dc8b598a4058",
+    "response_schema_sha256s": [
+      "1024dc53dae2372e53c906ca719548194b77e93da6f1c812d53e01cccc0dcc35",
+      "2e0518be5895966efc5cffcdb9d44952fe702f0aa7d5df88db6826aeb50e6958",
+      "99dbcd56ea6216ea9ca022acc5f989ba5a73567bd7b665826f7301469af731e3",
+      "7d4879ad9215a350729bed69c50cd3e856df2aa1abf11b4c71758302d9d9be3c",
+      "5ba6b8c0619a790bcc0f45f7c88a8206a78064d8264fa74d5ed13e9d308bb592",
+      "b1f3570c866565d0a1cc9b85f761e06f5f4be6567c4390a7ab217e17bbb6fa45",
+      "f5760fd595beac1364747baa2f503c6d692d2de97548d2ebfb01059c090f77e6",
+      "c4571594735e77a3022a8a949d509d078f328ee4700f6d70c0670e8f109ba32a",
+      "1de0348b5c6b80fa0e1a88b946461d98346eb87f9174d8a0d9a2706284389582",
+      "05ef7206d24ec5113e5a3921e0413b3578533ca5a60c215eec08726c6d2981d9"
+    ],
+    "diagnostic_of": "51-all-owner-rules-result.json",
+    "response_case_ids_and_count_constrained": true,
+    "cases_sha256": "12b5cebbeb56e95969459ea91ce4016e3f8648a379e194b683f3cb1cdb2637d7",
+    "batch_context_hashes": [
+      "fada1c4dc2881b78364409503075a963fce4add3979480f0e15bf405c18c9646",
+      "d24952ca69cb9e7471772b3ebec7836ba8b69624ddd2a3fe2b94d79210f9804a",
+      "23a71b15d052eb92d5725b0485cd554d72e6bb9af4ae9d57c4a2dab6f36044bd",
+      "4fb6d52f948093e17730477966ce4b2e82725fc8b660929f56112494b0d5ae46",
+      "68e62e9b5a801d7555fb170f481af1e7caadaa927eceb7c1e23fa3b120a73c5e",
+      "8f2050d61665fb2038b615336dc3a9bbe22cb66b180bcc0a6be1785f1f72f238",
+      "cfb7a9b720e300af8ec7c170bb86f6c3ebc334f8d7be90410354af751c12a1ac",
+      "5171b15678f8e031c85dbd9c91c3a11605dea454a6b3f828f4087317d69ed6c1",
+      "8245b3b3144f87f02646303bffc8cd4f27e0c3a88ffd5a2818033d36cd0cdc0a",
+      "cae04364b3691e048cc95885bdbb433749449793f4d414ff29740b8718c4a3c7"
+    ],
+    "probe_script_sha256": "4fa267d1a503adf34a6d0dc8c8837cb4438f0c93d20a10c55882beb88e6268bd",
+    "cases_script_sha256": "9dc286de84840b032ac82745e60506fbb1506812405f2deee20ecb5a607cf679",
+    "expected_decisions_sent_to_model": false,
+    "think": false,
+    "uses_deployed_full_sheet_instructions": false,
+    "uses_live_retrieval": false,
+    "database_access": false,
+    "packaged_execution_contract_count": 0
+  },
+  "batches": [
+    {
+      "number": 1,
+      "rule_ids": [
+        "RESISTANCE_EFFORT"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "3d90746c175ab067",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "O caso exige que haja falha em toda série (failure) e simultaneamente afirme que restam 2 RIR. A regra afirma que 'failure is not required' e que RIR é um valor de estimativa, não um número de repetições. Portanto, a combinação de falha e 2"
+          },
+          {
+            "case_id": "230650f5fdfaf1b6",
+            "decision": "accept",
+            "value": 2.0,
+            "unit": "rir",
+            "explanation_pt_br": "A regra indica que RIR é um valor de estimativa calibrada. O caso descreve uma série que termina com 2 repetições em reserva sem exigir falha, o que corresponde à definição de RIR calibrado (2 RIR)."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 7.759
+    },
+    {
+      "number": 2,
+      "rule_ids": [
+        "SOURCE_PAIRED_RESISTANCE"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "16cc3becc2daa00d",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra estabelece que o descanso é de 120 segundos após cada par, não após cada exercício isolado. A afirmação proposta transforma o protocolo em séries isoladas e afirma que a fonte estabeleceu 120 segundos após cada exercício isolado, oq"
+          },
+          {
+            "case_id": "f21eee0802fd4396",
+            "decision": "accept",
+            "value": 120.0,
+            "unit": "seconds_after_pair",
+            "explanation_pt_br": "O protocolo em pares confirmado segue a regra: 3 séries de 8–12 repetições por exercício com descanso de 120 segundos após cada par. A regra especifica que o descanso é após o par, não após cada exercício isolado."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 6.424
+    },
+    {
+      "number": 3,
+      "rule_ids": [
+        "SOURCE_MEDICINE_BALL_POWER"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "ec36e3112c557bb5",
+            "decision": "accept",
+            "value": 120.0,
+            "unit": "seconds",
+            "explanation_pt_br": "O caso confirma competência, espaço e bola apropriada. A regra especifica descanso de 120 segundos entre séries. O cálculo é direto e corresponde à regra."
+          },
+          {
+            "case_id": "a4e8a0c36744ad1b",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra não permite calcular o peso da bola como 80% do 1RM de agachamento. A regra exige que o peso seja determinado por observação técnica, critérios de parada/progressão e aplicabilidade, sem inferência de kg."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 5.498
+    },
+    {
+      "number": 4,
+      "rule_ids": [
+        "STRENGTH_REST"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "fa689a66a00e1eb2",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra estabelece que não deve ser aplicado automaticamente a um iniciante ou um circuito. O caso obriga todos iniciantes e circuitos a descansar 300 segundos sem avaliar experiência, o que viola a regra."
+          },
+          {
+            "case_id": "843bf756b5bcd1af",
+            "decision": "accept",
+            "value": 240.0,
+            "unit": "seconds",
+            "explanation_pt_br": "O caso descreve séries pesadas de praticante intermediário com recuperação confirmada, o que está dentro dos parâmetros da regra (180-300 segundos). O descanso de 240 segundos é válido."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 5.816
+    },
+    {
+      "number": 5,
+      "rule_ids": [
+        "HYPERTROPHY_REST"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "3dbc7ccbb7869914",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra proposta afirma que não há um ótimo científico exato, mas um intervalo operacional ajustável. A afirmação de que 90 segundos é obrigatório e exato contradiz a regra, que destaca incerteza acima de 90 segundos e não propõe um valor ó"
+          },
+          {
+            "case_id": "09e3b54b6d4ad377",
+            "decision": "accept",
+            "value": 150.0,
+            "unit": "seconds",
+            "explanation_pt_br": "O caso sugere usar 150 segundos como escolha operacional ajustável, o que está dentro do intervalo proposto (120-180 segundos) e não afirma ótimo científico, conforme a regra."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 5.566
+    },
+    {
+      "number": 6,
+      "rule_ids": [
+        "LOAD_PROGRESSION"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "fd206383cb76d2cf",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra especifica que o aumento de carga não é automático, mas deve considerar demonstração de 1-2 repetições além do desejado. O cenário descreve um aumento automático sem desempenho observado, o que viola a regra."
+          },
+          {
+            "case_id": "de1f9f22ad8c8e41",
+            "decision": "accept",
+            "value": 50.1,
+            "unit": "kg",
+            "explanation_pt_br": "Com 12 repetições demonstradas (2 além de 10 desejadas), o aumento de carga é 2% do atual (50 kg), resultando em 50.1 kg. A proposta respeita os limites de 2-10% e os critérios de desempenho observado."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 1,
+      "elapsed_seconds": 6.044
+    },
+    {
+      "number": 7,
+      "rule_ids": [
+        "FLEXIBILITY_DOSE"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "d4d0d9378a649217",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra FLEXIBILITY_DOSE especifica que o alongamento estático deve ser realizado com acumulação de 60 segundos por exercício em pelo menos dois dias por semana. O caso sugere que essa recomendação valida qualquer objetivo de mobilidade ati"
+          },
+          {
+            "case_id": "ceee6ac3e159b3b8",
+            "decision": "accept",
+            "value": 60.0,
+            "unit": "seconds_per_side",
+            "explanation_pt_br": "O caso pede acumular 60 segundos por exercício/lado em 2 dias semanais. A regra FLEXIBILITY_DOSE define um mínimo de 60 segundos por exercício por sessão, com frequência mínima de 2 dias por semana. Portanto, o valor correto é 60 segundos/l"
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 6.419
+    },
+    {
+      "number": 8,
+      "rule_ids": [
+        "FLEXIBILITY_STRUCTURE"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "157e108526f55a4e",
+            "decision": "accept",
+            "value": 60.0,
+            "unit": "seconds_per_side",
+            "explanation_pt_br": "A afirmação proposta descreve 2 sustentações de 30 segundos por lado, ou seja, 2 * 30 = 60 segundos por lado. O cálculo está correto e corresponde à regra de 2 sustentações de 30 segundos por lado com recuperação de 30 segundos entre elas ("
+          },
+          {
+            "case_id": "b1a0ab43dfa1f599",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A afirmação é incorreta porque 2 sustentações de 30 segundos por lado equivalem a 60 segundos por lado, não 120. A regra especifica que há 30 segundos de recuperação entre as sustentações, mas a sustentação acumulada por lado é apenas a dur"
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 6.596
+    },
+    {
+      "number": 9,
+      "rule_ids": [
+        "FLEXIBILITY_NEWER_EVIDENCE"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "56d43acc68630960",
+            "decision": "accept",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "O fragmento descreve corretamente os platôs agregados de 4 minutos por sessão e 10 minutos semanais como associações, sem teto individual ou soma indevida de músculos, conforme a regra FLEXIBILITY_NEWER_EVIDENCE."
+          },
+          {
+            "case_id": "348a761ab1ee1560",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "A regra afirma que os platôs são associações, não teto obrigatório para cada pessoa, músculo ou população. O caso sugere usar 4 minutos como teto obrigatório, o que contradiz a regra, pois a regra destaca que não há teto individual ou soma."
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 5.668
+    },
+    {
+      "number": 10,
+      "rule_ids": [
+        "COMBINED_GOALS"
+      ],
+      "raw_response": {
+        "results": [
+          {
+            "case_id": "93e865587d655981",
+            "decision": "accept",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "O caso descreve corretamente a regra: preserva objetivos confirmados (redução de gordura e hipertrofia), confirma prioridades, verifica tempo e recuperação compartilhados sem somar unidades (minutos e séries). Não há redefinição de saúde ou"
+          },
+          {
+            "case_id": "d91d51c19be77352",
+            "decision": "reject",
+            "value": null,
+            "unit": null,
+            "explanation_pt_br": "O caso viola a regra ao substituir silenciosamente hipertrofia por reabilitação e ignorar o tempo total, o que é proibido por 'No automatic sport-to-general-health or rehabilitation relabeling' e 'Distinguish health target, adaptation...'"
+          }
+        ]
+      },
+      "status": "completed",
+      "passed": 2,
+      "elapsed_seconds": 6.306
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "3d90746c175ab067",
+      "rule_id": "RESISTANCE_EFFORT",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Exigir falha em toda série e afirmar simultaneamente que restam 2 RIR.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "3d90746c175ab067",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso exige que haja falha em toda série (failure) e simultaneamente afirme que restam 2 RIR. A regra afirma que 'failure is not required' e que RIR é um valor de estimativa, não um número de repetições. Portanto, a combinação de falha e 2"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "230650f5fdfaf1b6",
+      "rule_id": "RESISTANCE_EFFORT",
+      "case_kind": "application",
+      "scenario_pt_br": "RIR calibrado: a série termina com 2 repetições em reserva, sem exigir falha. Informe o RIR observado.",
+      "expected": {
+        "decision": "accept",
+        "value": 2,
+        "unit": "rir"
+      },
+      "actual": {
+        "case_id": "230650f5fdfaf1b6",
+        "decision": "accept",
+        "value": 2.0,
+        "unit": "rir",
+        "explanation_pt_br": "A regra indica que RIR é um valor de estimativa calibrada. O caso descreve uma série que termina com 2 repetições em reserva sem exigir falha, o que corresponde à definição de RIR calibrado (2 RIR)."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "16cc3becc2daa00d",
+      "rule_id": "SOURCE_PAIRED_RESISTANCE",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Transformar o protocolo em séries isoladas e afirmar que a fonte estabeleceu 120 segundos após cada exercício isolado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "16cc3becc2daa00d",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra estabelece que o descanso é de 120 segundos após cada par, não após cada exercício isolado. A afirmação proposta transforma o protocolo em séries isoladas e afirma que a fonte estabeleceu 120 segundos após cada exercício isolado, oq"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "f21eee0802fd4396",
+      "rule_id": "SOURCE_PAIRED_RESISTANCE",
+      "case_kind": "application",
+      "scenario_pt_br": "Protocolo em pares confirmado: 3 séries de 8–12 repetições por exercício e 120 segundos depois do par. Informe o descanso depois do par.",
+      "expected": {
+        "decision": "accept",
+        "value": 120,
+        "unit": "seconds_after_pair"
+      },
+      "actual": {
+        "case_id": "f21eee0802fd4396",
+        "decision": "accept",
+        "value": 120.0,
+        "unit": "seconds_after_pair",
+        "explanation_pt_br": "O protocolo em pares confirmado segue a regra: 3 séries de 8–12 repetições por exercício com descanso de 120 segundos após cada par. A regra especifica que o descanso é após o par, não após cada exercício isolado."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "ec36e3112c557bb5",
+      "rule_id": "SOURCE_MEDICINE_BALL_POWER",
+      "case_kind": "application",
+      "scenario_pt_br": "Competência, espaço e bola apropriada confirmados. Arremesso acima da cabeça: 3 séries de 3–6 repetições; descanso de 120 segundos. Informe o descanso.",
+      "expected": {
+        "decision": "accept",
+        "value": 120,
+        "unit": "seconds"
+      },
+      "actual": {
+        "case_id": "ec36e3112c557bb5",
+        "decision": "accept",
+        "value": 120.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O caso confirma competência, espaço e bola apropriada. A regra especifica descanso de 120 segundos entre séries. O cálculo é direto e corresponde à regra."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "a4e8a0c36744ad1b",
+      "rule_id": "SOURCE_MEDICINE_BALL_POWER",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Calcular automaticamente o peso da medicine ball como 80% do 1RM de agachamento.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "a4e8a0c36744ad1b",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra não permite calcular o peso da bola como 80% do 1RM de agachamento. A regra exige que o peso seja determinado por observação técnica, critérios de parada/progressão e aplicabilidade, sem inferência de kg."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "fa689a66a00e1eb2",
+      "rule_id": "STRENGTH_REST",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Obrigar todo iniciante e todo circuito a descansar 300 segundos, sem avaliar carga, experiência ou estrutura.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "fa689a66a00e1eb2",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra estabelece que não deve ser aplicado automaticamente a um iniciante ou um circuito. O caso obriga todos iniciantes e circuitos a descansar 300 segundos sem avaliar experiência, o que viola a regra."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "843bf756b5bcd1af",
+      "rule_id": "STRENGTH_REST",
+      "case_kind": "application",
+      "scenario_pt_br": "Séries pesadas de praticante intermediário com recuperação confirmada: 240 segundos de descanso. Informe o descanso.",
+      "expected": {
+        "decision": "accept",
+        "value": 240,
+        "unit": "seconds"
+      },
+      "actual": {
+        "case_id": "843bf756b5bcd1af",
+        "decision": "accept",
+        "value": 240.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O caso descreve séries pesadas de praticante intermediário com recuperação confirmada, o que está dentro dos parâmetros da regra (180-300 segundos). O descanso de 240 segundos é válido."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "3dbc7ccbb7869914",
+      "rule_id": "HYPERTROPHY_REST",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Afirmar que 90 segundos é o ótimo científico exato e obrigatório para todos.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "3dbc7ccbb7869914",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra proposta afirma que não há um ótimo científico exato, mas um intervalo operacional ajustável. A afirmação de que 90 segundos é obrigatório e exato contradiz a regra, que destaca incerteza acima de 90 segundos e não propõe um valor ó"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "09e3b54b6d4ad377",
+      "rule_id": "HYPERTROPHY_REST",
+      "case_kind": "application",
+      "scenario_pt_br": "Usar 150 segundos como escolha operacional proposta, ajustável à recuperação, sem afirmar ótimo científico. Informe o descanso escolhido.",
+      "expected": {
+        "decision": "accept",
+        "value": 150,
+        "unit": "seconds"
+      },
+      "actual": {
+        "case_id": "09e3b54b6d4ad377",
+        "decision": "accept",
+        "value": 150.0,
+        "unit": "seconds",
+        "explanation_pt_br": "O caso sugere usar 150 segundos como escolha operacional ajustável, o que está dentro do intervalo proposto (120-180 segundos) e não afirma ótimo científico, conforme a regra."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "fd206383cb76d2cf",
+      "rule_id": "LOAD_PROGRESSION",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Aumentar automaticamente a carga em 10% toda semana, sem desempenho observado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "fd206383cb76d2cf",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra especifica que o aumento de carga não é automático, mas deve considerar demonstração de 1-2 repetições além do desejado. O cenário descreve um aumento automático sem desempenho observado, o que viola a regra."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "de1f9f22ad8c8e41",
+      "rule_id": "LOAD_PROGRESSION",
+      "case_kind": "application",
+      "scenario_pt_br": "Mesmo exercício: desejadas 10 repetições, demonstradas 12 com técnica e recuperação observadas; carga atual 50 kg. Foi escolhida proposta de aumento de 2%, sujeita à revisão, sem editar o plano. Calcule a carga proposta.",
+      "expected": {
+        "decision": "accept",
+        "value": 51,
+        "unit": "kg"
+      },
+      "actual": {
+        "case_id": "de1f9f22ad8c8e41",
+        "decision": "accept",
+        "value": 50.1,
+        "unit": "kg",
+        "explanation_pt_br": "Com 12 repetições demonstradas (2 além de 10 desejadas), o aumento de carga é 2% do atual (50 kg), resultando em 50.1 kg. A proposta respeita os limites de 2-10% e os critérios de desempenho observado."
+      },
+      "passed": false
+    },
+    {
+      "case_id": "d4d0d9378a649217",
+      "rule_id": "FLEXIBILITY_DOSE",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Declarar que uma recomendação de alongamento estático valida qualquer objetivo de mobilidade ativa ou reabilitação.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "d4d0d9378a649217",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra FLEXIBILITY_DOSE especifica que o alongamento estático deve ser realizado com acumulação de 60 segundos por exercício em pelo menos dois dias por semana. O caso sugere que essa recomendação valida qualquer objetivo de mobilidade ati"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "ceee6ac3e159b3b8",
+      "rule_id": "FLEXIBILITY_DOSE",
+      "case_kind": "application",
+      "scenario_pt_br": "Alvo e lado definidos, amplitude e tolerância observadas: acumular 60 segundos por exercício/lado em 2 dias semanais. Informe segundos por lado.",
+      "expected": {
+        "decision": "accept",
+        "value": 60,
+        "unit": "seconds_per_side"
+      },
+      "actual": {
+        "case_id": "ceee6ac3e159b3b8",
+        "decision": "accept",
+        "value": 60.0,
+        "unit": "seconds_per_side",
+        "explanation_pt_br": "O caso pede acumular 60 segundos por exercício/lado em 2 dias semanais. A regra FLEXIBILITY_DOSE define um mínimo de 60 segundos por exercício por sessão, com frequência mínima de 2 dias por semana. Portanto, o valor correto é 60 segundos/l"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "157e108526f55a4e",
+      "rule_id": "FLEXIBILITY_STRUCTURE",
+      "case_kind": "application",
+      "scenario_pt_br": "Escolha proposta: 2 sustentações de 30 segundos por lado e 30 segundos de recuperação entre sustentações. Calcule sustentação acumulada por lado.",
+      "expected": {
+        "decision": "accept",
+        "value": 60,
+        "unit": "seconds_per_side"
+      },
+      "actual": {
+        "case_id": "157e108526f55a4e",
+        "decision": "accept",
+        "value": 60.0,
+        "unit": "seconds_per_side",
+        "explanation_pt_br": "A afirmação proposta descreve 2 sustentações de 30 segundos por lado, ou seja, 2 * 30 = 60 segundos por lado. O cálculo está correto e corresponde à regra de 2 sustentações de 30 segundos por lado com recuperação de 30 segundos entre elas ("
+      },
+      "passed": true
+    },
+    {
+      "case_id": "b1a0ab43dfa1f599",
+      "rule_id": "FLEXIBILITY_STRUCTURE",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Afirmar que 2 sustentações de 30 segundos por lado equivalem a 120 segundos por lado.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "b1a0ab43dfa1f599",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A afirmação é incorreta porque 2 sustentações de 30 segundos por lado equivalem a 60 segundos por lado, não 120. A regra especifica que há 30 segundos de recuperação entre as sustentações, mas a sustentação acumulada por lado é apenas a dur"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "56d43acc68630960",
+      "rule_id": "FLEXIBILITY_NEWER_EVIDENCE",
+      "case_kind": "application",
+      "scenario_pt_br": "Descrever os platôs agregados de 4 minutos por sessão e 10 minutos semanais como associações, sem teto individual ou soma indevida de músculos.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "56d43acc68630960",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O fragmento descreve corretamente os platôs agregados de 4 minutos por sessão e 10 minutos semanais como associações, sem teto individual ou soma indevida de músculos, conforme a regra FLEXIBILITY_NEWER_EVIDENCE."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "348a761ab1ee1560",
+      "rule_id": "FLEXIBILITY_NEWER_EVIDENCE",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Usar 4 minutos como teto obrigatório para cada pessoa, músculo e população.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "348a761ab1ee1560",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "A regra afirma que os platôs são associações, não teto obrigatório para cada pessoa, músculo ou população. O caso sugere usar 4 minutos como teto obrigatório, o que contradiz a regra, pois a regra destaca que não há teto individual ou soma."
+      },
+      "passed": true
+    },
+    {
+      "case_id": "93e865587d655981",
+      "rule_id": "COMBINED_GOALS",
+      "case_kind": "application",
+      "scenario_pt_br": "Preservar os objetivos confirmados de redução de gordura e hipertrofia, com prioridades declaradas; verificar tempo e recuperação compartilhados sem somar minutos e séries numa única unidade.",
+      "expected": {
+        "decision": "accept",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "93e865587d655981",
+        "decision": "accept",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso descreve corretamente a regra: preserva objetivos confirmados (redução de gordura e hipertrofia), confirma prioridades, verifica tempo e recuperação compartilhados sem somar unidades (minutos e séries). Não há redefinição de saúde ou"
+      },
+      "passed": true
+    },
+    {
+      "case_id": "d91d51c19be77352",
+      "rule_id": "COMBINED_GOALS",
+      "case_kind": "counterexample",
+      "scenario_pt_br": "Substituir silenciosamente hipertrofia por reabilitação e ignorar o tempo total ao combinar componentes.",
+      "expected": {
+        "decision": "reject",
+        "value": null,
+        "unit": null
+      },
+      "actual": {
+        "case_id": "d91d51c19be77352",
+        "decision": "reject",
+        "value": null,
+        "unit": null,
+        "explanation_pt_br": "O caso viola a regra ao substituir silenciosamente hipertrofia por reabilitação e ignorar o tempo total, o que é proibido por 'No automatic sport-to-general-health or rehabilitation relabeling' e 'Distinguish health target, adaptation...'"
+      },
+      "passed": true
+    }
+  ],
+  "actual_model_calls": 10,
+  "saved_student_plans": 0,
+  "clinical_approval": false,
+  "independent_evaluation": false,
+  "request_hashes": [
+    "3a2852f17802f12b7366c6c306fd564c9b9c3aad147dc0b26ce0f898641721e7",
+    "42043686733230c1532ae0f73d5b378f81608ce5a155e306fa616eaccba658cc",
+    "591a0d1803ec2f701f9fb779b51c0ec82c81470cf21479bda07ce438c24187a9",
+    "0c10afff26e8037bccc155c0816fde50bd7c019206c5cbd86aac7b0310c9496b",
+    "719812169f4e462214c0c0fb991d99f3fbccdcfb649938efec0dc3fd55b84cb9",
+    "eafc629149e63239f2e78ff588cc171f47b0dcca71065ec0c46ec4f02f840eab",
+    "16ec3770b9b6b3521a4c201464b8289a38fdb867cef776d05cc7f4829ba832ec",
+    "3da12b98f2d94b9c91076c730c7de0292707f7c6037387cfb3380d0047639fac",
+    "b932f254ac0a53d0bcb1bad2464831fa801051db3909da3d6f8191069d9b96a2",
+    "8798a81a5a299f919c0bc55c90875a52eaa8ea93fa6878290b7a20da12713d95"
+  ]
+}

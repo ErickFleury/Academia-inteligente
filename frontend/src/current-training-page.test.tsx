@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { useLayoutEffect } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { CurrentTrainingPage } from './current-training-page'
@@ -32,6 +33,34 @@ const currentPlan = {
     },
   ],
 }
+
+test('changing credentials clears the previous client sheet before the next paint', async () => {
+  const observations: string[] = []
+  vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => init.headers && (init.headers as Record<string, string>).Authorization === 'Bearer first-client' ? { ok: true, json: async () => url.endsWith('/current') ? { plan: { ...currentPlan, name: 'Ficha privada sintética' } } : [] } : new Promise(() => {})))
+  function Page({ token }: { token: string }) {
+    useLayoutEffect(() => { observations.push(document.body.textContent ?? '') }, [token])
+    return <CurrentTrainingPage accessToken={token} onSignOut={vi.fn()} />
+  }
+  const mounted = render(<Page token="first-client" />)
+  await screen.findByText('Ficha privada sintética')
+  mounted.rerender(<Page token="second-client" />)
+  expect(observations.at(-1)).not.toContain('Ficha privada sintética')
+  expect(screen.queryByText('Ficha privada sintética')).not.toBeInTheDocument()
+})
+
+test('a late response cannot put another client sheet into the new session', async () => {
+  let finishFirst: (value: unknown) => void = () => {}
+  vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => {
+    if ((init.headers as Record<string, string>).Authorization === 'Bearer first-client' && url.endsWith('/current')) return new Promise((resolve) => { finishFirst = resolve })
+    return { ok: true, json: async () => url.endsWith('/current') ? { plan: null } : [] }
+  }))
+  const mounted = render(<CurrentTrainingPage accessToken="first-client" onSignOut={vi.fn()} />)
+  mounted.rerender(<CurrentTrainingPage accessToken="second-client" onSignOut={vi.fn()} />)
+  await screen.findByText('Seu treino ainda não está disponível')
+  await act(async () => { finishFirst({ ok: true, json: async () => ({ plan: { ...currentPlan, name: 'Resposta privada atrasada' } }) }) })
+  expect(screen.queryByText('Resposta privada atrasada')).not.toBeInTheDocument()
+  expect(screen.getByText('Seu treino ainda não está disponível')).toBeInTheDocument()
+})
 
 test('renders the current training plan in workout order', async () => {
   const fetchMock = vi.fn()

@@ -22,27 +22,52 @@ def _normalized(value: str) -> str:
     )
 
 
-def analyze_training_focus(
-    operation: Callable[[dict[str, object]], AiTrainingRequestFocus], request: str
-) -> dict[str, object]:
+def explicit_full_body_request(request):
     text = _normalized(request)
     body_term = r"(?:corpo inteiro|todo o corpo|full[ -]?body)"
-    full_body_requested = bool(
+    return bool(
         re.search(r"\b" + body_term + r"\b", text)
         and not re.search(r"\bnao(?:\s+\w+){0,3}\s+" + body_term + r"\b", text)
     )
+
+
+def analyze_training_focus(
+    operation: Callable[[dict[str, object]], AiTrainingRequestFocus],
+    request: str,
+    *,
+    allowed_muscle_groups: list[str] | None = None,
+) -> dict[str, object]:
+    text = _normalized(request)
+    full_body_requested = explicit_full_body_request(request)
+    explicit_groups = [
+        g
+        for g in (allowed_muscle_groups or [])
+        if re.search(r"(?<!\w)" + re.escape(_normalized(g)) + r"(?!\w)", text)
+    ]
+    allowed_scopes = ["full_body"] if full_body_requested else ["targeted", "unspecified"]
+    if allowed_muscle_groups is not None and not full_body_requested and not explicit_groups:
+        allowed_scopes = ["unspecified"]
     context: dict[str, object] = {
         "training_request": request,
         "focus_constraints": {
-            "allowed_scopes": ["full_body"] if full_body_requested else ["targeted", "unspecified"],
+            "allowed_scopes": allowed_scopes,
         },
     }
+    if allowed_muscle_groups is not None:
+        context["focus_constraints"]["allowed_muscle_groups"] = explicit_groups
     for attempt in range(2):
         focus = operation(context)
-        scope_matches = (focus.scope == "full_body") == full_body_requested
+        scope_matches = focus.scope in allowed_scopes
         if (
             scope_matches
             and (focus.scope != "targeted" or focus.muscle_groups)
+            and (
+                allowed_muscle_groups is None
+                or all(
+                    _normalized(g) in {_normalized(v) for v in explicit_groups}
+                    for g in focus.muscle_groups
+                )
+            )
             and all(
                 re.search(r"(?<!\w)" + re.escape(_normalized(group)) + r"(?!\w)", text)
                 for group in focus.muscle_groups

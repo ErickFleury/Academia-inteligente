@@ -1,0 +1,32 @@
+{
+  "status": "rejected",
+  "category": "insufficient_support",
+  "reason": "invalid_typed_candidate",
+  "issues": [
+    {
+      "field": "candidate",
+      "reason": "malformed_structured_output"
+    }
+  ],
+  "next_action": "abstain",
+  "plan_name": "remediation-model-20261024T234933Z",
+  "elapsed_seconds": 82.66063392399883,
+  "stage_calls": {
+    "writer": 4,
+    "review": 0,
+    "focus": 0
+  },
+  "actual_model_http_calls": {
+    "writer": 4,
+    "review": 0,
+    "focus": 0
+  },
+  "stage_seconds": {
+    "writer": 81.97256460200333,
+    "review": 0.0,
+    "focus": 0.0
+  },
+  "outputs": [],
+  "independent_evaluation": false,
+  "real_policy_or_retrieval": false
+}

@@ -17,6 +17,7 @@ from app.integrations.embeddings import (
     OllamaBgeM3EmbeddingProvider,
     validate_embedding,
 )
+from app.modules.knowledge.acquisition import validate_packaged_source
 from app.modules.knowledge.models import KnowledgeChunk, KnowledgeSource
 from app.modules.knowledge.service import source_is_reviewed
 
@@ -91,6 +92,8 @@ def _seed_catalog(session: Session, provider: EmbeddingProvider, catalog: dict[s
         approved = source_is_reviewed(source, date.today())
         if source.review_status == "approved" and not approved:
             raise ValueError("unlicensed_or_unreviewed_knowledge_source")
+        if approved:
+            validate_packaged_source(entry)
         chunks = entry.get("chunks", []) if approved else []
         if approved and not chunks:
             raise ValueError("approved_knowledge_source_without_chunks")
